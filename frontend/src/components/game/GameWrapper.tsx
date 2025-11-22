@@ -60,6 +60,7 @@ export default function GameWrapper({
   const { soundEnabled } = useAudioStore();
 
   const [showModeSelect, setShowModeSelect] = useState(true);
+  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
   const [highScore, setHighScore] = useState(0);
 
   // Input state refs (for real-time access in game loop)
@@ -103,21 +104,42 @@ export default function GameWrapper({
   // Get current action state (called by game)
   const getAction = useCallback(() => actionRef.current, []);
 
-  // Start game with selected mode
+  // Handle mode selection - just set state, useEffect will init the game
   const handleStartGame = useCallback(
-    async (mode: GameMode) => {
+    (mode: GameMode) => {
       if (mode !== 'free' && !isConnected) {
         alert('Please connect your wallet to play ranked or tournament mode');
         return;
       }
 
+      console.log('Mode selected:', mode);
+      setSelectedMode(mode);
       setShowModeSelect(false);
       startGame(gameId, mode);
+    },
+    [gameId, isConnected, startGame]
+  );
 
-      // Initialize Phaser game
-      if (containerRef.current && !gameRef.current) {
+  // Initialize Phaser AFTER container is rendered
+  useEffect(() => {
+    // Only init if mode selected, container exists, and game not created yet
+    if (!selectedMode || !containerRef.current || gameRef.current) {
+      console.log('Init check failed:', {
+        selectedMode,
+        containerExists: !!containerRef.current,
+        gameExists: !!gameRef.current,
+      });
+      return;
+    }
+
+    console.log('Initializing Phaser game...');
+
+    const initGame = async () => {
+      try {
         // Load the scene class dynamically
+        console.log('Loading scene...');
         const GameScene = await sceneLoader();
+        console.log('Scene loaded:', GameScene);
 
         // Create scene instance with callbacks
         const sceneInstance = new GameScene(
@@ -127,10 +149,11 @@ export default function GameWrapper({
           getAction,
           seed || Math.floor(Math.random() * 2147483647)
         );
+        console.log('Scene instance created:', sceneInstance);
 
         const gameConfig: Phaser.Types.Core.GameConfig = {
           type: Phaser.AUTO,
-          parent: containerRef.current,
+          parent: containerRef.current!,
           width: config.width || 800,
           height: config.height || 600,
           backgroundColor: config.backgroundColor || '#0a0a0a',
@@ -151,24 +174,26 @@ export default function GameWrapper({
           scene: sceneInstance,
         };
 
-        console.log('Creating Phaser game with scene:', sceneInstance);
+        console.log('Creating Phaser game with config:', gameConfig);
         gameRef.current = new Phaser.Game(gameConfig);
+        console.log('Phaser game created successfully!');
+      } catch (error) {
+        console.error('Failed to initialize game:', error);
       }
-    },
-    [
-      gameId,
-      isConnected,
-      startGame,
-      seed,
-      config,
-      soundEnabled,
-      sceneLoader,
-      handleScoreUpdate,
-      handleGameOver,
-      getDirection,
-      getAction,
-    ]
-  );
+    };
+
+    initGame();
+  }, [
+    selectedMode,
+    seed,
+    config,
+    soundEnabled,
+    sceneLoader,
+    handleScoreUpdate,
+    handleGameOver,
+    getDirection,
+    getAction,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -284,8 +309,9 @@ export default function GameWrapper({
       gameRef.current.destroy(true);
       gameRef.current = null;
     }
-    handleStartGame(gameMode);
-  }, [gameMode, handleStartGame]);
+    setSelectedMode(null);
+    setShowModeSelect(true);
+  }, []);
 
   // Back to games
   const handleBackToGames = useCallback(() => {
@@ -364,6 +390,7 @@ export default function GameWrapper({
           <div
             ref={containerRef}
             className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30"
+            style={{ minWidth: config.width || 800, minHeight: config.height || 600 }}
           />
         )}
 
