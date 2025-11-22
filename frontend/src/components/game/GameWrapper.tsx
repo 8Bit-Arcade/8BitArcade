@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import Button from '@/components/ui/Button';
 import TouchControls from './TouchControls';
 import { useGameStore } from '@/stores/gameStore';
