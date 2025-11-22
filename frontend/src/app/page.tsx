@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import { GameCard } from '@/components/ui/Card';
 import { formatNumber } from '@/lib/utils';
 
-// Placeholder games data - will come from Firebase
+// Games data - playable marks which games are implemented
 const GAMES = [
   {
     id: 'space-rocks',
@@ -16,6 +16,7 @@ const GAMES = [
     description: 'Destroy asteroids and UFOs in deep space',
     difficulty: 'medium' as const,
     thumbnail: null,
+    playable: true,
   },
   {
     id: 'alien-assault',
@@ -23,48 +24,7 @@ const GAMES = [
     description: 'Defend Earth from alien invaders',
     difficulty: 'easy' as const,
     thumbnail: null,
-  },
-  {
-    id: 'bug-blaster',
-    name: 'Bug Blaster',
-    description: 'Blast the centipede before it reaches you',
-    difficulty: 'hard' as const,
-    thumbnail: null,
-  },
-  {
-    id: 'chomper',
-    name: 'Chomper',
-    description: 'Eat all the dots, avoid the ghosts',
-    difficulty: 'medium' as const,
-    thumbnail: null,
-  },
-  {
-    id: 'tunnel-terror',
-    name: 'Tunnel Terror',
-    description: 'Dig tunnels and defeat underground enemies',
-    difficulty: 'medium' as const,
-    thumbnail: null,
-  },
-  {
-    id: 'galaxy-fighter',
-    name: 'Galaxy Fighter',
-    description: 'Take on waves of alien fighters',
-    difficulty: 'medium' as const,
-    thumbnail: null,
-  },
-  {
-    id: 'road-hopper',
-    name: 'Road Hopper',
-    description: 'Cross the road and river safely',
-    difficulty: 'easy' as const,
-    thumbnail: null,
-  },
-  {
-    id: 'barrel-dodge',
-    name: 'Barrel Dodge',
-    description: 'Climb to the top while dodging barrels',
-    difficulty: 'hard' as const,
-    thumbnail: null,
+    playable: true,
   },
   {
     id: 'brick-breaker',
@@ -72,6 +32,7 @@ const GAMES = [
     description: 'Break all the bricks with your paddle',
     difficulty: 'easy' as const,
     thumbnail: null,
+    playable: true,
   },
   {
     id: 'pixel-snake',
@@ -79,6 +40,55 @@ const GAMES = [
     description: 'Eat food and grow without hitting yourself',
     difficulty: 'easy' as const,
     thumbnail: null,
+    playable: true,
+  },
+  {
+    id: 'bug-blaster',
+    name: 'Bug Blaster',
+    description: 'Blast the centipede before it reaches you',
+    difficulty: 'hard' as const,
+    thumbnail: null,
+    playable: false,
+  },
+  {
+    id: 'chomper',
+    name: 'Chomper',
+    description: 'Eat all the dots, avoid the ghosts',
+    difficulty: 'medium' as const,
+    thumbnail: null,
+    playable: false,
+  },
+  {
+    id: 'tunnel-terror',
+    name: 'Tunnel Terror',
+    description: 'Dig tunnels and defeat underground enemies',
+    difficulty: 'medium' as const,
+    thumbnail: null,
+    playable: false,
+  },
+  {
+    id: 'galaxy-fighter',
+    name: 'Galaxy Fighter',
+    description: 'Take on waves of alien fighters',
+    difficulty: 'medium' as const,
+    thumbnail: null,
+    playable: false,
+  },
+  {
+    id: 'road-hopper',
+    name: 'Road Hopper',
+    description: 'Cross the road and river safely',
+    difficulty: 'easy' as const,
+    thumbnail: null,
+    playable: false,
+  },
+  {
+    id: 'barrel-dodge',
+    name: 'Barrel Dodge',
+    description: 'Climb to the top while dodging barrels',
+    difficulty: 'hard' as const,
+    thumbnail: null,
+    playable: false,
   },
   {
     id: 'block-drop',
@@ -86,6 +96,7 @@ const GAMES = [
     description: 'Stack falling blocks to clear lines',
     difficulty: 'medium' as const,
     thumbnail: null,
+    playable: false,
   },
   {
     id: 'paddle-battle',
@@ -93,6 +104,7 @@ const GAMES = [
     description: 'Classic pong against the CPU',
     difficulty: 'easy' as const,
     thumbnail: null,
+    playable: false,
   },
 ];
 
@@ -174,17 +186,30 @@ export default function HomePage() {
               <p className="font-arcade text-gray-400 mb-4">
                 {GAMES[selectedGame].description}
               </p>
+              {!GAMES[selectedGame].playable && (
+                <p className="font-pixel text-arcade-yellow text-xs mb-4 animate-pulse">
+                  COMING SOON
+                </p>
+              )}
               <div className="flex justify-center gap-4 flex-wrap">
-                <Link href={`/games/${GAMES[selectedGame].id}?mode=free`}>
-                  <Button variant="secondary">Free Play</Button>
-                </Link>
-                {isConnected ? (
-                  <Link href={`/games/${GAMES[selectedGame].id}?mode=ranked`}>
-                    <Button variant="primary">Play Ranked</Button>
-                  </Link>
+                {GAMES[selectedGame].playable ? (
+                  <>
+                    <Link href={`/games/${GAMES[selectedGame].id}`}>
+                      <Button variant="secondary">Free Play</Button>
+                    </Link>
+                    {isConnected ? (
+                      <Link href={`/games/${GAMES[selectedGame].id}`}>
+                        <Button variant="primary">Play Ranked</Button>
+                      </Link>
+                    ) : (
+                      <Button variant="primary" disabled>
+                        Connect to Play Ranked
+                      </Button>
+                    )}
+                  </>
                 ) : (
-                  <Button variant="primary" disabled>
-                    Connect to Play Ranked
+                  <Button variant="secondary" disabled>
+                    Coming Soon
                   </Button>
                 )}
               </div>
