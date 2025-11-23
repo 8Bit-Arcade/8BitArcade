@@ -3,33 +3,24 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import Button from '@/components/ui/Button';
-import { formatNumber, getOrdinalSuffix } from '@/lib/utils';
+import LeaderboardTable from '@/components/leaderboard/LeaderboardTable';
+import LeaderboardTabs from '@/components/leaderboard/LeaderboardTabs';
+import GameSelector from '@/components/leaderboard/GameSelector';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { formatNumber } from '@/lib/utils';
 
 type Period = 'daily' | 'weekly' | 'allTime';
 
-// Placeholder data
-const LEADERBOARD_DATA = Array.from({ length: 100 }, (_, i) => ({
-  rank: i + 1,
-  username: `Player${i + 1}`,
-  score: Math.floor(1500000 - i * 12000 + Math.random() * 5000),
-  gamesPlayed: Math.floor(50 + Math.random() * 200),
-}));
-
-const GAMES = [
-  { id: 'all', name: 'All Games' },
-  { id: 'space-rocks', name: 'Space Rocks' },
-  { id: 'alien-assault', name: 'Alien Assault' },
-  { id: 'bug-blaster', name: 'Bug Blaster' },
-  { id: 'chomper', name: 'Chomper' },
-];
-
 export default function LeaderboardPage() {
   const { address } = useAccount();
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>('weekly');
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>('allTime');
   const [selectedGame, setSelectedGame] = useState('all');
 
-  // Simulate user's rank
-  const userRank = address ? 42 : null;
+  // Fetch leaderboard data
+  const { data, isLoading, error } = useLeaderboard(
+    selectedGame === 'all' ? undefined : selectedGame,
+    selectedPeriod
+  );
 
   return (
     <div className="min-h-screen py-8">
@@ -40,137 +31,72 @@ export default function LeaderboardPage() {
             LEADERBOARD
           </h1>
           <p className="font-arcade text-gray-400">
-            Top players ranked by total score
+            Top players ranked by score
           </p>
         </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           {/* Period Filter */}
-          <div className="flex gap-2">
-            {(['daily', 'weekly', 'allTime'] as Period[]).map((period) => (
-              <Button
-                key={period}
-                variant={selectedPeriod === period ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setSelectedPeriod(period)}
-              >
-                {period === 'allTime' ? 'All Time' : period}
-              </Button>
-            ))}
-          </div>
-
-          {/* Game Filter */}
-          <select
-            value={selectedGame}
-            onChange={(e) => setSelectedGame(e.target.value)}
-            className="input-arcade text-sm py-2"
-          >
-            {GAMES.map((game) => (
-              <option key={game.id} value={game.id}>
-                {game.name}
-              </option>
-            ))}
-          </select>
+          <LeaderboardTabs
+            activePeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
+          />
         </div>
 
+        {/* Game Filter */}
+        <GameSelector
+          selectedGame={selectedGame}
+          onGameChange={setSelectedGame}
+        />
+
         {/* User's Rank Card */}
-        {userRank && (
+        {address && data?.userRank && (
           <div className="card-arcade mb-6 border-arcade-cyan">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="font-pixel text-arcade-cyan text-lg">
-                  #{userRank}
+                  #{data.userRank}
                 </span>
                 <div>
                   <p className="font-arcade text-white">Your Rank</p>
                   <p className="font-arcade text-xs text-gray-400">
-                    Top {Math.round((userRank / 100) * 100)}%
+                    {data.userRank <= 100 ? 'Top 100!' : `Top ${Math.round((data.userRank / 1000) * 100)}%`}
                   </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="font-arcade text-arcade-green">
-                  {formatNumber(875420)}
+                  {formatNumber(data.userScore || 0)}
                 </p>
-                <p className="font-arcade text-xs text-gray-400">Total Score</p>
+                <p className="font-arcade text-xs text-gray-400">Your Score</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Leaderboard Table */}
-        <div className="card-arcade overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-arcade-green/30">
-                  <th className="font-pixel text-xs text-arcade-green text-left py-3 px-4">
-                    Rank
-                  </th>
-                  <th className="font-pixel text-xs text-arcade-green text-left py-3 px-4">
-                    Player
-                  </th>
-                  <th className="font-pixel text-xs text-arcade-green text-right py-3 px-4">
-                    Score
-                  </th>
-                  <th className="font-pixel text-xs text-arcade-green text-right py-3 px-4 hidden sm:table-cell">
-                    Games
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {LEADERBOARD_DATA.slice(0, 50).map((player) => (
-                  <tr
-                    key={player.rank}
-                    className={`
-                      border-b border-arcade-green/10 last:border-0
-                      hover:bg-arcade-green/5 transition-colors
-                      ${player.rank <= 3 ? 'bg-arcade-green/5' : ''}
-                    `}
-                  >
-                    <td className="py-3 px-4">
-                      <span
-                        className={`
-                          font-pixel text-sm
-                          ${player.rank === 1 ? 'text-arcade-yellow' : ''}
-                          ${player.rank === 2 ? 'text-gray-300' : ''}
-                          ${player.rank === 3 ? 'text-arcade-orange' : ''}
-                          ${player.rank > 3 ? 'text-gray-500' : ''}
-                        `}
-                      >
-                        {player.rank <= 3 ? (
-                          <span className="text-lg">
-                            {player.rank === 1 && '🥇'}
-                            {player.rank === 2 && '🥈'}
-                            {player.rank === 3 && '🥉'}
-                          </span>
-                        ) : (
-                          getOrdinalSuffix(player.rank)
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-arcade text-white">
-                        {player.username}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="font-arcade text-arcade-green">
-                        {formatNumber(player.score)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right hidden sm:table-cell">
-                      <span className="font-arcade text-gray-400">
-                        {player.gamesPlayed}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Error State */}
+        {error && (
+          <div className="card-arcade mb-6 border-arcade-red">
+            <p className="font-arcade text-arcade-red text-center">
+              {error}
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* Leaderboard Table */}
+        <LeaderboardTable
+          entries={data?.entries || []}
+          userAddress={address}
+          isLoading={isLoading}
+        />
+
+        {/* Last Updated */}
+        {data?.lastUpdated && (
+          <p className="text-center font-arcade text-gray-500 text-xs mt-4">
+            Last updated: {new Date(data.lastUpdated).toLocaleString()}
+          </p>
+        )}
 
         {/* Rewards Info */}
         <div className="mt-8 text-center">

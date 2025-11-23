@@ -1,6 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 
 // Firebase configuration - replace with your actual config
 const firebaseConfig = {
@@ -16,6 +17,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let functions: Functions;
 
 if (typeof window !== 'undefined') {
   if (!getApps().length) {
@@ -25,9 +27,10 @@ if (typeof window !== 'undefined') {
   }
   auth = getAuth(app);
   db = getFirestore(app);
+  functions = getFunctions(app);
 }
 
-export { app, auth, db };
+export { app, auth, db, functions, httpsCallable };
 
 // Helper to check if Firebase is configured
 export const isFirebaseConfigured = (): boolean => {
