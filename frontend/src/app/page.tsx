@@ -1,21 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Button from '@/components/ui/Button';
-import { GameCard } from '@/components/ui/Card';
+import GameCarousel from '@/components/game/GameCarousel';
+import { useGameLeaderboards } from '@/hooks/useGameLeaderboards';
 import { formatNumber } from '@/lib/utils';
 
 // Games data - playable marks which games are implemented
+// Thumbnails go in: /public/games/{game-id}.png
 const GAMES = [
   {
     id: 'space-rocks',
     name: 'Space Rocks',
     description: 'Destroy asteroids and UFOs in deep space',
     difficulty: 'medium' as const,
-    thumbnail: null,
+    thumbnail: '/games/space-rocks.png',
     playable: true,
   },
   {
@@ -23,7 +25,7 @@ const GAMES = [
     name: 'Alien Assault',
     description: 'Defend Earth from alien invaders',
     difficulty: 'easy' as const,
-    thumbnail: null,
+    thumbnail: '/games/alien-assault.png',
     playable: true,
   },
   {
@@ -31,7 +33,7 @@ const GAMES = [
     name: 'Brick Breaker',
     description: 'Break all the bricks with your paddle',
     difficulty: 'easy' as const,
-    thumbnail: null,
+    thumbnail: '/games/brick-breaker.png',
     playable: true,
   },
   {
@@ -39,7 +41,7 @@ const GAMES = [
     name: 'Pixel Snake',
     description: 'Eat food and grow without hitting yourself',
     difficulty: 'easy' as const,
-    thumbnail: null,
+    thumbnail: '/games/pixel-snake.png',
     playable: true,
   },
   {
@@ -47,7 +49,7 @@ const GAMES = [
     name: 'Bug Blaster',
     description: 'Blast the centipede before it reaches you',
     difficulty: 'hard' as const,
-    thumbnail: null,
+    thumbnail: '/games/bug-blaster.png',
     playable: false,
   },
   {
@@ -55,7 +57,7 @@ const GAMES = [
     name: 'Chomper',
     description: 'Eat all the dots, avoid the ghosts',
     difficulty: 'medium' as const,
-    thumbnail: null,
+    thumbnail: '/games/chomper.png',
     playable: false,
   },
   {
@@ -63,7 +65,7 @@ const GAMES = [
     name: 'Tunnel Terror',
     description: 'Dig tunnels and defeat underground enemies',
     difficulty: 'medium' as const,
-    thumbnail: null,
+    thumbnail: '/games/tunnel-terror.png',
     playable: false,
   },
   {
@@ -71,7 +73,7 @@ const GAMES = [
     name: 'Galaxy Fighter',
     description: 'Take on waves of alien fighters',
     difficulty: 'medium' as const,
-    thumbnail: null,
+    thumbnail: '/games/galaxy-fighter.png',
     playable: false,
   },
   {
@@ -79,7 +81,7 @@ const GAMES = [
     name: 'Road Hopper',
     description: 'Cross the road and river safely',
     difficulty: 'easy' as const,
-    thumbnail: null,
+    thumbnail: '/games/road-hopper.png',
     playable: false,
   },
   {
@@ -87,7 +89,7 @@ const GAMES = [
     name: 'Barrel Dodge',
     description: 'Climb to the top while dodging barrels',
     difficulty: 'hard' as const,
-    thumbnail: null,
+    thumbnail: '/games/barrel-dodge.png',
     playable: false,
   },
   {
@@ -95,7 +97,7 @@ const GAMES = [
     name: 'Block Drop',
     description: 'Stack falling blocks to clear lines',
     difficulty: 'medium' as const,
-    thumbnail: null,
+    thumbnail: '/games/block-drop.png',
     playable: false,
   },
   {
@@ -103,7 +105,7 @@ const GAMES = [
     name: 'Paddle Battle',
     description: 'Classic pong against the CPU',
     difficulty: 'easy' as const,
-    thumbnail: null,
+    thumbnail: '/games/paddle-battle.png',
     playable: false,
   },
 ];
@@ -129,15 +131,19 @@ export default function HomePage() {
   const { isConnected } = useAccount();
   const [selectedGame, setSelectedGame] = useState(0);
 
+  // Get game IDs for leaderboard fetching
+  const gameIds = useMemo(() => GAMES.map((g) => g.id), []);
+  const { leaderboards } = useGameLeaderboards(gameIds);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-12 md:py-20 overflow-hidden">
+      <section className="relative py-8 md:py-12 overflow-hidden">
         {/* Background Grid */}
         <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
 
         <div className="relative max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="font-pixel text-3xl md:text-5xl text-arcade-green glow-green mb-4">
               8-BIT ARCADE
             </h1>
@@ -153,37 +159,24 @@ export default function HomePage() {
           </div>
 
           {/* Game Carousel */}
-          <div className="relative mb-12">
-            <h2 className="font-pixel text-arcade-cyan text-sm mb-4 text-center">
+          <div className="relative mb-8">
+            <h2 className="font-pixel text-arcade-cyan text-sm mb-6 text-center">
               SELECT YOUR GAME
             </h2>
 
-            {/* Game Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {GAMES.map((game, index) => (
-                <div
-                  key={game.id}
-                  onClick={() => setSelectedGame(index)}
-                  className={`
-                    cursor-pointer transition-all duration-300
-                    ${selectedGame === index ? 'scale-105 z-10' : 'opacity-70 hover:opacity-100'}
-                  `}
-                >
-                  <GameCard
-                    title={game.name}
-                    thumbnail={game.thumbnail || undefined}
-                    difficulty={game.difficulty}
-                  />
-                </div>
-              ))}
-            </div>
+            <GameCarousel
+              games={GAMES}
+              selectedIndex={selectedGame}
+              onSelectGame={setSelectedGame}
+              leaderboards={leaderboards}
+            />
 
             {/* Selected Game Actions */}
             <div className="mt-8 text-center">
-              <h3 className="font-pixel text-arcade-green text-lg mb-2">
+              <h3 className="font-pixel text-arcade-green text-xl mb-2 glow-green">
                 {GAMES[selectedGame].name}
               </h3>
-              <p className="font-arcade text-gray-400 mb-4">
+              <p className="font-arcade text-gray-400 mb-4 max-w-md mx-auto">
                 {GAMES[selectedGame].description}
               </p>
               {!GAMES[selectedGame].playable && (
@@ -195,20 +188,20 @@ export default function HomePage() {
                 {GAMES[selectedGame].playable ? (
                   <>
                     <Link href={`/games/${GAMES[selectedGame].id}`}>
-                      <Button variant="secondary">Free Play</Button>
+                      <Button variant="secondary" size="lg">Free Play</Button>
                     </Link>
                     {isConnected ? (
                       <Link href={`/games/${GAMES[selectedGame].id}`}>
-                        <Button variant="primary">Play Ranked</Button>
+                        <Button variant="primary" size="lg">Play Ranked</Button>
                       </Link>
                     ) : (
-                      <Button variant="primary" disabled>
+                      <Button variant="primary" size="lg" disabled>
                         Connect to Play Ranked
                       </Button>
                     )}
                   </>
                 ) : (
-                  <Button variant="secondary" disabled>
+                  <Button variant="secondary" size="lg" disabled>
                     Coming Soon
                   </Button>
                 )}
