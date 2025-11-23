@@ -249,6 +249,11 @@ export default function GameWrapper({
     if (!isPlaying || isPaused) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default for game keys to stop page scrolling
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyZ'].includes(e.code)) {
+        e.preventDefault();
+      }
+
       switch (e.code) {
         case 'ArrowUp':
         case 'KeyW':
