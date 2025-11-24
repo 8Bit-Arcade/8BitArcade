@@ -11,11 +11,12 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Never bundle undici into client - it's Node.js only
-      // Firebase will use browser's native fetch instead
+      // Never bundle Node.js-only or React Native packages into client bundle
       config.resolve.alias = {
         ...config.resolve.alias,
-        'undici': false,
+        'undici': false, // Node.js fetch library - use browser fetch
+        '@react-native-async-storage/async-storage': false, // React Native only
+        'react-native': false, // React Native not needed in web
       };
 
       config.resolve.fallback = {
