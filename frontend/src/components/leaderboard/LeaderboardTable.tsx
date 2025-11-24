@@ -1,0 +1,116 @@
+'use client';
+
+import { formatNumber, shortenAddress } from '@/lib/utils';
+
+interface LeaderboardEntry {
+  odedId: string;
+  username: string;
+  score: number;
+  timestamp: number;
+}
+
+interface LeaderboardTableProps {
+  entries: LeaderboardEntry[];
+  userAddress?: string;
+  isLoading?: boolean;
+}
+
+export default function LeaderboardTable({
+  entries,
+  userAddress,
+  isLoading,
+}: LeaderboardTableProps) {
+  if (isLoading) {
+    return (
+      <div className="card-arcade p-8 text-center">
+        <div className="animate-pulse">
+          <div className="font-pixel text-arcade-green">LOADING...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!entries || entries.length === 0) {
+    return (
+      <div className="card-arcade p-8 text-center">
+        <p className="font-pixel text-gray-400">No scores yet. Be the first!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card-arcade overflow-hidden">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-arcade-green/30">
+            <th className="p-3 text-left font-pixel text-arcade-green text-xs">
+              RANK
+            </th>
+            <th className="p-3 text-left font-pixel text-arcade-green text-xs">
+              PLAYER
+            </th>
+            <th className="p-3 text-right font-pixel text-arcade-green text-xs">
+              SCORE
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry, index) => {
+            const rank = index + 1;
+            const isCurrentUser =
+              userAddress?.toLowerCase() === entry.odedId.toLowerCase();
+
+            return (
+              <tr
+                key={entry.odedId}
+                className={`
+                  border-b border-arcade-dark/50 transition-colors
+                  ${isCurrentUser ? 'bg-arcade-green/10' : 'hover:bg-arcade-dark/30'}
+                `}
+              >
+                <td className="p-3">
+                  <span
+                    className={`
+                      font-pixel text-sm
+                      ${rank === 1 ? 'text-yellow-400' : ''}
+                      ${rank === 2 ? 'text-gray-300' : ''}
+                      ${rank === 3 ? 'text-amber-600' : ''}
+                      ${rank > 3 ? 'text-gray-400' : ''}
+                    `}
+                  >
+                    {rank === 1 && '🥇 '}
+                    {rank === 2 && '🥈 '}
+                    {rank === 3 && '🥉 '}
+                    #{rank}
+                  </span>
+                </td>
+                <td className="p-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`
+                        font-arcade text-sm
+                        ${isCurrentUser ? 'text-arcade-cyan' : 'text-white'}
+                      `}
+                    >
+                      {entry.username || shortenAddress(entry.odedId)}
+                    </span>
+                    {isCurrentUser && (
+                      <span className="font-pixel text-xs text-arcade-yellow">
+                        (YOU)
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="p-3 text-right">
+                  <span className="font-pixel text-arcade-yellow text-sm">
+                    {formatNumber(entry.score)}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

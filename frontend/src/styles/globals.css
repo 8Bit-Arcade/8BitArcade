@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --arcade-green: #00ff41;
+  --arcade-cyan: #00f5ff;
+  --arcade-pink: #ff00ff;
+  --arcade-black: #0a0a0a;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--arcade-black);
+  color: white;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--arcade-green);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--arcade-cyan);
+}
+
+/* CRT Scanline effect overlay */
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 9999;
+  opacity: 0.3;
+}
+
+/* Pixel-perfect rendering for game canvases */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Glow effects */
+.glow-green {
+  text-shadow: 0 0 5px var(--arcade-green), 0 0 10px var(--arcade-green);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 5px var(--arcade-cyan), 0 0 10px var(--arcade-cyan);
+}
+
+.glow-pink {
+  text-shadow: 0 0 5px var(--arcade-pink), 0 0 10px var(--arcade-pink);
+}
+
+/* Button styles */
+@layer components {
+  .btn-arcade {
+    @apply px-6 py-3 font-pixel text-sm uppercase tracking-wider;
+    @apply bg-transparent border-2 border-arcade-green text-arcade-green;
+    @apply hover:bg-arcade-green hover:text-arcade-black;
+    @apply transition-all duration-200;
+    @apply active:scale-95;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-arcade-filled {
+    @apply px-6 py-3 font-pixel text-sm uppercase tracking-wider;
+    @apply bg-arcade-green border-2 border-arcade-green text-arcade-black;
+    @apply hover:bg-arcade-cyan hover:border-arcade-cyan;
+    @apply transition-all duration-200;
+    @apply active:scale-95;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-arcade-danger {
+    @apply px-6 py-3 font-pixel text-sm uppercase tracking-wider;
+    @apply bg-transparent border-2 border-arcade-red text-arcade-red;
+    @apply hover:bg-arcade-red hover:text-arcade-black;
+    @apply transition-all duration-200;
+    @apply active:scale-95;
+  }
+
+  .card-arcade {
+    @apply bg-arcade-dark border border-arcade-green/30 rounded-lg p-4;
+    @apply hover:border-arcade-green/60 transition-all duration-300;
+  }
+
+  .input-arcade {
+    @apply w-full px-4 py-3 font-arcade text-lg;
+    @apply bg-arcade-black border-2 border-arcade-green/50 rounded;
+    @apply text-white placeholder:text-gray-500;
+    @apply focus:outline-none focus:border-arcade-green focus:ring-1 focus:ring-arcade-green;
+    @apply transition-all duration-200;
+  }
+}
+
+/* Loading animation */
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--arcade-green);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pixel art border */
+.pixel-border {
+  border-style: solid;
+  border-width: 4px;
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M2 2h8v8H2z' fill='none' stroke='%2300ff41' stroke-width='4'/%3E%3C/svg%3E") 4 stretch;
+}
+
+/* Touch control styles for mobile */
+.touch-control {
+  @apply select-none touch-none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+/* Responsive game container */
+.game-container {
+  @apply w-full max-w-4xl mx-auto;
+  aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 768px) {
+  .game-container {
+    aspect-ratio: 3 / 4;
+  }
+}
+
+/* Animation for new high score */
+@keyframes rainbow {
+  0% { color: #ff0000; }
+  17% { color: #ff8000; }
+  33% { color: #ffff00; }
+  50% { color: #00ff00; }
+  67% { color: #00ffff; }
+  83% { color: #8000ff; }
+  100% { color: #ff0000; }
+}
+
+.rainbow-text {
+  animation: rainbow 2s linear infinite;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
