@@ -1,15 +1,14 @@
 // Separate file for Firebase Functions - uses dynamic imports to avoid bundling undici
 // This file should NEVER be imported at the top level of client components
+// DO NOT add any imports from 'firebase/functions' here - not even type imports!
 
-import type { Functions } from 'firebase/functions';
-
-let functionsInstance: Functions | null = null;
-let functionsPromise: Promise<Functions> | null = null;
+let functionsInstance: any = null;
+let functionsPromise: Promise<any> | null = null;
 
 /**
  * Lazily load Firebase Functions - only imports firebase/functions at runtime
  */
-export async function getFirebaseFunctions(): Promise<Functions> {
+export async function getFirebaseFunctions(): Promise<any> {
   if (typeof window === 'undefined') {
     throw new Error('Firebase Functions can only be used in the browser');
   }
