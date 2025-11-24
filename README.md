@@ -99,6 +99,7 @@ See [Technical Specification](docs/TECHNICAL_SPECIFICATION.md) for full details.
 ## Game Screenshots
 
 frontend/public/games/
+
 ├── space-rocks.png
 ├── alien-assault.png
 ├── brick-breaker.png
