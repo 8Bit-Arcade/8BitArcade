@@ -9,6 +9,8 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Transpile Firebase packages to fix undici private class fields issue
+  transpilePackages: ['undici', '@firebase/functions', 'firebase'],
   // Fix for pino-pretty module not found error
   webpack: (config, { isServer }) => {
     if (!isServer) {
