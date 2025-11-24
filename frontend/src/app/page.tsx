@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Button from '@/components/ui/Button';
 import GameCarousel from '@/components/game/GameCarousel';
+import GameGrid, { GameCategory } from '@/components/game/GameGrid';
 import { useGameLeaderboards } from '@/hooks/useGameLeaderboards';
 import { formatNumber } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const GAMES = [
     difficulty: 'medium' as const,
     thumbnail: '/games/space-rocks.png',
     playable: true,
+    category: 'shooter' as GameCategory,
   },
   {
     id: 'alien-assault',
@@ -27,6 +29,7 @@ const GAMES = [
     difficulty: 'easy' as const,
     thumbnail: '/games/alien-assault.png',
     playable: true,
+    category: 'shooter' as GameCategory,
   },
   {
     id: 'brick-breaker',
@@ -35,6 +38,7 @@ const GAMES = [
     difficulty: 'easy' as const,
     thumbnail: '/games/brick-breaker.png',
     playable: true,
+    category: 'arcade' as GameCategory,
   },
   {
     id: 'pixel-snake',
@@ -43,6 +47,7 @@ const GAMES = [
     difficulty: 'easy' as const,
     thumbnail: '/games/pixel-snake.png',
     playable: true,
+    category: 'arcade' as GameCategory,
   },
   {
     id: 'bug-blaster',
@@ -51,6 +56,7 @@ const GAMES = [
     difficulty: 'hard' as const,
     thumbnail: '/games/bug-blaster.png',
     playable: false,
+    category: 'shooter' as GameCategory,
   },
   {
     id: 'chomper',
@@ -59,6 +65,7 @@ const GAMES = [
     difficulty: 'medium' as const,
     thumbnail: '/games/chomper.png',
     playable: false,
+    category: 'arcade' as GameCategory,
   },
   {
     id: 'tunnel-terror',
@@ -67,6 +74,7 @@ const GAMES = [
     difficulty: 'medium' as const,
     thumbnail: '/games/tunnel-terror.png',
     playable: false,
+    category: 'action' as GameCategory,
   },
   {
     id: 'galaxy-fighter',
@@ -75,6 +83,7 @@ const GAMES = [
     difficulty: 'medium' as const,
     thumbnail: '/games/galaxy-fighter.png',
     playable: false,
+    category: 'shooter' as GameCategory,
   },
   {
     id: 'road-hopper',
@@ -83,6 +92,7 @@ const GAMES = [
     difficulty: 'easy' as const,
     thumbnail: '/games/road-hopper.png',
     playable: false,
+    category: 'action' as GameCategory,
   },
   {
     id: 'barrel-dodge',
@@ -91,6 +101,7 @@ const GAMES = [
     difficulty: 'hard' as const,
     thumbnail: '/games/barrel-dodge.png',
     playable: false,
+    category: 'action' as GameCategory,
   },
   {
     id: 'block-drop',
@@ -99,6 +110,7 @@ const GAMES = [
     difficulty: 'medium' as const,
     thumbnail: '/games/block-drop.png',
     playable: false,
+    category: 'puzzle' as GameCategory,
   },
   {
     id: 'paddle-battle',
@@ -107,8 +119,14 @@ const GAMES = [
     difficulty: 'easy' as const,
     thumbnail: '/games/paddle-battle.png',
     playable: false,
+    category: 'arcade' as GameCategory,
   },
 ];
+
+// Featured games for the carousel (playable games first)
+const FEATURED_GAMES = GAMES.filter((g) => g.playable).concat(
+  GAMES.filter((g) => !g.playable).slice(0, 2)
+);
 
 // Placeholder leaderboard data
 const TOP_PLAYERS = [
@@ -135,6 +153,18 @@ export default function HomePage() {
   const gameIds = useMemo(() => GAMES.map((g) => g.id), []);
   const { leaderboards } = useGameLeaderboards(gameIds);
 
+  // Handle game selection from grid (maps to full GAMES array index)
+  const handleGridSelect = (index: number) => {
+    // Find the game in FEATURED_GAMES or scroll to it
+    const game = GAMES[index];
+    const featuredIndex = FEATURED_GAMES.findIndex((g) => g.id === game.id);
+    if (featuredIndex >= 0) {
+      setSelectedGame(featuredIndex);
+      // Scroll to carousel
+      document.getElementById('featured-carousel')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -158,14 +188,14 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Game Carousel */}
-          <div className="relative mb-8">
+          {/* Featured Game Carousel */}
+          <div id="featured-carousel" className="relative mb-8">
             <h2 className="font-pixel text-arcade-cyan text-sm mb-6 text-center">
-              SELECT YOUR GAME
+              FEATURED GAMES
             </h2>
 
             <GameCarousel
-              games={GAMES}
+              games={FEATURED_GAMES}
               selectedIndex={selectedGame}
               onSelectGame={setSelectedGame}
               leaderboards={leaderboards}
@@ -174,24 +204,24 @@ export default function HomePage() {
             {/* Selected Game Actions */}
             <div className="mt-8 text-center">
               <h3 className="font-pixel text-arcade-green text-xl mb-2 glow-green">
-                {GAMES[selectedGame].name}
+                {FEATURED_GAMES[selectedGame].name}
               </h3>
               <p className="font-arcade text-gray-400 mb-4 max-w-md mx-auto">
-                {GAMES[selectedGame].description}
+                {FEATURED_GAMES[selectedGame].description}
               </p>
-              {!GAMES[selectedGame].playable && (
+              {!FEATURED_GAMES[selectedGame].playable && (
                 <p className="font-pixel text-arcade-yellow text-xs mb-4 animate-pulse">
                   COMING SOON
                 </p>
               )}
               <div className="flex justify-center gap-4 flex-wrap">
-                {GAMES[selectedGame].playable ? (
+                {FEATURED_GAMES[selectedGame].playable ? (
                   <>
-                    <Link href={`/games/${GAMES[selectedGame].id}`}>
+                    <Link href={`/games/${FEATURED_GAMES[selectedGame].id}`}>
                       <Button variant="secondary" size="lg">Free Play</Button>
                     </Link>
                     {isConnected ? (
-                      <Link href={`/games/${GAMES[selectedGame].id}`}>
+                      <Link href={`/games/${FEATURED_GAMES[selectedGame].id}`}>
                         <Button variant="primary" size="lg">Play Ranked</Button>
                       </Link>
                     ) : (
@@ -208,6 +238,16 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* All Games Section */}
+      <section className="py-12 bg-arcade-dark/30">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="font-pixel text-arcade-green text-sm mb-6 text-center">
+            ALL GAMES
+          </h2>
+          <GameGrid games={GAMES} onSelectGame={handleGridSelect} />
         </div>
       </section>
 
