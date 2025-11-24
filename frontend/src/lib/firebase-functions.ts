@@ -1,9 +1,32 @@
-// Separate file for Firebase Functions - uses dynamic imports to avoid bundling undici
+// Firebase Functions with FULLY dynamic imports to avoid bundling undici
 // This file should NEVER be imported at the top level of client components
-// DO NOT add any imports from 'firebase/functions' here - not even type imports!
+// All Firebase modules are loaded dynamically at runtime only
 
 let functionsInstance: any = null;
 let functionsPromise: Promise<any> | null = null;
+
+/**
+ * Initialize Firebase app dynamically (no static imports)
+ */
+async function getFirebaseApp() {
+  const { initializeApp, getApps } = await import('firebase/app');
+
+  const apps = getApps();
+  if (apps.length > 0) {
+    return apps[0];
+  }
+
+  const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+
+  return initializeApp(firebaseConfig);
+}
 
 /**
  * Lazily load Firebase Functions - only imports firebase/functions at runtime
@@ -22,10 +45,10 @@ export async function getFirebaseFunctions(): Promise<any> {
   }
 
   functionsPromise = (async () => {
-    // Dynamic import - only loads at runtime, not build time
-    const [{ getFunctions, connectFunctionsEmulator }, { app }] = await Promise.all([
+    // Dynamic imports - only loads at runtime, not build time
+    const [{ getFunctions, connectFunctionsEmulator }, app] = await Promise.all([
       import('firebase/functions'),
-      import('./firebase'),
+      getFirebaseApp(),
     ]);
 
     functionsInstance = getFunctions(app);

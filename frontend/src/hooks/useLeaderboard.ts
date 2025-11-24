@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestoreInstance, isFirebaseConfigured } from '@/lib/firebase-client';
 
 interface LeaderboardEntry {
   odedId: string;
@@ -25,7 +24,7 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
 
   // Fetch leaderboard data directly from Firestore (no Cloud Functions needed)
   const fetchLeaderboard = useCallback(async () => {
-    if (typeof window === 'undefined' || !db) {
+    if (typeof window === 'undefined' || !isFirebaseConfigured()) {
       setIsLoading(false);
       return;
     }
@@ -34,6 +33,12 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
     setError(null);
 
     try {
+      // Dynamic imports - only loaded at runtime in browser
+      const [db, { doc, getDoc }] = await Promise.all([
+        getFirestoreInstance(),
+        import('firebase/firestore'),
+      ]);
+
       let entries: LeaderboardEntry[] = [];
       let lastUpdated = Date.now();
 
@@ -89,39 +94,54 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
 
   // Real-time updates
   useEffect(() => {
-    if (typeof window === 'undefined' || !db) return;
+    if (typeof window === 'undefined' || !isFirebaseConfigured()) return;
 
-    const leaderboardRef = gameId
-      ? doc(db, 'leaderboards', gameId)
-      : doc(db, 'globalLeaderboard', period);
+    let unsubscribe: (() => void) | undefined;
 
-    const unsubscribe = onSnapshot(
-      leaderboardRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const docData = snapshot.data();
-          const periodData = gameId ? (docData[period] || []) : (docData.entries || []);
+    (async () => {
+      try {
+        const [db, { doc, onSnapshot }] = await Promise.all([
+          getFirestoreInstance(),
+          import('firebase/firestore'),
+        ]);
 
-          const entries = periodData.slice(0, 100).map((entry: any) => ({
-            odedId: entry.odedId,
-            username: entry.username || 'Anonymous',
-            score: entry.score || 0,
-            timestamp: entry.timestamp?.toMillis?.() || Date.now(),
-          }));
+        const leaderboardRef = gameId
+          ? doc(db, 'leaderboards', gameId)
+          : doc(db, 'globalLeaderboard', period);
 
-          setData((prev) => ({
-            ...prev,
-            entries,
-            lastUpdated: docData.lastUpdated?.toMillis?.() || Date.now(),
-          }));
-        }
-      },
-      (err) => {
-        console.error('Leaderboard subscription error:', err);
+        unsubscribe = onSnapshot(
+          leaderboardRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              const docData = snapshot.data();
+              const periodData = gameId ? (docData[period] || []) : (docData.entries || []);
+
+              const entries = periodData.slice(0, 100).map((entry: any) => ({
+                odedId: entry.odedId,
+                username: entry.username || 'Anonymous',
+                score: entry.score || 0,
+                timestamp: entry.timestamp?.toMillis?.() || Date.now(),
+              }));
+
+              setData((prev) => ({
+                ...prev,
+                entries,
+                lastUpdated: docData.lastUpdated?.toMillis?.() || Date.now(),
+              }));
+            }
+          },
+          (err) => {
+            console.error('Leaderboard subscription error:', err);
+          }
+        );
+      } catch (err) {
+        console.error('Failed to setup leaderboard subscription:', err);
       }
-    );
+    })();
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [gameId, period]);
 
   return {
