@@ -175,6 +175,8 @@ export default function GameWrapper({
           scale: {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH,
+            width: '100%',
+            height: '100%',
           },
           audio: {
             disableWebAudio: !soundEnabled,
@@ -338,14 +340,14 @@ export default function GameWrapper({
   return (
     <div className="min-h-screen bg-arcade-black flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-arcade-green/30">
+      <div className="flex items-center justify-between p-2 md:p-4 border-b border-arcade-green/30">
         <button
           onClick={handleBackToGames}
           className="font-pixel text-arcade-green text-xs hover:text-arcade-cyan"
         >
           ← BACK
         </button>
-        <h1 className="font-pixel text-arcade-green text-sm">{gameName}</h1>
+        <h1 className="font-pixel text-arcade-green text-xs md:text-sm">{gameName}</h1>
         <div className="font-pixel text-arcade-cyan text-xs">
           HI: {formatNumber(highScore)}
         </div>
@@ -353,11 +355,11 @@ export default function GameWrapper({
 
       {/* Score Display */}
       {isPlaying && (
-        <div className="flex items-center justify-between px-4 py-2 bg-arcade-dark/50">
-          <span className="font-pixel text-arcade-yellow text-sm">
+        <div className="flex items-center justify-between px-2 md:px-4 py-1 md:py-2 bg-arcade-dark/50">
+          <span className="font-pixel text-arcade-yellow text-xs md:text-sm">
             SCORE: {formatNumber(score)}
           </span>
-          <span className="font-arcade text-gray-400 text-xs uppercase">
+          <span className="font-arcade text-gray-400 text-xs uppercase hidden sm:block">
             {gameMode} Mode
           </span>
           <button
@@ -370,7 +372,7 @@ export default function GameWrapper({
       )}
 
       {/* Game Container */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-2 md:p-4">
         {/* Mode Selection */}
         {showModeSelect && (
           <div className="card-arcade text-center max-w-sm">
@@ -402,8 +404,11 @@ export default function GameWrapper({
         {!showModeSelect && !isGameOver && (
           <div
             ref={containerRef}
-            className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30"
-            style={{ minWidth: config.width || 800, minHeight: config.height || 600 }}
+            className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto"
+            style={{
+              aspectRatio: `${config.width || 800} / ${config.height || 600}`,
+              maxHeight: 'calc(100vh - 300px)'
+            }}
           />
         )}
 
