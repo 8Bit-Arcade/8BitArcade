@@ -6,6 +6,7 @@
 
 // Auth functions
 export { createSession } from './auth/createSession';
+export { verifyWallet } from './auth/verifyWallet';
 
 // Score functions
 export { submitScore } from './scores/submitScore';

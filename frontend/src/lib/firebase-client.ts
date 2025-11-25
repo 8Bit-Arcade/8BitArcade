@@ -51,6 +51,11 @@ async function initializeFirebaseApp() {
 }
 
 /**
+ * Export Firebase app getter for external use
+ */
+export const getFirebaseApp = initializeFirebaseApp;
+
+/**
  * Get Firestore instance (lazy, client-side only)
  */
 export async function getFirestoreInstance() {
