@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import GameCarousel from '@/components/game/GameCarousel';
 import GameGrid, { GameCategory } from '@/components/game/GameGrid';
 import { formatNumber } from '@/lib/utils';
+import { getFirestoreInstance, isFirebaseConfigured } from '@/lib/firebase-client';
 
 // Games data - playable marks which games are implemented
 // Thumbnails go in: /public/games/{game-id}.png
@@ -127,15 +128,6 @@ const FEATURED_GAMES = GAMES.filter((g) => g.playable).concat(
   GAMES.filter((g) => !g.playable).slice(0, 2)
 );
 
-// Placeholder leaderboard data
-const TOP_PLAYERS = [
-  { rank: 1, username: 'CryptoKing', score: 1250000 },
-  { rank: 2, username: 'ArcadePro', score: 1180000 },
-  { rank: 3, username: 'RetroMaster', score: 1095000 },
-  { rank: 4, username: 'PixelHunter', score: 980000 },
-  { rank: 5, username: 'GameWizard', score: 875000 },
-];
-
 // Placeholder tournament data
 const ACTIVE_TOURNAMENT = {
   name: 'Weekly Championship',
@@ -144,33 +136,63 @@ const ACTIVE_TOURNAMENT = {
   participants: 128,
 };
 
-// Static placeholder leaderboard data for games (no Firebase dependency)
-const GAME_LEADERBOARDS: { [gameId: string]: { rank: number; username: string; score: number }[] } = {
-  'space-rocks': [
-    { rank: 1, username: 'AstroAce', score: 125000 },
-    { rank: 2, username: 'StarBlaster', score: 118500 },
-    { rank: 3, username: 'NebulaNinja', score: 112000 },
-  ],
-  'alien-assault': [
-    { rank: 1, username: 'DefenderX', score: 95000 },
-    { rank: 2, username: 'GalacticHero', score: 88000 },
-    { rank: 3, username: 'InvaderSlayer', score: 82500 },
-  ],
-  'brick-breaker': [
-    { rank: 1, username: 'BrickMaster', score: 78000 },
-    { rank: 2, username: 'PaddlePro', score: 71000 },
-    { rank: 3, username: 'BreakKing', score: 65000 },
-  ],
-  'pixel-snake': [
-    { rank: 1, username: 'SnakeLord', score: 45000 },
-    { rank: 2, username: 'SlitherKing', score: 42000 },
-    { rank: 3, username: 'CoilMaster', score: 38500 },
-  ],
-};
-
 export default function HomePage() {
   const { isConnected } = useAccount();
   const [selectedGame, setSelectedGame] = useState(0);
+  const [gameLeaderboards, setGameLeaderboards] = useState<{ [gameId: string]: { rank: number; username: string; score: number }[] }>({});
+  const [topPlayers, setTopPlayers] = useState<{ rank: number; username: string; score: number }[]>([]);
+
+  // Fetch leaderboard data from Firestore
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
+
+    const fetchLeaderboards = async () => {
+      try {
+        const [db, { doc, getDoc }] = await Promise.all([
+          getFirestoreInstance(),
+          import('firebase/firestore'),
+        ]);
+
+        // Fetch game-specific leaderboards
+        const gameLeaderboardsData: { [gameId: string]: { rank: number; username: string; score: number }[] } = {};
+
+        for (const game of GAMES.filter(g => g.playable)) {
+          const leaderboardRef = doc(db, 'leaderboards', game.id);
+          const snapshot = await getDoc(leaderboardRef);
+
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            const allTimeData = data?.allTime || [];
+            gameLeaderboardsData[game.id] = allTimeData.slice(0, 3).map((entry: any, idx: number) => ({
+              rank: idx + 1,
+              username: entry.username || 'Anonymous',
+              score: entry.score || 0,
+            }));
+          }
+        }
+
+        setGameLeaderboards(gameLeaderboardsData);
+
+        // Fetch global top players
+        const globalRef = doc(db, 'globalLeaderboard', 'allTime');
+        const globalSnapshot = await getDoc(globalRef);
+
+        if (globalSnapshot.exists()) {
+          const data = globalSnapshot.data();
+          const entries = data?.entries || [];
+          setTopPlayers(entries.slice(0, 5).map((entry: any, idx: number) => ({
+            rank: idx + 1,
+            username: entry.username || 'Anonymous',
+            score: entry.score || 0,
+          })));
+        }
+      } catch (err) {
+        console.error('Failed to fetch leaderboards:', err);
+      }
+    };
+
+    fetchLeaderboards();
+  }, []);
 
   // Handle game selection from grid (maps to full GAMES array index)
   const handleGridSelect = (index: number) => {
@@ -216,7 +238,7 @@ export default function HomePage() {
               games={FEATURED_GAMES}
               selectedIndex={selectedGame}
               onSelectGame={setSelectedGame}
-              leaderboards={GAME_LEADERBOARDS}
+              leaderboards={gameLeaderboards}
             />
 
             {/* Selected Game Actions */}
@@ -287,32 +309,40 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="space-y-2">
-                {TOP_PLAYERS.map((player) => (
-                  <div
-                    key={player.rank}
-                    className="flex items-center justify-between py-2 border-b border-arcade-green/10 last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`
-                          font-pixel text-xs w-6
-                          ${player.rank === 1 ? 'text-arcade-yellow' : ''}
-                          ${player.rank === 2 ? 'text-gray-300' : ''}
-                          ${player.rank === 3 ? 'text-arcade-orange' : ''}
-                          ${player.rank > 3 ? 'text-gray-500' : ''}
-                        `}
-                      >
-                        {player.rank}
-                      </span>
-                      <span className="font-arcade text-white">
-                        {player.username}
+                {topPlayers.length > 0 ? (
+                  topPlayers.map((player) => (
+                    <div
+                      key={player.rank}
+                      className="flex items-center justify-between py-2 border-b border-arcade-green/10 last:border-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`
+                            font-pixel text-xs w-6
+                            ${player.rank === 1 ? 'text-arcade-yellow' : ''}
+                            ${player.rank === 2 ? 'text-gray-300' : ''}
+                            ${player.rank === 3 ? 'text-arcade-orange' : ''}
+                            ${player.rank > 3 ? 'text-gray-500' : ''}
+                          `}
+                        >
+                          {player.rank}
+                        </span>
+                        <span className="font-arcade text-white">
+                          {player.username}
+                        </span>
+                      </div>
+                      <span className="font-arcade text-arcade-green">
+                        {formatNumber(player.score)}
                       </span>
                     </div>
-                    <span className="font-arcade text-arcade-green">
-                      {formatNumber(player.score)}
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <span className="font-arcade text-gray-500 text-xs">
+                      No scores yet - be the first!
                     </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
