@@ -127,13 +127,16 @@ export default function GameCarousel({
               className={`
                 flex-shrink-0 cursor-pointer
                 ${isCenter
-                  ? 'w-80 lg:w-[34rem] scale-100 opacity-100 z-20'
-                  : 'w-32 md:w-48 scale-90 opacity-50 hover:opacity-70 hover:scale-95 z-10'
+                  ? 'w-80 lg:w-[34rem] opacity-100 z-20'
+                  : 'w-32 md:w-48 opacity-30 z-10'
                 }
               `}
               style={{
-                transform: isCenter ? 'scale(1)' : 'scale(0.75)',
-                transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                transform: isCenter
+                  ? 'scale(1) translateY(0)'
+                  : 'scale(0.6) translateY(10px)',
+                transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                filter: isCenter ? 'brightness(1)' : 'brightness(0.7)',
               }}
             >
               <div

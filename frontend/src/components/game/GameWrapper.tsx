@@ -406,9 +406,10 @@ export default function GameWrapper({
             ref={containerRef}
             className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto"
             style={{
-              aspectRatio: `${config.width || 800} / ${config.height || 600}`,
-              maxHeight: 'calc(100vh - 120px)', // Much taller on mobile
-              height: '100%',
+              // On mobile, prioritize height. On desktop, maintain aspect ratio
+              minHeight: 'min(calc(100vh - 140px), 85vh)',
+              height: '85vh',
+              maxHeight: '800px',
             }}
           />
         )}
