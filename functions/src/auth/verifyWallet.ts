@@ -20,21 +20,37 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
   async (request) => {
     const { address, message, signature } = request.data;
 
+    console.log('verifyWallet called with:', {
+      address,
+      messageLength: message?.length,
+      signatureLength: signature?.length,
+    });
+
     if (!address || !message || !signature) {
       throw new HttpsError('invalid-argument', 'Missing required fields');
     }
 
     try {
+      console.log('Attempting to recover address from signature...');
+
       // Recover the address from the signature
       const recoveredAddress = await recoverMessageAddress({
         message,
         signature,
       });
 
+      console.log('Address recovered:', recoveredAddress);
+
       // Verify the recovered address matches the claimed address
       if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
+        console.error('Address mismatch:', {
+          recovered: recoveredAddress.toLowerCase(),
+          claimed: address.toLowerCase(),
+        });
         throw new HttpsError('unauthenticated', 'Signature verification failed');
       }
+
+      console.log('Address verified successfully');
 
       // Verify the message contains the nonce and hasn't expired
       // Expected format: "Sign in to 8-Bit Arcade\n\nNonce: {random}\nTimestamp: {timestamp}"
@@ -42,6 +58,7 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       const timestampMatch = message.match(/Timestamp: (\d+)/);
 
       if (!nonceMatch || !timestampMatch) {
+        console.error('Invalid message format:', message);
         throw new HttpsError('invalid-argument', 'Invalid message format');
       }
 
@@ -50,21 +67,37 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
 
       // Message must be less than 5 minutes old
       if (now - timestamp > 5 * 60 * 1000) {
+        console.error('Message expired:', {
+          timestamp,
+          now,
+          diff: now - timestamp,
+        });
         throw new HttpsError('deadline-exceeded', 'Message has expired');
       }
+
+      console.log('Creating custom token for:', address.toLowerCase());
 
       // Create a custom token for this wallet address
       // The UID will be the lowercase wallet address
       const auth = getAuth();
       const customToken = await auth.createCustomToken(address.toLowerCase());
 
+      console.log('Custom token created successfully');
+
       return { customToken };
     } catch (err: any) {
-      console.error('Wallet verification error:', err);
+      console.error('Wallet verification error:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+      });
+
       if (err instanceof HttpsError) {
         throw err;
       }
-      throw new HttpsError('internal', 'Failed to verify wallet signature');
+
+      // Include more details in the error message
+      throw new HttpsError('internal', `Failed to verify wallet signature: ${err.message}`);
     }
   }
 );
