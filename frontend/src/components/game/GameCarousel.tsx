@@ -122,21 +122,18 @@ export default function GameCarousel({
 
           return (
             <div
-              key={`${game.id}-${position}`}
+              key={`${game.id}-${position}-${selectedIndex}`}
               onClick={() => !isCenter && onSelectGame(index)}
-              className={`
-                flex-shrink-0 cursor-pointer
-                ${isCenter
-                  ? 'w-80 lg:w-[34rem] opacity-100 z-20'
-                  : 'w-32 md:w-48 opacity-30 z-10'
-                }
-              `}
+              className="flex-shrink-0 cursor-pointer"
               style={{
+                width: isCenter ? 'clamp(20rem, 40vw, 34rem)' : '8rem',
+                opacity: isCenter ? 1 : 0.3,
+                zIndex: isCenter ? 20 : 10,
                 transform: isCenter
-                  ? 'scale(1) translateY(0)'
-                  : 'scale(0.6) translateY(10px)',
-                transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                filter: isCenter ? 'brightness(1)' : 'brightness(0.7)',
+                  ? 'scale(1.0) translateY(0px)'
+                  : 'scale(0.5) translateY(15px)',
+                transition: 'transform 0.6s ease-in-out, opacity 0.6s ease-in-out, filter 0.6s ease-in-out, width 0.6s ease-in-out',
+                filter: isCenter ? 'brightness(1)' : 'brightness(0.6)',
               }}
             >
               <div
