@@ -122,11 +122,11 @@ export default function GameCarousel({
 
           return (
             <div
-              key={`${game.id}-${position}-${selectedIndex}`}
+              key={game.id}
               onClick={() => !isCenter && onSelectGame(index)}
               className="flex-shrink-0 cursor-pointer"
               style={{
-                width: isCenter ? 'clamp(20rem, 40vw, 34rem)' : '8rem',
+                width: isCenter ? 'clamp(20rem, 40vw, 34rem)' : '12rem',
                 opacity: isCenter ? 1 : 0.3,
                 zIndex: isCenter ? 20 : 10,
                 transform: isCenter

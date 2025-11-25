@@ -128,6 +128,15 @@ export default function GameWrapper({
     [gameId, isConnected, startGame]
   );
 
+  // Scroll game into view when it becomes visible (mobile centering)
+  useEffect(() => {
+    if (!showModeSelect && containerRef.current) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [showModeSelect]);
+
   // Initialize Phaser AFTER container is rendered
   useEffect(() => {
     // Only init if mode selected, container exists, and game not created yet
@@ -406,8 +415,8 @@ export default function GameWrapper({
             ref={containerRef}
             className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto"
             style={{
-              // Reduced to 75vh to prevent scrolling on mobile
-              height: '75vh',
+              // 72vh to prevent overflow and auto-center on mobile
+              height: '72vh',
               maxHeight: '800px',
             }}
           />
