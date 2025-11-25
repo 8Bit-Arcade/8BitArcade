@@ -120,10 +120,10 @@ export function useWalletAuth() {
    * Check auth status when wallet connects
    */
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && address && !isAuthenticating) {
       checkAuthStatus();
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, checkAuthStatus, isAuthenticating]);
 
   /**
    * Sign out when wallet disconnects

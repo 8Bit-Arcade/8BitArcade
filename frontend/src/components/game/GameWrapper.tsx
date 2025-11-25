@@ -41,7 +41,7 @@ export default function GameWrapper({
   actionLabel = 'FIRE',
 }: GameWrapperProps) {
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const gameRef = useRef<Phaser.Game | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -167,12 +167,36 @@ export default function GameWrapper({
       }
 
       // For ranked/tournament modes, ensure Firebase authentication
-      if (mode !== 'free' && !isFirebaseAuthenticated) {
-        console.log('Not authenticated with Firebase, requesting signature...');
-        const success = await signInWithWallet();
-        if (!success) {
-          alert('You must sign the message to play ranked games');
-          return;
+      if (mode !== 'free') {
+        try {
+          // Check current Firebase auth state
+          const { getFirebaseApp } = await import('@/lib/firebase-client');
+          await getFirebaseApp();
+          const { getAuth } = await import('firebase/auth');
+          const auth = getAuth();
+
+          // If not authenticated or wrong user, request signature
+          const currentUser = auth.currentUser;
+          const needsAuth = !currentUser || currentUser.uid.toLowerCase() !== address?.toLowerCase();
+
+          if (needsAuth) {
+            console.log('Not authenticated with Firebase, requesting signature...');
+            const success = await signInWithWallet();
+            if (!success) {
+              alert('You must sign the message to play ranked games');
+              return;
+            }
+          } else {
+            console.log('Already authenticated with Firebase:', currentUser.uid);
+          }
+        } catch (err) {
+          console.error('Error checking auth:', err);
+          // Try to authenticate anyway
+          const success = await signInWithWallet();
+          if (!success) {
+            alert('You must sign the message to play ranked games');
+            return;
+          }
         }
       }
 
