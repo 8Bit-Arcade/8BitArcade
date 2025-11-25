@@ -112,10 +112,15 @@ export default function GameWrapper({
       setScore(finalScore);
       endGame();
 
-      console.log('Game over! Score:', finalScore, 'Mode:', gameMode, 'Session:', sessionIdRef.current, 'Seed:', seed);
+      // Read current state from store (not captured closure values)
+      const currentState = useGameStore.getState();
+      const currentMode = currentState.gameMode;
+      const currentSeed = currentState.seed;
+
+      console.log('Game over! Score:', finalScore, 'Mode:', currentMode, 'Session:', sessionIdRef.current, 'Seed:', currentSeed);
 
       // Submit score for ranked/tournament modes
-      if (gameMode !== 'free' && sessionIdRef.current && seed) {
+      if (currentMode !== 'free' && sessionIdRef.current && currentSeed) {
         const duration = Date.now() - gameStartTimeRef.current;
         console.log('Submitting score... Inputs recorded:', inputsRef.current.length, 'Duration:', duration);
 
@@ -123,7 +128,7 @@ export default function GameWrapper({
           const result = await submitScoreToBackend(
             sessionIdRef.current,
             gameId,
-            seed,
+            currentSeed,
             inputsRef.current,
             finalScore,
             duration
@@ -143,13 +148,13 @@ export default function GameWrapper({
         }
       } else {
         console.log('Skipping score submission:', {
-          isFreeMode: gameMode === 'free',
+          isFreeMode: currentMode === 'free',
           hasSession: !!sessionIdRef.current,
-          hasSeed: !!seed
+          hasSeed: !!currentSeed
         });
       }
     },
-    [setScore, endGame, gameMode, seed, gameId, submitScoreToBackend]
+    [setScore, endGame, gameId, submitScoreToBackend]
   );
 
   // Get current direction (called by game)
