@@ -209,12 +209,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-4 md:py-6 overflow-hidden">
+      <section className="relative py-2 md:py-3 overflow-hidden">
         {/* Background Grid */}
         <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
 
         <div className="relative max-w-7xl mx-auto px-4">
-          <div className="text-center mb-4">
+          <div className="text-center mb-2">
        {/*     <h1 className="font-pixel text-3xl md:text-5xl text-arcade-green glow-green mb-4">
               8-BIT ARCADE
             </h1>*/}
@@ -229,7 +229,7 @@ export default function HomePage() {
           </div>
 
           {/* Featured Game Carousel */}
-          <div id="featured-carousel" className="relative mb-8">
+          <div id="featured-carousel" className="relative mb-4">
      {/*       <h2 className="font-pixel text-arcade-cyan text-sm mb-6 text-center">
               FEATURED GAMES
             </h2> */}
@@ -242,15 +242,15 @@ export default function HomePage() {
             />
 
             {/* Selected Game Actions */}
-            <div className="mt-8 text-center">
-              <h3 className="font-pixel text-arcade-green text-xl mb-2 glow-green">
+            <div className="mt-4 text-center">
+              <h3 className="font-pixel text-arcade-green text-xl mb-1 glow-green">
                 {FEATURED_GAMES[selectedGame].name}
               </h3>
-              <p className="font-arcade text-gray-400 mb-4 max-w-md mx-auto">
+              <p className="font-arcade text-gray-400 mb-2 max-w-md mx-auto">
                 {FEATURED_GAMES[selectedGame].description}
               </p>
               {!FEATURED_GAMES[selectedGame].playable && (
-                <p className="font-pixel text-arcade-yellow text-xs mb-4 animate-pulse">
+                <p className="font-pixel text-arcade-yellow text-xs mb-2 animate-pulse">
                   COMING SOON
                 </p>
               )}
