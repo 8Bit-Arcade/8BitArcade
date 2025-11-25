@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting on merge
+name: Deploy to Firebase Hosting and Functions on merge
 on:
   push:
     branches:
@@ -8,13 +8,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Build frontend
       - run: npm install
-        working-directory: ./frontend   # adjust as needed
+        working-directory: ./frontend
       - run: npm run build
-        working-directory: ./frontend   # adjust as needed
+        working-directory: ./frontend
+
+      # Build functions
+      - run: npm install
+        working-directory: ./functions
+      - run: npm run build
+        working-directory: ./functions
+
+      # Deploy hosting and functions
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BITARCADE_679B7 }}
           channelId: live
           projectId: bitarcade-679b7
+
+      - name: Deploy Functions
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: bitarcade-679b7
