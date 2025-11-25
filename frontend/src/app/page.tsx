@@ -209,16 +209,16 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-8 md:py-12 overflow-hidden">
+      <section className="relative py-4 md:py-6 overflow-hidden">
         {/* Background Grid */}
         <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-20" />
 
         <div className="relative max-w-7xl mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-4">
        {/*     <h1 className="font-pixel text-3xl md:text-5xl text-arcade-green glow-green mb-4">
               8-BIT ARCADE
             </h1>*/}
-            <p className="font-arcade text-xl md:text-2xl text-gray-300 mb-6">
+            <p className="font-arcade text-xl md:text-2xl text-gray-300 mb-2">
               Play the Classic 8-Bit Video Games You know and Love and Make Real Money! Compete Globally. Earn 8BIT Tokens.
             </p>
             {!isConnected && (
