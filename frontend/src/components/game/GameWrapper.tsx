@@ -110,9 +110,12 @@ export default function GameWrapper({
       setScore(finalScore);
       endGame();
 
+      console.log('Game over! Score:', finalScore, 'Mode:', gameMode, 'Session:', sessionIdRef.current, 'Seed:', seed);
+
       // Submit score for ranked/tournament modes
       if (gameMode !== 'free' && sessionIdRef.current && seed) {
         const duration = Date.now() - gameStartTimeRef.current;
+        console.log('Submitting score... Inputs recorded:', inputsRef.current.length, 'Duration:', duration);
 
         try {
           const result = await submitScoreToBackend(
@@ -124,14 +127,24 @@ export default function GameWrapper({
             duration
           );
 
+          console.log('Score submission result:', result);
+
           if (result?.verified) {
-            console.log('Score verified and submitted!', result);
+            console.log('✅ Score verified and submitted!', result);
           } else if (result) {
-            console.warn('Score submitted but not verified:', result.flags);
+            console.warn('⚠️ Score submitted but not verified:', result.flags);
+          } else {
+            console.error('❌ Score submission failed - no result returned');
           }
         } catch (err) {
-          console.error('Failed to submit score:', err);
+          console.error('❌ Failed to submit score:', err);
         }
+      } else {
+        console.log('Skipping score submission:', {
+          isFreeMode: gameMode === 'free',
+          hasSession: !!sessionIdRef.current,
+          hasSeed: !!seed
+        });
       }
     },
     [setScore, endGame, gameMode, seed, gameId, submitScoreToBackend]
@@ -158,14 +171,17 @@ export default function GameWrapper({
       // Create session for ranked/tournament modes
       if (mode !== 'free') {
         try {
+          console.log('Creating session for game:', gameId, 'mode:', mode);
           const session = await createSession(gameId, mode as 'ranked' | 'tournament');
+          console.log('Session created:', session);
           if (session) {
             sessionIdRef.current = session.sessionId;
             startGame(gameId, mode, session.sessionId, session.seed);
             gameStartTimeRef.current = Date.now();
             inputsRef.current = [];
+            console.log('Session ID stored:', sessionIdRef.current, 'Seed:', session.seed);
           } else {
-            console.error('Failed to create session');
+            console.error('Failed to create session - session is null');
             startGame(gameId, mode);
           }
         } catch (err) {
