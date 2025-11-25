@@ -281,10 +281,11 @@ export class AlienAssaultScene extends Phaser.Scene {
           this.score += CONFIG.ALIEN_POINTS[alien.row];
           this.onScoreUpdate(this.score);
 
-          // Speed up remaining aliens
+          // Speed up remaining aliens (maintain wave difficulty + per-alien increase)
           const remaining = this.aliens.filter((a) => a.active).length;
           if (remaining > 0) {
-            this.alienSpeed = CONFIG.ALIEN_SPEED_START +
+            const waveBaseSpeed = CONFIG.ALIEN_SPEED_START + (this.level - 1) * CONFIG.ALIEN_SPEED_PER_WAVE;
+            this.alienSpeed = waveBaseSpeed +
               (CONFIG.ALIEN_ROWS * CONFIG.ALIEN_COLS - remaining) * CONFIG.ALIEN_SPEED_INCREASE;
           }
 

@@ -121,6 +121,10 @@ export default function GameCarousel({
           const topPlayers = leaderboards[game.id] || [];
           const isCenter = position === 'center';
 
+          // Combine all transforms into a single string for smooth animation
+          const scaleValue = isCenter ? 1.0 : 0.5;
+          const translateYValue = isCenter ? 0 : 15;
+
           return (
             <div
               key={game.id}
@@ -130,11 +134,10 @@ export default function GameCarousel({
                 width: isCenter ? 'clamp(20rem, 40vw, 34rem)' : '16rem',
                 opacity: isCenter ? 1 : 0.5,
                 zIndex: isCenter ? 20 : 10,
-                transform: isCenter
-                  ? 'scale(1.0) translateY(0px)'
-                  : 'scale(0.5) translateY(15px)',
-                transition: 'transform 0.6s ease-in-out, opacity 0.6s ease-in-out, filter 0.6s ease-in-out, width 0.6s ease-in-out',
+                transform: `scale(${scaleValue}) translateY(${translateYValue}px)`,
+                transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                 filter: isCenter ? 'brightness(1)' : 'brightness(0.6)',
+                willChange: 'transform, opacity, filter, width',
               }}
             >
               <div

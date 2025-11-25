@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import TouchControls from './TouchControls';
 import { useGameStore } from '@/stores/gameStore';
 import { useAudioStore } from '@/stores/audioStore';
+import { useScoreSubmission } from '@/hooks/useScoreSubmission';
 import { formatNumber, isTouchDevice } from '@/lib/utils';
 import type { GameMode } from '@/types';
 
@@ -59,6 +60,7 @@ export default function GameWrapper({
   } = useGameStore();
 
   const { soundEnabled } = useAudioStore();
+  const { createSession, submitScore: submitScoreToBackend } = useScoreSubmission();
 
   const [showModeSelect, setShowModeSelect] = useState(true);
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
@@ -67,6 +69,11 @@ export default function GameWrapper({
   // Input state refs (for real-time access in game loop)
   const directionRef = useRef({ up: false, down: false, left: false, right: false });
   const actionRef = useRef(false);
+
+  // Score submission state
+  const sessionIdRef = useRef<string | null>(null);
+  const gameStartTimeRef = useRef<number>(0);
+  const inputsRef = useRef<Array<{ t: number; type: 'direction' | 'action'; data?: any }>>([]);
 
   // Reset game state when component mounts or gameId changes
   useEffect(() => {
@@ -99,11 +106,35 @@ export default function GameWrapper({
 
   // Handle game over
   const handleGameOver = useCallback(
-    (finalScore: number) => {
+    async (finalScore: number) => {
       setScore(finalScore);
       endGame();
+
+      // Submit score for ranked/tournament modes
+      if (gameMode !== 'free' && sessionIdRef.current && seed) {
+        const duration = Date.now() - gameStartTimeRef.current;
+
+        try {
+          const result = await submitScoreToBackend(
+            sessionIdRef.current,
+            gameId,
+            seed,
+            inputsRef.current,
+            finalScore,
+            duration
+          );
+
+          if (result?.verified) {
+            console.log('Score verified and submitted!', result);
+          } else if (result) {
+            console.warn('Score submitted but not verified:', result.flags);
+          }
+        } catch (err) {
+          console.error('Failed to submit score:', err);
+        }
+      }
     },
-    [setScore, endGame]
+    [setScore, endGame, gameMode, seed, gameId, submitScoreToBackend]
   );
 
   // Get current direction (called by game)
@@ -114,7 +145,7 @@ export default function GameWrapper({
 
   // Handle mode selection - just set state, useEffect will init the game
   const handleStartGame = useCallback(
-    (mode: GameMode) => {
+    async (mode: GameMode) => {
       if (mode !== 'free' && !isConnected) {
         alert('Please connect your wallet to play ranked or tournament mode');
         return;
@@ -123,9 +154,29 @@ export default function GameWrapper({
       console.log('Mode selected:', mode);
       setSelectedMode(mode);
       setShowModeSelect(false);
-      startGame(gameId, mode);
+
+      // Create session for ranked/tournament modes
+      if (mode !== 'free') {
+        try {
+          const session = await createSession(gameId, mode as 'ranked' | 'tournament');
+          if (session) {
+            sessionIdRef.current = session.sessionId;
+            startGame(gameId, mode, session.sessionId, session.seed);
+            gameStartTimeRef.current = Date.now();
+            inputsRef.current = [];
+          } else {
+            console.error('Failed to create session');
+            startGame(gameId, mode);
+          }
+        } catch (err) {
+          console.error('Error creating session:', err);
+          startGame(gameId, mode);
+        }
+      } else {
+        startGame(gameId, mode);
+      }
     },
-    [gameId, isConnected, startGame]
+    [gameId, isConnected, startGame, createSession]
   );
 
   // Scroll game into view when it becomes visible (mobile centering)
@@ -242,18 +293,45 @@ export default function GameWrapper({
   const handleDirectionChange = useCallback(
     (direction: { up: boolean; down: boolean; left: boolean; right: boolean }) => {
       directionRef.current = direction;
+
+      // Record input for ranked/tournament modes
+      if (gameMode !== 'free' && sessionIdRef.current) {
+        inputsRef.current.push({
+          t: Date.now() - gameStartTimeRef.current,
+          type: 'direction',
+          data: direction,
+        });
+      }
     },
-    []
+    [gameMode]
   );
 
   // Handle action button
   const handleAction = useCallback(() => {
     actionRef.current = true;
-  }, []);
+
+    // Record input for ranked/tournament modes
+    if (gameMode !== 'free' && sessionIdRef.current) {
+      inputsRef.current.push({
+        t: Date.now() - gameStartTimeRef.current,
+        type: 'action',
+        data: { action: true },
+      });
+    }
+  }, [gameMode]);
 
   const handleActionRelease = useCallback(() => {
     actionRef.current = false;
-  }, []);
+
+    // Record input for ranked/tournament modes
+    if (gameMode !== 'free' && sessionIdRef.current) {
+      inputsRef.current.push({
+        t: Date.now() - gameStartTimeRef.current,
+        type: 'action',
+        data: { action: false },
+      });
+    }
+  }, [gameMode]);
 
   // Keyboard controls
   useEffect(() => {
@@ -265,56 +343,92 @@ export default function GameWrapper({
         e.preventDefault();
       }
 
+      let recordInput = false;
+
       switch (e.code) {
         case 'ArrowUp':
         case 'KeyW':
           directionRef.current.up = true;
+          recordInput = true;
           break;
         case 'ArrowDown':
         case 'KeyS':
           directionRef.current.down = true;
+          recordInput = true;
           break;
         case 'ArrowLeft':
         case 'KeyA':
           directionRef.current.left = true;
+          recordInput = true;
           break;
         case 'ArrowRight':
         case 'KeyD':
           directionRef.current.right = true;
+          recordInput = true;
           break;
         case 'Space':
         case 'KeyZ':
           actionRef.current = true;
+          recordInput = true;
           break;
         case 'Escape':
         case 'KeyP':
           togglePause();
           break;
       }
+
+      // Record input for ranked/tournament modes
+      if (recordInput && gameMode !== 'free' && sessionIdRef.current) {
+        inputsRef.current.push({
+          t: Date.now() - gameStartTimeRef.current,
+          type: e.code === 'Space' || e.code === 'KeyZ' ? 'action' : 'direction',
+          data: e.code === 'Space' || e.code === 'KeyZ'
+            ? { action: true }
+            : { ...directionRef.current },
+        });
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      let recordInput = false;
+
       switch (e.code) {
         case 'ArrowUp':
         case 'KeyW':
           directionRef.current.up = false;
+          recordInput = true;
           break;
         case 'ArrowDown':
         case 'KeyS':
           directionRef.current.down = false;
+          recordInput = true;
           break;
         case 'ArrowLeft':
         case 'KeyA':
           directionRef.current.left = false;
+          recordInput = true;
           break;
         case 'ArrowRight':
         case 'KeyD':
           directionRef.current.right = false;
+          recordInput = true;
           break;
         case 'Space':
         case 'KeyZ':
           actionRef.current = false;
+          recordInput = true;
           break;
+      }
+
+      // Record input for ranked/tournament modes
+      if (recordInput && gameMode !== 'free' && sessionIdRef.current) {
+        inputsRef.current.push({
+          t: Date.now() - gameStartTimeRef.current,
+          type: e.code === 'Space' || e.code === 'KeyZ' ? 'action' : 'direction',
+          data: e.code === 'Space' || e.code === 'KeyZ'
+            ? { action: false }
+            : { ...directionRef.current },
+        });
       }
     };
 
@@ -325,7 +439,7 @@ export default function GameWrapper({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isPlaying, isPaused, togglePause]);
+  }, [isPlaying, isPaused, togglePause, gameMode]);
 
   // Play again
   const handlePlayAgain = useCallback(() => {
