@@ -43,7 +43,7 @@ export default function GameCarousel({
       : (selectedIndex - 1 + games.length) % games.length;
 
     onSelectGame(newIndex);
-    setTimeout(() => setIsAnimating(false), 400);
+    setTimeout(() => setIsAnimating(false), 600);
   }, [selectedIndex, games.length, onSelectGame, isAnimating]);
 
   // Keyboard navigation
@@ -126,15 +126,14 @@ export default function GameCarousel({
               onClick={() => !isCenter && onSelectGame(index)}
               className={`
                 flex-shrink-0 cursor-pointer
-                transition-all duration-500 ease-in-out
                 ${isCenter
                   ? 'w-80 lg:w-[34rem] scale-100 opacity-100 z-20'
                   : 'w-32 md:w-48 scale-90 opacity-50 hover:opacity-70 hover:scale-95 z-10'
                 }
               `}
               style={{
-                transform: isCenter ? 'scale(1)' : 'scale(0.85)',
-                transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transform: isCenter ? 'scale(1)' : 'scale(0.75)',
+                transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
               }}
             >
               <div
