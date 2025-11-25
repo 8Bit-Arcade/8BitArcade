@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import { callFunction } from '@/lib/firebase-functions';
@@ -13,6 +13,8 @@ export function useWalletAuth() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isFirebaseAuthenticated, setIsFirebaseAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasAttemptedAuth = useRef(false);
+  const userRejected = useRef(false);
 
   /**
    * Sign in to Firebase using the connected wallet
@@ -23,6 +25,11 @@ export function useWalletAuth() {
       return false;
     }
 
+    if (hasAttemptedAuth.current || userRejected.current) {
+      return false;
+    }
+
+    hasAttemptedAuth.current = true;
     setIsAuthenticating(true);
     setError(null);
 
@@ -53,11 +60,20 @@ export function useWalletAuth() {
       await signInWithCustomToken(auth, customToken);
 
       setIsFirebaseAuthenticated(true);
+      userRejected.current = false;
       console.log('✅ Signed in to Firebase with wallet:', address);
       return true;
     } catch (err: any) {
       console.error('Failed to authenticate with wallet:', err);
-      setError(err.message || 'Authentication failed');
+
+      // Check if user rejected the signature
+      if (err.message?.includes('User rejected') || err.message?.includes('User denied')) {
+        userRejected.current = true;
+        setError('Signature rejected. You need to sign in to play ranked games.');
+      } else {
+        setError(err.message || 'Authentication failed');
+      }
+
       setIsFirebaseAuthenticated(false);
       return false;
     } finally {
@@ -92,17 +108,22 @@ export function useWalletAuth() {
   }, [address]);
 
   /**
-   * Auto-authenticate when wallet connects
+   * Reset flags when wallet address changes
    */
   useEffect(() => {
-    if (isConnected && address && !isFirebaseAuthenticated && !isAuthenticating) {
-      checkAuthStatus().then((isAuth) => {
-        if (!isAuth) {
-          signInWithWallet();
-        }
-      });
+    hasAttemptedAuth.current = false;
+    userRejected.current = false;
+    setIsFirebaseAuthenticated(false);
+  }, [address]);
+
+  /**
+   * Check auth status when wallet connects
+   */
+  useEffect(() => {
+    if (isConnected && address) {
+      checkAuthStatus();
     }
-  }, [isConnected, address, isFirebaseAuthenticated, isAuthenticating, checkAuthStatus, signInWithWallet]);
+  }, [isConnected, address]);
 
   /**
    * Sign out when wallet disconnects
@@ -116,6 +137,8 @@ export function useWalletAuth() {
           const auth = getAuth();
           await auth.signOut();
           setIsFirebaseAuthenticated(false);
+          hasAttemptedAuth.current = false;
+          userRejected.current = false;
           console.log('✅ Signed out from Firebase');
         } catch (err) {
           console.error('Failed to sign out:', err);

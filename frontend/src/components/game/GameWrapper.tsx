@@ -9,6 +9,7 @@ import TouchControls from './TouchControls';
 import { useGameStore } from '@/stores/gameStore';
 import { useAudioStore } from '@/stores/audioStore';
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { formatNumber, isTouchDevice } from '@/lib/utils';
 import type { GameMode } from '@/types';
 
@@ -61,6 +62,7 @@ export default function GameWrapper({
 
   const { soundEnabled } = useAudioStore();
   const { createSession, submitScore: submitScoreToBackend } = useScoreSubmission();
+  const { signInWithWallet, isFirebaseAuthenticated, isAuthenticating } = useWalletAuth();
 
   const [showModeSelect, setShowModeSelect] = useState(true);
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
@@ -164,6 +166,16 @@ export default function GameWrapper({
         return;
       }
 
+      // For ranked/tournament modes, ensure Firebase authentication
+      if (mode !== 'free' && !isFirebaseAuthenticated) {
+        console.log('Not authenticated with Firebase, requesting signature...');
+        const success = await signInWithWallet();
+        if (!success) {
+          alert('You must sign the message to play ranked games');
+          return;
+        }
+      }
+
       console.log('Mode selected:', mode);
       setSelectedMode(mode);
       setShowModeSelect(false);
@@ -192,7 +204,7 @@ export default function GameWrapper({
         startGame(gameId, mode);
       }
     },
-    [gameId, isConnected, startGame, createSession]
+    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession]
   );
 
   // Scroll game into view when it becomes visible (mobile centering)

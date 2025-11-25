@@ -6,7 +6,6 @@ import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { config } from '@/lib/wagmi';
 import WalletProvider from '@/components/wallet/WalletProvider';
-import WalletAuthProvider from '@/components/auth/WalletAuthProvider';
 import AudioManager from '@/components/audio/AudioManager';
 
 import '@rainbow-me/rainbowkit/styles.css';
@@ -70,7 +69,6 @@ export default function Providers({ children }: ProvidersProps) {
         <RainbowKitProvider theme={customTheme} modalSize="compact">
           <AudioManager>
             <WalletProvider>
-              <WalletAuthProvider />
               {mounted ? children : null}
             </WalletProvider>
           </AudioManager>
