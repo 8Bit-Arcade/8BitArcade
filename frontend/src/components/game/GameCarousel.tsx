@@ -126,15 +126,15 @@ export default function GameCarousel({
               onClick={() => !isCenter && onSelectGame(index)}
               className={`
                 flex-shrink-0 cursor-pointer
-                transition-all duration-400 ease-out
+                transition-all duration-500 ease-in-out
                 ${isCenter
-                  ? 'w-72 md:w-96 scale-100 opacity-100 z-20'
-                  : 'w-32 md:w-48 scale-90 opacity-50 hover:opacity-70 z-10'
+                  ? 'w-80 lg:w-[34rem] scale-100 opacity-100 z-20'
+                  : 'w-32 md:w-48 scale-90 opacity-50 hover:opacity-70 hover:scale-95 z-10'
                 }
               `}
               style={{
                 transform: isCenter ? 'scale(1)' : 'scale(0.85)',
-                transition: 'all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
             >
               <div
@@ -189,28 +189,28 @@ export default function GameCarousel({
 
                 {/* Game Info - Only for center card */}
                 {isCenter && (
-                  <div className="p-4">
-                    <h3 className="font-pixel text-arcade-green text-sm md:text-base uppercase mb-3 glow-green text-center">
+                  <div className="p-4 lg:p-6">
+                    <h3 className="font-pixel text-arcade-green text-sm md:text-base lg:text-lg uppercase mb-3 lg:mb-4 glow-green text-center">
                       {game.name}
                     </h3>
 
-                    {/* Top 3 Players */}
-                    <div className="space-y-1.5">
+                    {/* Top 3 Players - constrained width on large screens */}
+                    <div className="space-y-2 max-w-md mx-auto">
                       {topPlayers.length > 0 ? (
                         topPlayers.map((player, playerIndex) => (
                           <div
                             key={playerIndex}
-                            className="flex items-center justify-between text-xs md:text-sm"
+                            className="flex items-center justify-between text-xs md:text-sm lg:text-base gap-3"
                           >
-                            <div className="flex items-center gap-2">
-                              <span className={`font-pixel ${rankColors[playerIndex]}`}>
+                            <div className="flex items-center gap-2 lg:gap-3 min-w-0 flex-1">
+                              <span className={`font-pixel ${rankColors[playerIndex]} text-xs lg:text-sm flex-shrink-0`}>
                                 {playerIndex === 0 ? '1st' : playerIndex === 1 ? '2nd' : '3rd'}
                               </span>
-                              <span className="font-arcade text-white truncate max-w-28">
+                              <span className="font-arcade text-white truncate">
                                 {player.username}
                               </span>
                             </div>
-                            <span className="font-arcade text-arcade-cyan">
+                            <span className="font-arcade text-arcade-cyan flex-shrink-0">
                               {player.score.toLocaleString()}
                             </span>
                           </div>
