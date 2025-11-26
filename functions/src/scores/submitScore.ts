@@ -136,6 +136,7 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
     // Update leaderboard if new best
     if (newBest) {
       await updateLeaderboard(gameId, playerAddress, username, verifiedScore);
+      await updateGlobalLeaderboard(playerAddress, username, verifiedScore);
     }
 
     // Update user stats
@@ -244,4 +245,57 @@ async function updateLeaderboard(
     weekly: updateList(data.weekly || []),
     allTime: updateList(data.allTime || []),
   });
+}
+
+/**
+ * Update global leaderboard (all games combined) with new score
+ */
+async function updateGlobalLeaderboard(
+  playerId: string,
+  username: string,
+  totalScore: number
+): Promise<void> {
+  const now = Timestamp.now();
+
+  const entry = {
+    odedId: playerId,
+    username,
+    score: totalScore,
+    timestamp: now,
+  };
+
+  // Update each period (daily, weekly, allTime)
+  for (const period of ['daily', 'weekly', 'allTime'] as const) {
+    const globalRef = collections.globalLeaderboard.doc(period);
+    const doc = await globalRef.get();
+
+    if (!doc.exists) {
+      // Create new global leaderboard
+      await globalRef.set({
+        lastUpdated: now,
+        entries: [entry],
+      });
+      continue;
+    }
+
+    const data = doc.data();
+    if (!data) continue;
+
+    // Update list
+    const updateList = (list: any[], maxSize: number = 100) => {
+      // Remove existing entry for this player
+      const filtered = list.filter((e: any) => e.odedId !== playerId);
+      // Add new entry
+      filtered.push(entry);
+      // Sort by score descending
+      filtered.sort((a: any, b: any) => b.score - a.score);
+      // Keep only top entries
+      return filtered.slice(0, maxSize);
+    };
+
+    await globalRef.update({
+      lastUpdated: now,
+      entries: updateList(data.entries || []),
+    });
+  }
 }
