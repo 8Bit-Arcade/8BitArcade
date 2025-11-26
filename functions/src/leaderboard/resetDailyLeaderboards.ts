@@ -5,12 +5,12 @@ import { GAME_CONFIGS, getRewardForRank } from '../config/games';
 
 /**
  * Scheduled function to reset daily leaderboards and distribute rewards
- * Runs every day at midnight UTC
+ * Runs every day at midnight EST/EDT
  */
 export const resetDailyLeaderboards = onSchedule(
   {
-    schedule: '0 0 * * *', // Every day at midnight UTC
-    timeZone: 'UTC',
+    schedule: '0 0 * * *', // Every day at midnight Eastern Time
+    timeZone: 'America/New_York',
   },
   async () => {
     console.log('Starting daily leaderboard reset...');
@@ -116,12 +116,12 @@ async function addPendingReward(
 }
 
 /**
- * Reset weekly leaderboards - runs every Monday at midnight UTC
+ * Reset weekly leaderboards - runs every Monday at midnight EST/EDT
  */
 export const resetWeeklyLeaderboards = onSchedule(
   {
-    schedule: '0 0 * * 1', // Every Monday at midnight UTC
-    timeZone: 'UTC',
+    schedule: '0 0 * * 1', // Every Monday at midnight Eastern Time
+    timeZone: 'America/New_York',
   },
   async () => {
     console.log('Starting weekly leaderboard reset...');
