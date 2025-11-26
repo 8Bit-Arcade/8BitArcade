@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
+import LeaderboardModal from '@/components/leaderboard/LeaderboardModal';
 
 // Define TopPlayer locally to avoid Firebase import chain
 interface TopPlayer {
@@ -33,6 +34,7 @@ export default function GameCarousel({
 }: GameCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
   const navigate = useCallback((direction: 'prev' | 'next') => {
     if (isAnimating) return;
@@ -117,7 +119,7 @@ export default function GameCarousel({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {getVisibleGames().map(({ game, position, index }) => {
+        {getVisibleGames().map(({ game, position, index }, positionIndex) => {
           const topPlayers = leaderboards[game.id] || [];
           const isCenter = position === 'center';
 
@@ -127,7 +129,7 @@ export default function GameCarousel({
 
           return (
             <div
-              key={game.id}
+              key={positionIndex}
               onClick={() => !isCenter && onSelectGame(index)}
               className="flex-shrink-0 cursor-pointer"
               style={{
@@ -235,19 +237,27 @@ export default function GameCarousel({
       </div>
 
       {/* Game Counter and Leaderboard Button */}
-      <div className="text-center mt-2 space-y-3">
-        <span className="font-arcade text-base md:text-lg text-gray-400">
+      <div className="text-center mt-0 space-y-3">
+        <span className="font-arcade text-lg md:text-xl text-gray-400">
           {selectedIndex + 1} / {games.length}
         </span>
         <div>
-          <a
-            href={`/leaderboard?game=${games[selectedIndex].id}`}
+          <button
+            onClick={() => setIsLeaderboardOpen(true)}
             className="inline-block px-4 py-2 bg-arcade-dark border-2 border-arcade-cyan/50 rounded text-arcade-cyan font-pixel text-xs md:text-sm hover:bg-arcade-cyan/10 hover:border-arcade-cyan transition-all duration-200"
           >
             VIEW LEADERBOARD
-          </a>
+          </button>
         </div>
       </div>
+
+      {/* Leaderboard Modal */}
+      <LeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        gameId={games[selectedIndex].id}
+        gameName={games[selectedIndex].name}
+      />
     </div>
   );
 }
