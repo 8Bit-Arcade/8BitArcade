@@ -50,42 +50,6 @@ export default function WalletProvider({
         }, 500);
       } else if (existingUsername && !hasShownModal.current) {
         hasShownModal.current = true;
-
-        // Auto-sync username from localStorage to Firestore if not already there
-        (async () => {
-          try {
-            const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
-            if (isFirebaseConfigured()) {
-              const [db, { doc, getDoc, setDoc, serverTimestamp }] = await Promise.all([
-                getFirestoreInstance(),
-                import('firebase/firestore'),
-              ]);
-
-              const userRef = doc(db, 'users', address.toLowerCase());
-              const userDoc = await getDoc(userRef);
-
-              // If username exists in localStorage but not in Firestore, sync it
-              if (!userDoc.exists() || !userDoc.data()?.username) {
-                await setDoc(userRef, {
-                  username: existingUsername,
-                  address: address.toLowerCase(),
-                  createdAt: serverTimestamp(),
-                  lastActive: serverTimestamp(),
-                }, { merge: true });
-
-                console.log('✅ Synced username to Firestore:', existingUsername);
-              } else {
-                // Update lastActive timestamp
-                await setDoc(userRef, {
-                  lastActive: serverTimestamp(),
-                }, { merge: true });
-              }
-            }
-          } catch (err) {
-            console.error('Failed to sync username to Firestore:', err);
-          }
-        })();
-
         addToast({
           type: 'success',
           message: `Welcome back, ${existingUsername}!`,

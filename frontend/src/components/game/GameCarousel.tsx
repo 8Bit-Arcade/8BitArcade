@@ -119,7 +119,7 @@ export default function GameCarousel({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {getVisibleGames().map(({ game, position, index }, positionIndex) => {
+        {getVisibleGames().map(({ game, position, index }) => {
           const topPlayers = leaderboards[game.id] || [];
           const isCenter = position === 'center';
 
@@ -129,7 +129,7 @@ export default function GameCarousel({
 
           return (
             <div
-              key={positionIndex}
+              key={game.id}
               onClick={() => !isCenter && onSelectGame(index)}
               className="flex-shrink-0 cursor-pointer"
               style={{

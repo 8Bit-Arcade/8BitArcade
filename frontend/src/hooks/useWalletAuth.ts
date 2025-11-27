@@ -2,6 +2,54 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import { callFunction } from '@/lib/firebase-functions';
+import { useAuthStore } from '@/stores/authStore';
+
+/**
+ * Sync username from localStorage to Firestore (called after Firebase auth)
+ */
+async function syncUsernameToFirestore(address: string): Promise<void> {
+  try {
+    // Get username from localStorage
+    const users = useAuthStore.getState().users;
+    const existingUsername = users[address.toLowerCase()]?.username;
+
+    if (!existingUsername) {
+      return; // No username to sync
+    }
+
+    const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
+    if (!isFirebaseConfigured()) {
+      return;
+    }
+
+    const [db, { doc, getDoc, setDoc, serverTimestamp }] = await Promise.all([
+      getFirestoreInstance(),
+      import('firebase/firestore'),
+    ]);
+
+    const userRef = doc(db, 'users', address.toLowerCase());
+    const userDoc = await getDoc(userRef);
+
+    // Only sync if username doesn't exist in Firestore
+    if (!userDoc.exists() || !userDoc.data()?.username) {
+      await setDoc(userRef, {
+        username: existingUsername,
+        address: address.toLowerCase(),
+        createdAt: serverTimestamp(),
+        lastActive: serverTimestamp(),
+      }, { merge: true });
+
+      console.log('✅ Synced username to Firestore:', existingUsername);
+    } else {
+      // Just update lastActive
+      await setDoc(userRef, {
+        lastActive: serverTimestamp(),
+      }, { merge: true });
+    }
+  } catch (err) {
+    console.error('Failed to sync username to Firestore:', err);
+  }
+}
 
 /**
  * Hook to handle wallet-based Firebase authentication
@@ -62,6 +110,10 @@ export function useWalletAuth() {
       setIsFirebaseAuthenticated(true);
       userRejected.current = false;
       console.log('✅ Signed in to Firebase with wallet:', address);
+
+      // Sync username from localStorage to Firestore after successful auth
+      await syncUsernameToFirestore(address);
+
       return true;
     } catch (err: any) {
       console.error('Failed to authenticate with wallet:', err);
