@@ -1,38 +1,123 @@
-name: Deploy to Firebase Hosting and Functions on merge
+name: Deploy to Firebase on merge
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_hosting:
+        description: 'Deploy Frontend (Hosting)'
+        required: false
+        type: boolean
+        default: true
+      deploy_functions:
+        description: 'Deploy Cloud Functions'
+        required: false
+        type: boolean
+        default: true
+      deploy_rules:
+        description: 'Deploy Firestore Rules'
+        required: false
+        type: boolean
+        default: true
+      deploy_indexes:
+        description: 'Deploy Firestore Indexes'
+        required: false
+        type: boolean
+        default: true
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need 2 commits to detect changes
 
-      # Build frontend
-      - run: npm install
+      # Detect what changed (only on push, not manual dispatch)
+      - name: Detect changed files
+        if: github.event_name == 'push'
+        id: changes
+        run: |
+          echo "frontend=$(git diff --name-only HEAD~1 HEAD | grep -E '^frontend/' | wc -l)" >> $GITHUB_OUTPUT
+          echo "functions=$(git diff --name-only HEAD~1 HEAD | grep -E '^functions/' | wc -l)" >> $GITHUB_OUTPUT
+          echo "rules=$(git diff --name-only HEAD~1 HEAD | grep -E '^firestore\.rules$' | wc -l)" >> $GITHUB_OUTPUT
+          echo "indexes=$(git diff --name-only HEAD~1 HEAD | grep -E '^firestore\.indexes\.json$' | wc -l)" >> $GITHUB_OUTPUT
+
+      # Build frontend (if changed or manual deploy)
+      - name: Install frontend dependencies
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_hosting == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.frontend != '0')
+        run: npm install
         working-directory: ./frontend
-      - run: npm run build
+
+      - name: Build frontend
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_hosting == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.frontend != '0')
+        run: npm run build
         working-directory: ./frontend
 
-      # Build functions
-      - run: npm install
-        working-directory: ./functions
-      - run: npm run build
+      # Build functions (if changed or manual deploy)
+      - name: Install functions dependencies
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_functions == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.functions != '0')
+        run: npm install
         working-directory: ./functions
 
-      # Deploy hosting and functions
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Build functions
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_functions == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.functions != '0')
+        run: npm run build
+        working-directory: ./functions
+
+      # Deploy hosting (if changed or manual deploy)
+      - name: Deploy to Firebase Hosting
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_hosting == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.frontend != '0')
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BITARCADE_679B7 }}
           channelId: live
           projectId: bitarcade-679b7
 
+      # Deploy functions (if changed or manual deploy)
       - name: Deploy Functions
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_functions == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.functions != '0')
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: bitarcade-679b7
+
+      # Deploy Firestore rules (if changed or manual deploy)
+      - name: Deploy Firestore Rules
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_rules == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.rules != '0')
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only firestore:rules
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: bitarcade-679b7
+
+      # Deploy Firestore indexes (if changed or manual deploy)
+      - name: Deploy Firestore Indexes
+        if: |
+          (github.event_name == 'workflow_dispatch' && inputs.deploy_indexes == true) ||
+          (github.event_name == 'push' && steps.changes.outputs.indexes != '0')
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only firestore:indexes
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           PROJECT_ID: bitarcade-679b7
