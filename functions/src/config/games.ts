@@ -41,6 +41,70 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
     maxInputsPerSecond: 15,
     pointsPerSecondLimit: 50,
   },
+  'paddle-battle': {
+    id: 'paddle-battle',
+    name: 'Paddle Battle',
+    maxTheoreticalScore: 1100, // 11 points to win * 100
+    minGameDuration: 10000,
+    maxInputsPerSecond: 20,
+    pointsPerSecondLimit: 50,
+  },
+  'road-hopper': {
+    id: 'road-hopper',
+    name: 'Road Hopper',
+    maxTheoreticalScore: 50000, // Multiple levels
+    minGameDuration: 5000,
+    maxInputsPerSecond: 10,
+    pointsPerSecondLimit: 200,
+  },
+  'block-drop': {
+    id: 'block-drop',
+    name: 'Block Drop',
+    maxTheoreticalScore: 100000, // Many levels possible
+    minGameDuration: 10000,
+    maxInputsPerSecond: 15,
+    pointsPerSecondLimit: 300,
+  },
+  'chomper': {
+    id: 'chomper',
+    name: 'Chomper',
+    maxTheoreticalScore: 50000, // Multiple levels
+    minGameDuration: 10000,
+    maxInputsPerSecond: 10,
+    pointsPerSecondLimit: 100,
+  },
+  'galaxy-fighter': {
+    id: 'galaxy-fighter',
+    name: 'Galaxy Fighter',
+    maxTheoreticalScore: 100000, // Many waves
+    minGameDuration: 5000,
+    maxInputsPerSecond: 30,
+    pointsPerSecondLimit: 500,
+  },
+  'tunnel-terror': {
+    id: 'tunnel-terror',
+    name: 'Tunnel Terror',
+    maxTheoreticalScore: 75000, // Multiple levels
+    minGameDuration: 10000,
+    maxInputsPerSecond: 15,
+    pointsPerSecondLimit: 300,
+  },
+  'barrel-dodge': {
+    id: 'barrel-dodge',
+    name: 'Barrel Dodge',
+    maxTheoreticalScore: 50000, // Multiple levels
+    minGameDuration: 10000,
+    maxInputsPerSecond: 20,
+    pointsPerSecondLimit: 200,
+  },
+  'bug-blaster': {
+    id: 'bug-blaster',
+    name: 'Bug Blaster',
+    maxTheoreticalScore: 100000, // Many levels
+    minGameDuration: 10000,
+    maxInputsPerSecond: 30,
+    pointsPerSecondLimit: 500,
+  },
 };
 
 // Daily reward tiers
