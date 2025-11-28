@@ -5,6 +5,9 @@ import { GameData } from '../types';
 import { analyzeGameplay, verifyChecksum } from '../anticheat/statisticalAnalysis';
 import { flagAccount as flagAccountDetailed, isAccountBanned } from '../anticheat/flagging';
 import { replayAlienAssault } from '../anticheat/replay/alienAssaultReplay';
+import { replaySpaceRocks } from '../anticheat/replay/spaceRocksReplay';
+import { replayBrickBreaker } from '../anticheat/replay/brickBreakerReplay';
+import { replayPixelSnake } from '../anticheat/replay/pixelSnakeReplay';
 
 interface SubmitScoreRequest {
   gameData: GameData;
@@ -118,13 +121,33 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       }
     }
 
-    // Perform server-side replay for supported games
+    // Perform server-side replay for all games
     let verifiedScore = finalScore;
 
-    if (gameId === 'alien-assault') {
-      try {
-        const replayResult = await replayAlienAssault(seed, inputs);
+    try {
+      let replayResult;
 
+      // Select appropriate replay engine based on game
+      switch (gameId) {
+        case 'alien-assault':
+          replayResult = await replayAlienAssault(seed, inputs);
+          break;
+        case 'space-rocks':
+          replayResult = await replaySpaceRocks(seed, inputs);
+          break;
+        case 'brick-breaker':
+          replayResult = await replayBrickBreaker(seed, inputs);
+          break;
+        case 'pixel-snake':
+          replayResult = await replayPixelSnake(seed, inputs);
+          break;
+        default:
+          // No replay available for this game
+          console.warn(`No replay engine available for game: ${gameId}`);
+          replayResult = null;
+      }
+
+      if (replayResult) {
         if (!replayResult.valid) {
           await flagAccountDetailed(playerAddress, {
             type: 'score_mismatch',
@@ -156,12 +179,12 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
         }
 
         verifiedScore = replayResult.score; // Use server-calculated score
-        console.log(`✅ Replay validated for ${playerAddress}: ${verifiedScore} points`);
-      } catch (error: any) {
-        if (error instanceof HttpsError) throw error;
-        console.error('Replay error:', error);
-        // If replay fails technically, fall back to statistical analysis
+        console.log(`✅ Replay validated for ${playerAddress} (${gameId}): ${verifiedScore} points`);
       }
+    } catch (error: any) {
+      if (error instanceof HttpsError) throw error;
+      console.error('Replay error:', error);
+      // If replay fails technically, fall back to statistical analysis
     }
 
     // Mark session as completed
