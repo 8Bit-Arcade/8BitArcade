@@ -56,7 +56,7 @@ const GAMES = [
     description: 'Blast the centipede before it reaches you',
     difficulty: 'hard' as const,
     thumbnail: '/games/bug-blaster.png',
-    playable: false,
+    playable: true,
     category: 'shooter' as GameCategory,
   },
   {
@@ -65,7 +65,7 @@ const GAMES = [
     description: 'Eat all the dots, avoid the ghosts',
     difficulty: 'medium' as const,
     thumbnail: '/games/chomper.png',
-    playable: false,
+    playable: true,
     category: 'arcade' as GameCategory,
   },
   {
@@ -74,7 +74,7 @@ const GAMES = [
     description: 'Dig tunnels and defeat underground enemies',
     difficulty: 'medium' as const,
     thumbnail: '/games/tunnel-terror.png',
-    playable: false,
+    playable: true,
     category: 'action' as GameCategory,
   },
   {
@@ -83,7 +83,7 @@ const GAMES = [
     description: 'Take on waves of alien fighters',
     difficulty: 'medium' as const,
     thumbnail: '/games/galaxy-fighter.png',
-    playable: false,
+    playable: true,
     category: 'shooter' as GameCategory,
   },
   {
@@ -92,7 +92,7 @@ const GAMES = [
     description: 'Cross the road and river safely',
     difficulty: 'easy' as const,
     thumbnail: '/games/road-hopper.png',
-    playable: false,
+    playable: true,
     category: 'action' as GameCategory,
   },
   {
@@ -101,7 +101,7 @@ const GAMES = [
     description: 'Climb to the top while dodging barrels',
     difficulty: 'hard' as const,
     thumbnail: '/games/barrel-dodge.png',
-    playable: false,
+    playable: true,
     category: 'action' as GameCategory,
   },
   {
@@ -110,7 +110,7 @@ const GAMES = [
     description: 'Stack falling blocks to clear lines',
     difficulty: 'medium' as const,
     thumbnail: '/games/block-drop.png',
-    playable: false,
+    playable: true,
     category: 'puzzle' as GameCategory,
   },
   {
@@ -119,7 +119,7 @@ const GAMES = [
     description: 'Classic pong against the CPU',
     difficulty: 'easy' as const,
     thumbnail: '/games/paddle-battle.png',
-    playable: false,
+    playable: true,
     category: 'arcade' as GameCategory,
   },
 ];
