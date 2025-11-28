@@ -9,7 +9,9 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test:anticheat": "npm run build && node lib/test/anticheatTest.js",
+    "test:stress": "npm run build && node lib/test/stressTest.js"
   },
   "engines": {
     "node": "20"
