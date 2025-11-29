@@ -3,7 +3,7 @@ import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
   TILE_SIZE: 24,
-  PLAYER_SPEED: 90,
+  PLAYER_SPEED: 105,
   GHOST_SPEED: 85,
   FRIGHTENED_SPEED: 60,
   PELLET_POINTS: 10,
@@ -12,6 +12,8 @@ const CONFIG = {
   POWER_DURATION: 6000,
   LIVES: 3,
   GHOST_RELEASE_DELAY: 2000,
+  SPEED_INCREASE_PER_LEVEL: 5,
+  POWER_DECREASE_PER_LEVEL: 500,
 };
 
 // Classic Pac-Man style maze (28x31 grid)
@@ -60,6 +62,8 @@ interface Ghost {
   graphics: Phaser.GameObjects.Graphics;
   gridX: number;
   gridY: number;
+  x: number;
+  y: number;
   targetGridX: number;
   targetGridY: number;
   color: number;
@@ -80,6 +84,7 @@ export class ChomperScene extends Phaser.Scene {
   private rng: SeededRNG;
   private score: number = 0;
   private lives: number = CONFIG.LIVES;
+  private level: number = 1;
   private gameOver: boolean = false;
   private paused: boolean = false;
 
@@ -178,10 +183,14 @@ export class ChomperScene extends Phaser.Scene {
 
     for (const data of ghostData) {
       const ghost = this.add.graphics();
+      const x = data.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const y = data.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
       this.ghosts.push({
         graphics: ghost,
         gridX: data.gridX,
         gridY: data.gridY,
+        x: x,
+        y: y,
         targetGridX: data.gridX,
         targetGridY: data.gridY,
         color: data.color,
@@ -321,9 +330,7 @@ export class ChomperScene extends Phaser.Scene {
       }
     }
 
-    const gx = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    const gy = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    ghost.graphics.setPosition(gx, gy);
+    ghost.graphics.setPosition(ghost.x, ghost.y);
   }
 
   update(time: number, delta: number): void {
@@ -436,31 +443,44 @@ export class ChomperScene extends Phaser.Scene {
     for (const ghost of this.ghosts) {
       if (!ghost.released) continue;
 
-      const speed = ghost.frightened ? CONFIG.FRIGHTENED_SPEED : CONFIG.GHOST_SPEED;
+      const levelSpeedBonus = (this.level - 1) * CONFIG.SPEED_INCREASE_PER_LEVEL;
+      const speed = ghost.frightened ? CONFIG.FRIGHTENED_SPEED : CONFIG.GHOST_SPEED + levelSpeedBonus;
 
-      // Simple AI - chase player or scatter
+      // Choose new target when reaching current target
       if (ghost.gridX === ghost.targetGridX && ghost.gridY === ghost.targetGridY) {
         this.chooseGhostTarget(ghost);
       }
 
-      // Move toward target
+      // Calculate direction to target
       const dx = ghost.targetGridX - ghost.gridX;
       const dy = ghost.targetGridY - ghost.gridY;
 
-      const currentX = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      const currentY = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      // Move in pixel coordinates
+      if (Math.abs(dx) > 0) {
+        ghost.x += Math.sign(dx) * speed * dt;
+      } else if (Math.abs(dy) > 0) {
+        ghost.y += Math.sign(dy) * speed * dt;
+      }
+
+      // Update grid position when crossing tile center
+      const centerX = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const centerY = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
 
       if (Math.abs(dx) > 0) {
-        const newX = currentX + Math.sign(dx) * speed * dt;
-        const newGridX = Math.round((newX - CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
-        if (this.canMoveTo(newGridX, ghost.gridY)) {
-          ghost.gridX = newGridX;
+        if (dx > 0 && ghost.x >= centerX + CONFIG.TILE_SIZE) {
+          ghost.gridX++;
+          ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        } else if (dx < 0 && ghost.x <= centerX - CONFIG.TILE_SIZE) {
+          ghost.gridX--;
+          ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         }
       } else if (Math.abs(dy) > 0) {
-        const newY = currentY + Math.sign(dy) * speed * dt;
-        const newGridY = Math.round((newY - CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
-        if (this.canMoveTo(ghost.gridX, newGridY)) {
-          ghost.gridY = newGridY;
+        if (dy > 0 && ghost.y >= centerY + CONFIG.TILE_SIZE) {
+          ghost.gridY++;
+          ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        } else if (dy < 0 && ghost.y <= centerY - CONFIG.TILE_SIZE) {
+          ghost.gridY--;
+          ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         }
       }
 
@@ -519,7 +539,9 @@ export class ChomperScene extends Phaser.Scene {
         this.maze[this.playerGridY].substring(this.playerGridX + 1);
       this.pelletsRemaining--;
       this.powered = true;
-      this.powerTimer = CONFIG.POWER_DURATION;
+      // Decrease power duration with each level (minimum 2 seconds)
+      const levelPenalty = (this.level - 1) * CONFIG.POWER_DECREASE_PER_LEVEL;
+      this.powerTimer = Math.max(2000, CONFIG.POWER_DURATION - levelPenalty);
       this.ghosts.forEach(g => {
         if (!g.eaten) {
           g.frightened = true;
@@ -576,6 +598,8 @@ export class ChomperScene extends Phaser.Scene {
       this.ghosts.forEach((g, i) => {
         g.gridX = g.homeX;
         g.gridY = g.homeY;
+        g.x = g.homeX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        g.y = g.homeY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         g.released = i === 0;
         g.frightened = false;
         g.eaten = false;
@@ -589,6 +613,7 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   levelComplete(): void {
+    this.level++;
     this.score += 1000;
     this.onScoreUpdate(this.score);
 
@@ -598,8 +623,43 @@ export class ChomperScene extends Phaser.Scene {
                             this.maze.join('').split('o').length - 1;
     this.drawPellets();
 
+    // Show level text
+    const levelText = this.add.text(
+      this.scale.width / 2,
+      17 * CONFIG.TILE_SIZE,
+      `LEVEL ${this.level}`,
+      {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '16px',
+        color: '#00ff00',
+      }
+    ).setOrigin(0.5);
+
+    // Reset player and ghosts
+    this.playerGridX = 14;
+    this.playerGridY = 23;
+    this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    this.playerDir = { x: 0, y: 0 };
+
+    this.ghosts.forEach((g, i) => {
+      g.gridX = g.homeX;
+      g.gridY = g.homeY;
+      g.x = g.homeX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      g.y = g.homeY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      g.targetGridX = g.homeX;
+      g.targetGridY = g.homeY;
+      g.released = i === 0;
+      g.frightened = false;
+      g.eaten = false;
+      this.drawGhost(g);
+    });
+
+    this.ghostReleaseTimer = 0;
+
     this.paused = true;
     this.time.delayedCall(2000, () => {
+      levelText.destroy();
       this.paused = false;
     });
   }
