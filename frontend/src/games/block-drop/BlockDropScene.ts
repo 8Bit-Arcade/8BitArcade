@@ -13,9 +13,7 @@ const CONFIG = {
   POINTS_PER_LINE: [0, 100, 300, 500, 800], // 0, 1, 2, 3, 4 lines
 };
 
-const TETROM
-
-INOES = {
+const TETROMINOES = {
   I: [[1, 1, 1, 1]],
   O: [[1, 1], [1, 1]],
   T: [[0, 1, 0], [1, 1, 1]],
