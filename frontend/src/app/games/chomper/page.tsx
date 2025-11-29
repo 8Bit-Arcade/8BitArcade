@@ -19,8 +19,8 @@ export default function ChomperPage() {
       gameName="CHOMPER"
       sceneLoader={loadChomperScene}
       config={{
-        width: 380,
-        height: 420,
+        width: 672,
+        height: 744,
         backgroundColor: '#000000',
       }}
       showDPad={true}

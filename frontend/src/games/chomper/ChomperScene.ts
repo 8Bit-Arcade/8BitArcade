@@ -313,12 +313,11 @@ export class ChomperScene extends Phaser.Scene {
 
         if (char === '.') {
           // Regular pellet
-          this.pelletGraphics.fillStyle(0xffb897);
+          this.pelletGraphics.fillStyle(0xffb897, 1);
           this.pelletGraphics.fillCircle(px, py, 2);
         } else if (char === 'o') {
-          // Power pellet - animated
-          const alpha = 0.5 + Math.sin(Date.now() / 200) * 0.5;
-          this.pelletGraphics.fillStyle(0xffb897, alpha);
+          // Power pellet - always visible (animation handled in update)
+          this.pelletGraphics.fillStyle(0xffb897, 1);
           this.pelletGraphics.fillCircle(px, py, 6);
         }
       }
@@ -359,39 +358,48 @@ export class ChomperScene extends Phaser.Scene {
   drawGhost(ghost: Ghost): void {
     ghost.graphics.clear();
 
-    const color = ghost.frightened
-      ? (this.powerTimer < 2000 && Math.floor(Date.now() / 200) % 2 === 0 ? 0xffffff : 0x2121de)
-      : ghost.color;
-
-    ghost.graphics.fillStyle(color);
-
     const size = CONFIG.TILE_SIZE / 2 - 2;
 
-    // Ghost head (semi-circle)
-    ghost.graphics.beginPath();
-    ghost.graphics.arc(0, 0, size, Math.PI, 0, true);
-    ghost.graphics.closePath();
-    ghost.graphics.fillPath();
+    if (ghost.eaten) {
+      // Just show eyes when eaten (returning home)
+      ghost.graphics.fillStyle(0xffffff);
+      ghost.graphics.fillCircle(-size / 2, 0, 4);
+      ghost.graphics.fillCircle(size / 2, 0, 4);
+      ghost.graphics.fillStyle(0x0000ff);
+      ghost.graphics.fillCircle(-size / 2, 0, 2);
+      ghost.graphics.fillCircle(size / 2, 0, 2);
+    } else {
+      // Normal ghost or frightened
+      const color = ghost.frightened
+        ? (this.powerTimer < 2000 && Math.floor(Date.now() / 200) % 2 === 0 ? 0xffffff : 0x2121de)
+        : ghost.color;
 
-    // Ghost body
-    ghost.graphics.fillRect(-size, 0, size * 2, size);
+      ghost.graphics.fillStyle(color);
 
-    // Wavy bottom
-    const wavePoints = 4;
-    const waveWidth = (size * 2) / wavePoints;
-    for (let i = 0; i < wavePoints; i++) {
-      const x1 = -size + i * waveWidth;
-      const x2 = x1 + waveWidth / 2;
-      const x3 = x1 + waveWidth;
-      ghost.graphics.fillTriangle(
-        x1, size,
-        x2, size + 4,
-        x3, size
-      );
-    }
+      // Ghost head (semi-circle)
+      ghost.graphics.beginPath();
+      ghost.graphics.arc(0, 0, size, Math.PI, 0, true);
+      ghost.graphics.closePath();
+      ghost.graphics.fillPath();
 
-    // Eyes
-    if (!ghost.eaten) {
+      // Ghost body
+      ghost.graphics.fillRect(-size, 0, size * 2, size);
+
+      // Wavy bottom
+      const wavePoints = 4;
+      const waveWidth = (size * 2) / wavePoints;
+      for (let i = 0; i < wavePoints; i++) {
+        const x1 = -size + i * waveWidth;
+        const x2 = x1 + waveWidth / 2;
+        const x3 = x1 + waveWidth;
+        ghost.graphics.fillTriangle(
+          x1, size,
+          x2, size + 4,
+          x3, size
+        );
+      }
+
+      // Eyes
       ghost.graphics.fillStyle(0xffffff);
       ghost.graphics.fillCircle(-size / 2, -2, 4);
       ghost.graphics.fillCircle(size / 2, -2, 4);
@@ -420,11 +428,6 @@ export class ChomperScene extends Phaser.Scene {
           g.frightened = false;
           this.drawGhost(g);
         });
-      } else {
-        // Redraw pellets for animation
-        if (Math.floor(time / 100) % 2 === 0) {
-          this.drawPellets();
-        }
       }
     }
 
@@ -528,11 +531,19 @@ export class ChomperScene extends Phaser.Scene {
       const dx = ghost.targetGridX - ghost.gridX;
       const dy = ghost.targetGridY - ghost.gridY;
 
-      // Move in pixel coordinates
+      // Move in pixel coordinates with wall collision checking
       if (Math.abs(dx) > 0) {
-        ghost.x += Math.sign(dx) * speed * dt;
+        const moveDir = Math.sign(dx);
+        const nextGridX = ghost.gridX + moveDir;
+        if (this.canMoveTo(nextGridX, ghost.gridY)) {
+          ghost.x += moveDir * speed * dt;
+        }
       } else if (Math.abs(dy) > 0) {
-        ghost.y += Math.sign(dy) * speed * dt;
+        const moveDir = Math.sign(dy);
+        const nextGridY = ghost.gridY + moveDir;
+        if (this.canMoveTo(ghost.gridX, nextGridY)) {
+          ghost.y += moveDir * speed * dt;
+        }
       }
 
       // Update grid position when crossing tile center
@@ -640,15 +651,18 @@ export class ChomperScene extends Phaser.Scene {
           ghost.frightened = false;
           ghost.targetGridX = ghost.homeX;
           ghost.targetGridY = ghost.homeY;
-
-          this.time.delayedCall(3000, () => {
-            ghost.eaten = false;
-            this.drawGhost(ghost);
-          });
         } else if (!ghost.eaten) {
           // Player dies
           this.loseLife();
         }
+      }
+
+      // Check if eaten ghost reached home
+      if (ghost.eaten && ghost.gridX === ghost.homeX && ghost.gridY === ghost.homeY) {
+        this.time.delayedCall(1000, () => {
+          ghost.eaten = false;
+          this.drawGhost(ghost);
+        });
       }
     }
   }
