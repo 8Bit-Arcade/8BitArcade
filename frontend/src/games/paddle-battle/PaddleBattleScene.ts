@@ -214,7 +214,7 @@ export class PaddleBattleScene extends Phaser.Scene {
       const speed = Math.sqrt(this.ballVelocity.x ** 2 + this.ballVelocity.y ** 2);
       const newSpeed = Math.min(speed + CONFIG.BALL_SPEED_INCREASE, CONFIG.BALL_SPEED * 2);
       const angle = Math.atan2(this.ballVelocity.y, this.ballVelocity.x);
-      this.ballVelocity.x = Math.cos(angle) * newSpeed * (isPlayer ? 1 : -1);
+      this.ballVelocity.x = Math.cos(angle) * newSpeed;
       this.ballVelocity.y = Math.sin(angle) * newSpeed;
 
       // Move ball out of paddle

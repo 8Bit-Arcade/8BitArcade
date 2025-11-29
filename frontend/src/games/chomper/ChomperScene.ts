@@ -2,42 +2,74 @@ import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
-  CELL_SIZE: 20,
-  PLAYER_SPEED: 100,
-  GHOST_SPEED: 80,
+  TILE_SIZE: 24,
+  PLAYER_SPEED: 90,
+  GHOST_SPEED: 85,
+  FRIGHTENED_SPEED: 60,
   PELLET_POINTS: 10,
   POWER_PELLET_POINTS: 50,
   GHOST_POINTS: 200,
-  POWER_DURATION: 8000,
+  POWER_DURATION: 6000,
   LIVES: 3,
+  GHOST_RELEASE_DELAY: 2000,
 };
 
-// Simple maze layout (1=wall, 0=path, 2=pellet, 3=power pellet)
+// Classic Pac-Man style maze (28x31 grid)
 const MAZE = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1],
-  [1,3,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,3,1],
-  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-  [1,2,1,1,2,1,2,1,1,1,1,1,2,1,2,1,1,2,1],
-  [1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1],
-  [1,1,1,1,2,1,1,1,0,1,0,1,1,1,2,1,1,1,1],
-  [1,1,1,1,2,1,0,0,0,0,0,0,0,1,2,1,1,1,1],
-  [1,1,1,1,2,0,0,1,1,0,1,1,0,0,2,1,1,1,1],
-  [0,0,0,0,2,0,0,1,0,0,0,1,0,0,2,0,0,0,0],
-  [1,1,1,1,2,0,0,1,1,1,1,1,0,0,2,1,1,1,1],
-  [1,1,1,1,2,1,0,0,0,0,0,0,0,1,2,1,1,1,1],
-  [1,1,1,1,2,1,0,1,1,1,1,1,0,1,2,1,1,1,1],
-  [1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1],
-  [1,2,1,1,2,1,1,1,2,1,2,1,1,1,2,1,1,2,1],
-  [1,3,2,1,2,2,2,2,2,0,2,2,2,2,2,1,2,3,1],
-  [1,1,2,1,2,1,2,1,1,1,1,1,2,1,2,1,2,1,1],
-  [1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,1],
-  [1,2,1,1,1,1,1,1,2,1,2,1,1,1,1,1,1,2,1],
-  [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  '############################',
+  '#............##............#',
+  '#.####.#####.##.#####.####.#',
+  '#o####.#####.##.#####.####o#',
+  '#.####.#####.##.#####.####.#',
+  '#..........................#',
+  '#.####.##.########.##.####.#',
+  '#.####.##.########.##.####.#',
+  '#......##....##....##......#',
+  '######.##### ## #####.######',
+  '######.##### ## #####.######',
+  '######.##          ##.######',
+  '######.## ###--### ##.######',
+  '######.## #      # ##.######',
+  '      .   #      #   .      ',
+  '######.## #      # ##.######',
+  '######.## ######## ##.######',
+  '######.##          ##.######',
+  '######.## ######## ##.######',
+  '######.## ######## ##.######',
+  '#............##............#',
+  '#.####.#####.##.#####.####.#',
+  '#.####.#####.##.#####.####.#',
+  '#o..##.......  .......##..o#',
+  '###.##.##.########.##.##.###',
+  '###.##.##.########.##.##.###',
+  '#......##....##....##......#',
+  '#.##########.##.##########.#',
+  '#.##########.##.##########.#',
+  '#..........................#',
+  '############################',
 ];
 
-type Direction = { x: number; y: number };
+const GHOST_COLORS = {
+  red: 0xff0000,
+  pink: 0xffb8ff,
+  cyan: 0x00ffff,
+  orange: 0xffb851,
+};
+
+interface Ghost {
+  graphics: Phaser.GameObjects.Graphics;
+  gridX: number;
+  gridY: number;
+  targetGridX: number;
+  targetGridY: number;
+  color: number;
+  name: string;
+  frightened: boolean;
+  eaten: boolean;
+  homeX: number;
+  homeY: number;
+  released: boolean;
+}
 
 export class ChomperScene extends Phaser.Scene {
   private onScoreUpdate: (score: number) => void;
@@ -49,29 +81,28 @@ export class ChomperScene extends Phaser.Scene {
   private score: number = 0;
   private lives: number = CONFIG.LIVES;
   private gameOver: boolean = false;
+  private paused: boolean = false;
 
-  private maze: number[][] = [];
-  private pellets: Phaser.GameObjects.Graphics[] = [];
+  // Game state
+  private maze: string[] = [];
   private player!: Phaser.GameObjects.Graphics;
-  private playerPos: { x: number; y: number } = { x: 9, y: 15 };
-  private playerDir: Direction = { x: 0, y: 0 };
-  private nextDir: Direction = { x: 0, y: 0 };
+  private playerGridX: number = 14;
+  private playerGridY: number = 23;
+  private playerX: number = 0;
+  private playerY: number = 0;
+  private playerDir: { x: number; y: number } = { x: 0, y: 0 };
+  private nextDir: { x: number; y: number } = { x: 0, y: 0 };
+  private mouthAngle: number = 0;
 
-  private ghosts: Array<{
-    graphics: Phaser.GameObjects.Graphics;
-    pos: { x: number; y: number };
-    dir: Direction;
-    color: number;
-    frightened: boolean;
-  }> = [];
-
+  private ghosts: Ghost[] = [];
   private powered: boolean = false;
   private powerTimer: number = 0;
-  private moveTimer: number = 0;
-  private pelletsRemaining: number = 0;
+  private ghostReleaseTimer: number = 0;
 
+  private pelletsRemaining: number = 0;
+  private mazeGraphics!: Phaser.GameObjects.Graphics;
+  private pelletGraphics!: Phaser.GameObjects.Graphics;
   private livesText!: Phaser.GameObjects.Text;
-  private graphics!: Phaser.GameObjects.Graphics;
 
   constructor(
     onScoreUpdate: (score: number) => void,
@@ -89,78 +120,124 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Copy maze
-    this.maze = MAZE.map(row => [...row]);
+    this.maze = MAZE.map(row => row);
 
     // Count pellets
-    this.pelletsRemaining = this.maze.flat().filter(cell => cell === 2 || cell === 3).length;
+    this.pelletsRemaining = this.maze.join('').split('.').length - 1 +
+                            this.maze.join('').split('o').length - 1;
 
-    // Graphics
-    this.graphics = this.add.graphics();
+    // Create graphics layers
+    this.mazeGraphics = this.add.graphics();
+    this.pelletGraphics = this.add.graphics();
+
     this.drawMaze();
+    this.drawPellets();
 
     // Create player
     this.player = this.add.graphics();
+    this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
     this.drawPlayer();
 
     // Create ghosts
-    const ghostColors = [0xff0000, 0xff69b4, 0x00ffff, 0xffa500];
-    const ghostStarts = [
-      { x: 8, y: 9 },
-      { x: 9, y: 9 },
-      { x: 10, y: 9 },
-      { x: 9, y: 10 },
-    ];
-
-    for (let i = 0; i < 4; i++) {
-      const ghost = this.add.graphics();
-      this.ghosts.push({
-        graphics: ghost,
-        pos: { ...ghostStarts[i] },
-        dir: { x: 0, y: -1 },
-        color: ghostColors[i],
-        frightened: false,
-      });
-      this.drawGhost(this.ghosts[i]);
-    }
+    this.createGhosts();
 
     // UI
-    this.livesText = this.add.text(16, this.scale.height - 30, `LIVES: ${this.lives}`, {
+    this.livesText = this.add.text(8, this.scale.height - 24, `LIVES: ${this.lives}`, {
       fontFamily: '"Press Start 2P"',
       fontSize: '12px',
-      color: '#00ff41',
+      color: '#ffff00',
+    });
+
+    // Add ready text
+    const readyText = this.add.text(
+      this.scale.width / 2,
+      17 * CONFIG.TILE_SIZE,
+      'READY!',
+      {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '16px',
+        color: '#ffff00',
+      }
+    ).setOrigin(0.5);
+
+    this.paused = true;
+    this.time.delayedCall(2000, () => {
+      readyText.destroy();
+      this.paused = false;
     });
   }
 
+  createGhosts(): void {
+    const ghostData = [
+      { name: 'red', color: GHOST_COLORS.red, gridX: 14, gridY: 11, released: true },
+      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: false },
+      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 12, gridY: 14, released: false },
+      { name: 'orange', color: GHOST_COLORS.orange, gridX: 16, gridY: 14, released: false },
+    ];
+
+    for (const data of ghostData) {
+      const ghost = this.add.graphics();
+      this.ghosts.push({
+        graphics: ghost,
+        gridX: data.gridX,
+        gridY: data.gridY,
+        targetGridX: data.gridX,
+        targetGridY: data.gridY,
+        color: data.color,
+        name: data.name,
+        frightened: false,
+        eaten: false,
+        homeX: data.gridX,
+        homeY: data.gridY,
+        released: data.released,
+      });
+      this.drawGhost(this.ghosts[this.ghosts.length - 1]);
+    }
+  }
+
   drawMaze(): void {
-    this.graphics.clear();
+    this.mazeGraphics.clear();
 
-    for (let y = 0; y < MAZE.length; y++) {
-      for (let x = 0; x < MAZE[y].length; x++) {
-        const cell = this.maze[y][x];
-        const px = x * CONFIG.CELL_SIZE;
-        const py = y * CONFIG.CELL_SIZE;
+    for (let y = 0; y < this.maze.length; y++) {
+      for (let x = 0; x < this.maze[y].length; x++) {
+        const char = this.maze[y][x];
+        const px = x * CONFIG.TILE_SIZE;
+        const py = y * CONFIG.TILE_SIZE;
 
-        if (cell === 1) {
-          // Wall
-          this.graphics.fillStyle(0x0000ff);
-          this.graphics.fillRect(px, py, CONFIG.CELL_SIZE, CONFIG.CELL_SIZE);
-        } else if (cell === 2) {
-          // Pellet
-          this.graphics.fillStyle(0xffff00);
-          this.graphics.fillCircle(
-            px + CONFIG.CELL_SIZE / 2,
-            py + CONFIG.CELL_SIZE / 2,
-            2
+        if (char === '#') {
+          // Wall - blue rounded rectangles
+          this.mazeGraphics.fillStyle(0x2121de);
+          this.mazeGraphics.fillRoundedRect(
+            px + 2,
+            py + 2,
+            CONFIG.TILE_SIZE - 4,
+            CONFIG.TILE_SIZE - 4,
+            3
           );
-        } else if (cell === 3) {
-          // Power pellet
-          this.graphics.fillStyle(0xffff00);
-          this.graphics.fillCircle(
-            px + CONFIG.CELL_SIZE / 2,
-            py + CONFIG.CELL_SIZE / 2,
-            5
-          );
+        }
+      }
+    }
+  }
+
+  drawPellets(): void {
+    this.pelletGraphics.clear();
+
+    for (let y = 0; y < this.maze.length; y++) {
+      for (let x = 0; x < this.maze[y].length; x++) {
+        const char = this.maze[y][x];
+        const px = x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        const py = y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+
+        if (char === '.') {
+          // Regular pellet
+          this.pelletGraphics.fillStyle(0xffb897);
+          this.pelletGraphics.fillCircle(px, py, 2);
+        } else if (char === 'o') {
+          // Power pellet - animated
+          const alpha = 0.5 + Math.sin(Date.now() / 200) * 0.5;
+          this.pelletGraphics.fillStyle(0xffb897, alpha);
+          this.pelletGraphics.fillCircle(px, py, 6);
         }
       }
     }
@@ -168,68 +245,93 @@ export class ChomperScene extends Phaser.Scene {
 
   drawPlayer(): void {
     this.player.clear();
-    this.player.fillStyle(this.powered ? 0xffff00 : 0xffff00);
+    this.player.fillStyle(0xffff00);
 
-    // Pac-Man shape
-    const angle = Math.PI / 6; // Mouth angle
+    // Animate mouth
+    this.mouthAngle = Math.abs(Math.sin(Date.now() / 100)) * 45;
+
+    // Pac-Man with mouth
+    const startAngle = Phaser.Math.DegToRad(this.mouthAngle);
+    const endAngle = Phaser.Math.DegToRad(360 - this.mouthAngle);
+
     this.player.slice(
-      0,
-      0,
-      CONFIG.CELL_SIZE / 2 - 2,
-      Phaser.Math.DegToRad(angle),
-      Phaser.Math.DegToRad(360 - angle),
+      0, 0,
+      CONFIG.TILE_SIZE / 2 - 2,
+      startAngle,
+      endAngle,
       false
     );
     this.player.fillPath();
 
-    this.player.setPosition(
-      this.playerPos.x * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2,
-      this.playerPos.y * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2
-    );
+    // Rotate based on direction
+    let rotation = 0;
+    if (this.playerDir.x === 1) rotation = 0;
+    else if (this.playerDir.x === -1) rotation = Math.PI;
+    else if (this.playerDir.y === 1) rotation = Math.PI / 2;
+    else if (this.playerDir.y === -1) rotation = -Math.PI / 2;
+
+    this.player.setRotation(rotation);
+    this.player.setPosition(this.playerX, this.playerY);
   }
 
-  drawGhost(ghost: { graphics: Phaser.GameObjects.Graphics; pos: { x: number; y: number }; color: number; frightened: boolean }): void {
+  drawGhost(ghost: Ghost): void {
     ghost.graphics.clear();
-    ghost.graphics.fillStyle(ghost.frightened ? 0x0000ff : ghost.color);
+
+    const color = ghost.frightened
+      ? (this.powerTimer < 2000 && Math.floor(Date.now() / 200) % 2 === 0 ? 0xffffff : 0x2121de)
+      : ghost.color;
+
+    ghost.graphics.fillStyle(color);
+
+    const size = CONFIG.TILE_SIZE / 2 - 2;
+
+    // Ghost head (semi-circle)
+    ghost.graphics.beginPath();
+    ghost.graphics.arc(0, 0, size, Math.PI, 0, true);
+    ghost.graphics.closePath();
+    ghost.graphics.fillPath();
 
     // Ghost body
-    const size = CONFIG.CELL_SIZE / 2 - 2;
-    ghost.graphics.fillCircle(0, -size / 2, size);
-    ghost.graphics.fillRect(-size, -size / 2, size * 2, size);
+    ghost.graphics.fillRect(-size, 0, size * 2, size);
 
-    // Eyes (if not frightened)
-    if (!ghost.frightened) {
-      ghost.graphics.fillStyle(0xffffff);
-      ghost.graphics.fillCircle(-size / 3, -size / 2, size / 4);
-      ghost.graphics.fillCircle(size / 3, -size / 2, size / 4);
+    // Wavy bottom
+    const wavePoints = 4;
+    const waveWidth = (size * 2) / wavePoints;
+    for (let i = 0; i < wavePoints; i++) {
+      const x1 = -size + i * waveWidth;
+      const x2 = x1 + waveWidth / 2;
+      const x3 = x1 + waveWidth;
+      ghost.graphics.fillTriangle(
+        x1, size,
+        x2, size + 4,
+        x3, size
+      );
     }
 
-    ghost.graphics.setPosition(
-      ghost.pos.x * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2,
-      ghost.pos.y * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2
-    );
+    // Eyes
+    if (!ghost.eaten) {
+      ghost.graphics.fillStyle(0xffffff);
+      ghost.graphics.fillCircle(-size / 2, -2, 4);
+      ghost.graphics.fillCircle(size / 2, -2, 4);
+
+      if (!ghost.frightened) {
+        ghost.graphics.fillStyle(0x0000ff);
+        ghost.graphics.fillCircle(-size / 2, -2, 2);
+        ghost.graphics.fillCircle(size / 2, -2, 2);
+      }
+    }
+
+    const gx = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const gy = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    ghost.graphics.setPosition(gx, gy);
   }
 
   update(time: number, delta: number): void {
-    if (this.gameOver) return;
+    if (this.gameOver || this.paused) return;
 
-    // Handle input
-    const dir = this.getDirection();
-    if (dir.up) this.nextDir = { x: 0, y: -1 };
-    else if (dir.down) this.nextDir = { x: 0, y: 1 };
-    else if (dir.left) this.nextDir = { x: -1, y: 0 };
-    else if (dir.right) this.nextDir = { x: 1, y: 0 };
+    const dt = delta / 1000;
 
-    // Move player and ghosts
-    this.moveTimer += delta;
-    if (this.moveTimer >= 100) {
-      this.moveTimer = 0;
-      this.movePlayer();
-      this.moveGhosts();
-      this.checkCollisions();
-    }
-
-    // Power mode timer
+    // Update power mode
     if (this.powered) {
       this.powerTimer -= delta;
       if (this.powerTimer <= 0) {
@@ -238,8 +340,43 @@ export class ChomperScene extends Phaser.Scene {
           g.frightened = false;
           this.drawGhost(g);
         });
+      } else {
+        // Redraw pellets for animation
+        if (Math.floor(time / 100) % 2 === 0) {
+          this.drawPellets();
+        }
       }
     }
+
+    // Release ghosts over time
+    if (!this.ghosts.every(g => g.released)) {
+      this.ghostReleaseTimer += delta;
+      if (this.ghostReleaseTimer > CONFIG.GHOST_RELEASE_DELAY) {
+        const unreleased = this.ghosts.find(g => !g.released);
+        if (unreleased) {
+          unreleased.released = true;
+          unreleased.targetGridY = 11; // Move to exit
+        }
+        this.ghostReleaseTimer = 0;
+      }
+    }
+
+    // Handle input
+    const dir = this.getDirection();
+    if (dir.up) this.nextDir = { x: 0, y: -1 };
+    else if (dir.down) this.nextDir = { x: 0, y: 1 };
+    else if (dir.left) this.nextDir = { x: -1, y: 0 };
+    else if (dir.right) this.nextDir = { x: 1, y: 0 };
+
+    // Move player
+    this.movePlayer(dt);
+    this.drawPlayer();
+
+    // Move ghosts
+    this.moveGhosts(dt);
+
+    // Check collisions
+    this.checkCollisions();
 
     // Check win
     if (this.pelletsRemaining === 0) {
@@ -247,120 +384,178 @@ export class ChomperScene extends Phaser.Scene {
     }
   }
 
-  movePlayer(): void {
-    // Try to turn
-    const newPos = {
-      x: this.playerPos.x + this.nextDir.x,
-      y: this.playerPos.y + this.nextDir.y,
-    };
+  movePlayer(dt: number): void {
+    const speed = CONFIG.PLAYER_SPEED;
 
-    if (this.isWalkable(newPos.x, newPos.y)) {
+    // Try to change direction
+    const nextGridX = this.playerGridX + this.nextDir.x;
+    const nextGridY = this.playerGridY + this.nextDir.y;
+
+    if (this.canMoveTo(nextGridX, nextGridY)) {
       this.playerDir = { ...this.nextDir };
     }
 
     // Move in current direction
-    const movePos = {
-      x: this.playerPos.x + this.playerDir.x,
-      y: this.playerPos.y + this.playerDir.y,
-    };
+    const targetGridX = this.playerGridX + this.playerDir.x;
+    const targetGridY = this.playerGridY + this.playerDir.y;
 
-    if (this.isWalkable(movePos.x, movePos.y)) {
-      this.playerPos = movePos;
+    if (this.canMoveTo(targetGridX, targetGridY)) {
+      this.playerX += this.playerDir.x * speed * dt;
+      this.playerY += this.playerDir.y * speed * dt;
 
-      // Collect pellet
-      const cell = this.maze[this.playerPos.y][this.playerPos.x];
-      if (cell === 2) {
-        this.score += CONFIG.PELLET_POINTS;
-        this.onScoreUpdate(this.score);
-        this.maze[this.playerPos.y][this.playerPos.x] = 0;
-        this.pelletsRemaining--;
-        this.drawMaze();
-      } else if (cell === 3) {
-        this.score += CONFIG.POWER_PELLET_POINTS;
-        this.onScoreUpdate(this.score);
-        this.maze[this.playerPos.y][this.playerPos.x] = 0;
-        this.pelletsRemaining--;
-        this.powered = true;
-        this.powerTimer = CONFIG.POWER_DURATION;
-        this.ghosts.forEach(g => {
-          g.frightened = true;
-          g.dir = { x: -g.dir.x, y: -g.dir.y }; // Reverse direction
-          this.drawGhost(g);
-        });
-        this.drawMaze();
+      // Update grid position when crossing tile center
+      const centerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const centerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+
+      if (this.playerDir.x > 0 && this.playerX >= centerX + CONFIG.TILE_SIZE) {
+        this.playerGridX++;
+        this.checkPelletCollision();
+      } else if (this.playerDir.x < 0 && this.playerX <= centerX - CONFIG.TILE_SIZE) {
+        this.playerGridX--;
+        this.checkPelletCollision();
+      } else if (this.playerDir.y > 0 && this.playerY >= centerY + CONFIG.TILE_SIZE) {
+        this.playerGridY++;
+        this.checkPelletCollision();
+      } else if (this.playerDir.y < 0 && this.playerY <= centerY - CONFIG.TILE_SIZE) {
+        this.playerGridY--;
+        this.checkPelletCollision();
       }
+    }
 
-      this.drawPlayer();
+    // Tunnel wraparound
+    if (this.playerGridX < 0) {
+      this.playerGridX = this.maze[0].length - 1;
+      this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    } else if (this.playerGridX >= this.maze[0].length) {
+      this.playerGridX = 0;
+      this.playerX = CONFIG.TILE_SIZE / 2;
     }
   }
 
-  moveGhosts(): void {
+  moveGhosts(dt: number): void {
     for (const ghost of this.ghosts) {
-      // Simple AI: random movement with slight bias toward player
-      const possibleDirs: Direction[] = [];
+      if (!ghost.released) continue;
 
-      for (const dir of [
+      const speed = ghost.frightened ? CONFIG.FRIGHTENED_SPEED : CONFIG.GHOST_SPEED;
+
+      // Simple AI - chase player or scatter
+      if (ghost.gridX === ghost.targetGridX && ghost.gridY === ghost.targetGridY) {
+        this.chooseGhostTarget(ghost);
+      }
+
+      // Move toward target
+      const dx = ghost.targetGridX - ghost.gridX;
+      const dy = ghost.targetGridY - ghost.gridY;
+
+      const currentX = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const currentY = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+
+      if (Math.abs(dx) > 0) {
+        const newX = currentX + Math.sign(dx) * speed * dt;
+        const newGridX = Math.round((newX - CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
+        if (this.canMoveTo(newGridX, ghost.gridY)) {
+          ghost.gridX = newGridX;
+        }
+      } else if (Math.abs(dy) > 0) {
+        const newY = currentY + Math.sign(dy) * speed * dt;
+        const newGridY = Math.round((newY - CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
+        if (this.canMoveTo(ghost.gridX, newGridY)) {
+          ghost.gridY = newGridY;
+        }
+      }
+
+      this.drawGhost(ghost);
+    }
+  }
+
+  chooseGhostTarget(ghost: Ghost): void {
+    if (ghost.frightened) {
+      // Random movement when frightened
+      const dirs = [
         { x: 0, y: -1 },
         { x: 0, y: 1 },
         { x: -1, y: 0 },
         { x: 1, y: 0 },
-      ]) {
-        const newPos = {
-          x: ghost.pos.x + dir.x,
-          y: ghost.pos.y + dir.y,
-        };
+      ].filter(d => this.canMoveTo(ghost.gridX + d.x, ghost.gridY + d.y));
 
-        if (this.isWalkable(newPos.x, newPos.y) &&
-            !(dir.x === -ghost.dir.x && dir.y === -ghost.dir.y)) {
-          possibleDirs.push(dir);
-        }
+      if (dirs.length > 0) {
+        const dir = dirs[Math.floor(this.rng.next() * dirs.length)];
+        ghost.targetGridX = ghost.gridX + dir.x;
+        ghost.targetGridY = ghost.gridY + dir.y;
       }
+    } else {
+      // Chase player
+      ghost.targetGridX = this.playerGridX;
+      ghost.targetGridY = this.playerGridY;
+    }
+  }
 
-      if (possibleDirs.length > 0) {
-        // Choose direction (random or toward player)
-        if (ghost.frightened || this.rng.next() < 0.3) {
-          ghost.dir = possibleDirs[Math.floor(this.rng.next() * possibleDirs.length)];
-        } else {
-          // Move toward player
-          const distances = possibleDirs.map(dir => {
-            const newPos = { x: ghost.pos.x + dir.x, y: ghost.pos.y + dir.y };
-            return Math.abs(newPos.x - this.playerPos.x) + Math.abs(newPos.y - this.playerPos.y);
-          });
-          const minDist = Math.min(...distances);
-          ghost.dir = possibleDirs[distances.indexOf(minDist)];
+  canMoveTo(gridX: number, gridY: number): boolean {
+    if (gridY < 0 || gridY >= this.maze.length || gridX < 0 || gridX >= this.maze[0].length) {
+      return true; // Allow tunnel
+    }
+    const char = this.maze[gridY][gridX];
+    return char !== '#' && char !== '-';
+  }
+
+  checkPelletCollision(): void {
+    const char = this.maze[this.playerGridY][this.playerGridX];
+
+    if (char === '.') {
+      this.score += CONFIG.PELLET_POINTS;
+      this.onScoreUpdate(this.score);
+      this.maze[this.playerGridY] =
+        this.maze[this.playerGridY].substring(0, this.playerGridX) +
+        ' ' +
+        this.maze[this.playerGridY].substring(this.playerGridX + 1);
+      this.pelletsRemaining--;
+      this.drawPellets();
+    } else if (char === 'o') {
+      this.score += CONFIG.POWER_PELLET_POINTS;
+      this.onScoreUpdate(this.score);
+      this.maze[this.playerGridY] =
+        this.maze[this.playerGridY].substring(0, this.playerGridX) +
+        ' ' +
+        this.maze[this.playerGridY].substring(this.playerGridX + 1);
+      this.pelletsRemaining--;
+      this.powered = true;
+      this.powerTimer = CONFIG.POWER_DURATION;
+      this.ghosts.forEach(g => {
+        if (!g.eaten) {
+          g.frightened = true;
+          this.drawGhost(g);
         }
-      }
-
-      ghost.pos.x += ghost.dir.x;
-      ghost.pos.y += ghost.dir.y;
-      this.drawGhost(ghost);
+      });
+      this.drawPellets();
     }
   }
 
   checkCollisions(): void {
     for (const ghost of this.ghosts) {
-      if (ghost.pos.x === this.playerPos.x && ghost.pos.y === this.playerPos.y) {
-        if (ghost.frightened) {
+      if (!ghost.released) continue;
+
+      const dist = Math.abs(ghost.gridX - this.playerGridX) + Math.abs(ghost.gridY - this.playerGridY);
+
+      if (dist < 1) {
+        if (ghost.frightened && !ghost.eaten) {
           // Eat ghost
           this.score += CONFIG.GHOST_POINTS;
           this.onScoreUpdate(this.score);
-          ghost.pos = { x: 9, y: 9 }; // Return to home
+          ghost.eaten = true;
           ghost.frightened = false;
-          this.drawGhost(ghost);
-        } else {
+          ghost.targetGridX = ghost.homeX;
+          ghost.targetGridY = ghost.homeY;
+
+          this.time.delayedCall(3000, () => {
+            ghost.eaten = false;
+            this.drawGhost(ghost);
+          });
+        } else if (!ghost.eaten) {
           // Player dies
           this.loseLife();
-          return;
         }
       }
     }
-  }
-
-  isWalkable(x: number, y: number): boolean {
-    if (y < 0 || y >= MAZE.length || x < 0 || x >= MAZE[0].length) {
-      return false;
-    }
-    return MAZE[y][x] !== 1;
   }
 
   loseLife(): void {
@@ -370,19 +565,26 @@ export class ChomperScene extends Phaser.Scene {
     if (this.lives <= 0) {
       this.endGame();
     } else {
-      // Reset positions
-      this.playerPos = { x: 9, y: 15 };
+      this.paused = true;
+      this.playerGridX = 14;
+      this.playerGridY = 23;
+      this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
       this.playerDir = { x: 0, y: 0 };
-      this.drawPlayer();
-
-      this.ghosts[0].pos = { x: 8, y: 9 };
-      this.ghosts[1].pos = { x: 9, y: 9 };
-      this.ghosts[2].pos = { x: 10, y: 9 };
-      this.ghosts[3].pos = { x: 9, y: 10 };
-      this.ghosts.forEach(g => this.drawGhost(g));
-
       this.powered = false;
-      this.powerTimer = 0;
+
+      this.ghosts.forEach((g, i) => {
+        g.gridX = g.homeX;
+        g.gridY = g.homeY;
+        g.released = i === 0;
+        g.frightened = false;
+        g.eaten = false;
+        this.drawGhost(g);
+      });
+
+      this.time.delayedCall(2000, () => {
+        this.paused = false;
+      });
     }
   }
 
@@ -390,14 +592,16 @@ export class ChomperScene extends Phaser.Scene {
     this.score += 1000;
     this.onScoreUpdate(this.score);
 
-    // Could increase difficulty here
-    this.maze = MAZE.map(row => [...row]);
-    this.pelletsRemaining = this.maze.flat().filter(cell => cell === 2 || cell === 3).length;
-    this.drawMaze();
+    // Reset maze
+    this.maze = MAZE.map(row => row);
+    this.pelletsRemaining = this.maze.join('').split('.').length - 1 +
+                            this.maze.join('').split('o').length - 1;
+    this.drawPellets();
 
-    this.playerPos = { x: 9, y: 15 };
-    this.playerDir = { x: 0, y: 0 };
-    this.drawPlayer();
+    this.paused = true;
+    this.time.delayedCall(2000, () => {
+      this.paused = false;
+    });
   }
 
   endGame(): void {
@@ -405,7 +609,7 @@ export class ChomperScene extends Phaser.Scene {
     this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
       fontSize: '24px',
-      color: '#ff0040',
+      color: '#ff0000',
     }).setOrigin(0.5);
 
     this.time.delayedCall(2000, () => {
