@@ -179,6 +179,8 @@ export class ChomperScene extends Phaser.Scene {
   private mazeGraphics!: Phaser.GameObjects.Graphics;
   private pelletGraphics!: Phaser.GameObjects.Graphics;
   private livesText!: Phaser.GameObjects.Text;
+  private powerPelletVisible: boolean = true;
+  private powerPelletTimer: number = 0;
 
   constructor(
     onScoreUpdate: (score: number) => void,
@@ -316,9 +318,11 @@ export class ChomperScene extends Phaser.Scene {
           this.pelletGraphics.fillStyle(0xffb897, 1);
           this.pelletGraphics.fillCircle(px, py, 2);
         } else if (char === 'o') {
-          // Power pellet - always visible (animation handled in update)
-          this.pelletGraphics.fillStyle(0xffb897, 1);
-          this.pelletGraphics.fillCircle(px, py, 6);
+          // Power pellet - flash on/off
+          if (this.powerPelletVisible) {
+            this.pelletGraphics.fillStyle(0xffb897, 1);
+            this.pelletGraphics.fillCircle(px, py, 6);
+          }
         }
       }
     }
@@ -418,6 +422,14 @@ export class ChomperScene extends Phaser.Scene {
     if (this.gameOver || this.paused) return;
 
     const dt = delta / 1000;
+
+    // Animate power pellets (flash every 250ms)
+    this.powerPelletTimer += delta;
+    if (this.powerPelletTimer > 250) {
+      this.powerPelletVisible = !this.powerPelletVisible;
+      this.powerPelletTimer = 0;
+      this.drawPellets();
+    }
 
     // Update power mode
     if (this.powered) {
@@ -531,18 +543,47 @@ export class ChomperScene extends Phaser.Scene {
       const dx = ghost.targetGridX - ghost.gridX;
       const dy = ghost.targetGridY - ghost.gridY;
 
-      // Move in pixel coordinates with wall collision checking
-      if (Math.abs(dx) > 0) {
-        const moveDir = Math.sign(dx);
-        const nextGridX = ghost.gridX + moveDir;
-        if (this.canMoveTo(nextGridX, ghost.gridY)) {
-          ghost.x += moveDir * speed * dt;
+      // Determine which direction to try first based on target
+      let moveX = Math.abs(dx) > Math.abs(dy);
+      let tried = false;
+
+      // Try to move in the best direction, or alternate if blocked
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (moveX && Math.abs(dx) > 0) {
+          const moveDir = Math.sign(dx);
+          const nextGridX = ghost.gridX + moveDir;
+          if (this.canMoveTo(nextGridX, ghost.gridY)) {
+            ghost.x += moveDir * speed * dt;
+            tried = true;
+            break;
+          }
+        } else if (!moveX && Math.abs(dy) > 0) {
+          const moveDir = Math.sign(dy);
+          const nextGridY = ghost.gridY + moveDir;
+          if (this.canMoveTo(ghost.gridX, nextGridY)) {
+            ghost.y += moveDir * speed * dt;
+            tried = true;
+            break;
+          }
         }
-      } else if (Math.abs(dy) > 0) {
-        const moveDir = Math.sign(dy);
-        const nextGridY = ghost.gridY + moveDir;
-        if (this.canMoveTo(ghost.gridX, nextGridY)) {
-          ghost.y += moveDir * speed * dt;
+        // If first direction failed, try the other direction
+        moveX = !moveX;
+      }
+
+      // If still can't move in target direction, pick any valid direction
+      if (!tried) {
+        const directions = [
+          { dx: 1, dy: 0 },
+          { dx: -1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: 0, dy: -1 },
+        ];
+        for (const dir of directions) {
+          if (this.canMoveTo(ghost.gridX + dir.dx, ghost.gridY + dir.dy)) {
+            ghost.x += dir.dx * speed * dt;
+            ghost.y += dir.dy * speed * dt;
+            break;
+          }
         }
       }
 
@@ -550,22 +591,20 @@ export class ChomperScene extends Phaser.Scene {
       const centerX = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
       const centerY = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
 
-      if (Math.abs(dx) > 0) {
-        if (dx > 0 && ghost.x >= centerX + CONFIG.TILE_SIZE) {
-          ghost.gridX++;
-          ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        } else if (dx < 0 && ghost.x <= centerX - CONFIG.TILE_SIZE) {
-          ghost.gridX--;
-          ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        }
-      } else if (Math.abs(dy) > 0) {
-        if (dy > 0 && ghost.y >= centerY + CONFIG.TILE_SIZE) {
-          ghost.gridY++;
-          ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        } else if (dy < 0 && ghost.y <= centerY - CONFIG.TILE_SIZE) {
-          ghost.gridY--;
-          ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        }
+      if (ghost.x >= centerX + CONFIG.TILE_SIZE) {
+        ghost.gridX++;
+        ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      } else if (ghost.x <= centerX - CONFIG.TILE_SIZE) {
+        ghost.gridX--;
+        ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      }
+
+      if (ghost.y >= centerY + CONFIG.TILE_SIZE) {
+        ghost.gridY++;
+        ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      } else if (ghost.y <= centerY - CONFIG.TILE_SIZE) {
+        ghost.gridY--;
+        ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
       }
 
       this.drawGhost(ghost);
