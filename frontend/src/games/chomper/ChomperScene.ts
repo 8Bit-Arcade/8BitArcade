@@ -701,64 +701,78 @@ export class ChomperScene extends Phaser.Scene {
           ghost.targetGridY = 1;
         }
       } else {
-        // Normal mode: each ghost has different targeting behavior
+        // Normal mode: each ghost has authentic Pac-Man targeting behavior
         if (ghost.name === 'red') {
-          // Red (Blinky): Direct chase - always targets player's current position
+          // Blinky (Red): "Shadow" - Direct chase, always targets player's current position
           ghost.targetGridX = this.playerGridX;
           ghost.targetGridY = this.playerGridY;
         } else if (ghost.name === 'pink') {
-          // Pink (Pinky): Ambush - targets 4 tiles ahead of player
+          // Pinky (Pink): "Speedy" - Ambush strategy, targets 4 tiles ahead
+          // Includes the famous "up bug" from original Pac-Man
           let targetX = this.playerGridX;
           let targetY = this.playerGridY;
-          // Use current direction if moving, otherwise patrol top-left area
+
           if (this.playerDir.x !== 0 || this.playerDir.y !== 0) {
-            targetX += this.playerDir.x * 4;
-            targetY += this.playerDir.y * 4;
-          } else {
-            // Player stopped - patrol top area
-            targetX = this.playerGridX < 14 ? this.playerGridX - 4 : this.playerGridX + 4;
-            targetY = Math.max(1, this.playerGridY - 3);
+            // When facing up, original bug causes offset to be 4 up AND 4 left
+            if (this.playerDir.y < 0) {
+              targetX += -4; // 4 tiles left (the bug)
+              targetY += -4; // 4 tiles up
+            } else {
+              // Normal: just 4 tiles ahead in current direction
+              targetX += this.playerDir.x * 4;
+              targetY += this.playerDir.y * 4;
+            }
           }
+
           ghost.targetGridX = Math.max(1, Math.min(this.maze[0].length - 2, targetX));
           ghost.targetGridY = Math.max(1, Math.min(this.maze.length - 2, targetY));
         } else if (ghost.name === 'cyan') {
-          // Cyan (Inky): Patroller - targets corners/sides to cut off player
-          const playerInLeftHalf = this.playerGridX < 14;
-          const playerInTopHalf = this.playerGridY < 15;
+          // Inky (Cyan): "Bashful" - Uses vector between Blinky and player
+          // Most complex AI: takes point 2 tiles ahead of player, then doubles vector from Blinky
+          const blinky = this.ghosts.find(g => g.name === 'red');
 
-          if (playerInLeftHalf && playerInTopHalf) {
-            ghost.targetGridX = this.maze[0].length - 3;
-            ghost.targetGridY = 3;
-          } else if (!playerInLeftHalf && playerInTopHalf) {
-            ghost.targetGridX = 3;
-            ghost.targetGridY = 3;
-          } else if (playerInLeftHalf && !playerInTopHalf) {
-            ghost.targetGridX = this.maze[0].length - 3;
-            ghost.targetGridY = this.maze.length - 3;
+          if (blinky) {
+            // Get point 2 tiles ahead of player (with "up bug" like Pinky)
+            let pivotX = this.playerGridX;
+            let pivotY = this.playerGridY;
+
+            if (this.playerDir.y < 0) {
+              pivotX += -2; // 2 tiles left when facing up (bug)
+              pivotY += -2; // 2 tiles up
+            } else {
+              pivotX += this.playerDir.x * 2;
+              pivotY += this.playerDir.y * 2;
+            }
+
+            // Calculate vector from Blinky to pivot point
+            const vectorX = pivotX - blinky.gridX;
+            const vectorY = pivotY - blinky.gridY;
+
+            // Double the vector to get target (creates unpredictable behavior)
+            ghost.targetGridX = pivotX + vectorX;
+            ghost.targetGridY = pivotY + vectorY;
+
+            // Clamp to maze bounds
+            ghost.targetGridX = Math.max(1, Math.min(this.maze[0].length - 2, ghost.targetGridX));
+            ghost.targetGridY = Math.max(1, Math.min(this.maze.length - 2, ghost.targetGridY));
           } else {
-            ghost.targetGridX = 3;
-            ghost.targetGridY = this.maze.length - 3;
+            // Fallback if Blinky not found
+            ghost.targetGridX = this.playerGridX;
+            ghost.targetGridY = this.playerGridY;
           }
         } else if (ghost.name === 'orange') {
-          // Orange (Clyde): Random patrol - picks random accessible areas
+          // Clyde (Orange): "Pokey" - Alternates between chase and scatter
+          // When close (8 tiles), heads to bottom-left scatter corner
           const dist = Math.abs(ghost.gridX - this.playerGridX) + Math.abs(ghost.gridY - this.playerGridY);
+
           if (dist > 8) {
-            // Far away - chase player
+            // Far away - chase player directly
             ghost.targetGridX = this.playerGridX;
             ghost.targetGridY = this.playerGridY;
           } else {
-            // Close - scatter to random corner
-            if (atCenter) {
-              const corners = [
-                { x: 1, y: 1 },
-                { x: this.maze[0].length - 2, y: 1 },
-                { x: 1, y: this.maze.length - 2 },
-                { x: this.maze[0].length - 2, y: this.maze.length - 2 },
-              ];
-              const corner = corners[Math.floor(this.rng.next() * corners.length)];
-              ghost.targetGridX = corner.x;
-              ghost.targetGridY = corner.y;
-            }
+            // Close - scatter to bottom-left corner (his home corner)
+            ghost.targetGridX = 1;
+            ghost.targetGridY = this.maze.length - 2;
           }
         }
       }
