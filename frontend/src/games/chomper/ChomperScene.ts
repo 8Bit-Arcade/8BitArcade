@@ -142,6 +142,8 @@ interface Ghost {
   homeY: number;
   released: boolean;
   exitedHouse: boolean;
+  dirX: number;
+  dirY: number;
 }
 
 export class ChomperScene extends Phaser.Scene {
@@ -274,6 +276,8 @@ export class ChomperScene extends Phaser.Scene {
         homeY: data.gridY,
         released: data.released,
         exitedHouse: data.exitedHouse,
+        dirX: 0,
+        dirY: 0,
       });
       this.drawGhost(this.ghosts[this.ghosts.length - 1]);
     }
@@ -595,7 +599,13 @@ export class ChomperScene extends Phaser.Scene {
             { x: ghost.gridX - 1, y: ghost.gridY },
             { x: ghost.gridX, y: ghost.gridY + 1 },
             { x: ghost.gridX, y: ghost.gridY - 1 },
-          ].filter(d => this.canMoveTo(d.x, d.y));
+          ].filter(d => {
+            // Filter out reverse direction and invalid moves
+            const dx = d.x - ghost.gridX;
+            const dy = d.y - ghost.gridY;
+            const isReverse = dx === -ghost.dirX && dy === -ghost.dirY;
+            return !isReverse && this.canMoveTo(d.x, d.y);
+          });
           if (dirs.length > 0) {
             const dir = dirs[Math.floor(this.rng.next() * dirs.length)];
             ghost.targetGridX = dir.x;
@@ -681,58 +691,77 @@ export class ChomperScene extends Phaser.Scene {
         return this.canMoveTo(gx, gy);
       };
 
-      // Only apply randomness at grid centers for non-exiting ghosts
-      const useRandom = atCenter && ghost.exitedHouse && !ghost.eaten && !ghost.frightened && this.rng.next() < 0.15;
+      // Only choose new direction at grid centers to prevent oscillation
+      if (atCenter || ghost.dirX === 0 && ghost.dirY === 0) {
+        // Only apply randomness at grid centers for non-exiting ghosts (reduced to 5%)
+        const useRandom = atCenter && ghost.exitedHouse && !ghost.eaten && !ghost.frightened && this.rng.next() < 0.05;
 
-      if (useRandom) {
-        // 15% chance for slight path variation at intersections
-        const dirs = [
-          { x: 1, y: 0 },
-          { x: -1, y: 0 },
-          { x: 0, y: 1 },
-          { x: 0, y: -1 },
-        ];
-        const validDirs = dirs.filter(d => canMove(ghost.gridX + d.x, ghost.gridY + d.y));
-        if (validDirs.length > 0) {
-          moveDir = validDirs[Math.floor(this.rng.next() * validDirs.length)];
-        }
-      } else {
-        // Normal pathfinding towards target
-        if (Math.abs(dx) > Math.abs(dy)) {
-          // Try horizontal first
-          if (dx !== 0 && canMove(ghost.gridX + Math.sign(dx), ghost.gridY)) {
-            moveDir.x = Math.sign(dx);
-          } else if (dy !== 0 && canMove(ghost.gridX, ghost.gridY + Math.sign(dy))) {
-            moveDir.y = Math.sign(dy);
+        if (useRandom) {
+          // 5% chance for slight path variation at intersections
+          const dirs = [
+            { x: 1, y: 0 },
+            { x: -1, y: 0 },
+            { x: 0, y: 1 },
+            { x: 0, y: -1 },
+          ];
+          // Filter out reverse direction and invalid moves
+          const validDirs = dirs.filter(d =>
+            canMove(ghost.gridX + d.x, ghost.gridY + d.y) &&
+            !(d.x === -ghost.dirX && d.y === -ghost.dirY) // Prevent 180-degree turns
+          );
+          if (validDirs.length > 0) {
+            moveDir = validDirs[Math.floor(this.rng.next() * validDirs.length)];
           }
         } else {
-          // Try vertical first
-          if (dy !== 0 && canMove(ghost.gridX, ghost.gridY + Math.sign(dy))) {
-            moveDir.y = Math.sign(dy);
-          } else if (dx !== 0 && canMove(ghost.gridX + Math.sign(dx), ghost.gridY)) {
-            moveDir.x = Math.sign(dx);
-          }
-        }
-      }
+          // Normal pathfinding towards target
+          const directions = [];
 
-      // If still no direction, pick any valid direction
-      if (moveDir.x === 0 && moveDir.y === 0) {
-        const dirs = [
-          { x: 1, y: 0 },
-          { x: -1, y: 0 },
-          { x: 0, y: 1 },
-          { x: 0, y: -1 },
-        ];
-        for (const dir of dirs) {
-          if (canMove(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
-            moveDir = dir;
-            break;
+          // Prioritize based on distance to target
+          if (Math.abs(dx) > Math.abs(dy)) {
+            // Try horizontal first, then vertical
+            if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
+            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
+          } else {
+            // Try vertical first, then horizontal
+            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
+            if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
+          }
+
+          // Also consider perpendicular directions
+          if (dx !== 0) directions.push({ x: 0, y: 1 }, { x: 0, y: -1 });
+          if (dy !== 0) directions.push({ x: 1, y: 0 }, { x: -1, y: 0 });
+
+          // Choose first valid direction that's not a 180-degree turn
+          for (const dir of directions) {
+            const isReverse = dir.x === -ghost.dirX && dir.y === -ghost.dirY;
+            if (!isReverse && canMove(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
+              moveDir = dir;
+              break;
+            }
+          }
+
+          // If no direction found (shouldn't happen), allow reverse as last resort
+          if (moveDir.x === 0 && moveDir.y === 0) {
+            for (const dir of directions) {
+              if (canMove(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
+                moveDir = dir;
+                break;
+              }
+            }
           }
         }
+      } else {
+        // Not at center, continue current direction
+        moveDir.x = ghost.dirX;
+        moveDir.y = ghost.dirY;
       }
 
       // Move ghost
       if (moveDir.x !== 0 || moveDir.y !== 0) {
+        // Store current direction
+        ghost.dirX = moveDir.x;
+        ghost.dirY = moveDir.y;
+
         ghost.x += moveDir.x * speed * dt;
         ghost.y += moveDir.y * speed * dt;
 
@@ -836,6 +865,8 @@ export class ChomperScene extends Phaser.Scene {
       if (ghost.eaten && ghost.gridX === ghost.homeX && ghost.gridY === ghost.homeY) {
         this.time.delayedCall(1000, () => {
           ghost.eaten = false;
+          ghost.dirX = 0; // Reset direction
+          ghost.dirY = 0;
           this.drawGhost(ghost);
         });
       }
