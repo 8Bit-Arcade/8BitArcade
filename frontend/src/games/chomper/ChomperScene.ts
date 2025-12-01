@@ -50,6 +50,7 @@ const MAZES = [
     '#.##########.##.##########.#',
     '#.##########.##.##########.#',
     '#..........................#',
+    '############################',
   ],
 
   // Maze 2: Open corridors with central chamber
@@ -83,6 +84,7 @@ const MAZES = [
     '#.########.####.########.#',
     '#.########.####.########.#',
     '#o........................o#',
+    '############################',
   ],
 
   // Maze 3: Zigzag tunnels
@@ -116,6 +118,7 @@ const MAZES = [
     '##########.######.##########',
     '##########.######.##########',
     '#..........................#',
+    '############################',
   ],
 ];
 
@@ -568,19 +571,35 @@ export class ChomperScene extends Phaser.Scene {
           if (ghost.name === 'red') {
             ghost.targetGridX = exitCenterX;
             ghost.targetGridY = 9;
+            if (ghost.gridY <= 9) {
+              ghost.exitedHouse = true;
+            }
           } else if (ghost.name === 'pink') {
             ghost.targetGridX = exitCenterX - 3;
             ghost.targetGridY = 9;
+            if (ghost.gridY <= 9 && Math.abs(ghost.gridX - (exitCenterX - 3)) < 2) {
+              ghost.exitedHouse = true;
+            }
           } else if (ghost.name === 'cyan') {
             ghost.targetGridX = exitCenterX + 3;
             ghost.targetGridY = 9;
-          } else {
-            ghost.targetGridX = exitCenterX;
-            ghost.targetGridY = 11;
-          }
-          // Mark as exited when reaching final exit position
-          if (ghost.gridY <= 9 || (ghost.name === 'orange' && ghost.gridY === 11 && Math.abs(ghost.gridX - exitCenterX) > 2)) {
-            ghost.exitedHouse = true;
+            if (ghost.gridY <= 9 && Math.abs(ghost.gridX - (exitCenterX + 3)) < 2) {
+              ghost.exitedHouse = true;
+            }
+          } else if (ghost.name === 'orange') {
+            // Orange exits horizontally along row 11, then up
+            if (ghost.gridX === exitCenterX) {
+              // First move left
+              ghost.targetGridX = exitCenterX - 3;
+              ghost.targetGridY = 11;
+            } else {
+              // Then move up
+              ghost.targetGridX = exitCenterX - 3;
+              ghost.targetGridY = 9;
+              if (ghost.gridY <= 9) {
+                ghost.exitedHouse = true;
+              }
+            }
           }
         }
       } else if (ghost.eaten) {
@@ -716,18 +735,25 @@ export class ChomperScene extends Phaser.Scene {
           // Normal pathfinding towards target
           const directions = [];
 
-          // Prioritize based on distance to target
-          if (Math.abs(dx) > Math.abs(dy)) {
-            // Try horizontal first, then vertical
+          // Prioritize based on distance to target, preferring horizontal when equal
+          const absDx = Math.abs(dx);
+          const absDy = Math.abs(dy);
+
+          if (absDx > absDy) {
+            // Horizontal is more important
             if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
             if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
+          } else if (absDy > absDx) {
+            // Vertical is more important
+            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
+            if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
           } else {
-            // Try vertical first, then horizontal
-            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
+            // Equal distance - prefer horizontal movement
             if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
+            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
           }
 
-          // Also consider perpendicular directions
+          // Also consider perpendicular directions as fallbacks
           if (dx !== 0) directions.push({ x: 0, y: 1 }, { x: 0, y: -1 });
           if (dy !== 0) directions.push({ x: 1, y: 0 }, { x: -1, y: 0 });
 

@@ -586,9 +586,9 @@ export default function GameWrapper({
             ref={containerRef}
             className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto"
             style={{
-              // 85vh to accommodate taller games like Chomper (720px)
-              height: '85vh',
-              maxHeight: '900px',
+              // 72vh to prevent overflow and auto-center on mobile
+              height: '72vh',
+              maxHeight: '800px',
             }}
           />
         )}
