@@ -16,7 +16,7 @@ const CONFIG = {
   POWER_DECREASE_PER_LEVEL: 500,
 };
 
-// Multiple maze layouts (28x31 grid) - cycles through levels
+// Multiple maze layouts (28x30 grid) - cycles through levels
 const MAZES = [
   // Maze 1: Classic Pac-Man style
   [
@@ -50,7 +50,6 @@ const MAZES = [
     '#.##########.##.##########.#',
     '#.##########.##.##########.#',
     '#..........................#',
-    '############################',
   ],
 
   // Maze 2: Open corridors with central chamber
@@ -84,7 +83,6 @@ const MAZES = [
     '#.########.####.########.#',
     '#.########.####.########.#',
     '#o........................o#',
-    '############################',
   ],
 
   // Maze 3: Zigzag tunnels
@@ -118,7 +116,6 @@ const MAZES = [
     '##########.######.##########',
     '##########.######.##########',
     '#..........................#',
-    '############################',
   ],
 ];
 
@@ -144,6 +141,7 @@ interface Ghost {
   homeX: number;
   homeY: number;
   released: boolean;
+  exitedHouse: boolean;
 }
 
 export class ChomperScene extends Phaser.Scene {
@@ -250,10 +248,10 @@ export class ChomperScene extends Phaser.Scene {
 
   createGhosts(): void {
     const ghostData = [
-      { name: 'red', color: GHOST_COLORS.red, gridX: 14, gridY: 11, released: true },
-      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: false },
-      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 12, gridY: 14, released: false },
-      { name: 'orange', color: GHOST_COLORS.orange, gridX: 16, gridY: 14, released: false },
+      { name: 'red', color: GHOST_COLORS.red, gridX: 14, gridY: 11, released: true, exitedHouse: true },
+      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: false, exitedHouse: false },
+      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 12, gridY: 14, released: false, exitedHouse: false },
+      { name: 'orange', color: GHOST_COLORS.orange, gridX: 16, gridY: 14, released: false, exitedHouse: false },
     ];
 
     for (const data of ghostData) {
@@ -275,6 +273,7 @@ export class ChomperScene extends Phaser.Scene {
         homeX: data.gridX,
         homeY: data.gridY,
         released: data.released,
+        exitedHouse: data.exitedHouse,
       });
       this.drawGhost(this.ghosts[this.ghosts.length - 1]);
     }
@@ -545,10 +544,23 @@ export class ChomperScene extends Phaser.Scene {
       const levelSpeedBonus = (this.level - 1) * CONFIG.SPEED_INCREASE_PER_LEVEL;
       const speed = ghost.frightened ? CONFIG.FRIGHTENED_SPEED : CONFIG.GHOST_SPEED + levelSpeedBonus;
 
-      // Always chase player (or scatter if frightened/eaten)
-      if (ghost.eaten) {
+      // Check if ghost needs to exit house first
+      if (!ghost.exitedHouse) {
+        // Move to exit position (gridY 11, gridX 14)
+        ghost.targetGridX = 14;
+        ghost.targetGridY = 11;
+        // Mark as exited once they reach the exit position
+        if (ghost.gridY === 11) {
+          ghost.exitedHouse = true;
+        }
+      } else if (ghost.eaten) {
+        // Return home when eaten
         ghost.targetGridX = ghost.homeX;
         ghost.targetGridY = ghost.homeY;
+        // Mark as not exited when they get back home so they exit again
+        if (ghost.gridX === ghost.homeX && ghost.gridY === ghost.homeY) {
+          ghost.exitedHouse = false;
+        }
       } else if (ghost.frightened) {
         // Random scatter behavior - only update target when at grid center
         const atCenter =
@@ -735,6 +747,7 @@ export class ChomperScene extends Phaser.Scene {
         g.x = g.homeX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         g.y = g.homeY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         g.released = i === 0;
+        g.exitedHouse = i === 0;
         g.frightened = false;
         g.eaten = false;
         this.drawGhost(g);
@@ -785,6 +798,7 @@ export class ChomperScene extends Phaser.Scene {
       g.targetGridX = g.homeX;
       g.targetGridY = g.homeY;
       g.released = i === 0;
+      g.exitedHouse = i === 0;
       g.frightened = false;
       g.eaten = false;
       this.drawGhost(g);
