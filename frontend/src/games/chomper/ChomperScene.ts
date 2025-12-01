@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
-  TILE_SIZE: 23,
+  TILE_SIZE: 21,
   PLAYER_SPEED: 105,
   GHOST_SPEED: 85,
   FRIGHTENED_SPEED: 60,
@@ -511,8 +511,11 @@ export class ChomperScene extends Phaser.Scene {
       if (this.powerTimer <= 0) {
         this.powered = false;
         this.ghosts.forEach(g => {
-          g.frightened = false;
-          this.drawGhost(g);
+          // Only un-frighten ghosts that aren't eaten
+          if (!g.eaten) {
+            g.frightened = false;
+            this.drawGhost(g);
+          }
         });
       }
     }
@@ -674,10 +677,6 @@ export class ChomperScene extends Phaser.Scene {
         // Return home when eaten - can pass through walls
         ghost.targetGridX = ghost.homeX;
         ghost.targetGridY = ghost.homeY;
-        // Mark as not exited when they get back home so they exit again
-        if (ghost.gridX === ghost.homeX && ghost.gridY === ghost.homeY) {
-          ghost.exitedHouse = false;
-        }
       } else if (ghost.frightened) {
         // Flee from player - move to opposite corner
         const dx = ghost.gridX - this.playerGridX;
@@ -961,6 +960,7 @@ export class ChomperScene extends Phaser.Scene {
       if (ghost.eaten && ghost.gridX === ghost.homeX && ghost.gridY === ghost.homeY) {
         this.time.delayedCall(1000, () => {
           ghost.eaten = false;
+          ghost.exitedHouse = false; // Reset so ghost exits again
           ghost.dirX = 0; // Reset direction
           ghost.dirY = 0;
           this.drawGhost(ghost);
