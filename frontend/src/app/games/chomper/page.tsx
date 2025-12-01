@@ -20,7 +20,7 @@ export default function ChomperPage() {
       sceneLoader={loadChomperScene}
       config={{
         width: 672,
-        height: 720,
+        height: 696,
         backgroundColor: '#000000',
       }}
       showDPad={true}

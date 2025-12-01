@@ -16,7 +16,7 @@ const CONFIG = {
   POWER_DECREASE_PER_LEVEL: 500,
 };
 
-// Multiple maze layouts (28x30 grid) - cycles through levels
+// Multiple maze layouts (28x29 grid) - cycles through levels
 const MAZES = [
   // Maze 1: Classic Pac-Man style
   [
@@ -47,7 +47,6 @@ const MAZES = [
     '###.##.##.########.##.##.###',
     '###.##.##.########.##.##.###',
     '#......##....##....##......#',
-    '#.##########.##.##########.#',
     '#.##########.##.##########.#',
     '#..........................#',
   ],
@@ -81,7 +80,6 @@ const MAZES = [
     '#.###.####.####.####.###.#',
     '#..........................#',
     '#.########.####.########.#',
-    '#.########.####.########.#',
     '#o........................o#',
   ],
 
@@ -113,7 +111,6 @@ const MAZES = [
     '#.##.######.####.######.##.#',
     '#.##.######.####.######.##.#',
     '#o..........####..........o#',
-    '##########.######.##########',
     '##########.######.##########',
     '#..........................#',
   ],
@@ -485,7 +482,7 @@ export class ChomperScene extends Phaser.Scene {
     const nextGridX = this.playerGridX + this.nextDir.x;
     const nextGridY = this.playerGridY + this.nextDir.y;
 
-    if (this.canMoveTo(nextGridX, nextGridY)) {
+    if (this.canPlayerMoveTo(nextGridX, nextGridY)) {
       this.playerDir = { ...this.nextDir };
     }
 
@@ -494,7 +491,7 @@ export class ChomperScene extends Phaser.Scene {
       const targetGridX = this.playerGridX + this.playerDir.x;
       const targetGridY = this.playerGridY + this.playerDir.y;
 
-      if (this.canMoveTo(targetGridX, targetGridY)) {
+      if (this.canPlayerMoveTo(targetGridX, targetGridY)) {
         // Move in pixel coordinates
         this.playerX += this.playerDir.x * speed * dt;
         this.playerY += this.playerDir.y * speed * dt;
@@ -589,9 +586,22 @@ export class ChomperScene extends Phaser.Scene {
       const dx = ghost.targetGridX - ghost.gridX;
       const dy = ghost.targetGridY - ghost.gridY;
 
-      // Choose best direction
+      // Choose best direction - always try to move towards target
       let moveDir = { x: 0, y: 0 };
-      if (Math.abs(dx) > Math.abs(dy)) {
+
+      // If at target, pick a random direction to keep moving
+      if (dx === 0 && dy === 0 && !ghost.frightened && !ghost.eaten && ghost.exitedHouse) {
+        const dirs = [
+          { x: 1, y: 0 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 0, y: -1 },
+        ];
+        const validDirs = dirs.filter(d => this.canMoveTo(ghost.gridX + d.x, ghost.gridY + d.y));
+        if (validDirs.length > 0) {
+          moveDir = validDirs[Math.floor(this.rng.next() * validDirs.length)];
+        }
+      } else if (Math.abs(dx) > Math.abs(dy)) {
         // Try horizontal first
         if (dx !== 0 && this.canMoveTo(ghost.gridX + Math.sign(dx), ghost.gridY)) {
           moveDir.x = Math.sign(dx);
@@ -607,7 +617,7 @@ export class ChomperScene extends Phaser.Scene {
         }
       }
 
-      // If no preferred direction, pick any valid direction
+      // If still no direction, pick any valid direction
       if (moveDir.x === 0 && moveDir.y === 0) {
         const dirs = [
           { x: 1, y: 0 },
@@ -654,6 +664,14 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   canMoveTo(gridX: number, gridY: number): boolean {
+    if (gridY < 0 || gridY >= this.maze.length || gridX < 0 || gridX >= this.maze[0].length) {
+      return true; // Allow tunnel
+    }
+    const char = this.maze[gridY][gridX];
+    return char !== '#';
+  }
+
+  canPlayerMoveTo(gridX: number, gridY: number): boolean {
     if (gridY < 0 || gridY >= this.maze.length || gridX < 0 || gridX >= this.maze[0].length) {
       return true; // Allow tunnel
     }
