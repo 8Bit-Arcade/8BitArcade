@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
-  TILE_SIZE: 24,
+  TILE_SIZE: 23,
   PLAYER_SPEED: 105,
   GHOST_SPEED: 85,
   FRIGHTENED_SPEED: 60,
@@ -117,6 +117,74 @@ const MAZES = [
     '#o..........####..........o#',
     '##########.######.##########',
     '##########.######.##########',
+    '#..........................#',
+    '############################',
+  ],
+
+  // Maze 4: T-junctions and split paths
+  [
+    '############################',
+    '#o........................o#',
+    '#.####.##########.####.#',
+    '#.####.##########.####.#',
+    '#......##........##......#',
+    '######.##.######.##.######',
+    '######.##.######.##.######',
+    '#.........######.........#',
+    '#.####.##.######.##.####.#',
+    '#.####.##........##.####.#',
+    '######.##          ##.######',
+    '######.## ###--### ##.######',
+    '######.## #      # ##.######',
+    '      .   #      #   .      ',
+    '######.## #      # ##.######',
+    '######.## ######## ##.######',
+    '######.##          ##.######',
+    '#.####.##........##.####.#',
+    '#.####.##.######.##.####.#',
+    '#.........######.........#',
+    '######.##.######.##.######',
+    '######.##.######.##.######',
+    '#......##........##......#',
+    '#.####.##.######.##.####.#',
+    '#.####.##.######.##.####.#',
+    '#o..........##..........o#',
+    '#.##########.##.##########.#',
+    '#.##########.##.##########.#',
+    '#..........................#',
+    '############################',
+  ],
+
+  // Maze 5: Cross pattern with chambers
+  [
+    '############################',
+    '#............##............#',
+    '#.####.####.##.####.####.#',
+    '#o####.####.##.####.####o#',
+    '#......####....####......#',
+    '######.####.##.####.######',
+    '######......##......######',
+    '#.......##.####.##.......#',
+    '#.#####.##.####.##.#####.#',
+    '#.#####.##......##.#####.#',
+    '######.##          ##.######',
+    '######.## ###--### ##.######',
+    '######.## #      # ##.######',
+    '      .   #      #   .      ',
+    '######.## #      # ##.######',
+    '######.## ######## ##.######',
+    '######.##          ##.######',
+    '#.#####.##......##.#####.#',
+    '#.#####.##.####.##.#####.#',
+    '#.......##.####.##.......#',
+    '######......##......######',
+    '######.####.##.####.######',
+    '#......####....####......#',
+    '#.####.####.##.####.####.#',
+    '#.####.####.##.####.####.#',
+    '#o..........##..........o#',
+    '##########.####.##########',
+    '##########.####.##########',
     '#..........................#',
     '############################',
   ],
@@ -611,25 +679,27 @@ export class ChomperScene extends Phaser.Scene {
           ghost.exitedHouse = false;
         }
       } else if (ghost.frightened) {
-        // Random scatter behavior - only update target at grid centers
-        if (atCenter) {
-          const dirs = [
-            { x: ghost.gridX + 1, y: ghost.gridY },
-            { x: ghost.gridX - 1, y: ghost.gridY },
-            { x: ghost.gridX, y: ghost.gridY + 1 },
-            { x: ghost.gridX, y: ghost.gridY - 1 },
-          ].filter(d => {
-            // Filter out reverse direction and invalid moves
-            const dx = d.x - ghost.gridX;
-            const dy = d.y - ghost.gridY;
-            const isReverse = dx === -ghost.dirX && dy === -ghost.dirY;
-            return !isReverse && this.canMoveTo(d.x, d.y);
-          });
-          if (dirs.length > 0) {
-            const dir = dirs[Math.floor(this.rng.next() * dirs.length)];
-            ghost.targetGridX = dir.x;
-            ghost.targetGridY = dir.y;
-          }
+        // Flee from player - move to opposite corner
+        const dx = ghost.gridX - this.playerGridX;
+        const dy = ghost.gridY - this.playerGridY;
+
+        // Target a corner far from player
+        if (dx > 0 && dy > 0) {
+          // Player is to the left and above - flee to bottom-right
+          ghost.targetGridX = this.maze[0].length - 2;
+          ghost.targetGridY = this.maze.length - 2;
+        } else if (dx < 0 && dy > 0) {
+          // Player is to the right and above - flee to bottom-left
+          ghost.targetGridX = 1;
+          ghost.targetGridY = this.maze.length - 2;
+        } else if (dx > 0 && dy < 0) {
+          // Player is to the left and below - flee to top-right
+          ghost.targetGridX = this.maze[0].length - 2;
+          ghost.targetGridY = 1;
+        } else {
+          // Player is to the right and below - flee to top-left
+          ghost.targetGridX = 1;
+          ghost.targetGridY = 1;
         }
       } else {
         // Normal mode: each ghost has different targeting behavior
