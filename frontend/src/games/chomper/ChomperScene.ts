@@ -547,29 +547,22 @@ export class ChomperScene extends Phaser.Scene {
       const levelSpeedBonus = (this.level - 1) * CONFIG.SPEED_INCREASE_PER_LEVEL;
       const speed = ghost.frightened ? CONFIG.FRIGHTENED_SPEED : CONFIG.GHOST_SPEED + levelSpeedBonus;
 
-      // Check if ghost needs to exit house first
-      if (!ghost.exitedHouse) {
-        // Move to exit position and a few tiles away before starting normal behavior
-        const exitY = 11;
-        const exitX = 14;
+      // Check if we're at a grid center (for decision making)
+      const atCenter =
+        Math.abs(ghost.x - (ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2)) < 2 &&
+        Math.abs(ghost.y - (ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2)) < 2;
 
-        // First, get to exit Y position
-        if (ghost.gridY > exitY) {
-          ghost.targetGridX = exitX;
-          ghost.targetGridY = exitY;
-        } else if (ghost.gridY === exitY) {
-          // At exit level - move up a few more tiles before marking as exited
-          ghost.targetGridX = exitX;
-          ghost.targetGridY = exitY - 2;
-          if (ghost.gridY <= exitY - 2) {
-            ghost.exitedHouse = true;
-          }
-        } else {
-          ghost.targetGridX = exitX;
-          ghost.targetGridY = ghost.gridY - 1;
+      // Determine target position based on ghost state
+      if (!ghost.exitedHouse) {
+        // Exiting house - move straight up to exit area
+        ghost.targetGridX = 14;
+        ghost.targetGridY = 9; // Move to row 9 (above exit)
+        // Mark as exited when we reach the target
+        if (ghost.gridY <= 9 && ghost.gridX === 14) {
+          ghost.exitedHouse = true;
         }
       } else if (ghost.eaten) {
-        // Return home when eaten
+        // Return home when eaten - can pass through walls
         ghost.targetGridX = ghost.homeX;
         ghost.targetGridY = ghost.homeY;
         // Mark as not exited when they get back home so they exit again
@@ -577,10 +570,7 @@ export class ChomperScene extends Phaser.Scene {
           ghost.exitedHouse = false;
         }
       } else if (ghost.frightened) {
-        // Random scatter behavior - only update target when at grid center
-        const atCenter =
-          Math.abs(ghost.x - (ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2)) < 2 &&
-          Math.abs(ghost.y - (ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2)) < 2;
+        // Random scatter behavior - only update target at grid centers
         if (atCenter) {
           const dirs = [
             { x: ghost.gridX + 1, y: ghost.gridY },
@@ -628,10 +618,8 @@ export class ChomperScene extends Phaser.Scene {
             ghost.targetGridX = this.playerGridX;
             ghost.targetGridY = this.playerGridY;
           } else {
-            // Close - scatter to corner with some randomness
+            // Close - scatter to corner
             const corners = [
-              { x: 1, y: 1 },
-              { x: this.maze[0].length - 2, y: 1 },
               { x: 1, y: this.maze.length - 2 },
               { x: this.maze[0].length - 2, y: this.maze.length - 2 },
             ];
@@ -646,21 +634,30 @@ export class ChomperScene extends Phaser.Scene {
       const dx = ghost.targetGridX - ghost.gridX;
       const dy = ghost.targetGridY - ghost.gridY;
 
-      // Choose best direction with some randomness to prevent perfect stacking
+      // Choose best direction
       let moveDir = { x: 0, y: 0 };
 
-      // 20% chance to pick a random valid direction instead of optimal (adds variety)
-      const useRandom = !ghost.exitedHouse || this.rng.next() < 0.2;
+      // Eaten ghosts can move through walls, others use normal pathfinding
+      const canMove = (gx: number, gy: number) => {
+        if (ghost.eaten) {
+          // Eaten ghosts can pass through everything except map boundaries
+          return gy >= 0 && gy < this.maze.length && gx >= 0 && gx < this.maze[0].length;
+        }
+        return this.canMoveTo(gx, gy);
+      };
+
+      // Only apply randomness at grid centers for non-exiting ghosts
+      const useRandom = atCenter && ghost.exitedHouse && !ghost.eaten && !ghost.frightened && this.rng.next() < 0.15;
 
       if (useRandom) {
-        // Pick any valid direction randomly
+        // 15% chance for slight path variation at intersections
         const dirs = [
           { x: 1, y: 0 },
           { x: -1, y: 0 },
           { x: 0, y: 1 },
           { x: 0, y: -1 },
         ];
-        const validDirs = dirs.filter(d => this.canMoveTo(ghost.gridX + d.x, ghost.gridY + d.y));
+        const validDirs = dirs.filter(d => canMove(ghost.gridX + d.x, ghost.gridY + d.y));
         if (validDirs.length > 0) {
           moveDir = validDirs[Math.floor(this.rng.next() * validDirs.length)];
         }
@@ -668,16 +665,16 @@ export class ChomperScene extends Phaser.Scene {
         // Normal pathfinding towards target
         if (Math.abs(dx) > Math.abs(dy)) {
           // Try horizontal first
-          if (dx !== 0 && this.canMoveTo(ghost.gridX + Math.sign(dx), ghost.gridY)) {
+          if (dx !== 0 && canMove(ghost.gridX + Math.sign(dx), ghost.gridY)) {
             moveDir.x = Math.sign(dx);
-          } else if (dy !== 0 && this.canMoveTo(ghost.gridX, ghost.gridY + Math.sign(dy))) {
+          } else if (dy !== 0 && canMove(ghost.gridX, ghost.gridY + Math.sign(dy))) {
             moveDir.y = Math.sign(dy);
           }
         } else {
           // Try vertical first
-          if (dy !== 0 && this.canMoveTo(ghost.gridX, ghost.gridY + Math.sign(dy))) {
+          if (dy !== 0 && canMove(ghost.gridX, ghost.gridY + Math.sign(dy))) {
             moveDir.y = Math.sign(dy);
-          } else if (dx !== 0 && this.canMoveTo(ghost.gridX + Math.sign(dx), ghost.gridY)) {
+          } else if (dx !== 0 && canMove(ghost.gridX + Math.sign(dx), ghost.gridY)) {
             moveDir.x = Math.sign(dx);
           }
         }
@@ -692,7 +689,7 @@ export class ChomperScene extends Phaser.Scene {
           { x: 0, y: -1 },
         ];
         for (const dir of dirs) {
-          if (this.canMoveTo(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
+          if (canMove(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
             moveDir = dir;
             break;
           }
