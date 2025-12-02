@@ -678,9 +678,9 @@ export class ChomperScene extends Phaser.Scene {
           }
         }
       } else if (ghost.eaten) {
-        // Return home when eaten - can pass through walls
-        ghost.targetGridX = ghost.homeX;
-        ghost.targetGridY = ghost.homeY;
+        // Return to ghost house when eaten - can pass through walls
+        ghost.targetGridX = 14; // Center of ghost house
+        ghost.targetGridY = 14;
       } else if (ghost.frightened) {
         // Flee from player - move to opposite corner
         const dx = ghost.gridX - this.playerGridX;
@@ -984,8 +984,8 @@ export class ChomperScene extends Phaser.Scene {
           this.onScoreUpdate(this.score);
           ghost.eaten = true;
           ghost.frightened = false;
-          ghost.targetGridX = ghost.homeX;
-          ghost.targetGridY = ghost.homeY;
+          ghost.targetGridX = 14; // Ghost house center
+          ghost.targetGridY = 14;
         } else if (!ghost.eaten) {
           // Player dies
           this.loseLife();
@@ -993,14 +993,20 @@ export class ChomperScene extends Phaser.Scene {
       }
 
       // Check if eaten ghost reached home
-      if (ghost.eaten && ghost.gridX === ghost.homeX && ghost.gridY === ghost.homeY) {
-        // Mark as not eaten immediately to stop trying to go home
-        ghost.eaten = false;
-        ghost.exitedHouse = false; // Reset so ghost exits again
-        ghost.released = true; // Keep released so it will exit again
-        ghost.dirX = 0; // Reset direction
-        ghost.dirY = 0;
-        this.drawGhost(ghost);
+      if (ghost.eaten) {
+        // All ghosts return to center of ghost house when eaten (gridY 14)
+        const ghostHouseX = 14;
+        const ghostHouseY = 14;
+
+        if (ghost.gridX === ghostHouseX && ghost.gridY === ghostHouseY) {
+          // Mark as not eaten immediately to stop trying to go home
+          ghost.eaten = false;
+          ghost.exitedHouse = false; // Reset so ghost exits again
+          ghost.released = true; // Keep released so it will exit again
+          ghost.dirX = 0; // Reset direction
+          ghost.dirY = 0;
+          this.drawGhost(ghost);
+        }
       }
     }
   }
