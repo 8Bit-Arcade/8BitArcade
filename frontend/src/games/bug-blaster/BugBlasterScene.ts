@@ -101,12 +101,26 @@ export class BugBlasterScene extends Phaser.Scene {
 
   drawPlayer(): void {
     this.player.clear();
-    this.player.fillStyle(0x00ff41);
 
-    // Shooter base
-    this.player.fillRect(-8, -5, 16, 10);
-    this.player.fillStyle(0x00f5ff);
-    this.player.fillRect(-3, -10, 6, 10);
+    // Base - wider, more substantial
+    this.player.fillStyle(0x00d5ff);
+    this.player.fillRect(-10, -4, 20, 8);
+
+    // Base shadow/depth
+    this.player.fillStyle(0x0080a0);
+    this.player.fillRect(-10, 2, 20, 2);
+
+    // Cannon barrel
+    this.player.fillStyle(0x00ff41);
+    this.player.fillRect(-4, -12, 8, 12);
+
+    // Barrel highlight
+    this.player.fillStyle(0x80ff90);
+    this.player.fillRect(-3, -12, 2, 10);
+
+    // Cannon tip
+    this.player.fillStyle(0xffff00);
+    this.player.fillRect(-3, -13, 6, 2);
 
     this.player.setPosition(this.playerX, this.playerY);
   }
@@ -141,10 +155,36 @@ export class BugBlasterScene extends Phaser.Scene {
   drawMushroom(mushroom: Mushroom): void {
     mushroom.graphics.clear();
     const alpha = mushroom.hp / CONFIG.MUSHROOM_HP;
-    mushroom.graphics.fillStyle(0xff6600, alpha);
-    mushroom.graphics.fillCircle(0, -3, 8);
-    mushroom.graphics.fillStyle(0xffff00, alpha);
-    mushroom.graphics.fillRect(-4, -3, 8, 6);
+
+    // Stem
+    mushroom.graphics.fillStyle(0xffeecc, alpha);
+    mushroom.graphics.fillRect(-3, -2, 6, 8);
+
+    // Stem shadow
+    mushroom.graphics.fillStyle(0xccaa88, alpha * 0.8);
+    mushroom.graphics.fillRect(1, -2, 2, 8);
+
+    // Mushroom cap - larger and rounder
+    mushroom.graphics.fillStyle(0xff4444, alpha);
+    mushroom.graphics.fillCircle(0, -4, 9);
+
+    // Cap spots based on HP
+    if (mushroom.hp >= 3) {
+      mushroom.graphics.fillStyle(0xffaaaa, alpha);
+      mushroom.graphics.fillCircle(-4, -5, 2);
+      mushroom.graphics.fillCircle(4, -4, 2);
+    }
+    if (mushroom.hp >= 2) {
+      mushroom.graphics.fillCircle(0, -7, 2);
+    }
+    if (mushroom.hp >= 4) {
+      mushroom.graphics.fillCircle(-2, -3, 2);
+      mushroom.graphics.fillCircle(3, -6, 1.5);
+    }
+
+    // Cap highlight
+    mushroom.graphics.fillStyle(0xff8888, alpha);
+    mushroom.graphics.fillCircle(-2, -8, 3);
 
     mushroom.graphics.setPosition(mushroom.x, mushroom.y);
   }
@@ -156,8 +196,8 @@ export class BugBlasterScene extends Phaser.Scene {
       const segment = this.add.graphics();
       this.centipedeSegments.push({
         graphics: segment,
-        x: width / 2 + i * CONFIG.GRID_SIZE,
-        y: CONFIG.GRID_SIZE,
+        x: width / 2 + i * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
+        y: CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
         dir: 1,
       });
       this.drawSegment(this.centipedeSegments[i]);
@@ -166,11 +206,34 @@ export class BugBlasterScene extends Phaser.Scene {
 
   drawSegment(segment: Segment): void {
     segment.graphics.clear();
-    segment.graphics.fillStyle(0xff00ff);
-    segment.graphics.fillCircle(0, 0, 8);
-    segment.graphics.fillStyle(0xffffff);
-    segment.graphics.fillCircle(-3, -2, 2);
-    segment.graphics.fillCircle(3, -2, 2);
+
+    // Main body - gradient effect with multiple circles
+    segment.graphics.fillStyle(0x00ffaa);
+    segment.graphics.fillCircle(0, 0, 9);
+
+    // Body shading segments
+    segment.graphics.fillStyle(0x00cc88);
+    segment.graphics.fillCircle(-2, 1, 8);
+    segment.graphics.fillCircle(2, 1, 8);
+
+    // Bright highlights
+    segment.graphics.fillStyle(0x66ffcc);
+    segment.graphics.fillCircle(-3, -2, 4);
+    segment.graphics.fillCircle(3, -2, 4);
+
+    // Center segment line
+    segment.graphics.fillStyle(0x008866);
+    segment.graphics.fillRect(-8, 0, 16, 2);
+
+    // Eyes/antennae
+    segment.graphics.fillStyle(0xffff00);
+    segment.graphics.fillCircle(-4, -3, 2);
+    segment.graphics.fillCircle(4, -3, 2);
+
+    // Eye pupils
+    segment.graphics.fillStyle(0xff0000);
+    segment.graphics.fillCircle(-4, -3, 1);
+    segment.graphics.fillCircle(4, -3, 1);
 
     segment.graphics.setPosition(segment.x, segment.y);
   }
@@ -273,8 +336,22 @@ export class BugBlasterScene extends Phaser.Scene {
 
   fireBullet(): void {
     const bullet = this.add.graphics();
+
+    // Outer glow
+    bullet.fillStyle(0x00ff41, 0.3);
+    bullet.fillRect(-3, -8, 6, 8);
+
+    // Main bullet body
     bullet.fillStyle(0x00ff41);
-    bullet.fillRect(-2, -6, 4, 6);
+    bullet.fillRect(-2, -7, 4, 7);
+
+    // Bright core
+    bullet.fillStyle(0xffffff);
+    bullet.fillRect(-1, -6, 2, 5);
+
+    // Tip
+    bullet.fillStyle(0xffff00);
+    bullet.fillRect(-1.5, -8, 3, 2);
 
     this.bullets.push({
       graphics: bullet,
@@ -313,18 +390,46 @@ export class BugBlasterScene extends Phaser.Scene {
 
   spawnSpider(): void {
     const spider = this.add.graphics();
-    spider.fillStyle(0xff0040);
+
+    // Draw 8 legs with joints
+    spider.fillStyle(0xcc0030);
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
-      spider.fillCircle(Math.cos(angle) * 8, Math.sin(angle) * 8, 3);
-    }
-    spider.fillCircle(0, 0, 6);
+      const legX = Math.cos(angle) * 12;
+      const legY = Math.sin(angle) * 12;
 
+      // Leg segments
+      spider.fillRect(legX * 0.3, legY * 0.3, 2, 8);
+      spider.fillCircle(legX, legY, 2);
+
+      // Inner leg joint
+      spider.fillCircle(legX * 0.6, legY * 0.6, 2.5);
+    }
+
+    // Main body - large
+    spider.fillStyle(0xff0040);
+    spider.fillCircle(0, 0, 8);
+
+    // Body segments/texture
+    spider.fillStyle(0xff4466);
+    spider.fillCircle(0, -2, 6);
+    spider.fillCircle(0, 2, 5);
+
+    // Head
+    spider.fillStyle(0xcc0030);
+    spider.fillCircle(0, -6, 4);
+
+    // Eyes
+    spider.fillStyle(0xffff00);
+    spider.fillCircle(-2, -6, 1.5);
+    spider.fillCircle(2, -6, 1.5);
+
+    const spawnLeft = this.rng.next() > 0.5;
     this.spider = {
       graphics: spider,
-      x: this.rng.next() > 0.5 ? 0 : this.scale.width,
+      x: spawnLeft ? 0 : this.scale.width,
       y: this.scale.height - 100,
-      vx: this.rng.next() > 0.5 ? CONFIG.SPIDER_SPEED : -CONFIG.SPIDER_SPEED,
+      vx: spawnLeft ? CONFIG.SPIDER_SPEED : -CONFIG.SPIDER_SPEED, // Always move toward center
       vy: this.rng.nextFloat(-50, 50),
     };
   }
@@ -354,12 +459,14 @@ export class BugBlasterScene extends Phaser.Scene {
           this.score += CONFIG.SEGMENT_POINTS;
           this.onScoreUpdate(this.score);
 
-          // Create mushroom where segment was
+          // Create mushroom where segment was - snap to grid center
           const mushroom = this.add.graphics();
+          const gridX = Math.round(segment.x / CONFIG.GRID_SIZE);
+          const gridY = Math.round(segment.y / CONFIG.GRID_SIZE);
           this.mushrooms.push({
             graphics: mushroom,
-            x: segment.x,
-            y: segment.y,
+            x: gridX * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
+            y: gridY * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2,
             hp: CONFIG.MUSHROOM_HP,
           });
           this.drawMushroom(this.mushrooms[this.mushrooms.length - 1]);
@@ -410,6 +517,7 @@ export class BugBlasterScene extends Phaser.Scene {
           this.bullets.splice(i, 1);
           this.spider.graphics.destroy();
           this.spider = null;
+          this.spiderTimer = 0; // Reset timer to prevent instant respawn
           this.score += CONFIG.SPIDER_POINTS;
           this.onScoreUpdate(this.score);
         }
@@ -439,8 +547,8 @@ export class BugBlasterScene extends Phaser.Scene {
       this.playerX = this.scale.width / 2;
       this.playerY = this.scale.height - 50;
       this.centipedeSegments.forEach(s => {
-        s.x = this.scale.width / 2;
-        s.y = CONFIG.GRID_SIZE;
+        s.x = this.scale.width / 2 + CONFIG.GRID_SIZE / 2;
+        s.y = CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
       });
     }
   }
