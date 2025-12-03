@@ -296,10 +296,15 @@ export class BugBlasterScene extends Phaser.Scene {
       this.spider.x += this.spider.vx * dt;
       this.spider.y += this.spider.vy * dt;
 
-      // Bounce
-      if (this.spider.x < 50 || this.spider.x > width - 50) {
-        this.spider.vx *= -1;
+      // Bounce at edges (exclude spawn zones to prevent immediate bounce)
+      if (this.spider.x < 30) {
+        this.spider.x = 30;
+        this.spider.vx = Math.abs(this.spider.vx); // Force moving right
+      } else if (this.spider.x > width - 30) {
+        this.spider.x = width - 30;
+        this.spider.vx = -Math.abs(this.spider.vx); // Force moving left
       }
+
       if (this.spider.y < height - 150 || this.spider.y > height - 50) {
         this.spider.vy *= -1;
       }
@@ -318,7 +323,7 @@ export class BugBlasterScene extends Phaser.Scene {
           Math.pow(this.spider.x - this.playerX, 2) +
           Math.pow(this.spider.y - this.playerY, 2)
         );
-        if (dist < 15) {
+        if (dist < 20) { // Increased to match spider size with legs
           this.loseLife();
           return;
         }
@@ -427,7 +432,7 @@ export class BugBlasterScene extends Phaser.Scene {
     const spawnLeft = this.rng.next() > 0.5;
     this.spider = {
       graphics: spider,
-      x: spawnLeft ? 0 : this.scale.width,
+      x: spawnLeft ? 20 : this.scale.width - 20, // Spawn slightly inside to avoid immediate bounce
       y: this.scale.height - 100,
       vx: spawnLeft ? CONFIG.SPIDER_SPEED : -CONFIG.SPIDER_SPEED, // Always move toward center
       vy: this.rng.nextFloat(-50, 50),
@@ -512,7 +517,7 @@ export class BugBlasterScene extends Phaser.Scene {
           Math.pow(bullet.x - this.spider.x, 2) + Math.pow(bullet.y - this.spider.y, 2)
         );
 
-        if (dist < 15) {
+        if (dist < 20) { // Increased from 15 to match larger spider graphics with legs
           bullet.graphics.destroy();
           this.bullets.splice(i, 1);
           this.spider.graphics.destroy();
