@@ -333,6 +333,7 @@ export class BugBlasterScene extends Phaser.Scene {
     // Bullet-segment collisions
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
+      let bulletDestroyed = false;
 
       // Check segments
       for (let j = this.centipedeSegments.length - 1; j >= 0; j--) {
@@ -345,6 +346,7 @@ export class BugBlasterScene extends Phaser.Scene {
           // Hit!
           bullet.graphics.destroy();
           this.bullets.splice(i, 1);
+          bulletDestroyed = true;
 
           segment.graphics.destroy();
           this.centipedeSegments.splice(j, 1);
@@ -366,6 +368,9 @@ export class BugBlasterScene extends Phaser.Scene {
         }
       }
 
+      // Skip further checks if bullet was already destroyed
+      if (bulletDestroyed) continue;
+
       // Check mushrooms
       for (const mushroom of this.mushrooms) {
         const dist = Math.sqrt(
@@ -375,6 +380,7 @@ export class BugBlasterScene extends Phaser.Scene {
         if (dist < 10) {
           bullet.graphics.destroy();
           this.bullets.splice(i, 1);
+          bulletDestroyed = true;
 
           mushroom.hp--;
           if (mushroom.hp <= 0) {
@@ -390,6 +396,9 @@ export class BugBlasterScene extends Phaser.Scene {
         }
       }
 
+      // Skip further checks if bullet was already destroyed
+      if (bulletDestroyed) continue;
+
       // Check spider
       if (this.spider) {
         const dist = Math.sqrt(
@@ -403,7 +412,6 @@ export class BugBlasterScene extends Phaser.Scene {
           this.spider = null;
           this.score += CONFIG.SPIDER_POINTS;
           this.onScoreUpdate(this.score);
-          break;
         }
       }
     }
