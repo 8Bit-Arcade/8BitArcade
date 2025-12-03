@@ -19,8 +19,8 @@ export default function BlockDropPage() {
       gameName="BLOCK DROP"
       sceneLoader={loadBlockDropScene}
       config={{
-        width: 500,
-        height: 700,
+        width: 450,   // Reduced from 500
+        height: 600,  // Reduced from 700 to fit in viewport
         backgroundColor: '#0a0a0a',
       }}
       showDPad={true}
