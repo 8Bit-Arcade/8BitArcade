@@ -4,7 +4,7 @@ import { SeededRNG } from '../engine/SeededRNG';
 const CONFIG = {
   GRID_WIDTH: 10,
   GRID_HEIGHT: 20,
-  CELL_SIZE: 30,
+  CELL_SIZE: 26,  // Reduced from 30 to fit in viewport
   INITIAL_FALL_SPEED: 1000, // ms
   FAST_FALL_SPEED: 50,
   MIN_FALL_SPEED: 100,
