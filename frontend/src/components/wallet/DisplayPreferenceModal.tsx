@@ -6,6 +6,7 @@ import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { useAuthStore, type DisplayPreference } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 export default function DisplayPreferenceModal() {
   const { address } = useAccount();
@@ -15,6 +16,7 @@ export default function DisplayPreferenceModal() {
     getDisplayPreference,
   } = useAuthStore();
   const { isDisplayPreferenceModalOpen, setDisplayPreferenceModalOpen, addToast } = useUIStore();
+  const { signInWithWallet, isFirebaseAuthenticated } = useWalletAuth();
 
   const userData = address ? users[address.toLowerCase()] : null;
   const currentPreference = address ? getDisplayPreference(address) : 'address';
@@ -49,22 +51,40 @@ export default function DisplayPreferenceModal() {
 
     // Save to Firestore
     try {
+      // Authenticate with Firebase first if not already authenticated
+      if (!isFirebaseAuthenticated) {
+        console.log('Authenticating with Firebase before saving display preference...');
+        const success = await signInWithWallet();
+        if (!success) {
+          addToast({
+            type: 'error',
+            message: 'Failed to authenticate. Preference saved locally only.',
+          });
+          setDisplayPreferenceModalOpen(false);
+          return;
+        }
+      }
+
       const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
       if (isFirebaseConfigured()) {
-        const [db, { doc, updateDoc }] = await Promise.all([
+        const [db, { doc, setDoc }] = await Promise.all([
           getFirestoreInstance(),
           import('firebase/firestore'),
         ]);
 
         const userRef = doc(db, 'users', address.toLowerCase());
-        await updateDoc(userRef, {
+        await setDoc(userRef, {
           displayPreference: selectedPreference,
-        });
+        }, { merge: true });
 
         console.log('✅ Display preference saved to Firestore');
       }
     } catch (err) {
       console.warn('Could not save display preference to Firestore:', err);
+      addToast({
+        type: 'warning',
+        message: 'Display preference saved locally only',
+      });
     }
 
     setDisplayPreferenceModalOpen(false);
