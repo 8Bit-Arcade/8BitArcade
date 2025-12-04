@@ -1,6 +1,7 @@
 'use client';
 
 import { formatNumber, shortenAddress } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
 
 interface LeaderboardEntry {
   odedId: string;
@@ -13,6 +14,30 @@ interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   userAddress?: string;
   isLoading?: boolean;
+}
+
+// Helper to get display name for a user
+function useEntryDisplayName(entry: LeaderboardEntry): string {
+  const { users } = useAuthStore();
+  const userData = users[entry.odedId.toLowerCase()];
+
+  if (!userData) {
+    // No local data - use server-provided username or shortened address
+    return entry.username || shortenAddress(entry.odedId);
+  }
+
+  const preference = userData.displayPreference ||
+    (userData.ensName ? 'ens' : userData.username ? 'username' : 'address');
+
+  switch (preference) {
+    case 'ens':
+      return userData.ensName || userData.username || entry.username || shortenAddress(entry.odedId);
+    case 'username':
+      return userData.username || userData.ensName || entry.username || shortenAddress(entry.odedId);
+    case 'address':
+    default:
+      return shortenAddress(entry.odedId);
+  }
 }
 
 export default function LeaderboardTable({
@@ -59,6 +84,7 @@ export default function LeaderboardTable({
             const rank = index + 1;
             const isCurrentUser =
               userAddress?.toLowerCase() === entry.odedId.toLowerCase();
+            const displayName = useEntryDisplayName(entry);
 
             return (
               <tr
@@ -92,7 +118,7 @@ export default function LeaderboardTable({
                         ${isCurrentUser ? 'text-arcade-cyan' : 'text-white'}
                       `}
                     >
-                      {entry.username || shortenAddress(entry.odedId)}
+                      {displayName}
                     </span>
                     {isCurrentUser && (
                       <span className="font-pixel text-xs text-arcade-yellow">

@@ -3,6 +3,7 @@ import Providers from '@/components/Providers';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import UsernameModal from '@/components/wallet/UsernameModal';
+import DisplayPreferenceModal from '@/components/wallet/DisplayPreferenceModal';
 import ToastContainer from '@/components/ui/Toast';
 import '@/styles/globals.css';
 
@@ -73,6 +74,7 @@ export default function RootLayout({
 
           {/* Modals */}
           <UsernameModal />
+          <DisplayPreferenceModal />
 
           {/* Toast Notifications */}
           <ToastContainer />

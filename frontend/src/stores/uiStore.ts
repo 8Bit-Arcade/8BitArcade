@@ -7,6 +7,7 @@ interface UIState {
   isMenuOpen: boolean;
   isUsernameModalOpen: boolean;
   isWalletModalOpen: boolean;
+  isDisplayPreferenceModalOpen: boolean;
   isLoading: boolean;
   loadingMessage: string | null;
 
@@ -18,6 +19,7 @@ interface UIState {
   toggleMenu: () => void;
   setUsernameModalOpen: (open: boolean) => void;
   setWalletModalOpen: (open: boolean) => void;
+  setDisplayPreferenceModalOpen: (open: boolean) => void;
   setLoading: (loading: boolean, message?: string) => void;
 }
 
@@ -28,6 +30,7 @@ export const useUIStore = create<UIState>()((set) => ({
   isMenuOpen: false,
   isUsernameModalOpen: false,
   isWalletModalOpen: false,
+  isDisplayPreferenceModalOpen: false,
   isLoading: false,
   loadingMessage: null,
 
@@ -60,6 +63,7 @@ export const useUIStore = create<UIState>()((set) => ({
 
   setUsernameModalOpen: (open) => set({ isUsernameModalOpen: open }),
   setWalletModalOpen: (open) => set({ isWalletModalOpen: open }),
+  setDisplayPreferenceModalOpen: (open) => set({ isDisplayPreferenceModalOpen: open }),
 
   setLoading: (loading, message) =>
     set({ isLoading: loading, loadingMessage: message || null }),

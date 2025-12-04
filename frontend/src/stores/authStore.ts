@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+type DisplayPreference = 'ens' | 'username' | 'address';
+
 interface UserData {
-  username: string;
+  username?: string;
+  ensName?: string;
+  displayPreference?: DisplayPreference;
   createdAt: number;
 }
 
@@ -22,7 +26,11 @@ interface AuthState {
   setIsNewUser: (isNew: boolean) => void;
   setLoading: (loading: boolean) => void;
   setUsername: (address: string, username: string) => void;
+  setEnsName: (address: string, ensName: string | null) => void;
+  setDisplayPreference: (address: string, preference: DisplayPreference) => void;
   getUsername: (address: string | null) => string | null;
+  getEnsName: (address: string | null) => string | null;
+  getDisplayPreference: (address: string | null) => DisplayPreference;
   reset: () => void;
 }
 
@@ -46,8 +54,37 @@ export const useAuthStore = create<AuthState>()(
           users: {
             ...state.users,
             [normalizedAddress]: {
+              ...state.users[normalizedAddress],
               username,
-              createdAt: Date.now(),
+              createdAt: state.users[normalizedAddress]?.createdAt || Date.now(),
+            },
+          },
+        }));
+      },
+
+      setEnsName: (address, ensName) => {
+        const normalizedAddress = address.toLowerCase();
+        set((state) => ({
+          users: {
+            ...state.users,
+            [normalizedAddress]: {
+              ...state.users[normalizedAddress],
+              ensName: ensName || undefined,
+              createdAt: state.users[normalizedAddress]?.createdAt || Date.now(),
+            },
+          },
+        }));
+      },
+
+      setDisplayPreference: (address, preference) => {
+        const normalizedAddress = address.toLowerCase();
+        set((state) => ({
+          users: {
+            ...state.users,
+            [normalizedAddress]: {
+              ...state.users[normalizedAddress],
+              displayPreference: preference,
+              createdAt: state.users[normalizedAddress]?.createdAt || Date.now(),
             },
           },
         }));
@@ -57,6 +94,27 @@ export const useAuthStore = create<AuthState>()(
         if (!address) return null;
         const normalizedAddress = address.toLowerCase();
         return get().users[normalizedAddress]?.username || null;
+      },
+
+      getEnsName: (address) => {
+        if (!address) return null;
+        const normalizedAddress = address.toLowerCase();
+        return get().users[normalizedAddress]?.ensName || null;
+      },
+
+      getDisplayPreference: (address) => {
+        if (!address) return 'address';
+        const normalizedAddress = address.toLowerCase();
+        const userData = get().users[normalizedAddress];
+
+        // Default preference: ENS > Username > Address
+        if (!userData?.displayPreference) {
+          if (userData?.ensName) return 'ens';
+          if (userData?.username) return 'username';
+          return 'address';
+        }
+
+        return userData.displayPreference;
       },
 
       reset: () => set({
@@ -81,3 +139,35 @@ export const useUsername = () => {
   if (!address) return null;
   return users[address.toLowerCase()]?.username || null;
 };
+
+// Helper hook to get display name based on preference
+export const useDisplayName = (targetAddress?: string | null) => {
+  const { address: currentAddress, users } = useAuthStore();
+  const address = targetAddress || currentAddress;
+
+  if (!address) return null;
+
+  const normalizedAddress = address.toLowerCase();
+  const userData = users[normalizedAddress];
+
+  if (!userData) {
+    // No user data - return shortened address
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+
+  const preference = userData.displayPreference ||
+    (userData.ensName ? 'ens' : userData.username ? 'username' : 'address');
+
+  switch (preference) {
+    case 'ens':
+      return userData.ensName || userData.username || `${address.slice(0, 6)}...${address.slice(-4)}`;
+    case 'username':
+      return userData.username || userData.ensName || `${address.slice(0, 6)}...${address.slice(-4)}`;
+    case 'address':
+    default:
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+};
+
+// Export type for use in other files
+export type { DisplayPreference };

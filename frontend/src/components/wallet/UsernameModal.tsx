@@ -1,19 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useAccount } from 'wagmi';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { isValidUsername } from '@/lib/utils';
 
 export default function UsernameModal() {
   const { address } = useAccount();
-  const { signMessageAsync } = useSignMessage();
   const { setUsername, setIsNewUser } = useAuthStore();
   const { isUsernameModalOpen, setUsernameModalOpen, addToast } = useUIStore();
+  const { signInWithWallet, isFirebaseAuthenticated } = useWalletAuth();
 
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState('');
@@ -40,10 +41,16 @@ export default function UsernameModal() {
     setError('');
 
     try {
-      // Sign message to verify ownership
-      const message = `Set username to "${inputValue}" for 8-Bit Arcade\nWallet: ${address}\nTimestamp: ${Date.now()}`;
-
-      await signMessageAsync({ message });
+      // Authenticate with Firebase first if not already authenticated
+      if (!isFirebaseAuthenticated) {
+        console.log('Authenticating with Firebase before saving username...');
+        const success = await signInWithWallet();
+        if (!success) {
+          setError('Failed to authenticate. Please try again.');
+          setIsLoading(false);
+          return;
+        }
+      }
 
       // Save username to Firestore
       const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
@@ -73,9 +80,17 @@ export default function UsernameModal() {
         type: 'success',
         message: `Welcome, ${inputValue}!`,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to set username:', err);
-      setError('Failed to save username. Please try again.');
+
+      // Provide more specific error messages
+      if (err.message?.includes('User rejected') || err.message?.includes('User denied')) {
+        setError('Signature rejected. Please sign the message to set your username.');
+      } else if (err.message?.includes('permissions')) {
+        setError('Permission denied. Please try reconnecting your wallet.');
+      } else {
+        setError('Failed to save username. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
