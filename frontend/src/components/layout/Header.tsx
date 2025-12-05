@@ -5,14 +5,13 @@ import { usePathname } from 'next/navigation';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import AudioControls from '@/components/audio/AudioControls';
-import { useAuthStore } from '@/stores/authStore';
+import { useDisplayName } from '@/stores/authStore';
 import { truncateAddress } from '@/lib/utils';
 
 export default function Header() {
   const pathname = usePathname();
   const { address, isConnected } = useAccount();
-  const { getUsername } = useAuthStore();
-  const username = address ? getUsername(address) : null;
+  const displayName = useDisplayName(address);
 
   const navLinks = [
     { href: '/', label: 'Games' },
@@ -117,7 +116,7 @@ export default function Header() {
                             className="btn-arcade text-xs flex items-center gap-2"
                           >
                             <span className="w-2 h-2 bg-arcade-green rounded-full animate-pulse" />
-                            {username || truncateAddress(account.address)}
+                            {displayName || truncateAddress(account.address)}
                           </button>
                         );
                       })()}
