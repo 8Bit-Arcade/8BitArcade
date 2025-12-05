@@ -554,7 +554,7 @@ export default function GameWrapper({
       {/* Game Container */}
       <div className="flex-1 flex items-center justify-center p-1 md:p-4">
         {/* Mode Selection */}
-        {showModeSelect && (
+        {showModeSelect && !isGameOver && (
           <div className="card-arcade text-center max-w-sm">
             <h2 className="font-pixel text-arcade-green text-lg mb-6">{gameName}</h2>
             <div className="space-y-3">
