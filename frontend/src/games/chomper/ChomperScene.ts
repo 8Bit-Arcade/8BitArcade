@@ -3,192 +3,282 @@ import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
   TILE_SIZE: 21,
-  PLAYER_SPEED: 105,
-  GHOST_SPEED: 85,
-  FRIGHTENED_SPEED: 60,
+  PLAYER_SPEED: 5, // Grid squares per second
+  GHOST_SPEED: 4,
+  FRIGHTENED_SPEED: 2.5,
   PELLET_POINTS: 5,
   POWER_PELLET_POINTS: 25,
   GHOST_POINTS: 100,
   POWER_DURATION: 6000,
   LIVES: 3,
-  GHOST_RELEASE_DELAY: 2000,
-  SPEED_INCREASE_PER_LEVEL: 5,
-  POWER_DECREASE_PER_LEVEL: 500,
+  GHOST_RELEASE_DELAY: 3000,
+  GRID_WIDTH: 28,
+  GRID_HEIGHT: 31,
 };
 
-// Multiple maze layouts (28x30 grid) - cycles through levels
-const MAZES = [
-  // Maze 1: Classic Pac-Man style
-  [
-    '############################',
-    '#............##............#',
-    '#.####.#####.##.#####.####.#',
-    '#o####.#####.##.#####.####o#',
-    '#.####.#####.##.#####.####.#',
-    '#..........................#',
-    '#.####.##.########.##.####.#',
-    '#.####.##.########.##.####.#',
-    '#......##....##....##......#',
-    '######.##### ## #####.######',
-    '######.##### ## #####.######',
-    '######.##          ##.######',
-    '######.## ###--### ##.######',
-    '######.## #      # ##.######',
-    '      .   #      #   .      ',
-    '######.## #      # ##.######',
-    '######.## ######## ##.######',
-    '######.##          ##.######',
-    '######.## ######## ##.######',
-    '######.## ######## ##.######',
-    '#............##............#',
-    '#.####.#####.##.#####.####.#',
-    '#.####.#####.##.#####.####.#',
-    '#o..##.......  .......##..o#',
-    '###.##.##.########.##.##.###',
-    '###.##.##.########.##.##.###',
-    '#......##....##....##......#',
-    '#.##########.##.##########.#',
-    '#.##########.##.##########.#',
-    '#..........................#',
-    '############################',
-  ],
+// Tile types
+const TILE = {
+  EMPTY: 0,
+  WALL: 1,
+  DOOR: 2, // Ghost house door (blocks player, not ghosts)
+};
 
-  // Maze 2: Variation with different wall patterns (fixed)
-[
-  '############################',
-  '#............##............#',
-  '#.####.#####.##.#####.####.#',
-  '#o####.#####.##.#####.####o#',
-  '#..........................#',
-  '####.##.####.##.####.##.####',
-  '####.##.####.##.####.##.####',
-  '#.........##....##.........#',
-  '#.#######.##.##.##.#######.#',
-  '#.#######..........#######.#',
-  '######.##          ##.######',
-  '######.## ###--### ##.######',
-  '######.## #      # ##.######',
-  '      .   #      #   .      ',
-  '######.## #      # ##.######',
-  '######.## ######## ##.######',
-  '######.##          ##.######',
-  '#.#######..........#######.#',
-  '#.#######.##.##.##.#######.#',
-  '#.........##....##.........#',
-  '####.##.####.##.####.##.####',
-  '####.##.####.##.####.##.####',
-  '#..........................#',
-  '#.####.#####.##.#####.####.#',
-  '#.####.#####.##.#####.####.#',
-  '#o............##..........o#',
-  '####.#######.##.#######.####',
-  '####.#######.##.#######.####',
-  '#..........................#',
-  '############################',
-],
+interface MazeData {
+  walls: number[][]; // Grid of tile types
+  pellets: { x: number; y: number }[];
+  powerPellets: { x: number; y: number }[];
+  playerStart: { x: number; y: number };
+  ghostHouse: { x: number; y: number };
+}
 
-  // Maze 3: Zigzag tunnels
-  [
-    '############################',
-    '#............##............#',
-    '#.##.######.####.######.##.#',
-    '#o##.######.####.######.##o#',
-    '#....######..##..######....#',
-    '####.##..............##.####',
-    '####.##.############.##.####',
-    '#.......############.......#',
-    '#.####.##..........##.####.#',
-    '#.####.##.########.##.####.#',
-    '######.##          ##.######',
-    '######.## ###--### ##.######',
-    '######.## #      # ##.######',
-    '      .   #      #   .      ',
-    '######.## #      # ##.######',
-    '######.## ######## ##.######',
-    '######.##          ##.######',
-    '#.####.##.########.##.####.#',
-    '#.####.##..........##.####.#',
-    '#.......############.......#',
-    '####.##.############.##.####',
-    '####.##..............##.####',
-    '#....######..##..######....#',
-    '#.##.######.####.######.##.#',
-    '#.##.######.####.######.##.#',
-    '#o..........####..........o#',
-    '##########.######.##########',
-    '##########.######.##########',
-    '#..........................#',
-    '############################',
-  ],
+// Create 5 distinct mazes with explicit control
+const MAZES: MazeData[] = [
+  // MAZE 1: Classic Pac-Man style
+  {
+    walls: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1],
+      [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+      [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+      [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ],
+    pellets: [],
+    powerPellets: [
+      { x: 1, y: 3 },
+      { x: 26, y: 3 },
+      { x: 1, y: 23 },
+      { x: 26, y: 23 },
+    ],
+    playerStart: { x: 14, y: 23 },
+    ghostHouse: { x: 14, y: 14 },
+  },
 
-  // Maze 4: T-junctions and split paths
-  [
-    '############################',
-    '#o........................o#',
-    '#.####.##########.####.###.#',
-    '#.####.##########.####.###.#',
-    '#.......##........##.......#',
-    '######.##.######.##.######.#',
-    '######.##.######.##.######.#',
-    '#..........######..........#',
-    '#.#####.##.######.##.#####.#',
-    '#.#####.##........##.#####.#',
-    '######.##          ##.######',
-    '######.## ###--### ##.######',
-    '######.## #      # ##.######',
-    '      .   #      #   .      ',
-    '######.## #      # ##.######',
-    '######.## ######## ##.######',
-    '######.##          ##.######',
-    '#.#####.##........##.#####.#',
-    '#.#####.##.######.##.#####.#',
-    '#..........######..........#',
-    '######.##.######.##.######.#',
-    '######.##.######.##.######.#',
-    '#.......##........##.......#',
-    '#.#####.##.######.##.#####.#',
-    '#.#####.##.######.##.#####.#',
-    '#o...........##...........o#',
-    '#.##########.##.##########.#',
-    '#.##########.##.##########.#',
-    '#..........................#',
-    '############################',
-  ],
+  // MAZE 2: Wide corridors
+  {
+    walls: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
+      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
+      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
+      [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ],
+    pellets: [],
+    powerPellets: [
+      { x: 1, y: 3 },
+      { x: 26, y: 3 },
+      { x: 1, y: 25 },
+      { x: 26, y: 25 },
+    ],
+    playerStart: { x: 14, y: 23 },
+    ghostHouse: { x: 14, y: 14 },
+  },
 
-  // Maze 5: Cross pattern with chambers
-  [
-    '############################',
-    '#............##............#',
-    '#.####.#####.##.#####.####.#',
-    '#o####.#####.##.#####.####o#',
-    '#.......####....####.......#',
-    '######.####.##.####.######.#',
-    '######......##......######.#',
-    '#........##.####.##........#',
-    '#.######.##.####.##.######.#',
-    '#.######.##......##.######.#',
-    '######.##          ##.######',
-    '######.## ###--### ##.######',
-    '######.## #      # ##.######',
-    '      .   #      #   .      ',
-    '######.## #      # ##.######',
-    '######.## ######## ##.######',
-    '######.##          ##.######',
-    '#.######.##......##.######.#',
-    '#.######.##.####.##.######.#',
-    '#........##.####.##........#',
-    '######......##......######.#',
-    '######.####.##.####.######.#',
-    '#.......####....####.......#',
-    '#.####.#####.##.#####.####.#',
-    '#.####.#####.##.#####.####.#',
-    '#o...........##...........o#',
-    '##########.####.##########.#',
-    '##########.####.##########.#',
-    '#..........................#',
-    '############################',
-  ],
+  // MAZE 3: Zigzag pattern
+  {
+    walls: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,0,1],
+      [1,0,1,1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,0,1],
+      [1,0,0,0,0,1,1,1,1,1,1,0,0,1,1,0,0,1,1,1,1,1,1,0,0,0,0,1],
+      [1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1],
+      [1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1],
+      [1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1],
+      [1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1],
+      [1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1],
+      [1,0,0,0,0,1,1,1,1,1,1,0,0,1,1,0,0,1,1,1,1,1,1,0,0,0,0,1],
+      [1,0,1,1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,0,1],
+      [1,0,1,1,0,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ],
+    pellets: [],
+    powerPellets: [
+      { x: 1, y: 3 },
+      { x: 26, y: 3 },
+      { x: 1, y: 25 },
+      { x: 26, y: 25 },
+    ],
+    playerStart: { x: 14, y: 23 },
+    ghostHouse: { x: 14, y: 14 },
+  },
+
+  // MAZE 4: Chambers
+  {
+    walls: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ],
+    pellets: [],
+    powerPellets: [
+      { x: 1, y: 1 },
+      { x: 26, y: 1 },
+      { x: 1, y: 25 },
+      { x: 26, y: 25 },
+    ],
+    playerStart: { x: 14, y: 23 },
+    ghostHouse: { x: 14, y: 14 },
+  },
+
+  // MAZE 5: Cross pattern
+  {
+    walls: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+      [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ],
+    pellets: [],
+    powerPellets: [
+      { x: 1, y: 3 },
+      { x: 26, y: 3 },
+      { x: 1, y: 25 },
+      { x: 26, y: 25 },
+    ],
+    playerStart: { x: 14, y: 23 },
+    ghostHouse: { x: 14, y: 14 },
+  },
 ];
+
+// Auto-generate pellets for all empty corridor spaces
+for (const maze of MAZES) {
+  for (let y = 0; y < maze.walls.length; y++) {
+    for (let x = 0; x < maze.walls[y].length; x++) {
+      if (maze.walls[y][x] === TILE.EMPTY) {
+        // Skip if it's a power pellet location
+        const isPowerPellet = maze.powerPellets.some(p => p.x === x && p.y === y);
+        // Skip if it's near ghost house (y 11-17, x 11-17)
+        const isNearGhostHouse = y >= 11 && y <= 17 && x >= 11 && x <= 17;
+        // Skip tunnel row (y 14)
+        const isTunnel = y === 14 && (x < 6 || x > 21);
+
+        if (!isPowerPellet && !isNearGhostHouse && !isTunnel) {
+          maze.pellets.push({ x, y });
+        }
+      }
+    }
+  }
+}
 
 const GHOST_COLORS = {
   red: 0xff0000,
@@ -201,8 +291,6 @@ interface Ghost {
   graphics: Phaser.GameObjects.Graphics;
   gridX: number;
   gridY: number;
-  x: number;
-  y: number;
   targetGridX: number;
   targetGridY: number;
   color: number;
@@ -231,12 +319,13 @@ export class ChomperScene extends Phaser.Scene {
   private paused: boolean = false;
 
   // Game state
-  private maze: string[] = [];
+  private mazeData!: MazeData;
+  private pellets: Set<string> = new Set(); // "x,y" keys
+  private powerPellets: Set<string> = new Set();
+
   private player!: Phaser.GameObjects.Graphics;
   private playerGridX: number = 14;
   private playerGridY: number = 23;
-  private playerX: number = 0;
-  private playerY: number = 0;
   private playerDir: { x: number; y: number } = { x: 0, y: 0 };
   private nextDir: { x: number; y: number } = { x: 0, y: 0 };
   private mouthAngle: number = 0;
@@ -246,7 +335,6 @@ export class ChomperScene extends Phaser.Scene {
   private powerTimer: number = 0;
   private ghostReleaseTimer: number = 0;
 
-  private pelletsRemaining: number = 0;
   private mazeGraphics!: Phaser.GameObjects.Graphics;
   private pelletGraphics!: Phaser.GameObjects.Graphics;
   private livesText!: Phaser.GameObjects.Text;
@@ -269,42 +357,59 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Select maze based on level (cycles through available mazes)
-    const mazeIndex = (this.level - 1) % MAZES.length;
-    this.maze = MAZES[mazeIndex].map(row => row);
+    this.loadLevel(this.level);
+  }
 
-    // Count pellets
-    this.pelletsRemaining = this.maze.join('').split('.').length - 1 +
-                            this.maze.join('').split('o').length - 1;
+  loadLevel(level: number): void {
+    // Select maze
+    const mazeIndex = (level - 1) % MAZES.length;
+    this.mazeData = MAZES[mazeIndex];
 
-    // Create graphics layers
-    this.mazeGraphics = this.add.graphics();
-    this.pelletGraphics = this.add.graphics();
+    // Initialize pellet sets
+    this.pellets = new Set(this.mazeData.pellets.map(p => `${p.x},${p.y}`));
+    this.powerPellets = new Set(this.mazeData.powerPellets.map(p => `${p.x},${p.y}`));
+
+    // Reset player position
+    this.playerGridX = this.mazeData.playerStart.x;
+    this.playerGridY = this.mazeData.playerStart.y;
+    this.playerDir = { x: 0, y: 0 };
+    this.nextDir = { x: 0, y: 0 };
+
+    // Create or clear graphics
+    if (!this.mazeGraphics) {
+      this.mazeGraphics = this.add.graphics();
+      this.pelletGraphics = this.add.graphics();
+      this.player = this.add.graphics();
+    } else {
+      this.mazeGraphics.clear();
+      this.pelletGraphics.clear();
+      this.player.clear();
+      this.ghosts.forEach(g => g.graphics.destroy());
+      this.ghosts = [];
+    }
 
     this.drawMaze();
     this.drawPellets();
-
-    // Create player
-    this.player = this.add.graphics();
-    this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    this.drawPlayer();
 
     // Create ghosts
     this.createGhosts();
 
     // UI
-    this.livesText = this.add.text(8, this.scale.height - 24, `LIVES: ${this.lives}`, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '12px',
-      color: '#ffff00',
-    });
+    if (!this.livesText) {
+      this.livesText = this.add.text(8, this.scale.height - 24, `LIVES: ${this.lives}`, {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '12px',
+        color: '#ffff00',
+      });
+    } else {
+      this.livesText.setText(`LIVES: ${this.lives}`);
+    }
 
-    // Add ready text
+    // Ready message
     const readyText = this.add.text(
       this.scale.width / 2,
-      17 * CONFIG.TILE_SIZE,
-      'READY!',
+      this.mazeData.ghostHouse.y * CONFIG.TILE_SIZE,
+      level === 1 ? 'READY!' : `LEVEL ${level}`,
       {
         fontFamily: '"Press Start 2P"',
         fontSize: '16px',
@@ -329,14 +434,10 @@ export class ChomperScene extends Phaser.Scene {
 
     for (const data of ghostData) {
       const ghost = this.add.graphics();
-      const x = data.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      const y = data.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
       this.ghosts.push({
         graphics: ghost,
         gridX: data.gridX,
         gridY: data.gridY,
-        x: x,
-        y: y,
         targetGridX: data.gridX,
         targetGridY: data.gridY,
         color: data.color,
@@ -350,20 +451,21 @@ export class ChomperScene extends Phaser.Scene {
         dirX: 0,
         dirY: 0,
       });
-      this.drawGhost(this.ghosts[this.ghosts.length - 1]);
     }
+
+    this.ghosts.forEach(g => this.drawGhost(g));
   }
 
   drawMaze(): void {
     this.mazeGraphics.clear();
 
-    for (let y = 0; y < this.maze.length; y++) {
-      for (let x = 0; x < this.maze[y].length; x++) {
-        const char = this.maze[y][x];
+    for (let y = 0; y < this.mazeData.walls.length; y++) {
+      for (let x = 0; x < this.mazeData.walls[y].length; x++) {
+        const tile = this.mazeData.walls[y][x];
         const px = x * CONFIG.TILE_SIZE;
         const py = y * CONFIG.TILE_SIZE;
 
-        if (char === '#') {
+        if (tile === TILE.WALL) {
           // Wall - blue rounded rectangles
           this.mazeGraphics.fillStyle(0x2121de);
           this.mazeGraphics.fillRoundedRect(
@@ -373,6 +475,10 @@ export class ChomperScene extends Phaser.Scene {
             CONFIG.TILE_SIZE - 4,
             3
           );
+        } else if (tile === TILE.DOOR) {
+          // Ghost house door - pink line
+          this.mazeGraphics.lineStyle(2, 0xffb8ff);
+          this.mazeGraphics.lineBetween(px, py + CONFIG.TILE_SIZE / 2, px + CONFIG.TILE_SIZE, py + CONFIG.TILE_SIZE / 2);
         }
       }
     }
@@ -381,24 +487,24 @@ export class ChomperScene extends Phaser.Scene {
   drawPellets(): void {
     this.pelletGraphics.clear();
 
-    for (let y = 0; y < this.maze.length; y++) {
-      for (let x = 0; x < this.maze[y].length; x++) {
-        const char = this.maze[y][x];
+    // Draw regular pellets
+    this.pellets.forEach(key => {
+      const [x, y] = key.split(',').map(Number);
+      const px = x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const py = y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      this.pelletGraphics.fillStyle(0xffb897);
+      this.pelletGraphics.fillCircle(px, py, 2);
+    });
+
+    // Draw power pellets (flashing)
+    if (this.powerPelletVisible) {
+      this.powerPellets.forEach(key => {
+        const [x, y] = key.split(',').map(Number);
         const px = x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         const py = y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-
-        if (char === '.') {
-          // Regular pellet
-          this.pelletGraphics.fillStyle(0xffb897, 1);
-          this.pelletGraphics.fillCircle(px, py, 2);
-        } else if (char === 'o') {
-          // Power pellet - flash on/off
-          if (this.powerPelletVisible) {
-            this.pelletGraphics.fillStyle(0xffb897, 1);
-            this.pelletGraphics.fillCircle(px, py, 6);
-          }
-        }
-      }
+        this.pelletGraphics.fillStyle(0xffb897);
+        this.pelletGraphics.fillCircle(px, py, 6);
+      });
     }
   }
 
@@ -409,7 +515,6 @@ export class ChomperScene extends Phaser.Scene {
     // Animate mouth
     this.mouthAngle = Math.abs(Math.sin(Date.now() / 100)) * 45;
 
-    // Pac-Man with mouth
     const startAngle = Phaser.Math.DegToRad(this.mouthAngle);
     const endAngle = Phaser.Math.DegToRad(360 - this.mouthAngle);
 
@@ -430,16 +535,17 @@ export class ChomperScene extends Phaser.Scene {
     else if (this.playerDir.y === -1) rotation = -Math.PI / 2;
 
     this.player.setRotation(rotation);
-    this.player.setPosition(this.playerX, this.playerY);
+    const px = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const py = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    this.player.setPosition(px, py);
   }
 
   drawGhost(ghost: Ghost): void {
     ghost.graphics.clear();
-
     const size = CONFIG.TILE_SIZE / 2 - 2;
 
     if (ghost.eaten) {
-      // Just show eyes when eaten (returning home)
+      // Eyes only
       ghost.graphics.fillStyle(0xffffff);
       ghost.graphics.fillCircle(-size / 2, 0, 4);
       ghost.graphics.fillCircle(size / 2, 0, 4);
@@ -447,20 +553,19 @@ export class ChomperScene extends Phaser.Scene {
       ghost.graphics.fillCircle(-size / 2, 0, 2);
       ghost.graphics.fillCircle(size / 2, 0, 2);
     } else {
-      // Normal ghost or frightened
       const color = ghost.frightened
         ? (this.powerTimer < 2000 && Math.floor(Date.now() / 200) % 2 === 0 ? 0xffffff : 0x2121de)
         : ghost.color;
 
       ghost.graphics.fillStyle(color);
 
-      // Ghost head (semi-circle)
+      // Head
       ghost.graphics.beginPath();
       ghost.graphics.arc(0, 0, size, Math.PI, 0, true);
       ghost.graphics.closePath();
       ghost.graphics.fillPath();
 
-      // Ghost body
+      // Body
       ghost.graphics.fillRect(-size, 0, size * 2, size);
 
       // Wavy bottom
@@ -470,11 +575,7 @@ export class ChomperScene extends Phaser.Scene {
         const x1 = -size + i * waveWidth;
         const x2 = x1 + waveWidth / 2;
         const x3 = x1 + waveWidth;
-        ghost.graphics.fillTriangle(
-          x1, size,
-          x2, size + 4,
-          x3, size
-        );
+        ghost.graphics.fillTriangle(x1, size, x2, size + 4, x3, size);
       }
 
       // Eyes
@@ -489,7 +590,9 @@ export class ChomperScene extends Phaser.Scene {
       }
     }
 
-    ghost.graphics.setPosition(ghost.x, ghost.y);
+    const px = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const py = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    ghost.graphics.setPosition(px, py);
   }
 
   update(time: number, delta: number): void {
@@ -497,7 +600,7 @@ export class ChomperScene extends Phaser.Scene {
 
     const dt = delta / 1000;
 
-    // Animate power pellets (flash every 250ms)
+    // Flash power pellets
     this.powerPelletTimer += delta;
     if (this.powerPelletTimer > 250) {
       this.powerPelletVisible = !this.powerPelletVisible;
@@ -511,24 +614,17 @@ export class ChomperScene extends Phaser.Scene {
       if (this.powerTimer <= 0) {
         this.powered = false;
         this.ghosts.forEach(g => {
-          // Only un-frighten ghosts that aren't eaten
-          if (!g.eaten) {
-            g.frightened = false;
-            this.drawGhost(g);
-          }
+          if (!g.eaten) g.frightened = false;
         });
       }
     }
 
-    // Release ghosts over time
+    // Release ghosts
     if (!this.ghosts.every(g => g.released)) {
       this.ghostReleaseTimer += delta;
       if (this.ghostReleaseTimer > CONFIG.GHOST_RELEASE_DELAY) {
         const unreleased = this.ghosts.find(g => !g.released);
-        if (unreleased) {
-          unreleased.released = true;
-          unreleased.targetGridY = 11; // Move to exit
-        }
+        if (unreleased) unreleased.released = true;
         this.ghostReleaseTimer = 0;
       }
     }
@@ -540,432 +636,148 @@ export class ChomperScene extends Phaser.Scene {
     else if (dir.left) this.nextDir = { x: -1, y: 0 };
     else if (dir.right) this.nextDir = { x: 1, y: 0 };
 
-    // Move player
+    // Move
     this.movePlayer(dt);
-    this.drawPlayer();
-
-    // Move ghosts
     this.moveGhosts(dt);
 
-    // Check collisions
+    // Check
     this.checkCollisions();
-
-    // Check win
-    if (this.pelletsRemaining === 0) {
+    if (this.pellets.size === 0 && this.powerPellets.size === 0) {
       this.levelComplete();
     }
+
+    // Draw
+    this.drawPlayer();
+    this.ghosts.forEach(g => this.drawGhost(g));
   }
 
   movePlayer(dt: number): void {
-    const speed = CONFIG.PLAYER_SPEED;
-
-    // Try to change direction
+    // Try to turn
     const nextGridX = this.playerGridX + this.nextDir.x;
     const nextGridY = this.playerGridY + this.nextDir.y;
-
     if (this.canPlayerMoveTo(nextGridX, nextGridY)) {
       this.playerDir = { ...this.nextDir };
     }
 
-    // Move in current direction
+    // Move
     if (this.playerDir.x !== 0 || this.playerDir.y !== 0) {
       const targetGridX = this.playerGridX + this.playerDir.x;
       const targetGridY = this.playerGridY + this.playerDir.y;
 
       if (this.canPlayerMoveTo(targetGridX, targetGridY)) {
-        // Move in pixel coordinates
-        this.playerX += this.playerDir.x * speed * dt;
-        this.playerY += this.playerDir.y * speed * dt;
-
-        // Update grid position when crossing tile boundaries
-        const centerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        const centerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-
-        if (this.playerDir.x > 0 && this.playerX >= centerX + CONFIG.TILE_SIZE) {
-          this.playerGridX++;
-          this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-          this.checkPelletCollision();
-        } else if (this.playerDir.x < 0 && this.playerX <= centerX - CONFIG.TILE_SIZE) {
-          this.playerGridX--;
-          this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-          this.checkPelletCollision();
-        } else if (this.playerDir.y > 0 && this.playerY >= centerY + CONFIG.TILE_SIZE) {
-          this.playerGridY++;
-          this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-          this.checkPelletCollision();
-        } else if (this.playerDir.y < 0 && this.playerY <= centerY - CONFIG.TILE_SIZE) {
-          this.playerGridY--;
-          this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-          this.checkPelletCollision();
-        }
+        this.playerGridX = targetGridX;
+        this.playerGridY = targetGridY;
+        this.checkPelletCollision();
       } else {
-        // Can't move forward, snap to grid center
-        this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        this.playerDir = { x: 0, y: 0 };
       }
     }
 
     // Tunnel wraparound
-    if (this.playerGridX < 0) {
-      this.playerGridX = this.maze[0].length - 1;
-      this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    } else if (this.playerGridX >= this.maze[0].length) {
-      this.playerGridX = 0;
-      this.playerX = CONFIG.TILE_SIZE / 2;
-    }
+    if (this.playerGridX < 0) this.playerGridX = CONFIG.GRID_WIDTH - 1;
+    if (this.playerGridX >= CONFIG.GRID_WIDTH) this.playerGridX = 0;
   }
 
   moveGhosts(dt: number): void {
     for (const ghost of this.ghosts) {
       if (!ghost.released) continue;
 
-      const levelSpeedBonus = (this.level - 1) * CONFIG.SPEED_INCREASE_PER_LEVEL;
-      const speed = ghost.frightened ? CONFIG.FRIGHTENED_SPEED : CONFIG.GHOST_SPEED + levelSpeedBonus;
-
-      // Check if we're at a grid center (for decision making)
-      const atCenter =
-        Math.abs(ghost.x - (ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2)) < 2 &&
-        Math.abs(ghost.y - (ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2)) < 2;
-
-      // Determine target position based on ghost state
+      // Determine target
       if (!ghost.exitedHouse) {
-        // Exiting house - each ghost takes slightly different path
-        const exitCenterX = 14;
-        const exitY = 11;
-
-        // First move to exit level
-        if (ghost.gridY > exitY) {
-          ghost.targetGridX = exitCenterX;
-          ghost.targetGridY = exitY;
-        } else {
-          // Then move to unique position based on ghost
-          if (ghost.name === 'red') {
-            ghost.targetGridX = exitCenterX;
-            ghost.targetGridY = 9;
-            if (ghost.gridY <= 9) {
-              ghost.exitedHouse = true;
-            }
-          } else if (ghost.name === 'pink') {
-            ghost.targetGridX = exitCenterX - 3;
-            ghost.targetGridY = 9;
-            if (ghost.gridY <= 9 && Math.abs(ghost.gridX - (exitCenterX - 3)) < 2) {
-              ghost.exitedHouse = true;
-            }
-          } else if (ghost.name === 'cyan') {
-            ghost.targetGridX = exitCenterX + 3;
-            ghost.targetGridY = 9;
-            if (ghost.gridY <= 9 && Math.abs(ghost.gridX - (exitCenterX + 3)) < 2) {
-              ghost.exitedHouse = true;
-            }
-          } else if (ghost.name === 'orange') {
-            // Orange exits: first move to center, then up
-            if (ghost.gridY > 11) {
-              // First move to exit row
-              ghost.targetGridX = exitCenterX;
-              ghost.targetGridY = 11;
-            } else if (ghost.gridY === 11) {
-              // At exit row, move up
-              ghost.targetGridX = exitCenterX;
-              ghost.targetGridY = 9;
-            } else {
-              // Above exit row, continue up and mark as exited
-              ghost.targetGridX = exitCenterX;
-              ghost.targetGridY = 9;
-              if (ghost.gridY <= 9) {
-                ghost.exitedHouse = true;
-              }
-            }
-          }
-        }
+        ghost.targetGridX = 14;
+        ghost.targetGridY = 11;
       } else if (ghost.eaten) {
-        // Return to ghost house when eaten - can pass through walls
-        ghost.targetGridX = 14; // Center of ghost house
-        ghost.targetGridY = 14;
+        ghost.targetGridX = this.mazeData.ghostHouse.x;
+        ghost.targetGridY = this.mazeData.ghostHouse.y;
       } else if (ghost.frightened) {
-        // Flee from player - move to opposite corner
+        // Flee
         const dx = ghost.gridX - this.playerGridX;
         const dy = ghost.gridY - this.playerGridY;
-
-        // Target a corner far from player
-        if (dx > 0 && dy > 0) {
-          // Player is to the left and above - flee to bottom-right
-          ghost.targetGridX = this.maze[0].length - 2;
-          ghost.targetGridY = this.maze.length - 2;
-        } else if (dx < 0 && dy > 0) {
-          // Player is to the right and above - flee to bottom-left
-          ghost.targetGridX = 1;
-          ghost.targetGridY = this.maze.length - 2;
-        } else if (dx > 0 && dy < 0) {
-          // Player is to the left and below - flee to top-right
-          ghost.targetGridX = this.maze[0].length - 2;
-          ghost.targetGridY = 1;
-        } else {
-          // Player is to the right and below - flee to top-left
-          ghost.targetGridX = 1;
-          ghost.targetGridY = 1;
-        }
+        ghost.targetGridX = dx > 0 ? CONFIG.GRID_WIDTH - 2 : 1;
+        ghost.targetGridY = dy > 0 ? CONFIG.GRID_HEIGHT - 2 : 1;
       } else {
-        // Normal mode: each ghost has authentic Pac-Man targeting behavior
-        if (ghost.name === 'red') {
-          // Blinky (Red): "Shadow" - Direct chase, always targets player's current position
-          ghost.targetGridX = this.playerGridX;
-          ghost.targetGridY = this.playerGridY;
-        } else if (ghost.name === 'pink') {
-          // Pinky (Pink): "Speedy" - Ambush strategy, targets 4 tiles ahead
-          // Includes the famous "up bug" from original Pac-Man
-          let targetX = this.playerGridX;
-          let targetY = this.playerGridY;
+        // Chase player
+        ghost.targetGridX = this.playerGridX;
+        ghost.targetGridY = this.playerGridY;
+      }
 
-          if (this.playerDir.x !== 0 || this.playerDir.y !== 0) {
-            // When facing up, original bug causes offset to be 4 up AND 4 left
-            if (this.playerDir.y < 0) {
-              targetX += -4; // 4 tiles left (the bug)
-              targetY += -4; // 4 tiles up
-            } else {
-              // Normal: just 4 tiles ahead in current direction
-              targetX += this.playerDir.x * 4;
-              targetY += this.playerDir.y * 4;
-            }
-          }
+      // Choose direction
+      const directions = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 },
+      ];
 
-          ghost.targetGridX = Math.max(1, Math.min(this.maze[0].length - 2, targetX));
-          ghost.targetGridY = Math.max(1, Math.min(this.maze.length - 2, targetY));
-        } else if (ghost.name === 'cyan') {
-          // Inky (Cyan): "Bashful" - Uses vector between Blinky and player
-          // Most complex AI: takes point 2 tiles ahead of player, then doubles vector from Blinky
-          const blinky = this.ghosts.find(g => g.name === 'red');
+      let bestDir = { x: 0, y: 0 };
+      let bestDist = Infinity;
 
-          if (blinky) {
-            // Get point 2 tiles ahead of player (with "up bug" like Pinky)
-            let pivotX = this.playerGridX;
-            let pivotY = this.playerGridY;
+      for (const dir of directions) {
+        const nextX = ghost.gridX + dir.x;
+        const nextY = ghost.gridY + dir.y;
 
-            if (this.playerDir.y < 0) {
-              pivotX += -2; // 2 tiles left when facing up (bug)
-              pivotY += -2; // 2 tiles up
-            } else {
-              pivotX += this.playerDir.x * 2;
-              pivotY += this.playerDir.y * 2;
-            }
+        // Skip reverse and invalid
+        if (dir.x === -ghost.dirX && dir.y === -ghost.dirY) continue;
+        if (!this.canGhostMoveTo(nextX, nextY, ghost.eaten)) continue;
 
-            // Calculate vector from Blinky to pivot point
-            const vectorX = pivotX - blinky.gridX;
-            const vectorY = pivotY - blinky.gridY;
-
-            // Double the vector to get target (creates unpredictable behavior)
-            ghost.targetGridX = pivotX + vectorX;
-            ghost.targetGridY = pivotY + vectorY;
-
-            // Clamp to maze bounds
-            ghost.targetGridX = Math.max(1, Math.min(this.maze[0].length - 2, ghost.targetGridX));
-            ghost.targetGridY = Math.max(1, Math.min(this.maze.length - 2, ghost.targetGridY));
-          } else {
-            // Fallback if Blinky not found
-            ghost.targetGridX = this.playerGridX;
-            ghost.targetGridY = this.playerGridY;
-          }
-        } else if (ghost.name === 'orange') {
-          // Clyde (Orange): "Pokey" - Alternates between chase and scatter
-          // When close (8 tiles), heads to bottom-left scatter corner
-          const dist = Math.abs(ghost.gridX - this.playerGridX) + Math.abs(ghost.gridY - this.playerGridY);
-
-          if (dist > 8) {
-            // Far away - chase player directly
-            ghost.targetGridX = this.playerGridX;
-            ghost.targetGridY = this.playerGridY;
-          } else {
-            // Close - scatter to bottom-left corner (his home corner)
-            ghost.targetGridX = 1;
-            ghost.targetGridY = this.maze.length - 2;
-          }
+        const dist = Math.abs(nextX - ghost.targetGridX) + Math.abs(nextY - ghost.targetGridY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestDir = dir;
         }
       }
 
-      // Calculate direction to target
-      const dx = ghost.targetGridX - ghost.gridX;
-      const dy = ghost.targetGridY - ghost.gridY;
+      // Move
+      if (bestDir.x !== 0 || bestDir.y !== 0) {
+        ghost.dirX = bestDir.x;
+        ghost.dirY = bestDir.y;
+        ghost.gridX += bestDir.x;
+        ghost.gridY += bestDir.y;
 
-      // Choose best direction
-      let moveDir = { x: 0, y: 0 };
-
-      // Eaten ghosts can move through walls, others use normal pathfinding
-      const canMove = (gx: number, gy: number) => {
-        if (ghost.eaten) {
-          // Eaten ghosts can pass through everything except map boundaries
-          return gy >= 0 && gy < this.maze.length && gx >= 0 && gx < this.maze[0].length;
-        }
-        return this.canMoveTo(gx, gy);
-      };
-
-      // Only choose new direction at grid centers to prevent oscillation
-      if (atCenter || ghost.dirX === 0 && ghost.dirY === 0) {
-        // Only apply randomness at grid centers for non-exiting ghosts (reduced to 5%)
-        const useRandom = atCenter && ghost.exitedHouse && !ghost.eaten && !ghost.frightened && this.rng.next() < 0.05;
-
-        if (useRandom) {
-          // 5% chance for slight path variation at intersections
-          const dirs = [
-            { x: 1, y: 0 },
-            { x: -1, y: 0 },
-            { x: 0, y: 1 },
-            { x: 0, y: -1 },
-          ];
-          // Filter out reverse direction and invalid moves
-          const validDirs = dirs.filter(d =>
-            canMove(ghost.gridX + d.x, ghost.gridY + d.y) &&
-            !(d.x === -ghost.dirX && d.y === -ghost.dirY) // Prevent 180-degree turns
-          );
-          if (validDirs.length > 0) {
-            moveDir = validDirs[Math.floor(this.rng.next() * validDirs.length)];
-          }
-        } else {
-          // Normal pathfinding towards target
-          const directions = [];
-
-          // Prioritize based on distance to target, preferring horizontal when equal
-          const absDx = Math.abs(dx);
-          const absDy = Math.abs(dy);
-
-          if (absDx > absDy) {
-            // Horizontal is more important
-            if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
-            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
-          } else if (absDy > absDx) {
-            // Vertical is more important
-            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
-            if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
-          } else {
-            // Equal distance - prefer horizontal movement
-            if (dx !== 0) directions.push({ x: Math.sign(dx), y: 0 });
-            if (dy !== 0) directions.push({ x: 0, y: Math.sign(dy) });
-          }
-
-          // Also consider perpendicular directions as fallbacks
-          if (dx !== 0) directions.push({ x: 0, y: 1 }, { x: 0, y: -1 });
-          if (dy !== 0) directions.push({ x: 1, y: 0 }, { x: -1, y: 0 });
-
-          // Choose first valid direction that's not a 180-degree turn
-          for (const dir of directions) {
-            const isReverse = dir.x === -ghost.dirX && dir.y === -ghost.dirY;
-            if (!isReverse && canMove(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
-              moveDir = dir;
-              break;
-            }
-          }
-
-          // If no direction found (shouldn't happen), allow reverse as last resort
-          if (moveDir.x === 0 && moveDir.y === 0) {
-            for (const dir of directions) {
-              if (canMove(ghost.gridX + dir.x, ghost.gridY + dir.y)) {
-                moveDir = dir;
-                break;
-              }
-            }
-          }
-        }
-      } else {
-        // Not at center, continue current direction
-        moveDir.x = ghost.dirX;
-        moveDir.y = ghost.dirY;
-      }
-
-      // Move ghost
-      if (moveDir.x !== 0 || moveDir.y !== 0) {
-        // Store current direction
-        ghost.dirX = moveDir.x;
-        ghost.dirY = moveDir.y;
-
-        ghost.x += moveDir.x * speed * dt;
-        ghost.y += moveDir.y * speed * dt;
-
-        // Update grid position when crossing tile boundaries
-        const centerX = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        const centerY = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-
-        if (moveDir.x > 0 && ghost.x >= centerX + CONFIG.TILE_SIZE) {
-          ghost.gridX++;
-          ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        } else if (moveDir.x < 0 && ghost.x <= centerX - CONFIG.TILE_SIZE) {
-          ghost.gridX--;
-          ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        // Check exit
+        if (!ghost.exitedHouse && ghost.gridY <= 11) {
+          ghost.exitedHouse = true;
         }
 
-        if (moveDir.y > 0 && ghost.y >= centerY + CONFIG.TILE_SIZE) {
-          ghost.gridY++;
-          ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        } else if (moveDir.y < 0 && ghost.y <= centerY - CONFIG.TILE_SIZE) {
-          ghost.gridY--;
-          ghost.y = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        }
+        // Wraparound
+        if (ghost.gridX < 0) ghost.gridX = CONFIG.GRID_WIDTH - 1;
+        if (ghost.gridX >= CONFIG.GRID_WIDTH) ghost.gridX = 0;
       }
-
-      // Tunnel wraparound for ghosts (prevent escaping map)
-      if (ghost.gridX < 0) {
-        ghost.gridX = this.maze[0].length - 1;
-        ghost.x = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      } else if (ghost.gridX >= this.maze[0].length) {
-        ghost.gridX = 0;
-        ghost.x = CONFIG.TILE_SIZE / 2;
-      }
-
-      // Clamp vertical position to maze bounds (no vertical tunnels)
-      if (ghost.gridY < 0) {
-        ghost.gridY = 0;
-        ghost.y = CONFIG.TILE_SIZE / 2;
-      } else if (ghost.gridY >= this.maze.length) {
-        ghost.gridY = this.maze.length - 1;
-        ghost.y = (this.maze.length - 1) * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      }
-
-      this.drawGhost(ghost);
     }
   }
 
-  canMoveTo(gridX: number, gridY: number): boolean {
-    if (gridY < 0 || gridY >= this.maze.length || gridX < 0 || gridX >= this.maze[0].length) {
-      return true; // Allow tunnel
-    }
-    const char = this.maze[gridY][gridX];
-    return char !== '#';
+  canPlayerMoveTo(x: number, y: number): boolean {
+    if (y < 0 || y >= this.mazeData.walls.length) return false;
+    if (x < 0 || x >= this.mazeData.walls[0].length) return true; // Tunnel
+    const tile = this.mazeData.walls[y][x];
+    return tile === TILE.EMPTY;
   }
 
-  canPlayerMoveTo(gridX: number, gridY: number): boolean {
-    if (gridY < 0 || gridY >= this.maze.length || gridX < 0 || gridX >= this.maze[0].length) {
-      return true; // Allow tunnel
-    }
-    const char = this.maze[gridY][gridX];
-    return char !== '#' && char !== '-';
+  canGhostMoveTo(x: number, y: number, isEaten: boolean): boolean {
+    if (y < 0 || y >= this.mazeData.walls.length) return false;
+    if (x < 0 || x >= this.mazeData.walls[0].length) return true; // Tunnel
+    const tile = this.mazeData.walls[y][x];
+    return tile === TILE.EMPTY || (isEaten && tile === TILE.DOOR);
   }
 
   checkPelletCollision(): void {
-    const char = this.maze[this.playerGridY][this.playerGridX];
+    const key = `${this.playerGridX},${this.playerGridY}`;
 
-    if (char === '.') {
+    if (this.pellets.has(key)) {
+      this.pellets.delete(key);
       this.score += CONFIG.PELLET_POINTS;
       this.onScoreUpdate(this.score);
-      this.maze[this.playerGridY] =
-        this.maze[this.playerGridY].substring(0, this.playerGridX) +
-        ' ' +
-        this.maze[this.playerGridY].substring(this.playerGridX + 1);
-      this.pelletsRemaining--;
       this.drawPellets();
-    } else if (char === 'o') {
+    }
+
+    if (this.powerPellets.has(key)) {
+      this.powerPellets.delete(key);
       this.score += CONFIG.POWER_PELLET_POINTS;
       this.onScoreUpdate(this.score);
-      this.maze[this.playerGridY] =
-        this.maze[this.playerGridY].substring(0, this.playerGridX) +
-        ' ' +
-        this.maze[this.playerGridY].substring(this.playerGridX + 1);
-      this.pelletsRemaining--;
       this.powered = true;
-      // Decrease power duration with each level (minimum 2 seconds)
-      const levelPenalty = (this.level - 1) * CONFIG.POWER_DECREASE_PER_LEVEL;
-      this.powerTimer = Math.max(2000, CONFIG.POWER_DURATION - levelPenalty);
+      this.powerTimer = CONFIG.POWER_DURATION;
       this.ghosts.forEach(g => {
-        if (!g.eaten) {
-          g.frightened = true;
-          this.drawGhost(g);
-        }
+        if (!g.eaten) g.frightened = true;
       });
       this.drawPellets();
     }
@@ -975,38 +787,23 @@ export class ChomperScene extends Phaser.Scene {
     for (const ghost of this.ghosts) {
       if (!ghost.released) continue;
 
-      const dist = Math.abs(ghost.gridX - this.playerGridX) + Math.abs(ghost.gridY - this.playerGridY);
-
-      if (dist < 1) {
+      if (ghost.gridX === this.playerGridX && ghost.gridY === this.playerGridY) {
         if (ghost.frightened && !ghost.eaten) {
           // Eat ghost
           this.score += CONFIG.GHOST_POINTS;
           this.onScoreUpdate(this.score);
           ghost.eaten = true;
           ghost.frightened = false;
-          ghost.targetGridX = 14; // Ghost house center
-          ghost.targetGridY = 14;
         } else if (!ghost.eaten) {
-          // Player dies
+          // Die
           this.loseLife();
         }
       }
 
-      // Check if eaten ghost reached home
-      if (ghost.eaten) {
-        // All ghosts return to center of ghost house when eaten (gridY 14)
-        const ghostHouseX = 14;
-        const ghostHouseY = 14;
-
-        if (ghost.gridX === ghostHouseX && ghost.gridY === ghostHouseY) {
-          // Mark as not eaten immediately to stop trying to go home
-          ghost.eaten = false;
-          ghost.exitedHouse = false; // Reset so ghost exits again
-          ghost.released = true; // Keep released so it will exit again
-          ghost.dirX = 0; // Reset direction
-          ghost.dirY = 0;
-          this.drawGhost(ghost);
-        }
+      // Respawn eaten ghost
+      if (ghost.eaten && ghost.gridX === this.mazeData.ghostHouse.x && ghost.gridY === this.mazeData.ghostHouse.y) {
+        ghost.eaten = false;
+        ghost.exitedHouse = false;
       }
     }
   }
@@ -1018,26 +815,23 @@ export class ChomperScene extends Phaser.Scene {
     if (this.lives <= 0) {
       this.endGame();
     } else {
-      this.paused = true;
-      this.playerGridX = 14;
-      this.playerGridY = 23;
-      this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      this.playerGridX = this.mazeData.playerStart.x;
+      this.playerGridY = this.mazeData.playerStart.y;
       this.playerDir = { x: 0, y: 0 };
       this.powered = false;
 
       this.ghosts.forEach((g, i) => {
         g.gridX = g.homeX;
         g.gridY = g.homeY;
-        g.x = g.homeX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        g.y = g.homeY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
         g.released = i === 0;
         g.exitedHouse = i === 0;
         g.frightened = false;
         g.eaten = false;
-        this.drawGhost(g);
+        g.dirX = 0;
+        g.dirY = 0;
       });
 
+      this.paused = true;
       this.time.delayedCall(2000, () => {
         this.paused = false;
       });
@@ -1048,54 +842,7 @@ export class ChomperScene extends Phaser.Scene {
     this.level++;
     this.score += 500;
     this.onScoreUpdate(this.score);
-
-    // Load next maze (cycles through available mazes)
-    const mazeIndex = (this.level - 1) % MAZES.length;
-    this.maze = MAZES[mazeIndex].map(row => row);
-    this.pelletsRemaining = this.maze.join('').split('.').length - 1 +
-                            this.maze.join('').split('o').length - 1;
-    this.drawPellets();
-
-    // Show level text
-    const levelText = this.add.text(
-      this.scale.width / 2,
-      17 * CONFIG.TILE_SIZE,
-      `LEVEL ${this.level}`,
-      {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '16px',
-        color: '#00ff00',
-      }
-    ).setOrigin(0.5);
-
-    // Reset player and ghosts
-    this.playerGridX = 14;
-    this.playerGridY = 23;
-    this.playerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    this.playerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    this.playerDir = { x: 0, y: 0 };
-
-    this.ghosts.forEach((g, i) => {
-      g.gridX = g.homeX;
-      g.gridY = g.homeY;
-      g.x = g.homeX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      g.y = g.homeY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      g.targetGridX = g.homeX;
-      g.targetGridY = g.homeY;
-      g.released = i === 0;
-      g.exitedHouse = i === 0;
-      g.frightened = false;
-      g.eaten = false;
-      this.drawGhost(g);
-    });
-
-    this.ghostReleaseTimer = 0;
-
-    this.paused = true;
-    this.time.delayedCall(2000, () => {
-      levelText.destroy();
-      this.paused = false;
-    });
+    this.loadLevel(this.level);
   }
 
   endGame(): void {
