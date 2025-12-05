@@ -2,38 +2,104 @@ import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
-  GRID_WIDTH: 10,
-  GRID_HEIGHT: 20,
-  CELL_SIZE: 26,  // Reduced from 30 to fit in viewport
-  INITIAL_FALL_SPEED: 1000, // ms
-  FAST_FALL_SPEED: 50,
-  MIN_FALL_SPEED: 100,
-  SPEED_DECREASE: 50, // Speed up every level
-  LINES_PER_LEVEL: 10,
-  POINTS_PER_LINE: [0, 100, 300, 500, 800], // 0, 1, 2, 3, 4 lines
+  TILE_SIZE: 40,
+  GRID_WIDTH: 16,
+  GRID_HEIGHT: 14,
+  PLAYER_MOVE_DELAY: 150,
+  BARREL_MOVE_DELAY: 200,
+  BARREL_SPAWN_DELAY: 1500,
+  LIVES: 3,
+  POINTS_PER_BARREL: 50,
+  POINTS_PER_LEVEL: 500,
+  BARRELS_TO_DODGE_PER_LEVEL: 30,
 };
 
-const TETROMINOES = {
-  I: [[1, 1, 1, 1]],
-  O: [[1, 1], [1, 1]],
-  T: [[0, 1, 0], [1, 1, 1]],
-  S: [[0, 1, 1], [1, 1, 0]],
-  Z: [[1, 1, 0], [0, 1, 1]],
-  J: [[1, 0, 0], [1, 1, 1]],
-  L: [[0, 0, 1], [1, 1, 1]],
-};
+interface Barrel {
+  gridX: number;
+  gridY: number;
+  direction: 'down' | 'right' | 'left';
+  graphics: Phaser.GameObjects.Graphics;
+}
 
-const COLORS = {
-  I: 0x00f5ff,
-  O: 0xffff00,
-  T: 0xff00ff,
-  S: 0x00ff41,
-  Z: 0xff0040,
-  J: 0x0066ff,
-  L: 0xff6600,
-};
+interface LanePattern {
+  column?: number; // For vertical lanes (down)
+  row?: number;    // For horizontal lanes (right/left)
+  direction: 'down' | 'right' | 'left';
+  spawnDelay: number;
+}
 
-type TetrominoType = keyof typeof TETROMINOES;
+// 5 distinct levels with different barrel patterns
+const LEVELS = [
+  // Level 1: Simple vertical lanes
+  {
+    name: 'FACTORY FLOOR',
+    patterns: [
+      { column: 3, direction: 'down' as const, spawnDelay: 2000 },
+      { column: 7, direction: 'down' as const, spawnDelay: 2200 },
+      { column: 11, direction: 'down' as const, spawnDelay: 2400 },
+    ],
+    backgroundColor: 0x1a1a2e,
+    floorColor: 0x3d3d5c,
+  },
+
+  // Level 2: Alternating vertical lanes
+  {
+    name: 'WAREHOUSE',
+    patterns: [
+      { column: 2, direction: 'down' as const, spawnDelay: 1800 },
+      { column: 5, direction: 'down' as const, spawnDelay: 2000 },
+      { column: 8, direction: 'down' as const, spawnDelay: 1700 },
+      { column: 11, direction: 'down' as const, spawnDelay: 1900 },
+      { column: 14, direction: 'down' as const, spawnDelay: 2100 },
+    ],
+    backgroundColor: 0x2d2d44,
+    floorColor: 0x4a4a6a,
+  },
+
+  // Level 3: Horizontal barrels from both sides
+  {
+    name: 'CONVEYOR BELTS',
+    patterns: [
+      { row: 3, direction: 'right' as const, spawnDelay: 2000 },
+      { row: 6, direction: 'left' as const, spawnDelay: 2200 },
+      { row: 9, direction: 'right' as const, spawnDelay: 1800 },
+      { row: 12, direction: 'left' as const, spawnDelay: 2400 },
+    ],
+    backgroundColor: 0x1e1e3f,
+    floorColor: 0x3b3b6b,
+  },
+
+  // Level 4: Mixed vertical and horizontal
+  {
+    name: 'CHAOS ZONE',
+    patterns: [
+      { column: 4, direction: 'down' as const, spawnDelay: 1600 },
+      { column: 12, direction: 'down' as const, spawnDelay: 1700 },
+      { row: 4, direction: 'right' as const, spawnDelay: 1900 },
+      { row: 8, direction: 'left' as const, spawnDelay: 1800 },
+      { row: 11, direction: 'right' as const, spawnDelay: 2000 },
+    ],
+    backgroundColor: 0x2a1a3f,
+    floorColor: 0x4f3a6a,
+  },
+
+  // Level 5: Dense pattern - all directions
+  {
+    name: 'BARREL STORM',
+    patterns: [
+      { column: 2, direction: 'down' as const, spawnDelay: 1400 },
+      { column: 6, direction: 'down' as const, spawnDelay: 1500 },
+      { column: 10, direction: 'down' as const, spawnDelay: 1600 },
+      { column: 14, direction: 'down' as const, spawnDelay: 1450 },
+      { row: 3, direction: 'right' as const, spawnDelay: 1700 },
+      { row: 6, direction: 'left' as const, spawnDelay: 1650 },
+      { row: 9, direction: 'right' as const, spawnDelay: 1550 },
+      { row: 11, direction: 'left' as const, spawnDelay: 1600 },
+    ],
+    backgroundColor: 0x1f0a2e,
+    floorColor: 0x3f2a5c,
+  },
+];
 
 export class BlockDropScene extends Phaser.Scene {
   private onScoreUpdate: (score: number) => void;
@@ -43,24 +109,24 @@ export class BlockDropScene extends Phaser.Scene {
 
   private rng: SeededRNG;
   private score: number = 0;
-  private lines: number = 0;
+  private lives: number = CONFIG.LIVES;
   private level: number = 1;
   private gameOver: boolean = false;
+  private barrelsDodged: number = 0;
 
-  private grid: (number | null)[][] = [];
-  private currentPiece: { type: TetrominoType; shape: number[][]; x: number; y: number } | null = null;
-  private nextPiece: TetrominoType | null = null;
+  private playerGridX: number = 8;
+  private playerGridY: number = 12;
+  private playerMoveTimer: number = 0;
+  private player!: Phaser.GameObjects.Graphics;
 
-  private fallTimer: number = 0;
-  private fallSpeed: number = CONFIG.INITIAL_FALL_SPEED;
-  private fastFalling: boolean = false;
-  private canMove: boolean = true;
-  private lastRotate: boolean = false;
+  private barrels: Barrel[] = [];
+  private barrelMoveTimer: number = 0;
+  private spawnTimers: Map<number, number> = new Map();
 
-  private graphics!: Phaser.GameObjects.Graphics;
-  private scoreText!: Phaser.GameObjects.Text;
+  private background!: Phaser.GameObjects.Graphics;
+  private livesText!: Phaser.GameObjects.Text;
+  private dodgedText!: Phaser.GameObjects.Text;
   private levelText!: Phaser.GameObjects.Text;
-  private linesText!: Phaser.GameObjects.Text;
 
   constructor(
     onScoreUpdate: (score: number) => void,
@@ -78,319 +144,411 @@ export class BlockDropScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { width, height } = this.scale;
+    this.loadLevel(this.level);
+  }
 
-    // Initialize grid
-    for (let y = 0; y < CONFIG.GRID_HEIGHT; y++) {
-      this.grid[y] = [];
-      for (let x = 0; x < CONFIG.GRID_WIDTH; x++) {
-        this.grid[y][x] = null;
-      }
+  loadLevel(level: number): void {
+    const levelIndex = (level - 1) % LEVELS.length;
+    const levelData = LEVELS[levelIndex];
+
+    // Clear previous level
+    this.barrels.forEach(b => b.graphics.destroy());
+    this.barrels = [];
+    this.spawnTimers.clear();
+    this.barrelsDodged = 0;
+
+    // Initialize spawn timers for each pattern
+    levelData.patterns.forEach((_, index) => {
+      this.spawnTimers.set(index, 0);
+    });
+
+    // Draw background
+    if (!this.background) {
+      this.background = this.add.graphics();
     }
+    this.drawBackground(levelData.backgroundColor, levelData.floorColor);
 
-    // Graphics
-    this.graphics = this.add.graphics();
+    // Create player
+    if (!this.player) {
+      this.player = this.add.graphics();
+    }
+    this.playerGridX = 8;
+    this.playerGridY = 12;
+    this.drawPlayer();
 
     // UI
-    const gridWidth = CONFIG.GRID_WIDTH * CONFIG.CELL_SIZE;
-    const offsetX = (width - gridWidth) / 2;
+    if (!this.livesText) {
+      this.livesText = this.add.text(8, 8, `LIVES: ${this.lives}`, {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '14px',
+        color: '#ff0000',
+      });
+    } else {
+      this.livesText.setText(`LIVES: ${this.lives}`);
+    }
 
-    this.scoreText = this.add.text(offsetX, 20, `SCORE: ${this.score}`, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
-      color: '#ffffff',
+    if (!this.dodgedText) {
+      this.dodgedText = this.add.text(this.scale.width / 2, 8, `DODGED: 0/${CONFIG.BARRELS_TO_DODGE_PER_LEVEL}`, {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '14px',
+        color: '#00ff00',
+      }).setOrigin(0.5, 0);
+    } else {
+      this.dodgedText.setText(`DODGED: 0/${CONFIG.BARRELS_TO_DODGE_PER_LEVEL}`);
+    }
+
+    if (!this.levelText) {
+      this.levelText = this.add.text(this.scale.width - 8, 8, `LVL: ${level}`, {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '14px',
+        color: '#00ffff',
+      }).setOrigin(1, 0);
+    } else {
+      this.levelText.setText(`LVL: ${level}`);
+    }
+
+    // Level name
+    const levelNameText = this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2,
+      levelData.name,
+      {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '20px',
+        color: '#ffff00',
+      }
+    ).setOrigin(0.5);
+
+    this.time.delayedCall(2000, () => {
+      levelNameText.destroy();
     });
-
-    this.levelText = this.add.text(offsetX, 50, `LEVEL: ${this.level}`, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
-      color: '#00f5ff',
-    });
-
-    this.linesText = this.add.text(offsetX, 80, `LINES: ${this.lines}`, {
-      fontFamily: '"Press Start 2P"',
-      fontSize: '14px',
-      color: '#00ff41',
-    });
-
-    // Spawn first piece
-    this.spawnPiece();
   }
 
-  spawnPiece(): void {
-    const types: TetrominoType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-    const type = this.nextPiece || types[Math.floor(this.rng.next() * types.length)];
-    this.nextPiece = types[Math.floor(this.rng.next() * types.length)];
+  drawBackground(bgColor: number, floorColor: number): void {
+    this.background.clear();
 
-    const shape = JSON.parse(JSON.stringify(TETROMINOES[type]));
+    // Background gradient
+    this.background.fillStyle(bgColor);
+    this.background.fillRect(0, 40, this.scale.width, this.scale.height - 40);
 
-    this.currentPiece = {
-      type,
-      shape,
-      x: Math.floor(CONFIG.GRID_WIDTH / 2) - Math.floor(shape[0].length / 2),
-      y: 0,
-    };
-
-    // Check if game over (piece can't spawn)
-    if (this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
-      this.endGame();
+    // Grid pattern
+    this.background.lineStyle(1, 0xffffff, 0.1);
+    for (let x = 0; x < CONFIG.GRID_WIDTH; x++) {
+      const screenX = x * CONFIG.TILE_SIZE;
+      this.background.lineBetween(screenX, 40, screenX, this.scale.height);
     }
-  }
-
-  update(time: number, delta: number): void {
-    if (this.gameOver || !this.currentPiece) return;
-
-    // Handle rotation
-    const dir = this.getDirection();
-    const action = this.getAction();
-
-    if (action && !this.lastRotate) {
-      this.rotatePiece();
-      this.lastRotate = true;
-    } else if (!action) {
-      this.lastRotate = false;
-    }
-
-    // Handle movement
-    if (this.canMove) {
-      if (dir.left) {
-        this.movePiece(-1, 0);
-        this.canMove = false;
-        this.time.delayedCall(100, () => { this.canMove = true; });
-      } else if (dir.right) {
-        this.movePiece(1, 0);
-        this.canMove = false;
-        this.time.delayedCall(100, () => { this.canMove = true; });
-      }
-    }
-
-    // Fast fall
-    this.fastFalling = dir.down;
-
-    // Gravity
-    const speed = this.fastFalling ? CONFIG.FAST_FALL_SPEED : this.fallSpeed;
-    this.fallTimer += delta;
-
-    if (this.fallTimer >= speed) {
-      this.fallTimer = 0;
-
-      if (!this.movePiece(0, 1)) {
-        // Piece locked
-        this.lockPiece();
-        this.clearLines();
-        this.spawnPiece();
-      }
-    }
-
-    this.draw();
-  }
-
-  movePiece(dx: number, dy: number): boolean {
-    if (!this.currentPiece) return false;
-
-    const newX = this.currentPiece.x + dx;
-    const newY = this.currentPiece.y + dy;
-
-    if (this.checkCollision(newX, newY, this.currentPiece.shape)) {
-      return false;
-    }
-
-    this.currentPiece.x = newX;
-    this.currentPiece.y = newY;
-    return true;
-  }
-
-  rotatePiece(): void {
-    if (!this.currentPiece || this.currentPiece.type === 'O') return;
-
-    const rotated = this.rotate(this.currentPiece.shape);
-
-    if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y, rotated)) {
-      this.currentPiece.shape = rotated;
-    }
-  }
-
-  rotate(shape: number[][]): number[][] {
-    const rows = shape.length;
-    const cols = shape[0].length;
-    const rotated: number[][] = [];
-
-    for (let x = 0; x < cols; x++) {
-      rotated[x] = [];
-      for (let y = rows - 1; y >= 0; y--) {
-        rotated[x][rows - 1 - y] = shape[y][x];
-      }
-    }
-
-    return rotated;
-  }
-
-  checkCollision(x: number, y: number, shape: number[][]): boolean {
-    for (let row = 0; row < shape.length; row++) {
-      for (let col = 0; col < shape[row].length; col++) {
-        if (shape[row][col]) {
-          const gridX = x + col;
-          const gridY = y + row;
-
-          if (
-            gridX < 0 ||
-            gridX >= CONFIG.GRID_WIDTH ||
-            gridY >= CONFIG.GRID_HEIGHT ||
-            (gridY >= 0 && this.grid[gridY][gridX] !== null)
-          ) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  lockPiece(): void {
-    if (!this.currentPiece) return;
-
-    for (let row = 0; row < this.currentPiece.shape.length; row++) {
-      for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-        if (this.currentPiece.shape[row][col]) {
-          const gridY = this.currentPiece.y + row;
-          const gridX = this.currentPiece.x + col;
-
-          if (gridY >= 0) {
-            this.grid[gridY][gridX] = COLORS[this.currentPiece.type];
-          }
-        }
-      }
-    }
-  }
-
-  clearLines(): void {
-    let linesCleared = 0;
-
-    for (let y = CONFIG.GRID_HEIGHT - 1; y >= 0; y--) {
-      if (this.grid[y].every(cell => cell !== null)) {
-        // Clear line
-        this.grid.splice(y, 1);
-        this.grid.unshift(Array(CONFIG.GRID_WIDTH).fill(null));
-        linesCleared++;
-        y++; // Check same row again
-      }
-    }
-
-    if (linesCleared > 0) {
-      this.lines += linesCleared;
-      this.score += CONFIG.POINTS_PER_LINE[linesCleared] * this.level;
-      this.onScoreUpdate(this.score);
-
-      this.linesText.setText(`LINES: ${this.lines}`);
-      this.scoreText.setText(`SCORE: ${this.score}`);
-
-      // Level up
-      if (this.lines >= this.level * CONFIG.LINES_PER_LEVEL) {
-        this.level++;
-        this.levelText.setText(`LEVEL: ${this.level}`);
-        this.fallSpeed = Math.max(
-          CONFIG.MIN_FALL_SPEED,
-          CONFIG.INITIAL_FALL_SPEED - (this.level - 1) * CONFIG.SPEED_DECREASE
-        );
-      }
-    }
-  }
-
-  draw(): void {
-    this.graphics.clear();
-
-    const gridWidth = CONFIG.GRID_WIDTH * CONFIG.CELL_SIZE;
-    const offsetX = (this.scale.width - gridWidth) / 2;
-    const offsetY = 120;
-
-    // Draw grid background
-    this.graphics.fillStyle(0x0a0a0a);
-    this.graphics.fillRect(
-      offsetX,
-      offsetY,
-      CONFIG.GRID_WIDTH * CONFIG.CELL_SIZE,
-      CONFIG.GRID_HEIGHT * CONFIG.CELL_SIZE
-    );
-
-    // Draw grid lines
-    this.graphics.lineStyle(1, 0x333333);
-    for (let x = 0; x <= CONFIG.GRID_WIDTH; x++) {
-      this.graphics.strokeLineShape(
-        new Phaser.Geom.Line(
-          offsetX + x * CONFIG.CELL_SIZE,
-          offsetY,
-          offsetX + x * CONFIG.CELL_SIZE,
-          offsetY + CONFIG.GRID_HEIGHT * CONFIG.CELL_SIZE
-        )
-      );
-    }
-    for (let y = 0; y <= CONFIG.GRID_HEIGHT; y++) {
-      this.graphics.strokeLineShape(
-        new Phaser.Geom.Line(
-          offsetX,
-          offsetY + y * CONFIG.CELL_SIZE,
-          offsetX + CONFIG.GRID_WIDTH * CONFIG.CELL_SIZE,
-          offsetY + y * CONFIG.CELL_SIZE
-        )
-      );
-    }
-
-    // Draw locked blocks
     for (let y = 0; y < CONFIG.GRID_HEIGHT; y++) {
-      for (let x = 0; x < CONFIG.GRID_WIDTH; x++) {
-        if (this.grid[y][x] !== null) {
-          this.graphics.fillStyle(this.grid[y][x]!);
-          this.graphics.fillRect(
-            offsetX + x * CONFIG.CELL_SIZE + 2,
-            offsetY + y * CONFIG.CELL_SIZE + 2,
-            CONFIG.CELL_SIZE - 4,
-            CONFIG.CELL_SIZE - 4
+      const screenY = 40 + y * CONFIG.TILE_SIZE;
+      this.background.lineBetween(0, screenY, this.scale.width, screenY);
+    }
+
+    // Floor tiles pattern
+    this.background.fillStyle(floorColor);
+    for (let x = 0; x < CONFIG.GRID_WIDTH; x++) {
+      for (let y = 0; y < CONFIG.GRID_HEIGHT; y++) {
+        if ((x + y) % 2 === 0) {
+          this.background.fillRect(
+            x * CONFIG.TILE_SIZE + 1,
+            40 + y * CONFIG.TILE_SIZE + 1,
+            CONFIG.TILE_SIZE - 2,
+            CONFIG.TILE_SIZE - 2
           );
         }
       }
     }
+  }
 
-    // Draw current piece
-    if (this.currentPiece) {
-      this.graphics.fillStyle(COLORS[this.currentPiece.type]);
-      for (let row = 0; row < this.currentPiece.shape.length; row++) {
-        for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-          if (this.currentPiece.shape[row][col]) {
-            const x = this.currentPiece.x + col;
-            const y = this.currentPiece.y + row;
+  drawPlayer(): void {
+    this.player.clear();
 
-            if (y >= 0) {
-              this.graphics.fillRect(
-                offsetX + x * CONFIG.CELL_SIZE + 2,
-                offsetY + y * CONFIG.CELL_SIZE + 2,
-                CONFIG.CELL_SIZE - 4,
-                CONFIG.CELL_SIZE - 4
-              );
-            }
-          }
-        }
+    const size = CONFIG.TILE_SIZE * 0.7;
+    const centerX = 0;
+    const centerY = 0;
+
+    // Worker character - simple arcade style
+
+    // Body (blue overalls)
+    this.player.fillStyle(0x0066ff);
+    this.player.fillRect(centerX - size / 3, centerY - size / 4, size * 0.66, size * 0.5);
+
+    // Head (skin tone)
+    this.player.fillStyle(0xffcc99);
+    this.player.fillCircle(centerX, centerY - size / 2, size / 3);
+
+    // Hard hat (yellow)
+    this.player.fillStyle(0xffff00);
+    this.player.fillEllipse(centerX, centerY - size / 1.7, size / 2.5, size / 6);
+    this.player.fillRect(centerX - size / 4, centerY - size / 1.5, size / 2, 4);
+
+    // Eyes
+    this.player.fillStyle(0x000000);
+    this.player.fillCircle(centerX - 4, centerY - size / 2, 2);
+    this.player.fillCircle(centerX + 4, centerY - size / 2, 2);
+
+    // Arms
+    this.player.fillStyle(0xffcc99);
+    this.player.fillRect(centerX - size / 2.2, centerY - size / 6, 4, size / 3);
+    this.player.fillRect(centerX + size / 2.2 - 4, centerY - size / 6, 4, size / 3);
+
+    // Legs
+    this.player.fillStyle(0x0044cc);
+    this.player.fillRect(centerX - size / 4, centerY + size / 6, 6, size / 3);
+    this.player.fillRect(centerX + size / 4 - 6, centerY + size / 6, 6, size / 3);
+
+    // Boots (brown)
+    this.player.fillStyle(0x654321);
+    this.player.fillRect(centerX - size / 4, centerY + size / 2.5, 7, 4);
+    this.player.fillRect(centerX + size / 4 - 7, centerY + size / 2.5, 7, 4);
+
+    const screenX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const screenY = 40 + this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    this.player.setPosition(screenX, screenY);
+  }
+
+  drawBarrel(barrel: Barrel): void {
+    barrel.graphics.clear();
+
+    const size = CONFIG.TILE_SIZE * 0.6;
+
+    // Brown barrel body
+    barrel.graphics.fillStyle(0x8b4513);
+    barrel.graphics.fillEllipse(0, 0, size, size * 0.9);
+
+    // Darker barrel top
+    barrel.graphics.fillStyle(0x654321);
+    barrel.graphics.fillEllipse(0, -size / 3, size * 0.8, size * 0.3);
+
+    // Wood grain texture (horizontal bands)
+    barrel.graphics.lineStyle(2, 0x654321);
+    barrel.graphics.strokeEllipse(0, 0, size, size * 0.9);
+    barrel.graphics.strokeEllipse(0, -size / 4, size * 0.85, size * 0.7);
+    barrel.graphics.strokeEllipse(0, size / 4, size * 0.85, size * 0.7);
+
+    // Metal bands
+    barrel.graphics.lineStyle(3, 0x888888);
+    barrel.graphics.strokeEllipse(0, -size / 3, size * 0.9, size * 0.4);
+    barrel.graphics.strokeEllipse(0, size / 3, size * 0.9, size * 0.4);
+
+    // Highlight
+    barrel.graphics.fillStyle(0xaa7744);
+    barrel.graphics.fillCircle(-size / 4, -size / 5, size / 8);
+
+    const screenX = barrel.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const screenY = 40 + barrel.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    barrel.graphics.setPosition(screenX, screenY);
+  }
+
+  update(time: number, delta: number): void {
+    if (this.gameOver) return;
+
+    const levelIndex = (this.level - 1) % LEVELS.length;
+    const levelData = LEVELS[levelIndex];
+
+    // Handle player movement
+    const dir = this.getDirection();
+    this.playerMoveTimer += delta;
+
+    if (this.playerMoveTimer >= CONFIG.PLAYER_MOVE_DELAY) {
+      this.playerMoveTimer = 0;
+
+      let moved = false;
+      if (dir.left && this.playerGridX > 0) {
+        this.playerGridX--;
+        moved = true;
+      } else if (dir.right && this.playerGridX < CONFIG.GRID_WIDTH - 1) {
+        this.playerGridX++;
+        moved = true;
+      } else if (dir.up && this.playerGridY > 0) {
+        this.playerGridY--;
+        moved = true;
+      } else if (dir.down && this.playerGridY < CONFIG.GRID_HEIGHT - 1) {
+        this.playerGridY++;
+        moved = true;
+      }
+
+      if (moved) {
+        this.drawPlayer();
       }
     }
 
-    // Draw border
-    this.graphics.lineStyle(4, 0x00ff41);
-    this.graphics.strokeRect(
-      offsetX - 2,
-      offsetY - 2,
-      CONFIG.GRID_WIDTH * CONFIG.CELL_SIZE + 4,
-      CONFIG.GRID_HEIGHT * CONFIG.CELL_SIZE + 4
-    );
+    // Spawn barrels based on level patterns
+    levelData.patterns.forEach((pattern, index) => {
+      const currentTimer = this.spawnTimers.get(index) || 0;
+      const newTimer = currentTimer + delta;
+
+      if (newTimer >= pattern.spawnDelay) {
+        this.spawnBarrel(pattern);
+        this.spawnTimers.set(index, 0);
+      } else {
+        this.spawnTimers.set(index, newTimer);
+      }
+    });
+
+    // Move barrels
+    this.barrelMoveTimer += delta;
+    if (this.barrelMoveTimer >= CONFIG.BARREL_MOVE_DELAY) {
+      this.barrelMoveTimer = 0;
+
+      this.barrels.forEach(barrel => {
+        switch (barrel.direction) {
+          case 'down':
+            barrel.gridY++;
+            break;
+          case 'right':
+            barrel.gridX++;
+            break;
+          case 'left':
+            barrel.gridX--;
+            break;
+        }
+
+        this.drawBarrel(barrel);
+      });
+
+      // Remove off-screen barrels and count dodges
+      this.barrels = this.barrels.filter(barrel => {
+        const offScreen =
+          barrel.gridY >= CONFIG.GRID_HEIGHT ||
+          barrel.gridX >= CONFIG.GRID_WIDTH ||
+          barrel.gridX < 0;
+
+        if (offScreen) {
+          // Successfully dodged
+          this.barrelsDodged++;
+          this.score += CONFIG.POINTS_PER_BARREL;
+          this.onScoreUpdate(this.score);
+          this.dodgedText.setText(`DODGED: ${this.barrelsDodged}/${CONFIG.BARRELS_TO_DODGE_PER_LEVEL}`);
+
+          barrel.graphics.destroy();
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Check collisions
+    for (const barrel of this.barrels) {
+      if (barrel.gridX === this.playerGridX && barrel.gridY === this.playerGridY) {
+        this.loseLife();
+        return;
+      }
+    }
+
+    // Check level complete
+    if (this.barrelsDodged >= CONFIG.BARRELS_TO_DODGE_PER_LEVEL) {
+      this.levelComplete();
+    }
+  }
+
+  spawnBarrel(pattern: LanePattern): void {
+    const graphics = this.add.graphics();
+
+    let gridX: number;
+    let gridY: number;
+
+    if (pattern.direction === 'down') {
+      gridX = pattern.column!;
+      gridY = -1;
+    } else if (pattern.direction === 'right') {
+      gridX = -1;
+      gridY = pattern.row!;
+    } else {
+      gridX = CONFIG.GRID_WIDTH;
+      gridY = pattern.row!;
+    }
+
+    const barrel: Barrel = {
+      gridX,
+      gridY,
+      direction: pattern.direction,
+      graphics,
+    };
+
+    this.barrels.push(barrel);
+    this.drawBarrel(barrel);
+  }
+
+  loseLife(): void {
+    this.lives--;
+    this.livesText.setText(`LIVES: ${this.lives}`);
+
+    if (this.lives <= 0) {
+      this.endGame();
+    } else {
+      // Reset player position
+      this.playerGridX = 8;
+      this.playerGridY = 12;
+      this.drawPlayer();
+
+      // Clear all barrels
+      this.barrels.forEach(b => b.graphics.destroy());
+      this.barrels = [];
+
+      // Brief invincibility flash
+      let flashCount = 0;
+      const flashInterval = this.time.addEvent({
+        delay: 100,
+        callback: () => {
+          this.player.setAlpha(this.player.alpha === 1 ? 0.3 : 1);
+          flashCount++;
+          if (flashCount >= 6) {
+            flashInterval.remove();
+            this.player.setAlpha(1);
+          }
+        },
+        loop: true,
+      });
+    }
+  }
+
+  levelComplete(): void {
+    this.score += CONFIG.POINTS_PER_LEVEL;
+    this.onScoreUpdate(this.score);
+
+    // Clear barrels
+    this.barrels.forEach(b => b.graphics.destroy());
+    this.barrels = [];
+
+    // Show level complete message
+    const completeText = this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2,
+      'LEVEL COMPLETE!',
+      {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '20px',
+        color: '#00ff00',
+      }
+    ).setOrigin(0.5);
+
+    this.time.delayedCall(2000, () => {
+      completeText.destroy();
+      this.level++;
+      this.loadLevel(this.level);
+    });
   }
 
   endGame(): void {
     this.gameOver = true;
-    this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
+
+    this.add.text(this.scale.width / 2, this.scale.height / 2 - 40, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
-      fontSize: '32px',
-      color: '#ff0040',
+      fontSize: '24px',
+      color: '#ff0000',
     }).setOrigin(0.5);
 
-    this.time.delayedCall(2000, () => {
+    this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2 + 20,
+      `FINAL SCORE: ${this.score}`,
+      {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '16px',
+        color: '#ffffff',
+      }
+    ).setOrigin(0.5);
+
+    this.time.delayedCall(3000, () => {
       this.onGameOver(this.score);
     });
   }
