@@ -2,215 +2,69 @@ import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
-  PLAYER_SPEED: 100,
-  JUMP_VELOCITY: -320,
-  GRAVITY: 750,
-  CLIMB_SPEED: 90,
-  BARREL_SPEED: 120,
-  BARREL_SPAWN_RATE: 2500,
-  FIREBALL_SPEED: 80,
-  FIREBALL_SPAWN_RATE: 4000,
-  HAMMER_DURATION: 10000,
-  ELEVATOR_SPEED: 60,
-  CONVEYOR_SPEED: 40,
-  SPRING_BOUNCE_VELOCITY: -280,
+  CROSSHAIR_SPEED: 200,
+  MISSILE_SPEED: 300,
+  ENEMY_MISSILE_SPEED: 80,
+  EXPLOSION_DURATION: 800,
+  EXPLOSION_MAX_RADIUS: 40,
+  BATTERY_RELOAD_TIME: 5000,
+  MISSILES_PER_BATTERY: 10,
+  WAVE_DELAY: 3000,
+  INITIAL_ENEMY_COUNT: 10,
+  ENEMY_COUNT_INCREASE: 5,
+  CITIES: 6,
   LIVES: 3,
-  LEVEL_COMPLETE_POINTS: 1000,
-  BARREL_DODGE_POINTS: 100,
-  HAMMER_SMASH_POINTS: 100,
-  RIVET_POINTS: 100,
+  POINTS_PER_MISSILE: 25,
+  POINTS_PER_CITY: 100,
+  POINTS_PER_BATTERY: 50,
 };
 
-interface Platform {
+interface City {
   x: number;
   y: number;
-  width: number;
-  color: number;
-  hasLadder?: boolean;
-  ladderX?: number;
-  ladderHeight?: number;
-  isConveyor?: boolean;
-  conveyorDirection?: number;
-}
-
-interface Ladder {
-  x: number;
-  y: number;
-  height: number;
-}
-
-interface Barrel {
+  alive: boolean;
   graphics: Phaser.GameObjects.Graphics;
+}
+
+interface Battery {
   x: number;
   y: number;
+  missiles: number;
+  alive: boolean;
+  graphics: Phaser.GameObjects.Graphics;
+}
+
+interface Missile {
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
   vx: number;
   vy: number;
-  rolling: boolean;
+  graphics: Phaser.GameObjects.Graphics;
+  trail: Array<{ x: number; y: number }>;
 }
 
-interface Fireball {
-  graphics: Phaser.GameObjects.Graphics;
+interface EnemyMissile {
   x: number;
   y: number;
+  targetX: number;
+  targetY: number;
   vx: number;
   vy: number;
+  graphics: Phaser.GameObjects.Graphics;
+  trail: Array<{ x: number; y: number }>;
 }
 
-interface Rivet {
+interface Explosion {
   x: number;
   y: number;
-  removed: boolean;
+  radius: number;
+  maxRadius: number;
+  expanding: boolean;
+  timer: number;
   graphics: Phaser.GameObjects.Graphics;
 }
-
-interface Elevator {
-  graphics: Phaser.GameObjects.Graphics;
-  x: number;
-  y: number;
-  minY: number;
-  maxY: number;
-  speed: number;
-  width: number;
-  height: number;
-}
-
-interface Spring {
-  graphics: Phaser.GameObjects.Graphics;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  bouncing: boolean;
-}
-
-// 4 authentic arcade levels
-const LEVELS = [
-  // Level 1: 25m - BARRELS (Classic slanted girders)
-  {
-    name: '25m',
-    type: 'barrels' as const,
-    platforms: [
-      { x: 0, y: 540, width: 640, color: 0xff1493 },
-      { x: 60, y: 480, width: 540, color: 0xff1493 },
-      { x: 0, y: 420, width: 580, color: 0xff1493 },
-      { x: 80, y: 360, width: 520, color: 0xff1493 },
-      { x: 0, y: 300, width: 560, color: 0xff1493 },
-      { x: 100, y: 240, width: 460, color: 0xff1493 },
-      { x: 0, y: 120, width: 640, color: 0xff1493 },
-    ],
-    ladders: [
-      { x: 580, y: 480, height: 60 },
-      { x: 70, y: 420, height: 60 },
-      { x: 560, y: 360, height: 60 },
-      { x: 90, y: 300, height: 60 },
-      { x: 540, y: 240, height: 60 },
-      { x: 120, y: 120, height: 120 },
-    ],
-    dkPosition: { x: 80, y: 100 },
-    paulinePosition: { x: 320, y: 90 },
-    barrelSpawnX: 90,
-    barrelSpawnY: 100,
-    goalY: 120,
-    backgroundColor: 0x000000,
-  },
-
-  // Level 2: 50m - CEMENT FACTORY (Conveyor belts)
-  {
-    name: '50m',
-    type: 'factory' as const,
-    platforms: [
-      { x: 0, y: 540, width: 640, color: 0x4169e1, isConveyor: true, conveyorDirection: 1 },
-      { x: 0, y: 460, width: 640, color: 0x4169e1, isConveyor: true, conveyorDirection: -1 },
-      { x: 0, y: 380, width: 640, color: 0x4169e1, isConveyor: true, conveyorDirection: 1 },
-      { x: 0, y: 300, width: 640, color: 0x4169e1, isConveyor: true, conveyorDirection: -1 },
-      { x: 0, y: 220, width: 640, color: 0x4169e1, isConveyor: true, conveyorDirection: 1 },
-      { x: 200, y: 140, width: 240, color: 0xff1493 },
-    ],
-    ladders: [
-      { x: 100, y: 460, height: 80 },
-      { x: 540, y: 380, height: 80 },
-      { x: 100, y: 300, height: 80 },
-      { x: 540, y: 220, height: 80 },
-      { x: 320, y: 140, height: 80 },
-    ],
-    dkPosition: { x: 320, y: 120 },
-    paulinePosition: { x: 320, y: 110 },
-    barrelSpawnX: 330,
-    barrelSpawnY: 120,
-    goalY: 140,
-    backgroundColor: 0x000033,
-  },
-
-  // Level 3: 75m - ELEVATORS
-  {
-    name: '75m',
-    type: 'elevators' as const,
-    platforms: [
-      { x: 0, y: 540, width: 200, color: 0xff1493 },
-      { x: 440, y: 540, width: 200, color: 0xff1493 },
-      { x: 0, y: 360, width: 200, color: 0xff1493 },
-      { x: 440, y: 360, width: 200, color: 0xff1493 },
-      { x: 0, y: 180, width: 200, color: 0xff1493 },
-      { x: 440, y: 180, width: 200, color: 0xff1493 },
-      { x: 200, y: 100, width: 240, color: 0xff1493 },
-    ],
-    ladders: [
-      { x: 180, y: 360, height: 180 },
-      { x: 460, y: 360, height: 180 },
-      { x: 180, y: 180, height: 180 },
-      { x: 460, y: 180, height: 180 },
-    ],
-    elevators: [
-      { x: 220, minY: 360, maxY: 520, speed: CONFIG.ELEVATOR_SPEED, width: 100, height: 12 },
-      { x: 320, minY: 360, maxY: 520, speed: -CONFIG.ELEVATOR_SPEED, width: 100, height: 12 },
-      { x: 220, minY: 180, maxY: 340, speed: -CONFIG.ELEVATOR_SPEED, width: 100, height: 12 },
-      { x: 320, minY: 180, maxY: 340, speed: CONFIG.ELEVATOR_SPEED, width: 100, height: 12 },
-    ],
-    dkPosition: { x: 320, y: 80 },
-    paulinePosition: { x: 320, y: 70 },
-    barrelSpawnX: 0,
-    barrelSpawnY: 0,
-    goalY: 100,
-    backgroundColor: 0x1a001a,
-  },
-
-  // Level 4: 100m - RIVETS
-  {
-    name: '100m',
-    type: 'rivets' as const,
-    platforms: [
-      { x: 0, y: 540, width: 640, color: 0xff1493 },
-      { x: 0, y: 400, width: 180, color: 0xff1493 },
-      { x: 460, y: 400, width: 180, color: 0xff1493 },
-      { x: 0, y: 260, width: 180, color: 0xff1493 },
-      { x: 460, y: 260, width: 180, color: 0xff1493 },
-      { x: 200, y: 180, width: 240, color: 0xff1493 },
-    ],
-    ladders: [
-      { x: 160, y: 400, height: 140 },
-      { x: 480, y: 400, height: 140 },
-      { x: 160, y: 260, height: 140 },
-      { x: 480, y: 260, height: 140 },
-      { x: 320, y: 180, height: 80 },
-    ],
-    rivets: [
-      { x: 100, y: 540 },
-      { x: 220, y: 540 },
-      { x: 340, y: 540 },
-      { x: 460, y: 540 },
-      { x: 100, y: 180 },
-      { x: 220, y: 180 },
-      { x: 420, y: 180 },
-      { x: 540, y: 180 },
-    ],
-    dkPosition: { x: 320, y: 160 },
-    paulinePosition: { x: 320, y: 150 },
-    barrelSpawnX: 0,
-    barrelSpawnY: 0,
-    goalY: 180,
-    backgroundColor: 0x000033,
-  },
-];
 
 export class BarrelDodgeScene extends Phaser.Scene {
   private onScoreUpdate: (score: number) => void;
@@ -220,36 +74,25 @@ export class BarrelDodgeScene extends Phaser.Scene {
 
   private rng: SeededRNG;
   private score: number = 0;
-  private lives: number = CONFIG.LIVES;
-  private level: number = 1;
+  private wave: number = 1;
   private gameOver: boolean = false;
-  private levelType: 'barrels' | 'factory' | 'elevators' | 'rivets' = 'barrels';
+  private waveActive: boolean = false;
 
-  private player!: Phaser.GameObjects.Graphics;
-  private playerX: number = 50;
-  private playerY: number = 500;
-  private playerVX: number = 0;
-  private playerVY: number = 0;
-  private onGround: boolean = false;
-  private onLadder: boolean = false;
-  private onElevator: Elevator | null = null;
+  private crosshairX: number = 320;
+  private crosshairY: number = 300;
+  private lastFire: boolean = false;
 
-  private platforms: Platform[] = [];
-  private ladders: Ladder[] = [];
-  private barrels: Barrel[] = [];
-  private fireballs: Fireball[] = [];
-  private rivets: Rivet[] = [];
-  private elevators: Elevator[] = [];
-  private springs: Spring[] = [];
-  private hammer: { active: boolean; timer: number } = { active: false, timer: 0 };
+  private cities: City[] = [];
+  private batteries: Battery[] = [];
+  private missiles: Missile[] = [];
+  private enemyMissiles: EnemyMissile[] = [];
+  private explosions: Explosion[] = [];
 
-  private spawnTimer: number = 0;
-  private fireballSpawnTimer: number = 0;
   private graphics!: Phaser.GameObjects.Graphics;
-  private donkeyKong!: Phaser.GameObjects.Graphics;
-  private pauline!: Phaser.GameObjects.Graphics;
-  private livesText!: Phaser.GameObjects.Text;
-  private levelText!: Phaser.GameObjects.Text;
+  private crosshairGraphics!: Phaser.GameObjects.Graphics;
+  private scoreText!: Phaser.GameObjects.Text;
+  private waveText!: Phaser.GameObjects.Text;
+  private ammoText!: Phaser.GameObjects.Text;
 
   constructor(
     onScoreUpdate: (score: number) => void,
@@ -267,876 +110,493 @@ export class BarrelDodgeScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.loadLevel(this.level);
-  }
+    const { width, height } = this.scale;
 
-  loadLevel(level: number): void {
-    const levelIndex = (level - 1) % LEVELS.length;
-    const levelData = LEVELS[levelIndex];
-    this.levelType = levelData.type;
+    this.graphics = this.add.graphics();
+    this.crosshairGraphics = this.add.graphics();
 
-    // Clear previous level
-    if (this.graphics) this.graphics.clear();
-    this.barrels.forEach(b => b.graphics.destroy());
-    this.fireballs.forEach(f => f.graphics.destroy());
-    this.rivets.forEach(r => r.graphics.destroy());
-    this.elevators.forEach(e => e.graphics.destroy());
-    this.springs.forEach(s => s.graphics.destroy());
-    this.barrels = [];
-    this.fireballs = [];
-    this.rivets = [];
-    this.elevators = [];
-    this.springs = [];
-    this.hammer.active = false;
+    // Create cities (6 cities)
+    const cityY = height - 30;
+    const cityPositions = [100, 150, 200, 440, 490, 540];
 
-    // Setup level
-    this.platforms = levelData.platforms;
-    this.ladders = levelData.ladders;
-
-    // Create graphics
-    if (!this.graphics) {
-      this.graphics = this.add.graphics();
-    }
-
-    // Set background
-    this.cameras.main.setBackgroundColor(levelData.backgroundColor);
-
-    // Create elevators if elevator level
-    if (levelData.type === 'elevators' && levelData.elevators) {
-      levelData.elevators.forEach(elevData => {
-        const graphics = this.add.graphics();
-        this.elevators.push({
-          graphics,
-          x: elevData.x,
-          y: elevData.minY,
-          minY: elevData.minY,
-          maxY: elevData.maxY,
-          speed: elevData.speed,
-          width: elevData.width,
-          height: elevData.height,
-        });
+    cityPositions.forEach(x => {
+      const graphics = this.add.graphics();
+      this.cities.push({
+        x,
+        y: cityY,
+        alive: true,
+        graphics,
       });
-    }
+    });
 
-    // Create rivets if rivet level
-    if (levelData.type === 'rivets' && levelData.rivets) {
-      levelData.rivets.forEach(riv => {
-        const graphics = this.add.graphics();
-        this.rivets.push({
-          x: riv.x,
-          y: riv.y,
-          removed: false,
-          graphics,
-        });
+    // Create batteries (3 batteries - left, center, right)
+    const batteryY = height - 30;
+    const batteryPositions = [60, 320, 580];
+
+    batteryPositions.forEach(x => {
+      const graphics = this.add.graphics();
+      this.batteries.push({
+        x,
+        y: batteryY,
+        missiles: CONFIG.MISSILES_PER_BATTERY,
+        alive: true,
+        graphics,
       });
-    }
-
-    // Create player
-    if (!this.player) {
-      this.player = this.add.graphics();
-    }
-    this.playerX = 50;
-    this.playerY = 520;
-    this.playerVX = 0;
-    this.playerVY = 0;
-    this.drawPlayer();
-
-    // Create Donkey Kong
-    if (!this.donkeyKong) {
-      this.donkeyKong = this.add.graphics();
-    }
-    this.drawDonkeyKong(levelData.dkPosition.x, levelData.dkPosition.y);
-
-    // Create Pauline
-    if (!this.pauline) {
-      this.pauline = this.add.graphics();
-    }
-    this.drawPauline(levelData.paulinePosition.x, levelData.paulinePosition.y);
+    });
 
     // UI
-    if (!this.livesText) {
-      this.livesText = this.add.text(16, 16, `LIVES: ${this.lives}`, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
-        color: '#ff0000',
-      });
-    } else {
-      this.livesText.setText(`LIVES: ${this.lives}`);
-    }
-
-    if (!this.levelText) {
-      this.levelText = this.add.text(this.scale.width - 16, 16, levelData.name, {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '12px',
-        color: '#ffff00',
-      }).setOrigin(1, 0);
-    } else {
-      this.levelText.setText(levelData.name);
-    }
-
-    // Level name announcement
-    const levelNameText = this.add.text(
-      this.scale.width / 2,
-      this.scale.height / 2,
-      levelData.name,
-      {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '24px',
-        color: '#ffff00',
-      }
-    ).setOrigin(0.5);
-
-    this.time.delayedCall(1500, () => {
-      levelNameText.destroy();
+    this.scoreText = this.add.text(16, 16, `SCORE: ${this.score}`, {
+      fontFamily: '"Press Start 2P"',
+      fontSize: '14px',
+      color: '#00ff00',
     });
+
+    this.waveText = this.add.text(width / 2, 16, `WAVE ${this.wave}`, {
+      fontFamily: '"Press Start 2P"',
+      fontSize: '14px',
+      color: '#ffff00',
+    }).setOrigin(0.5, 0);
+
+    this.ammoText = this.add.text(width - 16, 16, '', {
+      fontFamily: '"Press Start 2P"',
+      fontSize: '12px',
+      color: '#00ffff',
+    }).setOrigin(1, 0);
+
+    // Start first wave
+    this.startWave();
   }
 
-  drawPlayer(): void {
-    this.player.clear();
+  startWave(): void {
+    this.waveActive = true;
+    this.waveText.setText(`WAVE ${this.wave}`);
 
-    const size = 20;
+    // Spawn enemy missiles
+    const enemyCount = CONFIG.INITIAL_ENEMY_COUNT + (this.wave - 1) * CONFIG.ENEMY_COUNT_INCREASE;
 
-    // Mario - red cap, blue overalls, brown shoes
-    // Legs
-    this.player.fillStyle(0x0000ff);
-    this.player.fillRect(-4, size * 0.2, 3, size * 0.4);
-    this.player.fillRect(1, size * 0.2, 3, size * 0.4);
+    for (let i = 0; i < enemyCount; i++) {
+      this.time.delayedCall(i * 200, () => {
+        this.spawnEnemyMissile();
+      });
+    }
+  }
 
-    // Brown shoes
-    this.player.fillStyle(0x8b4513);
-    this.player.fillRect(-5, size * 0.6, 4, 3);
-    this.player.fillRect(1, size * 0.6, 4, 3);
+  spawnEnemyMissile(): void {
+    const startX = 50 + this.rng.next() * (this.scale.width - 100);
+    const startY = 0;
 
-    // Body (blue overalls)
-    this.player.fillStyle(this.hammer.active ? 0xffff00 : 0x0000ff);
-    this.player.fillRect(-5, -size * 0.1, 10, size * 0.3);
+    // Target cities or batteries
+    let targetX: number;
+    let targetY: number;
 
-    // Arms
-    this.player.fillStyle(0xffcc99);
-    this.player.fillRect(-8, -size * 0.05, 3, size * 0.25);
-    this.player.fillRect(5, -size * 0.05, 3, size * 0.25);
-
-    // Head (skin tone)
-    this.player.fillStyle(0xffcc99);
-    this.player.fillCircle(0, -size * 0.35, size * 0.25);
-
-    // Red cap
-    this.player.fillStyle(0xff0000);
-    this.player.fillRect(-size * 0.3, -size * 0.5, size * 0.6, 5);
-
-    // Eyes
-    this.player.fillStyle(0x000000);
-    this.player.fillRect(-3, -size * 0.35, 2, 2);
-    this.player.fillRect(1, -size * 0.35, 2, 2);
-
-    // Mustache
-    this.player.fillStyle(0x000000);
-    this.player.fillRect(-4, -size * 0.25, 8, 2);
-
-    // Hammer (if active)
-    if (this.hammer.active) {
-      this.player.fillStyle(0x8b4513);
-      this.player.fillRect(8, -size * 0.4, 3, 12);
-      this.player.fillStyle(0x696969);
-      this.player.fillRect(8, -size * 0.5, 10, 6);
+    if (this.rng.next() < 0.7) {
+      // Target city
+      const aliveCities = this.cities.filter(c => c.alive);
+      if (aliveCities.length > 0) {
+        const city = aliveCities[Math.floor(this.rng.next() * aliveCities.length)];
+        targetX = city.x;
+        targetY = city.y;
+      } else {
+        targetX = this.scale.width / 2;
+        targetY = this.scale.height - 30;
+      }
+    } else {
+      // Target battery
+      const aliveBatteries = this.batteries.filter(b => b.alive);
+      if (aliveBatteries.length > 0) {
+        const battery = aliveBatteries[Math.floor(this.rng.next() * aliveBatteries.length)];
+        targetX = battery.x;
+        targetY = battery.y;
+      } else {
+        targetX = this.scale.width / 2;
+        targetY = this.scale.height - 30;
+      }
     }
 
-    this.player.setPosition(this.playerX, this.playerY);
-  }
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
 
-  drawDonkeyKong(x: number, y: number): void {
-    this.donkeyKong.clear();
+    const graphics = this.add.graphics();
 
-    const size = 36;
-
-    // Brown body
-    this.donkeyKong.fillStyle(0x8b4513);
-    this.donkeyKong.fillRect(-size / 2, -size / 3, size, size * 0.7);
-
-    // Chest (tan)
-    this.donkeyKong.fillStyle(0xd2691e);
-    this.donkeyKong.fillRect(-size / 4, 0, size / 2, size / 3);
-
-    // Head
-    this.donkeyKong.fillStyle(0x8b4513);
-    this.donkeyKong.fillCircle(0, -size / 2, size / 3);
-
-    // Face
-    this.donkeyKong.fillStyle(0xd2691e);
-    this.donkeyKong.fillRect(-size / 5, -size / 2, size * 0.4, size / 3);
-
-    // Eyes (white)
-    this.donkeyKong.fillStyle(0xffffff);
-    this.donkeyKong.fillCircle(-6, -size / 2, 4);
-    this.donkeyKong.fillCircle(6, -size / 2, 4);
-
-    // Pupils (black)
-    this.donkeyKong.fillStyle(0x000000);
-    this.donkeyKong.fillCircle(-6, -size / 2, 2);
-    this.donkeyKong.fillCircle(6, -size / 2, 2);
-
-    // Red tie
-    this.donkeyKong.fillStyle(0xff0000);
-    this.donkeyKong.fillRect(-4, size / 6, 8, size / 4);
-
-    this.donkeyKong.setPosition(x, y);
-  }
-
-  drawPauline(x: number, y: number): void {
-    this.pauline.clear();
-
-    const size = 20;
-
-    // Pink dress
-    this.pauline.fillStyle(0xffb6c1);
-    this.pauline.fillRect(-6, size * 0.1, 12, size * 0.5);
-
-    // Head (skin)
-    this.pauline.fillStyle(0xffcc99);
-    this.pauline.fillCircle(0, -size * 0.2, size * 0.25);
-
-    // Brown hair
-    this.pauline.fillStyle(0x8b4513);
-    this.pauline.fillRect(-size * 0.3, -size * 0.35, size * 0.6, size * 0.2);
-
-    // Eyes
-    this.pauline.fillStyle(0x000000);
-    this.pauline.fillRect(-3, -size * 0.2, 2, 2);
-    this.pauline.fillRect(1, -size * 0.2, 2, 2);
-
-    // Arms up (HELP!)
-    this.pauline.fillStyle(0xffcc99);
-    this.pauline.fillRect(-8, -size * 0.1, 3, size * 0.2);
-    this.pauline.fillRect(5, -size * 0.1, 3, size * 0.2);
-
-    this.pauline.setPosition(x, y);
-  }
-
-  drawBarrel(barrel: Barrel): void {
-    barrel.graphics.clear();
-
-    const size = 16;
-
-    // Brown barrel
-    barrel.graphics.fillStyle(0x8b4513);
-    barrel.graphics.fillRect(-size / 2, -size / 2, size, size);
-
-    // Darker bands
-    barrel.graphics.fillStyle(0x654321);
-    barrel.graphics.fillRect(-size / 2, -size / 3, size, 2);
-    barrel.graphics.fillRect(-size / 2, size / 3, size, 2);
-
-    // Highlight
-    barrel.graphics.fillStyle(0xaa7744);
-    barrel.graphics.fillRect(-size / 3, -size / 3, size / 4, size / 4);
-
-    barrel.graphics.setPosition(barrel.x, barrel.y);
-  }
-
-  drawFireball(fireball: Fireball): void {
-    fireball.graphics.clear();
-
-    const size = 12;
-
-    // Orange/yellow fireball
-    fireball.graphics.fillStyle(0xff6600);
-    fireball.graphics.fillCircle(0, 0, size / 2);
-
-    // Yellow center
-    fireball.graphics.fillStyle(0xffff00);
-    fireball.graphics.fillCircle(0, 0, size / 4);
-
-    fireball.graphics.setPosition(fireball.x, fireball.y);
-  }
-
-  drawRivet(rivet: Rivet): void {
-    if (rivet.removed) return;
-
-    rivet.graphics.clear();
-
-    // Yellow rivet
-    rivet.graphics.fillStyle(0xffff00);
-    rivet.graphics.fillCircle(0, 0, 6);
-
-    // Dark center
-    rivet.graphics.fillStyle(0x000000);
-    rivet.graphics.fillCircle(0, 0, 2);
-
-    rivet.graphics.setPosition(rivet.x, rivet.y);
-  }
-
-  drawElevator(elevator: Elevator): void {
-    elevator.graphics.clear();
-
-    // Blue platform
-    elevator.graphics.fillStyle(0x4169e1);
-    elevator.graphics.fillRect(0, 0, elevator.width, elevator.height);
-
-    // Border
-    elevator.graphics.lineStyle(2, 0xffffff);
-    elevator.graphics.strokeRect(0, 0, elevator.width, elevator.height);
-
-    elevator.graphics.setPosition(elevator.x, elevator.y);
+    this.enemyMissiles.push({
+      x: startX,
+      y: startY,
+      targetX,
+      targetY,
+      vx: (dx / dist) * CONFIG.ENEMY_MISSILE_SPEED,
+      vy: (dy / dist) * CONFIG.ENEMY_MISSILE_SPEED,
+      graphics,
+      trail: [],
+    });
   }
 
   update(time: number, delta: number): void {
     if (this.gameOver) return;
 
     const dt = delta / 1000;
-    const { width, height } = this.scale;
-    const levelIndex = (this.level - 1) % LEVELS.length;
-    const levelData = LEVELS[levelIndex];
-
-    // Draw static elements
-    this.drawScene();
-
-    // Handle input
     const dir = this.getDirection();
+    const action = this.getAction();
 
-    // Check if on ladder
-    this.checkLadder();
+    // Move crosshair
+    if (dir.left) this.crosshairX -= CONFIG.CROSSHAIR_SPEED * dt;
+    if (dir.right) this.crosshairX += CONFIG.CROSSHAIR_SPEED * dt;
+    if (dir.up) this.crosshairY -= CONFIG.CROSSHAIR_SPEED * dt;
+    if (dir.down) this.crosshairY += CONFIG.CROSSHAIR_SPEED * dt;
 
-    if (this.onLadder) {
-      this.playerVY = 0;
-      this.playerVX = 0;
+    // Constrain crosshair
+    this.crosshairX = Math.max(10, Math.min(this.scale.width - 10, this.crosshairX));
+    this.crosshairY = Math.max(10, Math.min(this.scale.height - 50, this.crosshairY));
 
-      if (dir.up) {
-        this.playerY -= CONFIG.CLIMB_SPEED * dt;
-      } else if (dir.down) {
-        this.playerY += CONFIG.CLIMB_SPEED * dt;
-      }
-
-      // Horizontal movement on ladder
-      if (dir.left) {
-        this.playerX -= CONFIG.PLAYER_SPEED * dt * 0.5;
-      } else if (dir.right) {
-        this.playerX += CONFIG.PLAYER_SPEED * dt * 0.5;
-      }
-    } else {
-      // Normal movement
-      this.playerVX = 0;
-
-      if (dir.left) {
-        this.playerVX = -CONFIG.PLAYER_SPEED;
-      } else if (dir.right) {
-        this.playerVX = CONFIG.PLAYER_SPEED;
-      }
-
-      // Conveyor belt effect
-      if (this.onGround) {
-        for (const platform of this.platforms) {
-          if (
-            platform.isConveyor &&
-            this.playerX > platform.x &&
-            this.playerX < platform.x + platform.width &&
-            Math.abs(this.playerY - platform.y) < 5
-          ) {
-            this.playerVX += platform.conveyorDirection! * CONFIG.CONVEYOR_SPEED;
-          }
-        }
-      }
-
-      // Jump
-      if (dir.up && this.onGround) {
-        this.playerVY = CONFIG.JUMP_VELOCITY;
-        this.onGround = false;
-      }
-
-      // Apply gravity
-      this.playerVY += CONFIG.GRAVITY * dt;
-
-      // Move
-      this.playerX += this.playerVX * dt;
-      this.playerY += this.playerVY * dt;
-
-      // Screen bounds
-      this.playerX = Math.max(10, Math.min(width - 10, this.playerX));
+    // Fire missile
+    if (action && !this.lastFire) {
+      this.fireMissile();
+      this.lastFire = true;
+    } else if (!action) {
+      this.lastFire = false;
     }
 
-    // Platform collision
-    this.onGround = false;
-    this.onElevator = null;
+    // Update missiles
+    for (let i = this.missiles.length - 1; i >= 0; i--) {
+      const missile = this.missiles[i];
 
-    for (const platform of this.platforms) {
-      if (
-        this.playerX > platform.x &&
-        this.playerX < platform.x + platform.width &&
-        this.playerY >= platform.y - 5 &&
-        this.playerY <= platform.y + 10 &&
-        this.playerVY >= 0
-      ) {
-        this.playerY = platform.y;
-        this.playerVY = 0;
-        this.onGround = true;
-        break;
-      }
-    }
+      missile.trail.push({ x: missile.x, y: missile.y });
+      if (missile.trail.length > 15) missile.trail.shift();
 
-    // Elevator collision
-    for (const elevator of this.elevators) {
-      if (
-        this.playerX > elevator.x &&
-        this.playerX < elevator.x + elevator.width &&
-        this.playerY >= elevator.y - 5 &&
-        this.playerY <= elevator.y + elevator.height + 5 &&
-        this.playerVY >= 0
-      ) {
-        this.playerY = elevator.y;
-        this.playerVY = 0;
-        this.onGround = true;
-        this.onElevator = elevator;
-        break;
-      }
-    }
+      missile.x += missile.vx * dt;
+      missile.y += missile.vy * dt;
 
-    // Move with elevator
-    if (this.onElevator) {
-      this.playerY += this.onElevator.speed * dt;
-    }
-
-    this.drawPlayer();
-
-    // Hammer pickup (action button)
-    if (this.getAction() && !this.hammer.active && this.playerY < 200) {
-      this.hammer.active = true;
-      this.hammer.timer = CONFIG.HAMMER_DURATION;
-      this.drawPlayer();
-    }
-
-    // Hammer timer
-    if (this.hammer.active) {
-      this.hammer.timer -= delta;
-      if (this.hammer.timer <= 0) {
-        this.hammer.active = false;
-        this.drawPlayer();
-      }
-    }
-
-    // Level-specific updates
-    if (levelData.type === 'barrels' || levelData.type === 'factory') {
-      this.updateBarrelLevel(delta, dt, levelData);
-    } else if (levelData.type === 'elevators') {
-      this.updateElevatorLevel(delta, dt, levelData);
-    } else if (levelData.type === 'rivets') {
-      this.updateRivetLevel(delta, dt, levelData);
-    }
-
-    // Update fireballs (all levels)
-    this.updateFireballs(dt);
-
-    // Update elevators
-    for (const elevator of this.elevators) {
-      elevator.y += elevator.speed * dt;
-      if (elevator.y <= elevator.minY || elevator.y >= elevator.maxY) {
-        elevator.speed = -elevator.speed;
-      }
-      this.drawElevator(elevator);
-    }
-
-    // Check win condition
-    if (this.playerY <= levelData.goalY + 10 && Math.abs(this.playerX - levelData.paulinePosition.x) < 60) {
-      this.levelComplete();
-    }
-  }
-
-  updateBarrelLevel(delta: number, dt: number, levelData: any): void {
-    // Spawn barrels
-    this.spawnTimer += delta;
-    if (this.spawnTimer > CONFIG.BARREL_SPAWN_RATE) {
-      this.spawnTimer = 0;
-      this.spawnBarrel(levelData.barrelSpawnX, levelData.barrelSpawnY);
-    }
-
-    // Update barrels
-    for (let i = this.barrels.length - 1; i >= 0; i--) {
-      const barrel = this.barrels[i];
-
-      barrel.x += barrel.vx * dt;
-      barrel.y += barrel.vy * dt;
-
-      // Barrel gravity
-      barrel.vy += CONFIG.GRAVITY * 0.5 * dt;
-
-      // Platform collision
-      for (const platform of this.platforms) {
-        if (
-          barrel.x > platform.x &&
-          barrel.x < platform.x + platform.width &&
-          barrel.y >= platform.y - 12 &&
-          barrel.y <= platform.y + 5 &&
-          barrel.vy > 0
-        ) {
-          barrel.y = platform.y - 8;
-          barrel.vy = 0;
-          barrel.rolling = true;
-
-          // Roll direction based on platform slope
-          if (barrel.vx === 0) {
-            barrel.vx = CONFIG.BARREL_SPEED;
-          }
-        }
-      }
-
-      // Fall off platform edges
-      if (barrel.rolling) {
-        let onPlatform = false;
-        for (const platform of this.platforms) {
-          if (
-            barrel.x > platform.x &&
-            barrel.x < platform.x + platform.width &&
-            Math.abs(barrel.y - platform.y + 8) < 5
-          ) {
-            onPlatform = true;
-            break;
-          }
-        }
-
-        if (!onPlatform && this.rng.next() < 0.03) {
-          barrel.rolling = false;
-          barrel.vy = 50;
-        }
-      }
-
-      this.drawBarrel(barrel);
-
-      // Remove off-screen
-      if (barrel.y > this.scale.height || barrel.x < -20 || barrel.x > this.scale.width + 20) {
-        barrel.graphics.destroy();
-        this.barrels.splice(i, 1);
-        continue;
-      }
-
-      // Check collision with player
+      // Check if reached target
       const dist = Math.sqrt(
-        Math.pow(barrel.x - this.playerX, 2) + Math.pow(barrel.y - this.playerY, 2)
+        Math.pow(missile.targetX - missile.x, 2) +
+        Math.pow(missile.targetY - missile.y, 2)
       );
 
-      if (dist < 16) {
-        if (this.hammer.active) {
-          barrel.graphics.destroy();
-          this.barrels.splice(i, 1);
-          this.score += CONFIG.HAMMER_SMASH_POINTS;
-          this.onScoreUpdate(this.score);
-        } else {
-          this.loseLife();
-          return;
-        }
+      if (dist < 5) {
+        this.createExplosion(missile.targetX, missile.targetY);
+        missile.graphics.destroy();
+        this.missiles.splice(i, 1);
       }
     }
-  }
 
-  updateElevatorLevel(delta: number, dt: number, levelData: any): void {
-    // Spawn springs
-    if (this.springs.length < 3 && this.rng.next() < 0.002) {
-      this.spawnSpring();
-    }
+    // Update enemy missiles
+    for (let i = this.enemyMissiles.length - 1; i >= 0; i--) {
+      const missile = this.enemyMissiles[i];
 
-    // Update springs
-    for (let i = this.springs.length - 1; i >= 0; i--) {
-      const spring = this.springs[i];
+      missile.trail.push({ x: missile.x, y: missile.y });
+      if (missile.trail.length > 20) missile.trail.shift();
 
-      spring.x += spring.vx * dt;
-      spring.y += spring.vy * dt;
+      missile.x += missile.vx * dt;
+      missile.y += missile.vy * dt;
 
-      spring.vy += CONFIG.GRAVITY * dt;
-
-      // Platform collision
-      for (const platform of this.platforms) {
-        if (
-          spring.x > platform.x &&
-          spring.x < platform.x + platform.width &&
-          spring.y >= platform.y - 12 &&
-          spring.y <= platform.y + 5 &&
-          spring.vy > 0
-        ) {
-          spring.y = platform.y - 10;
-          spring.vy = CONFIG.SPRING_BOUNCE_VELOCITY;
-        }
-      }
-
-      this.drawSpring(spring);
-
-      // Remove off-screen
-      if (spring.y > this.scale.height) {
-        spring.graphics.destroy();
-        this.springs.splice(i, 1);
-        continue;
-      }
-
-      // Check collision with player
+      // Check if hit target
       const dist = Math.sqrt(
-        Math.pow(spring.x - this.playerX, 2) + Math.pow(spring.y - this.playerY, 2)
+        Math.pow(missile.targetX - missile.x, 2) +
+        Math.pow(missile.targetY - missile.y, 2)
       );
 
-      if (dist < 16) {
-        this.loseLife();
-        return;
+      if (dist < 10) {
+        this.hitTarget(missile.targetX, missile.targetY);
+        missile.graphics.destroy();
+        this.enemyMissiles.splice(i, 1);
       }
-    }
-  }
 
-  updateRivetLevel(delta: number, dt: number, levelData: any): void {
-    // Check rivet collection
-    for (const rivet of this.rivets) {
-      if (!rivet.removed) {
-        const dist = Math.sqrt(
-          Math.pow(rivet.x - this.playerX, 2) + Math.pow(rivet.y - this.playerY, 2)
+      // Check collision with explosions
+      for (const explosion of this.explosions) {
+        const distToExplosion = Math.sqrt(
+          Math.pow(explosion.x - missile.x, 2) +
+          Math.pow(explosion.y - missile.y, 2)
         );
 
-        if (dist < 20) {
-          rivet.removed = true;
-          rivet.graphics.destroy();
-          this.score += CONFIG.RIVET_POINTS;
+        if (distToExplosion < explosion.radius) {
+          this.score += CONFIG.POINTS_PER_MISSILE;
           this.onScoreUpdate(this.score);
+          this.scoreText.setText(`SCORE: ${this.score}`);
+          missile.graphics.destroy();
+          this.enemyMissiles.splice(i, 1);
+          break;
         }
       }
     }
 
-    // Check if all rivets removed
-    if (this.rivets.every(r => r.removed)) {
-      this.levelComplete();
+    // Update explosions
+    for (let i = this.explosions.length - 1; i >= 0; i--) {
+      const explosion = this.explosions[i];
+
+      explosion.timer += delta;
+
+      if (explosion.expanding) {
+        explosion.radius += 80 * dt;
+        if (explosion.radius >= explosion.maxRadius) {
+          explosion.expanding = false;
+        }
+      } else {
+        explosion.radius -= 80 * dt;
+      }
+
+      if (explosion.timer > CONFIG.EXPLOSION_DURATION || explosion.radius <= 0) {
+        explosion.graphics.destroy();
+        this.explosions.splice(i, 1);
+      }
     }
+
+    // Check wave complete
+    if (this.waveActive && this.enemyMissiles.length === 0) {
+      this.waveComplete();
+    }
+
+    this.draw();
+    this.updateAmmoDisplay();
   }
 
-  updateFireballs(dt: number): void {
-    this.fireballSpawnTimer += dt * 1000;
-    if (this.fireballSpawnTimer > CONFIG.FIREBALL_SPAWN_RATE && this.fireballs.length < 4) {
-      this.fireballSpawnTimer = 0;
-      this.spawnFireball();
-    }
+  fireMissile(): void {
+    // Find battery with ammo closest to crosshair
+    let closestBattery: Battery | null = null;
+    let closestDist = Infinity;
 
-    for (let i = this.fireballs.length - 1; i >= 0; i--) {
-      const fireball = this.fireballs[i];
-
-      fireball.x += fireball.vx * dt;
-      fireball.y += fireball.vy * dt;
-
-      fireball.vy += CONFIG.GRAVITY * 0.3 * dt;
-
-      // Platform collision
-      for (const platform of this.platforms) {
-        if (
-          fireball.x > platform.x &&
-          fireball.x < platform.x + platform.width &&
-          fireball.y >= platform.y - 10 &&
-          fireball.y <= platform.y + 5 &&
-          fireball.vy > 0
-        ) {
-          fireball.y = platform.y - 6;
-          fireball.vy = -100;
-
-          // Change direction randomly
-          if (this.rng.next() > 0.5) {
-            fireball.vx = -fireball.vx;
-          }
-        }
-      }
-
-      this.drawFireball(fireball);
-
-      // Remove off-screen
-      if (fireball.y > this.scale.height || fireball.x < -20 || fireball.x > this.scale.width + 20) {
-        fireball.graphics.destroy();
-        this.fireballs.splice(i, 1);
-        continue;
-      }
-
-      // Check collision with player
-      const dist = Math.sqrt(
-        Math.pow(fireball.x - this.playerX, 2) + Math.pow(fireball.y - this.playerY, 2)
-      );
-
-      if (dist < 14) {
-        if (this.hammer.active) {
-          fireball.graphics.destroy();
-          this.fireballs.splice(i, 1);
-          this.score += CONFIG.HAMMER_SMASH_POINTS;
-          this.onScoreUpdate(this.score);
-        } else {
-          this.loseLife();
-          return;
+    for (const battery of this.batteries) {
+      if (battery.alive && battery.missiles > 0) {
+        const dist = Math.abs(battery.x - this.crosshairX);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestBattery = battery;
         }
       }
     }
+
+    if (!closestBattery) return;
+
+    closestBattery.missiles--;
+
+    const dx = this.crosshairX - closestBattery.x;
+    const dy = this.crosshairY - closestBattery.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    const graphics = this.add.graphics();
+
+    this.missiles.push({
+      x: closestBattery.x,
+      y: closestBattery.y,
+      targetX: this.crosshairX,
+      targetY: this.crosshairY,
+      vx: (dx / dist) * CONFIG.MISSILE_SPEED,
+      vy: (dy / dist) * CONFIG.MISSILE_SPEED,
+      graphics,
+      trail: [],
+    });
   }
 
-  drawScene(): void {
-    this.graphics.clear();
+  createExplosion(x: number, y: number): void {
+    const graphics = this.add.graphics();
 
-    // Draw platforms
-    for (const platform of this.platforms) {
-      // Girder with rivets
-      this.graphics.fillStyle(platform.color);
-      this.graphics.fillRect(platform.x, platform.y, platform.width, 8);
-
-      // Rivets on girders
-      this.graphics.fillStyle(0xffff00);
-      for (let x = platform.x + 15; x < platform.x + platform.width; x += 20) {
-        this.graphics.fillCircle(x, platform.y + 4, 2);
-      }
-
-      // Conveyor belt lines
-      if (platform.isConveyor) {
-        this.graphics.lineStyle(1, 0xffffff);
-        for (let x = platform.x; x < platform.x + platform.width; x += 12) {
-          this.graphics.lineBetween(x, platform.y + 2, x + 8, platform.y + 2);
-        }
-      }
-    }
-
-    // Draw ladders
-    for (const ladder of this.ladders) {
-      this.graphics.fillStyle(0xffff00);
-
-      // Rails
-      this.graphics.fillRect(ladder.x - 6, ladder.y, 3, ladder.height);
-      this.graphics.fillRect(ladder.x + 3, ladder.y, 3, ladder.height);
-
-      // Rungs
-      for (let y = ladder.y; y < ladder.y + ladder.height; y += 10) {
-        this.graphics.fillRect(ladder.x - 8, y, 16, 2);
-      }
-    }
-
-    // Draw rivets
-    for (const rivet of this.rivets) {
-      this.drawRivet(rivet);
-    }
+    this.explosions.push({
+      x,
+      y,
+      radius: 0,
+      maxRadius: CONFIG.EXPLOSION_MAX_RADIUS,
+      expanding: true,
+      timer: 0,
+      graphics,
+    });
   }
 
-  checkLadder(): void {
-    for (const ladder of this.ladders) {
-      if (
-        Math.abs(this.playerX - ladder.x) < 12 &&
-        this.playerY > ladder.y - 10 &&
-        this.playerY < ladder.y + ladder.height + 10
-      ) {
-        this.onLadder = true;
+  hitTarget(x: number, y: number): void {
+    // Check if city hit
+    for (const city of this.cities) {
+      if (city.alive && Math.abs(city.x - x) < 20 && Math.abs(city.y - y) < 20) {
+        city.alive = false;
+        this.createExplosion(x, y);
         return;
       }
     }
 
-    this.onLadder = false;
-  }
-
-  spawnBarrel(spawnX: number, spawnY: number): void {
-    const barrel = this.add.graphics();
-
-    this.barrels.push({
-      graphics: barrel,
-      x: spawnX,
-      y: spawnY,
-      vx: 0,
-      vy: 50,
-      rolling: false,
-    });
-
-    this.drawBarrel(this.barrels[this.barrels.length - 1]);
-  }
-
-  spawnFireball(): void {
-    const fireball = this.add.graphics();
-
-    this.fireballs.push({
-      graphics: fireball,
-      x: 50 + this.rng.next() * 540,
-      y: 100,
-      vx: (this.rng.next() - 0.5) * CONFIG.FIREBALL_SPEED * 2,
-      vy: 0,
-    });
-
-    this.drawFireball(this.fireballs[this.fireballs.length - 1]);
-  }
-
-  spawnSpring(): void {
-    const spring = this.add.graphics();
-
-    this.springs.push({
-      graphics: spring,
-      x: 100 + this.rng.next() * 440,
-      y: 100,
-      vx: (this.rng.next() - 0.5) * 80,
-      vy: 0,
-      bouncing: true,
-    });
-  }
-
-  drawSpring(spring: Spring): void {
-    spring.graphics.clear();
-
-    // Spring coil
-    spring.graphics.lineStyle(3, 0xffffff);
-    for (let i = 0; i < 5; i++) {
-      spring.graphics.arc(0, i * 3, 4, 0, Math.PI, i % 2 === 0);
-    }
-
-    spring.graphics.setPosition(spring.x, spring.y);
-  }
-
-  loseLife(): void {
-    this.lives--;
-    this.livesText.setText(`LIVES: ${this.lives}`);
-
-    if (this.lives <= 0) {
-      this.endGame();
-    } else {
-      this.playerX = 50;
-      this.playerY = 520;
-      this.playerVX = 0;
-      this.playerVY = 0;
-      this.hammer.active = false;
-      this.barrels.forEach(b => b.graphics.destroy());
-      this.fireballs.forEach(f => f.graphics.destroy());
-      this.springs.forEach(s => s.graphics.destroy());
-      this.barrels = [];
-      this.fireballs = [];
-      this.springs = [];
-      this.drawPlayer();
-
-      // Brief invincibility flash
-      let flashCount = 0;
-      const flashInterval = this.time.addEvent({
-        delay: 100,
-        callback: () => {
-          this.player.setAlpha(this.player.alpha === 1 ? 0.3 : 1);
-          flashCount++;
-          if (flashCount >= 6) {
-            flashInterval.remove();
-            this.player.setAlpha(1);
-          }
-        },
-        loop: true,
-      });
-    }
-  }
-
-  levelComplete(): void {
-    this.score += CONFIG.LEVEL_COMPLETE_POINTS;
-    this.onScoreUpdate(this.score);
-
-    this.barrels.forEach(b => b.graphics.destroy());
-    this.fireballs.forEach(f => f.graphics.destroy());
-    this.springs.forEach(s => s.graphics.destroy());
-    this.barrels = [];
-    this.fireballs = [];
-    this.springs = [];
-
-    const completeText = this.add.text(
-      this.scale.width / 2,
-      this.scale.height / 2,
-      'LEVEL COMPLETE!',
-      {
-        fontFamily: '"Press Start 2P"',
-        fontSize: '20px',
-        color: '#00ff00',
+    // Check if battery hit
+    for (const battery of this.batteries) {
+      if (battery.alive && Math.abs(battery.x - x) < 20 && Math.abs(battery.y - y) < 20) {
+        battery.alive = false;
+        this.createExplosion(x, y);
+        return;
       }
-    ).setOrigin(0.5);
+    }
 
-    this.time.delayedCall(2000, () => {
-      completeText.destroy();
-      this.level++;
-      this.loadLevel(this.level);
+    // Just create explosion if nothing hit
+    this.createExplosion(x, y);
+  }
+
+  waveComplete(): void {
+    this.waveActive = false;
+
+    // Bonus points for surviving cities and batteries
+    const aliveCities = this.cities.filter(c => c.alive).length;
+    const aliveBatteries = this.batteries.filter(b => b.alive).length;
+
+    const bonus = aliveCities * CONFIG.POINTS_PER_CITY + aliveBatteries * CONFIG.POINTS_PER_BATTERY;
+    this.score += bonus;
+    this.onScoreUpdate(this.score);
+    this.scoreText.setText(`SCORE: ${this.score}`);
+
+    // Check game over
+    if (aliveCities === 0) {
+      this.endGame();
+      return;
+    }
+
+    // Reload batteries
+    for (const battery of this.batteries) {
+      if (battery.alive) {
+        battery.missiles = CONFIG.MISSILES_PER_BATTERY;
+      }
+    }
+
+    // Next wave
+    this.wave++;
+    this.time.delayedCall(CONFIG.WAVE_DELAY, () => {
+      this.startWave();
     });
+  }
+
+  updateAmmoDisplay(): void {
+    const ammo = this.batteries
+      .filter(b => b.alive)
+      .map((b, i) => `B${i + 1}:${b.missiles}`)
+      .join('  ');
+    this.ammoText.setText(ammo);
+  }
+
+  draw(): void {
+    this.graphics.clear();
+
+    // Draw ground
+    this.graphics.fillStyle(0x654321);
+    this.graphics.fillRect(0, this.scale.height - 20, this.scale.width, 20);
+
+    // Draw cities
+    for (const city of this.cities) {
+      if (city.alive) {
+        this.drawCity(city);
+      }
+    }
+
+    // Draw batteries
+    for (const battery of this.batteries) {
+      if (battery.alive) {
+        this.drawBattery(battery);
+      }
+    }
+
+    // Draw missiles
+    for (const missile of this.missiles) {
+      this.drawMissile(missile, 0x00ff00);
+    }
+
+    // Draw enemy missiles
+    for (const missile of this.enemyMissiles) {
+      this.drawMissile(missile, 0xff0000);
+    }
+
+    // Draw explosions
+    for (const explosion of this.explosions) {
+      this.drawExplosion(explosion);
+    }
+
+    // Draw crosshair
+    this.drawCrosshair();
+  }
+
+  drawCity(city: City): void {
+    city.graphics.clear();
+
+    // Simple city skyline
+    city.graphics.fillStyle(0x00ffff);
+
+    // Buildings
+    city.graphics.fillRect(-12, -15, 8, 15);
+    city.graphics.fillRect(-4, -20, 8, 20);
+    city.graphics.fillRect(4, -12, 8, 12);
+
+    // Windows
+    city.graphics.fillStyle(0xffff00);
+    city.graphics.fillRect(-10, -13, 2, 2);
+    city.graphics.fillRect(-6, -13, 2, 2);
+    city.graphics.fillRect(-10, -8, 2, 2);
+    city.graphics.fillRect(-6, -8, 2, 2);
+
+    city.graphics.fillRect(-2, -16, 2, 2);
+    city.graphics.fillRect(2, -16, 2, 2);
+    city.graphics.fillRect(-2, -11, 2, 2);
+    city.graphics.fillRect(2, -11, 2, 2);
+
+    city.graphics.fillRect(6, -9, 2, 2);
+    city.graphics.fillRect(10, -9, 2, 2);
+
+    city.graphics.setPosition(city.x, city.y);
+  }
+
+  drawBattery(battery: Battery): void {
+    battery.graphics.clear();
+
+    // Missile silo
+    battery.graphics.fillStyle(0x00ff00);
+    battery.graphics.fillRect(-10, -8, 20, 8);
+
+    // Barrel/launcher
+    battery.graphics.fillStyle(0x00cc00);
+    battery.graphics.fillRect(-3, -15, 6, 8);
+
+    battery.graphics.setPosition(battery.x, battery.y);
+  }
+
+  drawMissile(missile: Missile | EnemyMissile, color: number): void {
+    missile.graphics.clear();
+
+    // Draw trail
+    missile.graphics.lineStyle(2, color, 0.5);
+    for (let i = 0; i < missile.trail.length - 1; i++) {
+      missile.graphics.lineBetween(
+        missile.trail[i].x,
+        missile.trail[i].y,
+        missile.trail[i + 1].x,
+        missile.trail[i + 1].y
+      );
+    }
+
+    // Draw missile head
+    missile.graphics.fillStyle(color);
+    missile.graphics.fillCircle(missile.x, missile.y, 3);
+
+    missile.graphics.setPosition(0, 0);
+  }
+
+  drawExplosion(explosion: Explosion): void {
+    explosion.graphics.clear();
+
+    // Colorful explosion
+    const alpha = 1 - (explosion.timer / CONFIG.EXPLOSION_DURATION);
+
+    explosion.graphics.fillStyle(0xffff00, alpha);
+    explosion.graphics.fillCircle(0, 0, explosion.radius);
+
+    explosion.graphics.fillStyle(0xff6600, alpha * 0.8);
+    explosion.graphics.fillCircle(0, 0, explosion.radius * 0.7);
+
+    explosion.graphics.fillStyle(0xff0000, alpha * 0.6);
+    explosion.graphics.fillCircle(0, 0, explosion.radius * 0.4);
+
+    explosion.graphics.setPosition(explosion.x, explosion.y);
+  }
+
+  drawCrosshair(): void {
+    this.crosshairGraphics.clear();
+
+    // White crosshair
+    this.crosshairGraphics.lineStyle(2, 0xffffff);
+    this.crosshairGraphics.strokeCircle(0, 0, 10);
+    this.crosshairGraphics.lineBetween(-15, 0, -5, 0);
+    this.crosshairGraphics.lineBetween(5, 0, 15, 0);
+    this.crosshairGraphics.lineBetween(0, -15, 0, -5);
+    this.crosshairGraphics.lineBetween(0, 5, 0, 15);
+
+    this.crosshairGraphics.setPosition(this.crosshairX, this.crosshairY);
   }
 
   endGame(): void {
@@ -1156,6 +616,17 @@ export class BarrelDodgeScene extends Phaser.Scene {
         fontFamily: '"Press Start 2P"',
         fontSize: '14px',
         color: '#ffffff',
+      }
+    ).setOrigin(0.5);
+
+    this.add.text(
+      this.scale.width / 2,
+      this.scale.height / 2 + 50,
+      `WAVES SURVIVED: ${this.wave - 1}`,
+      {
+        fontFamily: '"Press Start 2P"',
+        fontSize: '14px',
+        color: '#00ffff',
       }
     ).setOrigin(0.5);
 
