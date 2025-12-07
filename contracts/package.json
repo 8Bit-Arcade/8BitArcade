@@ -1,0 +1,19 @@
+{
+  "name": "8bit-arcade-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for 8-Bit Arcade on Arbitrum",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network arbitrumSepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network arbitrumOne",
+    "verify:testnet": "hardhat verify --network arbitrumSepolia",
+    "verify:mainnet": "hardhat verify --network arbitrumOne"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.1",
+    "hardhat": "^2.19.4",
+    "dotenv": "^16.3.1"
+  }
+}

@@ -1,16 +1,23 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { arbitrum, arbitrumSepolia } from 'wagmi/chains';
+import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
 
-// Contract addresses - will be updated after deployment
-export const CONTRACT_ADDRESSES = {
-  token: process.env.NEXT_PUBLIC_TOKEN_ADDRESS || '',
-  rewardsPool: process.env.NEXT_PUBLIC_REWARDS_POOL_ADDRESS || '',
-  tournamentManager: process.env.NEXT_PUBLIC_TOURNAMENT_MANAGER_ADDRESS || '',
-  scoreOracle: process.env.NEXT_PUBLIC_SCORE_ORACLE_ADDRESS || '',
-} as const;
+/**
+ * Wagmi Configuration for 8-Bit Arcade
+ *
+ * Automatically uses testnet or mainnet based on USE_TESTNET flag
+ * in config/contracts.ts
+ *
+ * ⚠️ IMPORTANT: Get your WalletConnect Project ID
+ * 1. Visit: https://cloud.walletconnect.com
+ * 2. Create a project
+ * 3. Copy the Project ID
+ * 4. Add to frontend/.env.local:
+ *    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+ */
 
-// Use testnet for development, mainnet for production
-const chains = process.env.NEXT_PUBLIC_USE_TESTNET === 'true'
+// Use testnet or mainnet based on config
+const chains = USE_TESTNET
   ? [arbitrumSepolia] as const
   : [arbitrum] as const;
 
@@ -21,6 +28,10 @@ export const config = getDefaultConfig({
   ssr: true,
 });
 
+// Export contract addresses for easy access
+export { CONTRACTS, USE_TESTNET } from '@/config/contracts';
+export { EIGHT_BIT_TOKEN_ADDRESS, GAME_REWARDS_ADDRESS } from '@/config/contracts';
+
 // Chain IDs
 export const SUPPORTED_CHAIN_IDS = {
   ARBITRUM: 42161,
@@ -29,7 +40,7 @@ export const SUPPORTED_CHAIN_IDS = {
 
 // Get current chain ID
 export const getCurrentChainId = (): number => {
-  return process.env.NEXT_PUBLIC_USE_TESTNET === 'true'
+  return USE_TESTNET
     ? SUPPORTED_CHAIN_IDS.ARBITRUM_SEPOLIA
     : SUPPORTED_CHAIN_IDS.ARBITRUM;
 };
