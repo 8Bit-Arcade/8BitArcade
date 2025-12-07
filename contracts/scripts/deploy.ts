@@ -74,6 +74,34 @@ async function main() {
   console.log("✅ TournamentManager funded with", ethers.formatEther(prizePoolAmount), "8BIT");
   console.log();
 
+  // Deploy TokenSale
+  console.log("📝 Deploying TokenSale...");
+  // USDC addresses:
+  // Arbitrum Sepolia: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d
+  // Arbitrum One: 0xaf88d065e77c8cC2239327C5EDb3A432268e5831
+  const usdcAddress = network.name === "arbitrumSepolia"
+    ? "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"
+    : "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";
+
+  const TokenSale = await ethers.getContractFactory("TokenSale");
+  const tokenSale = await TokenSale.deploy(
+    tokenAddress,
+    usdcAddress,
+    0 // Start immediately (0 = use block.timestamp)
+  );
+  await tokenSale.waitForDeployment();
+  const tokenSaleAddress = await tokenSale.getAddress();
+  console.log("✅ TokenSale deployed to:", tokenSaleAddress);
+  console.log();
+
+  // Fund TokenSale with 100M tokens (10% of supply)
+  console.log("💰 Funding TokenSale with 100M tokens...");
+  const saleAmount = ethers.parseEther("100000000"); // 100M tokens
+  const saleFundTx = await token.transfer(tokenSaleAddress, saleAmount);
+  await saleFundTx.wait();
+  console.log("✅ TokenSale funded with", ethers.formatEther(saleAmount), "8BIT");
+  console.log();
+
   console.log("═══════════════════════════════════════════════════");
   console.log("  DEPLOYMENT SUMMARY");
   console.log("═══════════════════════════════════════════════════");
@@ -81,6 +109,7 @@ async function main() {
   console.log("EightBitToken (8BIT):", tokenAddress);
   console.log("GameRewards:", rewardsAddress);
   console.log("TournamentManager:", tournamentsAddress);
+  console.log("TokenSale:", tokenSaleAddress);
   console.log("Deployer:", deployer.address);
   console.log();
   console.log("⚠️  IMPORTANT NEXT STEPS:");
@@ -96,6 +125,7 @@ async function main() {
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${rewardsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentsAddress} ${tokenAddress}`);
+  console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 0`);
   console.log("6. Add liquidity to DEX for 8BIT token trading");
   console.log();
   console.log("For mainnet deployment, run: npm run deploy:mainnet");

@@ -39,6 +39,8 @@ const TESTNET_CONTRACTS = {
   EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // ← UPDATE: 8BIT token address
   GAME_REWARDS: '0x0000000000000000000000000000000000000000',    // ← UPDATE: GameRewards address
   TOURNAMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentManager address
+  TOKEN_SALE: '0x0000000000000000000000000000000000000000',      // ← UPDATE: TokenSale address
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',            // Arbitrum Sepolia USDC
   CHAIN_ID: 421614, // Arbitrum Sepolia
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
@@ -59,6 +61,8 @@ const MAINNET_CONTRACTS = {
   EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // ← UPDATE: 8BIT token address
   GAME_REWARDS: '0x0000000000000000000000000000000000000000',    // ← UPDATE: GameRewards address
   TOURNAMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentManager address
+  TOKEN_SALE: '0x0000000000000000000000000000000000000000',      // ← UPDATE: TokenSale address
+  USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',            // Arbitrum One USDC
   CHAIN_ID: 42161, // Arbitrum One
   CHAIN_NAME: 'Arbitrum One',
   RPC_URL: 'https://arb1.arbitrum.io/rpc',
@@ -75,6 +79,8 @@ export const CONTRACTS = USE_TESTNET ? TESTNET_CONTRACTS : MAINNET_CONTRACTS;
 export const EIGHT_BIT_TOKEN_ADDRESS = CONTRACTS.EIGHT_BIT_TOKEN;
 export const GAME_REWARDS_ADDRESS = CONTRACTS.GAME_REWARDS;
 export const TOURNAMENT_MANAGER_ADDRESS = CONTRACTS.TOURNAMENT_MANAGER;
+export const TOKEN_SALE_ADDRESS = CONTRACTS.TOKEN_SALE;
+export const USDC_ADDRESS = CONTRACTS.USDC;
 export const ARBITRUM_CHAIN_ID = CONTRACTS.CHAIN_ID;
 export const ARBITRUM_CHAIN_NAME = CONTRACTS.CHAIN_NAME;
 export const ARBITRUM_RPC_URL = CONTRACTS.RPC_URL;
@@ -154,6 +160,33 @@ export const TOURNAMENT_MANAGER_ABI = [
   "event PlayerEntered(uint256 indexed tournamentId, address indexed player, uint256 entryFee)",
   "event WinnerDeclared(uint256 indexed tournamentId, address indexed winner, uint256 prizeAmount)",
   "event FeeBurned(uint256 indexed tournamentId, uint256 amount)",
+];
+
+export const TOKEN_SALE_ABI = [
+  "function buyWithEth() external payable",
+  "function buyWithUsdc(uint256 usdcAmount) external",
+  "function TOKENS_FOR_SALE() view returns (uint256)",
+  "function tokensSold() view returns (uint256)",
+  "function ethRaised() view returns (uint256)",
+  "function usdcRaised() view returns (uint256)",
+  "function saleStartTime() view returns (uint256)",
+  "function saleEndTime() view returns (uint256)",
+  "function tokensPerEth() view returns (uint256)",
+  "function tokensPerUsdc() view returns (uint256)",
+  "function purchasedTokens(address buyer) view returns (uint256)",
+  "function getSaleProgress() view returns (uint256)",
+  "function getTimeRemaining() view returns (uint256)",
+  "function isSaleActive() view returns (bool)",
+  "function calculateTokensForEth(uint256 ethAmount) view returns (uint256)",
+  "function calculateTokensForUsdc(uint256 usdcAmount) view returns (uint256)",
+  "event TokensPurchased(address indexed buyer, uint256 amount, uint256 ethSpent, uint256 usdcSpent)",
+];
+
+export const USDC_ABI = [
+  "function balanceOf(address account) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function decimals() view returns (uint8)",
 ];
 
 // ═══════════════════════════════════════════════════════════
