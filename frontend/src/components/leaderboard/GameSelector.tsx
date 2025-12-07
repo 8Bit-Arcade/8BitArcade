@@ -11,6 +11,14 @@ const GAMES: Game[] = [
   { id: 'alien-assault', name: 'ALIEN ASSAULT' },
   { id: 'brick-breaker', name: 'BRICK BREAKER' },
   { id: 'pixel-snake', name: 'PIXEL SNAKE' },
+  { id: 'bug-blaster', name: 'BUG BLASTER' },
+  { id: 'chomper', name: 'CHOMPER' },
+  { id: 'tunnel-terror', name: 'TUNNEL TERROR' },
+  { id: 'galaxy-fighter', name: 'GALAXY FIGHTER' },
+  { id: 'road-hopper', name: 'ROAD HOPPER' },
+  { id: 'missile-command', name: 'MISSILE COMMAND' },
+  { id: 'block-drop', name: 'BLOCK DROP' },
+  { id: 'paddle-battle', name: 'PADDLE BATTLE' },
 ];
 
 interface GameSelectorProps {
