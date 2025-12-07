@@ -4,9 +4,10 @@ import { SeededRNG } from '../engine/SeededRNG';
 const CONFIG = {
   CROSSHAIR_SPEED: 200,
   MISSILE_SPEED: 300,
-  ENEMY_MISSILE_SPEED: 80,
+  ENEMY_MISSILE_SPEED: 50,
+  ENEMY_SPEED_INCREASE: 5,
   EXPLOSION_DURATION: 800,
-  EXPLOSION_MAX_RADIUS: 40,
+  EXPLOSION_MAX_RADIUS: 50,
   BATTERY_RELOAD_TIME: 5000,
   MISSILES_PER_BATTERY: 10,
   WAVE_DELAY: 3000,
@@ -217,6 +218,9 @@ export class MissileCommandScene extends Phaser.Scene {
     const dy = targetY - startY;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
+    // Calculate speed based on wave (starts slow, gets faster)
+    const speed = CONFIG.ENEMY_MISSILE_SPEED + (this.wave - 1) * CONFIG.ENEMY_SPEED_INCREASE;
+
     const graphics = this.add.graphics();
 
     this.enemyMissiles.push({
@@ -224,8 +228,8 @@ export class MissileCommandScene extends Phaser.Scene {
       y: startY,
       targetX,
       targetY,
-      vx: (dx / dist) * CONFIG.ENEMY_MISSILE_SPEED,
-      vy: (dy / dist) * CONFIG.ENEMY_MISSILE_SPEED,
+      vx: (dx / dist) * speed,
+      vy: (dy / dist) * speed,
       graphics,
       trail: [],
     });

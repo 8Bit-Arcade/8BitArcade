@@ -3,7 +3,7 @@ import { SeededRNG } from '../engine/SeededRNG';
 
 const CONFIG = {
   TILE_SIZE: 40,
-  GRID_WIDTH: 13,
+  GRID_WIDTH: 20,
   GRID_HEIGHT: 13,
   PLAYER_MOVE_DELAY: 150, // ms between moves
   LIVES: 5,
@@ -69,7 +69,7 @@ export class RoadHopperScene extends Phaser.Scene {
   private timeRemaining: number = CONFIG.TIME_LIMIT;
   private highestRow: number = 12;
 
-  private playerGridX: number = 6;
+  private playerGridX: number = 10;
   private playerGridY: number = 12;
   private playerMoveTimer: number = 0;
   private playerDir: { x: number; y: number } = { x: 0, y: 0 };
@@ -191,8 +191,8 @@ export class RoadHopperScene extends Phaser.Scene {
   }
 
   createGoals(): void {
-    // 5 goal spots across the top
-    const goalPositions = [1, 3, 5, 7, 9, 11];
+    // 6 goal spots across the top
+    const goalPositions = [2, 5, 8, 11, 14, 17];
     for (const x of goalPositions) {
       const graphics = this.add.graphics();
       this.goals.push({
@@ -601,7 +601,7 @@ export class RoadHopperScene extends Phaser.Scene {
   }
 
   resetPlayer(): void {
-    this.playerGridX = 6;
+    this.playerGridX = 10;
     this.playerGridY = 12;
     this.highestRow = 12;
     this.onPlatform = null;
