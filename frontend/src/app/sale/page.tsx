@@ -247,10 +247,10 @@ export default function TokenSalePage() {
             <div className="text-center">
               <p className="font-arcade text-xs text-gray-500 mb-1">Tokens Sold</p>
               <p className="font-pixel text-arcade-cyan text-lg">
-                {formatNumber(Number(formatEther(tokensSold || 0n)))}
+                {formatNumber(Number(formatEther(tokensSold || BigInt(0))))}
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                / {formatNumber(Number(formatEther(tokensForSale || 0n)))}
+                / {formatNumber(Number(formatEther(tokensForSale || BigInt(0))))}
               </p>
             </div>
           </Card>
@@ -338,7 +338,7 @@ export default function TokenSalePage() {
                 <span className="font-arcade text-xs text-gray-500">
                   Balance: {paymentMethod === 'eth'
                     ? `${Number(ethBalance?.formatted || 0).toFixed(4)} ETH`
-                    : `${((Number(usdcBalance || 0n) / 1e6) || 0).toFixed(2)} USDC`}
+                    : `${((Number(usdcBalance || BigInt(0)) / 1e6) || 0).toFixed(2)} USDC`}
                 </span>
                 <span className="font-arcade text-xs text-arcade-yellow">
                   You get: {formatNumber(calculateTokens())} 8BIT
@@ -351,8 +351,8 @@ export default function TokenSalePage() {
               <p className="font-arcade text-xs text-gray-400 mb-1">Current Price</p>
               <p className="font-pixel text-arcade-yellow">
                 {paymentMethod === 'eth'
-                  ? `1 ETH = ${formatNumber(Number(formatEther(tokensPerEth || 0n)))} 8BIT`
-                  : `1 USDC = ${formatNumber(Number(formatEther(tokensPerUsdc || 0n)))} 8BIT`}
+                  ? `1 ETH = ${formatNumber(Number(formatEther(tokensPerEth || BigInt(0))))} 8BIT`
+                  : `1 USDC = ${formatNumber(Number(formatEther(tokensPerUsdc || BigInt(0))))} 8BIT`}
               </p>
               <p className="font-arcade text-xs text-gray-400 mt-1">
                 ($0.0005 per token)

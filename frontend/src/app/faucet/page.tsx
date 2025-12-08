@@ -128,7 +128,7 @@ export default function FaucetPage() {
     );
   }
 
-  const belowMinBalance = Number(userBalance) < Number(minBalance || 0n);
+  const belowMinBalance = Number(userBalance) < Number(minBalance || BigInt(0));
 
   return (
     <div className="min-h-screen py-8">
@@ -157,7 +157,7 @@ export default function FaucetPage() {
               <div className="p-4 bg-arcade-green/10 rounded border border-arcade-green/30 text-center">
                 <p className="font-arcade text-xs text-gray-400 mb-1">Claim Amount</p>
                 <p className="font-pixel text-2xl text-arcade-green">
-                  {formatNumber(Number(formatEther(claimAmount || 0n)))} 8BIT
+                  {formatNumber(Number(formatEther(claimAmount || BigInt(0))))} 8BIT
                 </p>
                 <p className="font-arcade text-xs text-gray-400 mt-2">
                   Every 24 hours
@@ -202,7 +202,7 @@ export default function FaucetPage() {
                   Balance Above Minimum
                 </Button>
                 <p className="font-arcade text-xs text-center text-gray-500 mt-2">
-                  Your balance must be below {formatNumber(Number(formatEther(minBalance || 0n)))} 8BIT to claim
+                  Your balance must be below {formatNumber(Number(formatEther(minBalance || BigInt(0))))} 8BIT to claim
                 </p>
               </div>
             ) : !canClaim ? (
@@ -222,7 +222,7 @@ export default function FaucetPage() {
                 onClick={handleClaim}
                 disabled={!!claimHash}
               >
-                {claimHash ? 'Claiming...' : `Claim ${formatNumber(Number(formatEther(claimAmount || 0n)))} 8BIT`}
+                {claimHash ? 'Claiming...' : `Claim ${formatNumber(Number(formatEther(claimAmount || BigInt(0))))} 8BIT`}
               </Button>
             )}
 
