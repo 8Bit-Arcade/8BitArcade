@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8BIT Token Sale | 8-Bit Arcade</title>
+    <meta name="description" content="Join the 8-Bit Arcade token sale. $0.0005 per token, $50K raise goal.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <a href="index.html" class="pixel-text glow-pink">8BIT ARCADE</a>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html#about">About</a>
+                    <a href="index.html#tokenomics">Tokenomics</a>
+                    <a href="index.html#roadmap">Roadmap</a>
+                    <a href="index.html#faq">FAQ</a>
+                    <a href="https://docs.8bitarcade.games" target="_blank">Docs</a>
+                    <button id="connectWalletBtn" class="btn btn-primary">Connect Wallet</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sale Hero -->
+    <section class="sale-hero">
+        <div class="container">
+            <div class="sale-status">
+                <div class="status-indicator" id="saleStatus">
+                    <span class="status-dot"></span>
+                    <span class="pixel-text" id="saleStatusText">Loading...</span>
+                </div>
+            </div>
+            <h1 class="pixel-text glow-yellow">8BIT TOKEN SALE</h1>
+            <p class="sale-subtitle">Join the future of blockchain gaming</p>
+        </div>
+    </section>
+
+    <!-- Sale Stats -->
+    <section class="sale-stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Tokens Sold</div>
+                    <div class="stat-value pixel-text" id="tokensSold">0</div>
+                    <div class="stat-sublabel" id="tokensSoldSub">/ 100,000,000 8BIT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Raised</div>
+                    <div class="stat-value pixel-text glow-green" id="totalRaised">$0</div>
+                    <div class="stat-sublabel">Goal: $50,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Time Remaining</div>
+                    <div class="stat-value pixel-text glow-pink" id="timeRemaining">--</div>
+                    <div class="stat-sublabel">4 Week Sale</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-labels">
+                    <span class="pixel-text">Sale Progress</span>
+                    <span class="pixel-text" id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Purchase Section -->
+    <section class="purchase-section">
+        <div class="container">
+            <div class="purchase-grid">
+                <!-- Purchase Card -->
+                <div class="purchase-card">
+                    <h2 class="pixel-text glow-cyan">BUY 8BIT TOKENS</h2>
+
+                    <!-- Payment Method Toggle -->
+                    <div class="payment-toggle">
+                        <button class="toggle-btn active" data-method="eth" id="ethToggle">
+                            <span class="pixel-text">ETH</span>
+                        </button>
+                        <button class="toggle-btn" data-method="usdc" id="usdcToggle">
+                            <span class="pixel-text">USDC</span>
+                        </button>
+                    </div>
+
+                    <!-- Amount Input -->
+                    <div class="input-group">
+                        <label class="input-label">Amount</label>
+                        <input type="number" id="amountInput" placeholder="0.1" step="0.01" min="0">
+                        <div class="input-footer">
+                            <span class="balance" id="balanceDisplay">Balance: --</span>
+                            <span class="tokens-receive pixel-text" id="tokensReceive">0 8BIT</span>
+                        </div>
+                    </div>
+
+                    <!-- Current Price -->
+                    <div class="price-display">
+                        <div class="price-label">Current Price</div>
+                        <div class="price-value pixel-text" id="currentPrice">Loading...</div>
+                        <div class="price-sublabel">$0.0005 per token</div>
+                    </div>
+
+                    <!-- Buy Button -->
+                    <button id="buyButton" class="btn btn-large btn-primary" disabled>
+                        Connect Wallet to Buy
+                    </button>
+
+                    <!-- User Purchase Info -->
+                    <div id="userPurchaseInfo" class="user-purchase-info" style="display: none;">
+                        <div class="info-label">Your Purchase</div>
+                        <div class="info-value pixel-text" id="userTokens">0 8BIT</div>
+                    </div>
+
+                    <!-- Transaction Status -->
+                    <div id="txStatus" class="tx-status" style="display: none;"></div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="info-card">
+                    <h3 class="pixel-text glow-pink">SALE DETAILS</h3>
+
+                    <div class="detail-list">
+                        <div class="detail-item">
+                            <span>Token Price</span>
+                            <span class="pixel-text">$0.0005</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Total Supply</span>
+                            <span class="pixel-text">1 Billion</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>For Sale</span>
+                            <span class="pixel-text">100M (10%)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Raise Goal</span>
+                            <span class="pixel-text glow-yellow">$50,000</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Vesting</span>
+                            <span class="pixel-text glow-green">None</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Unsold Tokens</span>
+                            <span class="pixel-text glow-red">Burned</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="alert-title pixel-text">🔥 EARLY BIRD</div>
+                        <p>Buy early and benefit from potential price appreciation as the platform grows!</p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <div class="alert-title pixel-text">⚠️ IMPORTANT</div>
+                        <p>You must be on Arbitrum One network. Tokens are delivered immediately with no vesting.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="benefits-section">
+                <h3 class="pixel-text" style="text-align: center; margin-bottom: 2rem;">WHY BUY 8BIT?</h3>
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🎮</div>
+                        <h4 class="pixel-text">Play & Earn</h4>
+                        <p>Earn tokens by playing games and ranking on leaderboards</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🏆</div>
+                        <h4 class="pixel-text">Tournaments</h4>
+                        <p>Enter tournaments and compete for massive prize pools</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🔥</div>
+                        <h4 class="pixel-text">Deflationary</h4>
+                        <p>50% of tournament fees burned, reducing supply over time</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">⚡</div>
+                        <h4 class="pixel-text">Low Fees</h4>
+                        <p>Built on Arbitrum for fast, cheap transactions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="disclaimer-section">
+        <div class="container">
+            <div class="disclaimer-box">
+                <div class="pixel-text" style="margin-bottom: 1rem;">⚠️ RISK DISCLAIMER</div>
+                <p>Cryptocurrency investments carry risk. Only invest what you can afford to lose. This is not financial advice. DYOR (Do Your Own Research). By participating in this token sale, you acknowledge that you understand the risks involved in cryptocurrency investments.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="pixel-text">8BIT ARCADE</h3>
+                    <p>Retro gaming meets blockchain technology</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Links</h4>
+                    <a href="https://play.8bitarcade.games" target="_blank">Play Games</a>
+                    <a href="index.html">Home</a>
+                    <a href="https://docs.8bitarcade.games" target="_blank">Documentation</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Community</h4>
+                    <a href="https://discord.gg/8bitarcade" target="_blank">Discord</a>
+                    <a href="https://twitter.com/8bitarcade" target="_blank">Twitter</a>
+                    <a href="https://t.me/8bitarcade" target="_blank">Telegram</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 8-Bit Arcade. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load ethers.js from CDN -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script src="js/sale.js"></script>
+</body>
+</html>
