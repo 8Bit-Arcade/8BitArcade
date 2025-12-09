@@ -117,19 +117,30 @@ export default function TokenSalePage() {
     hash: buyUsdcHash,
   });
 
+  // Type-safe extraction of contract data
+  const tokensForSaleValue = tokensForSale as bigint | undefined;
+  const tokensSoldValue = tokensSold as bigint | undefined;
+  const ethRaisedValue = ethRaised as bigint | undefined;
+  const usdcRaisedValue = usdcRaised as bigint | undefined;
+  const saleEndTimeValue = saleEndTime as bigint | undefined;
+  const tokensPerEthValue = tokensPerEth as bigint | undefined;
+  const tokensPerUsdcValue = tokensPerUsdc as bigint | undefined;
+  const usdcBalanceValue = usdcBalance as bigint | undefined;
+  const userPurchasedValue = userPurchased as bigint | undefined;
+
   // Calculate tokens based on input
   const calculateTokens = () => {
     if (!amount || isNaN(parseFloat(amount))) return 0;
 
-    if (paymentMethod === 'eth' && tokensPerEth) {
+    if (paymentMethod === 'eth' && tokensPerEthValue) {
       const ethAmount = parseEther(amount);
-      const tokens = (ethAmount * (tokensPerEth as bigint)) / parseEther('1');
+      const tokens = (ethAmount * tokensPerEthValue) / parseEther('1');
       return Number(formatEther(tokens));
     }
 
-    if (paymentMethod === 'usdc' && tokensPerUsdc) {
+    if (paymentMethod === 'usdc' && tokensPerUsdcValue) {
       const usdcAmount = parseUnits(amount, 6); // USDC has 6 decimals
-      const tokens = (usdcAmount * (tokensPerUsdc as bigint)) / BigInt(10 ** 6);
+      const tokens = (usdcAmount * tokensPerUsdcValue) / BigInt(10 ** 6);
       return Number(formatEther(tokens));
     }
 
@@ -193,12 +204,12 @@ export default function TokenSalePage() {
     }
   };
 
-  const saleProgress = tokensForSale && tokensSold
-    ? Number((tokensSold as bigint) * BigInt(100) / (tokensForSale as bigint))
+  const saleProgress = tokensForSaleValue && tokensSoldValue
+    ? Number(tokensSoldValue * BigInt(100) / tokensForSaleValue)
     : 0;
 
-  const timeRemaining = saleEndTime
-    ? Math.max(0, Number(saleEndTime) - Math.floor(Date.now() / 1000))
+  const timeRemaining = saleEndTimeValue
+    ? Math.max(0, Number(saleEndTimeValue) - Math.floor(Date.now() / 1000))
     : 0;
 
   const formatTimeRemaining = (seconds: number) => {
@@ -211,8 +222,8 @@ export default function TokenSalePage() {
     return `${minutes}m`;
   };
 
-  const totalRaised = ethRaised && usdcRaised && tokensPerEth
-    ? (Number(formatEther(ethRaised as bigint)) * 5000) + (Number(usdcRaised) / 1e6)
+  const totalRaised = ethRaisedValue && usdcRaisedValue && tokensPerEthValue
+    ? (Number(formatEther(ethRaisedValue)) * 5000) + (Number(usdcRaisedValue) / 1e6)
     : 0;
 
   return (
@@ -247,10 +258,10 @@ export default function TokenSalePage() {
             <div className="text-center">
               <p className="font-arcade text-xs text-gray-500 mb-1">Tokens Sold</p>
               <p className="font-pixel text-arcade-cyan text-lg">
-                {formatNumber(Number(formatEther(tokensSold || BigInt(0))))}
+                {formatNumber(Number(formatEther(tokensSoldValue ?? BigInt(0))))}
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                / {formatNumber(Number(formatEther(tokensForSale || BigInt(0))))}
+                / {formatNumber(Number(formatEther(tokensForSaleValue ?? BigInt(0))))}
               </p>
             </div>
           </Card>
@@ -338,7 +349,7 @@ export default function TokenSalePage() {
                 <span className="font-arcade text-xs text-gray-500">
                   Balance: {paymentMethod === 'eth'
                     ? `${Number(ethBalance?.formatted || 0).toFixed(4)} ETH`
-                    : `${((Number(usdcBalance || BigInt(0)) / 1e6) || 0).toFixed(2)} USDC`}
+                    : `${((Number(usdcBalanceValue ?? BigInt(0)) / 1e6) || 0).toFixed(2)} USDC`}
                 </span>
                 <span className="font-arcade text-xs text-arcade-yellow">
                   You get: {formatNumber(calculateTokens())} 8BIT
@@ -351,8 +362,8 @@ export default function TokenSalePage() {
               <p className="font-arcade text-xs text-gray-400 mb-1">Current Price</p>
               <p className="font-pixel text-arcade-yellow">
                 {paymentMethod === 'eth'
-                  ? `1 ETH = ${formatNumber(Number(formatEther(tokensPerEth || BigInt(0))))} 8BIT`
-                  : `1 USDC = ${formatNumber(Number(formatEther(tokensPerUsdc || BigInt(0))))} 8BIT`}
+                  ? `1 ETH = ${formatNumber(Number(formatEther(tokensPerEthValue ?? BigInt(0))))} 8BIT`
+                  : `1 USDC = ${formatNumber(Number(formatEther(tokensPerUsdcValue ?? BigInt(0))))} 8BIT`}
               </p>
               <p className="font-arcade text-xs text-gray-400 mt-1">
                 ($0.0005 per token)
@@ -391,11 +402,11 @@ export default function TokenSalePage() {
             )}
 
             {/* User Purchase Info */}
-            {isConnected && userPurchased && Number(userPurchased) > 0 && (
+            {isConnected && userPurchasedValue && Number(userPurchasedValue) > 0 && (
               <div className="mt-4 p-3 bg-arcade-green/10 rounded border border-arcade-green/30">
                 <p className="font-arcade text-xs text-gray-400">Your Purchase</p>
                 <p className="font-pixel text-arcade-green">
-                  {formatNumber(Number(formatEther(userPurchased as bigint)))} 8BIT
+                  {formatNumber(Number(formatEther(userPurchasedValue)))} 8BIT
                 </p>
               </div>
             )}
