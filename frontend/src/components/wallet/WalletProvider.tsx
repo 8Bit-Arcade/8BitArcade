@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useAccount, useEnsName } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { useAuthStore } from '@/stores/authStore';
@@ -32,6 +32,39 @@ export default function WalletProvider({
   // Track if we've already shown the modal for this session
   const hasShownModal = useRef(false);
   const prevAddress = useRef<string | null>(null);
+  const hasLoadedFromFirestore = useRef(false);
+
+  // Load user data from Firestore if not in localStorage
+  const loadUserFromFirestore = useCallback(async (address: string) => {
+    try {
+      const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
+      if (!isFirebaseConfigured()) return;
+
+      const [db, { doc, getDoc }] = await Promise.all([
+        getFirestoreInstance(),
+        import('firebase/firestore'),
+      ]);
+
+      const userRef = doc(db, 'users', address.toLowerCase());
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        const { setUsername, setDisplayPreference } = useAuthStore.getState();
+
+        // Update localStorage with Firestore data
+        if (data.username) {
+          setUsername(address, data.username);
+          console.log('✅ Loaded username from Firestore:', data.username);
+        }
+        if (data.displayPreference) {
+          setDisplayPreference(address, data.displayPreference);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load user data from Firestore:', err);
+    }
+  }, []);
 
   // Save ENS name when fetched
   useEffect(() => {
@@ -53,29 +86,44 @@ export default function WalletProvider({
       if (prevAddress.current !== address) {
         prevAddress.current = address;
         hasShownModal.current = false;
+        hasLoadedFromFirestore.current = false;
       }
 
-      const existingUsername = getUsername(address);
-      const existingEnsName = getEnsName(address);
+      // Check localStorage first, then try Firestore
+      const checkUsername = async () => {
+        let existingUsername = getUsername(address);
+        const existingEnsName = getEnsName(address);
 
-      if (!existingUsername && !hasShownModal.current) {
-        setIsNewUser(true);
-        hasShownModal.current = true;
-        // Delay modal to allow wallet modal to close
-        setTimeout(() => {
-          setUsernameModalOpen(true);
-        }, 500);
-      } else if ((existingUsername || existingEnsName) && !hasShownModal.current) {
-        hasShownModal.current = true;
-        const displayName = existingEnsName || existingUsername;
-        addToast({
-          type: 'success',
-          message: `Welcome back, ${displayName}!`,
-        });
-      }
+        // If no username in localStorage, try loading from Firestore
+        if (!existingUsername && !hasLoadedFromFirestore.current) {
+          hasLoadedFromFirestore.current = true;
+          await loadUserFromFirestore(address);
+          // Re-check after Firestore load
+          existingUsername = getUsername(address);
+        }
+
+        if (!existingUsername && !hasShownModal.current) {
+          setIsNewUser(true);
+          hasShownModal.current = true;
+          // Delay modal to allow wallet modal to close
+          setTimeout(() => {
+            setUsernameModalOpen(true);
+          }, 500);
+        } else if ((existingUsername || existingEnsName) && !hasShownModal.current) {
+          hasShownModal.current = true;
+          const displayName = existingEnsName || existingUsername;
+          addToast({
+            type: 'success',
+            message: `Welcome back, ${displayName}!`,
+          });
+        }
+      };
+
+      checkUsername();
     } else if (!isConnected) {
       prevAddress.current = null;
       hasShownModal.current = false;
+      hasLoadedFromFirestore.current = false;
       resetAuth();
     }
   }, [
@@ -91,6 +139,7 @@ export default function WalletProvider({
     setUsernameModalOpen,
     addToast,
     resetAuth,
+    loadUserFromFirestore,
   ]);
 
   return <>{children}</>;
