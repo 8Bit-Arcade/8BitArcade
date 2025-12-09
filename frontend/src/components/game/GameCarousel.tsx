@@ -1,12 +1,15 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useAuthStore } from '@/stores/authStore';
+import { shortenAddress } from '@/lib/utils';
 
 // Define TopPlayer locally to avoid Firebase import chain
 interface TopPlayer {
   rank: number;
   username: string;
   score: number;
+  odedId: string; // Wallet address to look up display preference
 }
 
 interface Game {
@@ -23,6 +26,30 @@ interface GameCarouselProps {
   selectedIndex: number;
   onSelectGame: (index: number) => void;
   leaderboards: { [gameId: string]: TopPlayer[] };
+}
+
+// Helper to get display name for a user (similar to LeaderboardTable)
+function getPlayerDisplayName(player: TopPlayer): string {
+  const { users } = useAuthStore.getState();
+  const userData = users[player.odedId.toLowerCase()];
+
+  if (!userData) {
+    // No local data - use server-provided username or shortened address
+    return player.username || shortenAddress(player.odedId);
+  }
+
+  const preference = userData.displayPreference ||
+    (userData.ensName ? 'ens' : userData.username ? 'username' : 'address');
+
+  switch (preference) {
+    case 'ens':
+      return userData.ensName || userData.username || player.username || shortenAddress(player.odedId);
+    case 'username':
+      return userData.username || userData.ensName || player.username || shortenAddress(player.odedId);
+    case 'address':
+    default:
+      return shortenAddress(player.odedId);
+  }
 }
 
 export default function GameCarousel({
@@ -215,7 +242,7 @@ export default function GameCarousel({
                                 {playerIndex === 0 ? '1st' : playerIndex === 1 ? '2nd' : '3rd'}
                               </span>
                               <span className="font-arcade text-white truncate">
-                                {player.username}
+                                {getPlayerDisplayName(player)}
                               </span>
                             </div>
                             <span className="font-arcade text-arcade-cyan flex-shrink-0">

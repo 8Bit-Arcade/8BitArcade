@@ -140,7 +140,7 @@ const ACTIVE_TOURNAMENT = {
 export default function HomePage() {
   const { isConnected } = useAccount();
   const [selectedGame, setSelectedGame] = useState(0);
-  const [gameLeaderboards, setGameLeaderboards] = useState<{ [gameId: string]: { rank: number; username: string; score: number }[] }>({});
+  const [gameLeaderboards, setGameLeaderboards] = useState<{ [gameId: string]: { rank: number; username: string; score: number; odedId: string }[] }>({});
   const [topPlayers, setTopPlayers] = useState<{ rank: number; username: string; score: number }[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
@@ -168,7 +168,7 @@ export default function HomePage() {
         ]);
 
         // Fetch game-specific leaderboards
-        const gameLeaderboardsData: { [gameId: string]: { rank: number; username: string; score: number }[] } = {};
+        const gameLeaderboardsData: { [gameId: string]: { rank: number; username: string; score: number; odedId: string }[] } = {};
 
         for (const game of GAMES.filter(g => g.playable)) {
           const leaderboardRef = doc(db, 'leaderboards', game.id);
@@ -181,6 +181,7 @@ export default function HomePage() {
               rank: idx + 1,
               username: entry.username || 'Anonymous',
               score: entry.score || 0,
+              odedId: entry.odedId || '', // Include wallet address for display preference lookup
             }));
           }
         }
