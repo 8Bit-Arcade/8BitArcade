@@ -7,6 +7,40 @@ This guide will walk you through deploying and configuring smart contracts for 8
 The smart contract system consists of:
 - **8BIT Token**: ERC20 reward token for players
 - **GameRewards**: Distributes daily rewards to top players
+- **TokenSale**: Public presale contract for $100K raise
+- **TournamentBuyback**: Automatic USDC → 8BIT buyback and burn
+
+## 💰 Token Allocation (500M Max Supply)
+
+| Allocation | Amount | % | Purpose | Status |
+|------------|--------|---|---------|--------|
+| **Token Sale** | 200M | 40% | Public presale @ $0.0005 | ✅ TokenSale contract |
+| **Rewards Pool** | 150M | 30% | Daily rewards + tournaments | ✅ GameRewards minting |
+| **Staking Pool** | 50M | 10% | Long-term holder incentives | ⚠️ RESERVED (deploy later) |
+| **DEX Liquidity** | 50M | 10% | Uniswap V3 locked liquidity | 🔒 Initial mint |
+| **Operations** | 50M | 10% | Marketing, team, treasury | 🔒 Initial mint |
+
+### ⚠️ Important Notes on Token Allocation
+
+**Staking Pool (50M tokens):**
+- Reserved from max supply for future staking contract
+- Do NOT mint these tokens until staking contract is deployed
+- GameRewards contract enforces MAX_SUPPLY cap (prevents over-minting)
+- Planned for Phase 3 (months 7-12)
+- 1% monthly distribution rate = 8+ year runway
+
+**Initial Mint (100M tokens):**
+- Minted to deployer wallet in EightBitToken constructor
+- Must be split: 50M DEX liquidity + 50M operations
+- Lock DEX liquidity on Uniswap V3 for 6-12 months
+- Operations tokens for marketing, team vesting, treasury
+
+**Deployment Order:**
+1. ✅ EightBitToken (100M initial mint)
+2. ✅ GameRewards (authorized to mint rewards)
+3. ✅ TokenSale (200M tokens transferred from treasury)
+4. 🔜 TournamentBuyback (after Uniswap V3 pool creation)
+5. 🔜 Staking Contract (Phase 3, months 7-12)
 
 ## 🚀 Quick Start (Testnet)
 
