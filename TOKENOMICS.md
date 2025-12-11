@@ -25,12 +25,12 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ├─ 200,000,000 (40%) - Token Sale
 ├─ 200,000,000 (40%) - Rewards & Ecosystem
-│  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments
+│  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
 │  └─ 50,000,000 (10%) - Staking Rewards
 └─ 100,000,000 (20%) - Initial Distribution
-   ├─ 50,000,000 (10%) - DEX Liquidity
-   ├─ 25,000,000 (5%) - Marketing & Partnerships
-   └─ 25,000,000 (5%) - Team & Treasury
+   ├─ 75,000,000 (15%) - DEX Liquidity (locked)
+   ├─ 15,000,000 (3%) - Marketing & Partnerships
+   └─ 10,000,000 (2%) - Team (vested)
 ```
 
 ### Distribution Breakdown
@@ -38,10 +38,11 @@ Total Supply: 500,000,000 8BIT (100%)
 | Allocation | Amount | % | Purpose |
 |------------|--------|---|---------|
 | **Token Sale** | 200,000,000 | 40% | Public presale at $0.0005 |
-| **Rewards Pool** | 150,000,000 | 30% | Player rewards, tournaments, ecosystem growth |
+| **Rewards Pool** | 150,000,000 | 30% | Player rewards, tournaments (distributed over 5 years) |
 | **Staking Pool** | 50,000,000 | 10% | Long-term holder incentives |
-| **DEX Liquidity** | 50,000,000 | 10% | Initial Uniswap V3 liquidity |
-| **Operations** | 50,000,000 | 10% | Marketing, team, treasury |
+| **DEX Liquidity** | 75,000,000 | 15% | Uniswap V3 locked liquidity (deep pool) |
+| **Marketing** | 15,000,000 | 3% | Partnerships, listings, growth |
+| **Team** | 10,000,000 | 2% | Team allocation (vested) |
 
 **Presale Cap:** $100,000 USD (if all 200M tokens sold)
 
@@ -69,50 +70,56 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ## 🎮 Emissions Schedule
 
-### Monthly Token Emissions: ~440,000 8BIT/month
+### Monthly Token Emissions: ~2,500,000 8BIT/month
+
+**🚀 ACCELERATED 5-YEAR DISTRIBUTION** - Maximize player earnings NOW!
 
 | Source | Tokens/Month | % of Max Supply |
 |--------|--------------|-----------------|
-| Daily Rewards (10K/day) | 300,000 | 0.06% |
-| Standard Tournaments | 30,000 | 0.006% |
-| High Roller Tournaments | 110,000 | 0.022% |
-| **TOTAL** | **440,000** | **0.088%** |
+| Daily Rewards (50K/day) | 1,500,000 | 0.30% |
+| Standard Tournaments | 180,000 | 0.036% |
+| High Roller Tournaments | 820,000 | 0.164% |
+| **TOTAL** | **2,500,000** | **0.50%** |
 
 ### Annual Emissions
 
-**Year 1:** 5,280,000 tokens (1.056% of max supply)
+**Year 1-5:** 30,000,000 tokens/year (6% of max supply annually)
 
-This sustainable emission rate ensures:
-- ✅ Adequate player rewards
-- ✅ Ultra-low inflation (<2% annually)
-- ✅ Long-term token value appreciation
-- ✅ 28+ year rewards runway from 150M pool
+This aggressive emission rate delivers:
+- 🔥 **MASSIVE payouts** - 5.7x higher than typical GameFi projects
+- 💰 **Life-changing prizes** - Up to 500K 8BIT monthly ($33,350 at $10M mcap)
+- 🎯 **Maximum opportunity** - Best earning potential in first 5 years
+- ⚡ **Front-loaded rewards** - Players benefit IMMEDIATELY
 
 ---
 
 ## 🏆 Reward Distribution
 
-### Daily Free Rewards (10,000 8BIT/day)
+### Daily Free Rewards (50,000 8BIT/day) 🎁
+
+**Play for FREE and earn REAL crypto!** No entry fees, no catches - just play and win.
 
 Top 10 players in each game earn daily rewards:
 
 | Rank | % of Pool | Daily Reward | Monthly Potential |
 |------|-----------|--------------|-------------------|
-| 1st | 25% | 2,500 8BIT | 75,000 8BIT |
-| 2nd-5th | 12.5% ea | 1,250 8BIT | 37,500 8BIT |
-| 6th-10th | 5% ea | 500 8BIT | 15,000 8BIT |
+| 1st | 25% | **12,500 8BIT** | **375,000 8BIT** |
+| 2nd-5th | 12.5% ea | **6,250 8BIT** | **187,500 8BIT** |
+| 6th-10th | 5% ea | **2,500 8BIT** | **75,000 8BIT** |
 
-**Total Daily Distribution:** 10,000 8BIT across all games
+**Total Daily Distribution:** 50,000 8BIT across all games
+
+💡 **The Best FREE Crypto Earning Method** - No investment required, just skill!
 
 ### Tournament Structure
 
 #### Standard Tier
-- **Weekly Entry:** $1 USDC → Prize Pool: 5,000 8BIT
-- **Monthly Entry:** $5 USDC → Prize Pool: 10,000 8BIT
+- **Weekly Entry:** $1 USDC → Prize Pool: **25,000 8BIT**
+- **Monthly Entry:** $5 USDC → Prize Pool: **80,000 8BIT**
 
 #### High Roller Tier ⭐
-- **Weekly Entry:** $5 USDC → Prize Pool: 15,000 8BIT
-- **Monthly Entry:** $25 USDC → Prize Pool: 50,000 8BIT
+- **Weekly Entry:** $5 USDC → Prize Pool: **80,000 8BIT**
+- **Monthly Entry:** $25 USDC → Prize Pool: **500,000 8BIT** 🚀
 
 ### Prize Distribution (Top 3)
 1. **1st Place:** 50% of pool
@@ -144,14 +151,16 @@ Top 10 players in each game earn daily rewards:
 
 ### Projected Prize Values at Different Market Caps
 
-*Assumptions: 3 months post-launch, 50% presale sold, ~150M circulating supply*
+*Assumptions: 3 months post-launch, ~307.5M circulating supply*
 
-| Market Cap | Token Price | High Roller Monthly | High Roller Weekly | Standard Monthly | Standard Weekly |
-|------------|-------------|---------------------|-------------------|------------------|-----------------|
-| **$100,000** | $0.000667 | $33.35 | $10.00 | $6.67 | $3.33 |
-| **$500,000** | $0.00333 | $166.50 | $49.95 | $33.30 | $16.65 |
-| **$1,000,000** | $0.00667 | $333.50 | $100.05 | $66.70 | $33.35 |
-| **$10,000,000** | $0.0667 | $3,335 | $1,000 | $667 | $333.50 |
+**NEW PRIZE STRUCTURE (5x-10x HIGHER!):**
+
+| Market Cap | Token Price | High Roller Monthly (500K) | High Roller Weekly (80K) | Standard Monthly (80K) | Standard Weekly (25K) |
+|------------|-------------|---------------------------|--------------------------|------------------------|----------------------|
+| **$100,000** | $0.000325 | **$162.50** | **$26** | **$26** | **$8.13** |
+| **$500,000** | $0.001626 | **$813** | **$130** | **$130** | **$40.65** |
+| **$1,000,000** | $0.00325 | **$1,625** | **$260** | **$260** | **$81.25** |
+| **$10,000,000** | $0.0325 | **$16,250** 🔥 | **$2,600** | **$2,600** | **$812.50** |
 
 ### Price Appreciation Scenarios
 
@@ -233,23 +242,23 @@ Top 10 players in each game earn daily rewards:
 | Month | New Emissions | Circulating Supply | % of Max Supply |
 |-------|---------------|-------------------|-----------------|
 | Launch | 300,000,000* | 300,000,000 | 60% |
-| Month 3 | 1,320,000 | 301,320,000 | 60.26% |
-| Month 6 | 2,640,000 | 302,640,000 | 60.53% |
-| Month 12 | 5,280,000 | 305,280,000 | 61.06% |
+| Month 3 | 7,500,000 | 307,500,000 | 61.5% |
+| Month 6 | 15,000,000 | 315,000,000 | 63% |
+| Month 12 | 30,000,000 | 330,000,000 | 66% |
 
 *Initial 100M + Presale 200M (assuming full sale)
 
-### 5-Year Projection
+### 5-Year Projection (Accelerated Distribution)
 
 | Year | Annual Emissions | Cumulative Supply | % of Max Supply |
 |------|-----------------|-------------------|-----------------|
-| 1 | 5,280,000 | 305,280,000 | 61.06% |
-| 2 | 5,280,000 | 310,560,000 | 62.11% |
-| 3 | 5,280,000 | 315,840,000 | 63.17% |
-| 4 | 5,280,000 | 321,120,000 | 64.22% |
-| 5 | 5,280,000 | 326,400,000 | 65.28% |
+| 1 | 30,000,000 | 330,000,000 | 66% |
+| 2 | 30,000,000 | 360,000,000 | 72% |
+| 3 | 30,000,000 | 390,000,000 | 78% |
+| 4 | 30,000,000 | 420,000,000 | 84% |
+| 5 | 30,000,000 | 450,000,000 | 90% |
 
-**Runway:** At current emission rate, the 150M rewards pool lasts ~28 years before depletion.
+**🎯 5-Year Rewards Runway:** All 150M rewards distributed by end of Year 5, maximizing player earnings during the critical growth phase!
 
 ---
 
@@ -302,6 +311,62 @@ Top 10 players in each game earn daily rewards:
 
 ---
 
+## 🎁 The Best Way to Earn FREE Crypto
+
+**8-Bit Arcade might be the most generous free crypto earning platform in existence.**
+
+### Why This Could Change Lives
+
+**No Investment Needed:**
+- Play 12+ retro games completely FREE
+- Earn up to **12,500 8BIT daily** just for ranking #1 in one game
+- That's **375,000 8BIT per month** = **$12,187.50 at just $10M market cap**
+- Zero cost, zero risk, 100% skill-based
+
+**Compare to Traditional Jobs:**
+- Minimum wage (US): ~$1,160/month
+- Top player earnings: **$12,000+/month** (at modest market cap)
+- **Play games and earn more than most jobs**
+
+**Compare to Other Crypto Earning Methods:**
+- **Airdrops:** One-time, unpredictable, often scams
+- **Faucets:** Pennies per hour, not worth the time
+- **Staking:** Requires capital investment (thousands of dollars)
+- **Yield Farming:** High risk, impermanent loss, complex
+- **NFT Flipping:** Requires buying expensive NFTs first
+- **8-Bit Arcade:** Daily payouts, skill-based, FREE to play, sustainable for 5 years
+
+### The Numbers Don't Lie
+
+**Daily FREE Rewards Comparison (No Investment Required):**
+
+| Platform | Daily Earning Potential | Cost to Start | Skill Required |
+|----------|------------------------|---------------|----------------|
+| **8-Bit Arcade** | **$400+** (at $10M mcap) | **$0** | Medium |
+| Typical Crypto Faucet | $0.10 - $1.00 | $0 | None |
+| Axie Infinity | $5 - $20 | **$500+** | Medium |
+| Stepn (Move-to-Earn) | $3 - $15 | **$200+** | None |
+| Bitcoin Mining | Negative | **$5,000+** | High |
+
+**8-Bit Arcade is the ONLY platform where you can realistically earn hundreds of dollars per month without spending a penny.**
+
+### Real Earning Potential at Launch
+
+Even at conservative market caps:
+
+**$500K Market Cap** (very achievable early):
+- Top daily player: **$20.31/day** = **$609/month**
+- 2nd place daily: **$10.16/day** = **$304/month**
+- 6th-10th place: **$4.07/day** = **$122/month**
+
+**$1M Market Cap:**
+- Top daily player: **$40.63/day** = **$1,218/month**
+- High Roller Monthly winner: **$1,625** in one tournament
+
+**This is REAL money that can change lives in developing countries or supplement income anywhere.**
+
+---
+
 ## 💡 Investment Thesis
 
 ### Why 8BIT is Attractive
@@ -320,15 +385,16 @@ Top 10 players in each game earn daily rewards:
    - Reduces supply over time
    - Scarcity increases with adoption
 
-4. **Sustainable Emissions**
-   - Only 1.056% annual inflation
-   - Much lower than most GameFi projects
-   - 28+ year rewards runway
+4. **Aggressive Player-First Rewards**
+   - 6% annual emissions (accelerated 5-year distribution)
+   - Front-loaded rewards maximize early player earnings
+   - Best earning potential in first 5 years
+   - Players benefit immediately, not decades later
 
 5. **Professional Launch**
    - $100K presale for proper liquidity
-   - $50K+ locked DEX liquidity
-   - Room for significant growth
+   - $75K+ locked DEX liquidity (15% of supply)
+   - Deep liquidity pool minimizes slippage
    - Early adopter advantage
 
 6. **Proven Gaming**
