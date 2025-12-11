@@ -11,10 +11,10 @@ import "@openzeppelin/contracts/security/Pausable.sol";
  * @dev Public token sale contract for 8BIT token
  *
  * Sale Parameters:
- * - Amount: 10% of supply (100M tokens)
+ * - Amount: 40% of supply (200M tokens)
  * - Price: $0.0005 per token
- * - Goal: $50,000 USD
- * - Duration: 4 weeks
+ * - Hard Cap: $100,000 USD
+ * - Duration: 4-6 weeks
  * - Payments: ETH + USDC
  * - Access: Fully public, no KYC
  * - Vesting: None (immediate unlock)
@@ -29,10 +29,10 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
     IERC20 public immutable usdcToken;
 
     // Sale parameters
-    uint256 public constant TOKENS_FOR_SALE = 100_000_000 * 10**18; // 100M tokens
+    uint256 public constant TOKENS_FOR_SALE = 200_000_000 * 10**18; // 200M tokens
     uint256 public constant TOKEN_PRICE_USD = 500; // $0.0005 (in millionths)
-    uint256 public constant SALE_DURATION = 4 weeks;
-    uint256 public constant SOFT_CAP_USD = 50_000 * 10**6; // $50K in USDC decimals (6)
+    uint256 public constant SALE_DURATION = 6 weeks;
+    uint256 public constant SOFT_CAP_USD = 100_000 * 10**6; // $100K in USDC decimals (6)
 
     // Pricing (can be updated by owner for market changes)
     uint256 public tokensPerEth = 10_000 * 10**18; // Default: 1 ETH = 10,000 8BIT ($5000 ETH price)
@@ -59,7 +59,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
 
     // Limits (optional, can be set by owner)
     uint256 public minPurchaseUsdc = 10 * 10**6; // $10 minimum
-    uint256 public maxPurchasePerWallet = 10_000_000 * 10**18; // 10M tokens max per wallet
+    uint256 public maxPurchasePerWallet = 20_000_000 * 10**18; // 20M tokens max per wallet (10% of sale)
 
     // ═══════════════════════════════════════════════════════════
     // EVENTS

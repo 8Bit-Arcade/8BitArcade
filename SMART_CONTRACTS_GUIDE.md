@@ -7,6 +7,50 @@ This guide will walk you through deploying and configuring smart contracts for 8
 The smart contract system consists of:
 - **8BIT Token**: ERC20 reward token for players
 - **GameRewards**: Distributes daily rewards to top players
+- **TokenSale**: Public presale contract for $100K raise
+- **TournamentBuyback**: Automatic USDC → 8BIT buyback and burn
+
+## 💰 Token Allocation (500M Max Supply)
+
+| Allocation | Amount | % | Purpose | Status |
+|------------|--------|---|---------|--------|
+| **Token Sale** | 200M | 40% | Public presale @ $0.0005 | ✅ TokenSale contract |
+| **Rewards Pool** | 150M | 30% | Daily rewards + tournaments (5-year distribution) | ✅ GameRewards minting |
+| **Staking Pool** | 50M | 10% | Long-term holder incentives | ⚠️ RESERVED (deploy later) |
+| **DEX Liquidity** | 75M | 15% | Uniswap V3 locked liquidity (deep pool) | 🔒 Initial mint |
+| **Marketing** | 15M | 3% | Partnerships, listings, growth | 🔒 Initial mint |
+| **Team** | 10M | 2% | Team allocation (vested) | 🔒 Initial mint |
+
+### ⚠️ Important Notes on Token Allocation
+
+**Staking Pool (50M tokens):**
+- Reserved from max supply for future staking contract
+- Do NOT mint these tokens until staking contract is deployed
+- GameRewards contract enforces MAX_SUPPLY cap (prevents over-minting)
+- Planned for Phase 3 (months 7-12)
+- 1% monthly distribution rate = 8+ year runway
+
+**Initial Mint (100M tokens):**
+- Minted to deployer wallet in EightBitToken constructor
+- Must be split: 75M DEX liquidity + 15M marketing + 10M team
+- Lock 75M DEX liquidity on Uniswap V3 for 6-12 months (deep pool!)
+- 15M for marketing: Partnerships, CEX listings, community growth
+- 10M for team: Vested allocation only (no emergency funds)
+
+**Deployment Order:**
+1. ✅ EightBitToken (100M initial mint)
+2. ✅ GameRewards (authorized to mint rewards)
+3. ✅ TokenSale (200M tokens transferred from treasury)
+4. 🔜 Uniswap V3 8BIT/USDC Pool (primary liquidity pair)
+5. 🔜 TournamentBuyback (after pool creation)
+6. 🔜 Uniswap V3 8BIT/ETH Pool (secondary pair, if needed)
+7. 🔜 Staking Contract (Phase 3, months 7-12)
+
+**Future Liquidity Pairs:**
+- **Primary:** 8BIT/USDC - For tournament fees, buybacks, and stable trading
+- **Secondary:** 8BIT/ETH - For additional liquidity and broader market access
+- ETH pair deployment depends on success of USDC pair and community demand
+- Allocate from marketing budget if ETH pair becomes necessary
 
 ## 🚀 Quick Start (Testnet)
 

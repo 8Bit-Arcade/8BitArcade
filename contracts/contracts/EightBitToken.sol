@@ -20,16 +20,16 @@ contract EightBitToken is ERC20, Ownable {
      */
     address public gameRewardsContract;
 
-    /// @notice Maximum supply cap (100 million tokens)
-    uint256 public constant MAX_SUPPLY = 100_000_000 * 10**18;
+    /// @notice Maximum supply cap (500 million tokens)
+    uint256 public constant MAX_SUPPLY = 500_000_000 * 10**18;
 
     event GameRewardsUpdated(address indexed oldAddress, address indexed newAddress);
     event TokensMinted(address indexed to, uint256 amount);
 
     constructor() ERC20("8-Bit Arcade Token", "8BIT") Ownable(msg.sender) {
         // Initial mint to deployer for liquidity, marketing, team
-        // ⚠️ UPDATE: Decide initial distribution amounts
-        _mint(msg.sender, 10_000_000 * 10**18); // 10% initial supply
+        // 100M (20%): 75M DEX liquidity + 15M marketing + 10M team (vested)
+        _mint(msg.sender, 100_000_000 * 10**18); // 20% initial supply
     }
 
     /**

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>8BIT Tokenomics | Supply, Distribution & Price Projections</title>
+    <meta name="title" content="8BIT Tokenomics | Token Distribution & Economics">
+    <meta name="description" content="Complete 8BIT token economics: 500M supply, 1.056% annual emissions, deflationary model. See price projections at $100K-$10M market caps. Presale $100K!">
+    <meta name="keywords" content="8BIT tokenomics, crypto token economics, GameFi token, play to earn token, P2E tokenomics, token distribution, market cap projections">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://8bitarcade.games/tokenomics.html">
+    <meta property="og:title" content="8BIT Tokenomics | Complete Token Economics">
+    <meta property="og:description" content="500M max supply, 1.056% annual emissions, deflationary model. $100K presale with professional DEX launch.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://8bitarcade.games/tokenomics.html">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        /* Additional tokenomics-specific styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px solid var(--color-cyan);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            color: var(--color-green);
+            text-shadow: 0 0 10px var(--color-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--color-cyan);
+            text-transform: uppercase;
+        }
+
+        .distribution-chart {
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid var(--color-purple);
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            gap: 1rem;
+        }
+
+        .chart-label {
+            min-width: 150px;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+        }
+
+        .chart-bar-fill {
+            height: 30px;
+            background: linear-gradient(90deg, var(--color-green), var(--color-cyan));
+            border-radius: 4px;
+            position: relative;
+            transition: width 0.5s ease;
+        }
+
+        .chart-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            color: var(--color-dark);
+        }
+
+        .mcap-table {
+            width: 100%;
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid var(--color-pink);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .mcap-table th {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(139, 92, 246, 0.2));
+            padding: 1rem;
+            text-align: left;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            color: var(--color-pink);
+        }
+
+        .mcap-table td {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 0, 255, 0.2);
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+        }
+
+        .mcap-table tr:hover {
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        .highlight-green {
+            color: var(--color-green);
+            text-shadow: 0 0 5px var(--color-green);
+        }
+
+        .highlight-yellow {
+            color: var(--color-yellow);
+            text-shadow: 0 0 5px var(--color-yellow);
+        }
+
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 4px solid var(--color-purple);
+            border-radius: 4px;
+        }
+
+        .timeline-period {
+            min-width: 100px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--color-pink);
+        }
+
+        .timeline-content h4 {
+            color: var(--color-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-box {
+            background: rgba(255, 255, 0, 0.1);
+            border: 2px solid var(--color-yellow);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .warning-box h3 {
+            color: var(--color-yellow);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .chart-label {
+                min-width: 100px;
+                font-size: 1rem;
+            }
+
+            .mcap-table {
+                font-size: 0.8rem;
+            }
+
+            .mcap-table th {
+                font-size: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .mcap-table td {
+                padding: 0.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="pixel-text glow-green">8-BIT</span>
+                    <span class="pixel-text glow-cyan">ARCADE</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html">Home</a>
+                    <a href="sale.html">Token Sale</a>
+                    <a href="tokenomics.html" class="active">Tokenomics</a>
+                    <a href="https://play.8bitarcade.games" target="_blank">Play Games</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" style="padding: 4rem 0;">
+        <div class="container">
+            <h1 class="pixel-text glow-yellow" style="text-align: center; font-size: 2rem; margin-bottom: 1rem;">
+                8BIT TOKENOMICS
+            </h1>
+            <p style="text-align: center; font-size: 1.2rem; color: var(--color-cyan); margin-bottom: 2rem;">
+                Complete Token Economics & Price Projections
+            </p>
+
+            <!-- Key Stats -->
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number pixel-text">500M</div>
+                    <div class="stat-label">Max Supply</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number pixel-text">$100K</div>
+                    <div class="stat-label">Presale Cap</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number pixel-text">5 Years</div>
+                    <div class="stat-label">Rewards Runway</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number pixel-text">50%</div>
+                    <div class="stat-label">Fees Burned</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Distribution Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-cyan">TOKEN DISTRIBUTION</h2>
+
+            <div class="distribution-chart">
+                <div class="chart-bar">
+                    <div class="chart-label">🎯 Token Sale</div>
+                    <div style="flex: 1;">
+                        <div class="chart-bar-fill" style="width: 40%;">
+                            <span class="chart-value">200M (40%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">🏆 Rewards Pool</div>
+                    <div style="flex: 1;">
+                        <div class="chart-bar-fill" style="width: 30%; background: linear-gradient(90deg, var(--color-purple), var(--color-pink));">
+                            <span class="chart-value">150M (30%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">💎 Staking Pool</div>
+                    <div style="flex: 1;">
+                        <div class="chart-bar-fill" style="width: 10%; background: linear-gradient(90deg, var(--color-cyan), var(--color-purple));">
+                            <span class="chart-value">50M (10%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">💧 DEX Liquidity</div>
+                    <div style="flex: 1;">
+                        <div class="chart-bar-fill" style="width: 15%; background: linear-gradient(90deg, var(--color-green), var(--color-cyan));">
+                            <span class="chart-value">75M (15%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">📢 Marketing</div>
+                    <div style="flex: 1;">
+                        <div class="chart-bar-fill" style="width: 3%; background: linear-gradient(90deg, var(--color-yellow), var(--color-orange));">
+                            <span class="chart-value">15M (3%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">👥 Team</div>
+                    <div style="flex: 1;">
+                        <div class="chart-bar-fill" style="width: 2%; background: linear-gradient(90deg, var(--color-purple), var(--color-pink));">
+                            <span class="chart-value">10M (2%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(0, 212, 255, 0.1); padding: 1.5rem; border-left: 4px solid var(--color-cyan); border-radius: 4px; margin-top: 2rem;">
+                <h4 style="color: var(--color-cyan); margin-bottom: 0.5rem;">Distribution Breakdown:</h4>
+                <ul style="line-height: 1.8;">
+                    <li><strong>Token Sale (200M):</strong> Public presale at $0.0005 ($100K hard cap)</li>
+                    <li><strong>Rewards Pool (150M):</strong> 🚀 ACCELERATED 5-YEAR DISTRIBUTION - massive payouts!</li>
+                    <li><strong>Staking Pool (50M):</strong> Long-term holder incentives (8+ year runway)</li>
+                    <li><strong>DEX Liquidity (75M):</strong> Deep Uniswap V3 pool, fully locked</li>
+                    <li><strong>Marketing (15M):</strong> Partnerships, listings, community growth</li>
+                    <li><strong>Team (10M):</strong> Vested team allocation</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Emissions Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-green">EMISSION SCHEDULE</h2>
+
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <div class="stat-box" style="max-width: 400px; margin: 0 auto;">
+                    <div class="stat-number pixel-text">2.5M</div>
+                    <div class="stat-label">Tokens per Month</div>
+                    <p style="margin-top: 1rem; color: var(--color-green);">🔥 MASSIVE PAYOUTS - 0.50% of supply monthly!</p>
+                </div>
+            </div>
+
+            <h3 class="pixel-text" style="color: var(--color-cyan); text-align: center; margin: 2rem 0;">Monthly Breakdown</h3>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number pixel-text" style="color: var(--color-cyan);">1.5M</div>
+                    <div class="stat-label">Daily Rewards</div>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">50K per day × 30 days - FREE!</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number pixel-text" style="color: var(--color-green);">180K</div>
+                    <div class="stat-label">Standard Tournaments</div>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Weekly + Monthly (6x boost!)</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number pixel-text" style="color: var(--color-pink);">820K</div>
+                    <div class="stat-label">High Roller Tournaments</div>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">LIFE-CHANGING prizes!</p>
+                </div>
+            </div>
+
+            <div class="timeline">
+                <h3 class="pixel-text" style="color: var(--color-yellow); text-align: center; margin: 3rem 0 2rem 0;">
+                    5-Year Supply Projection
+                </h3>
+
+                <div class="timeline-item">
+                    <div class="timeline-period">LAUNCH</div>
+                    <div class="timeline-content">
+                        <h4>300M Circulating</h4>
+                        <p>Initial 100M + Presale 200M tokens in circulation</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-period">YEAR 1</div>
+                    <div class="timeline-content">
+                        <h4>330M Circulating (66%)</h4>
+                        <p>+30M from accelerated rewards</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-period">YEAR 3</div>
+                    <div class="timeline-content">
+                        <h4>390M Circulating (78%)</h4>
+                        <p>Massive player payouts ongoing</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-period">YEAR 5</div>
+                    <div class="timeline-content">
+                        <h4>450M Circulating (90%)</h4>
+                        <p>All 150M rewards distributed - players rewarded!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(0, 255, 136, 0.1); padding: 1.5rem; border-left: 4px solid var(--color-green); border-radius: 4px; margin-top: 2rem; text-align: center;">
+                <p style="font-size: 1.2rem;"><strong>🚀 5-Year Accelerated Distribution</strong> - Players benefit NOW, not decades later!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Cap Scenarios -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-pink">MARKET CAP SCENARIOS</h2>
+
+            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 2rem;">
+                What would prizes be worth at different market caps?
+            </p>
+
+            <div style="background: rgba(139, 92, 246, 0.1); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <p style="text-align: center;"><strong>NEW PRIZE STRUCTURE (5x-10x HIGHER!):</strong> 3 months post-launch, ~307.5M circulating supply</p>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="mcap-table">
+                    <thead>
+                        <tr>
+                            <th>Market Cap</th>
+                            <th>Token Price</th>
+                            <th>ROI from Presale</th>
+                            <th>High Roller Monthly (500K)</th>
+                            <th>High Roller Weekly (80K)</th>
+                            <th>Standard Monthly (80K)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="highlight-green">$100,000</td>
+                            <td>$0.000325</td>
+                            <td class="highlight-green">-35%</td>
+                            <td class="highlight-yellow">$162.50</td>
+                            <td>$26</td>
+                            <td>$26</td>
+                        </tr>
+                        <tr>
+                            <td class="highlight-green">$500,000</td>
+                            <td>$0.001626</td>
+                            <td class="highlight-green">225%</td>
+                            <td class="highlight-yellow">$813</td>
+                            <td>$130</td>
+                            <td>$130</td>
+                        </tr>
+                        <tr>
+                            <td class="highlight-green">$1,000,000</td>
+                            <td>$0.00325</td>
+                            <td class="highlight-green">550%</td>
+                            <td class="highlight-yellow">$1,625</td>
+                            <td>$260</td>
+                            <td>$260</td>
+                        </tr>
+                        <tr style="background: rgba(255, 0, 255, 0.15);">
+                            <td class="highlight-pink"><strong>$10,000,000</strong></td>
+                            <td><strong>$0.0325</strong></td>
+                            <td class="highlight-pink"><strong>6,400%</strong></td>
+                            <td class="highlight-yellow"><strong>$16,250</strong> 🔥</td>
+                            <td><strong>$2,600</strong></td>
+                            <td><strong>$2,600</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div style="background: rgba(0, 255, 136, 0.1); padding: 1.5rem; border: 2px solid var(--color-green); border-radius: 8px;">
+                    <h4 class="pixel-text" style="color: var(--color-green); font-size: 0.8rem; margin-bottom: 1rem;">FOR PLAYERS</h4>
+                    <p>As market cap grows, your tournament prizes become more valuable! A $25 entry could win you thousands in prizes.</p>
+                </div>
+                <div style="background: rgba(255, 0, 255, 0.1); padding: 1.5rem; border: 2px solid var(--color-pink); border-radius: 8px;">
+                    <h4 class="pixel-text" style="color: var(--color-pink); font-size: 0.8rem; margin-bottom: 1rem;">FOR INVESTORS</h4>
+                    <p>Early presale buyers at $0.0005 see massive ROI potential as the platform grows and demand increases.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deflationary Model -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-yellow">🔥 DEFLATIONARY MODEL</h2>
+
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: rgba(255, 255, 0, 0.1); border: 2px solid var(--color-yellow); border-radius: 8px; padding: 2rem; margin-bottom: 2rem;">
+                    <h3 class="pixel-text" style="color: var(--color-yellow); text-align: center; margin-bottom: 1.5rem;">
+                        50% of Tournament Fees BURNED
+                    </h3>
+                    <p style="text-align: center; font-size: 1.1rem; line-height: 1.8;">
+                        Every tournament entry creates permanent deflationary pressure. As more players compete, more tokens are removed from circulation forever.
+                    </p>
+                </div>
+
+                <h4 style="text-align: center; margin: 2rem 0; color: var(--color-cyan);">How It Works:</h4>
+
+                <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 2rem; margin: 2rem 0;">
+                    <div style="text-align: center;">
+                        <div class="pixel-text" style="font-size: 1.5rem; color: var(--color-green); margin-bottom: 0.5rem;">1️⃣</div>
+                        <p>Player pays $25<br>tournament entry</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="pixel-text" style="font-size: 1.5rem; color: var(--color-yellow); margin-bottom: 0.5rem;">→</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="pixel-text" style="font-size: 1.5rem; color: var(--color-pink); margin-bottom: 0.5rem;">2️⃣</div>
+                        <p>$12.50 buys 8BIT<br>& permanently burns it</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="pixel-text" style="font-size: 1.5rem; color: var(--color-yellow); margin-bottom: 0.5rem;">→</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="pixel-text" style="font-size: 1.5rem; color: var(--color-cyan); margin-bottom: 0.5rem;">3️⃣</div>
+                        <p>$12.50 funds<br>prize pool</p>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 0, 255, 0.1); padding: 1.5rem; border-left: 4px solid var(--color-pink); border-radius: 4px; margin-top: 2rem;">
+                    <h4 style="color: var(--color-pink); margin-bottom: 1rem;">Long-Term Effect:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>✅ Reduces circulating supply over time</li>
+                        <li>✅ Creates scarcity as adoption grows</li>
+                        <li>✅ Supports long-term value appreciation</li>
+                        <li>✅ Rewards holders with reduced supply</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Risk Warning -->
+    <section class="section">
+        <div class="container">
+            <div class="warning-box">
+                <h3 class="pixel-text">⚠️ IMPORTANT DISCLAIMER</h3>
+                <p style="line-height: 1.8; margin-top: 1rem;">
+                    The market cap scenarios shown are <strong>theoretical projections</strong> and not guarantees. Cryptocurrency prices are highly volatile and depend on market conditions, adoption rates, overall crypto sentiment, and many other factors.
+                </p>
+                <p style="line-height: 1.8; margin-top: 1rem;">
+                    <strong>8BIT tokens are utility tokens for gaming, not investment securities.</strong> Only invest what you can afford to lose. Past performance does not indicate future results. Always do your own research (DYOR).
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section">
+        <div class="container" style="text-align: center;">
+            <h2 class="pixel-text glow-green" style="font-size: 1.8rem; margin-bottom: 1rem;">
+                READY TO JOIN?
+            </h2>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+                Presale at $0.0005 per token • 50M tokens available
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="sale.html" class="btn btn-large btn-primary">Buy 8BIT Tokens</a>
+                <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-large btn-secondary">Play Games Free</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="pixel-text glow-green">8-BIT ARCADE</h3>
+                    <p>Play-to-Earn Retro Gaming on Arbitrum</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="sale.html">Token Sale</a></li>
+                        <li><a href="tokenomics.html">Tokenomics</a></li>
+                        <li><a href="https://play.8bitarcade.games" target="_blank">Play Games</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://github.com/JayB77/8BitArcade" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/JayB77/8BitArcade/blob/main/TOKENOMICS.md" target="_blank">Full Tokenomics</a></li>
+                        <li><a href="#">Whitepaper (Soon)</a></li>
+                        <li><a href="#">Audit (Soon)</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="#" target="_blank">Twitter (Soon)</a></li>
+                        <li><a href="#" target="_blank">Discord (Soon)</a></li>
+                        <li><a href="#" target="_blank">Telegram (Soon)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 8-Bit Arcade. All rights reserved.</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Not financial advice. Cryptocurrency carries risk. DYOR.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
