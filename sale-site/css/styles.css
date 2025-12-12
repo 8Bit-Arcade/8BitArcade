@@ -933,8 +933,12 @@ body {
         display: block;
     }
 
+    .hero {
+        padding: 4rem 0;
+    }
+
     .hero h1 {
-        font-size: 1.8rem;
+        font-size: 1.7rem;
     }
 
     .hero-stats {
