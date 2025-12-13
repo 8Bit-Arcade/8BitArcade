@@ -1,10 +1,12 @@
 # Dependencies
 node_modules/
+node_modules_bak/
 .pnp/
 .pnp.js
 
 # Build outputs
 .next/
+.next_bak/
 out/
 build/
 dist/
