@@ -2,121 +2,125 @@
 
 ![8-Bit Arcade Banner](https://img.shields.io/badge/Token-8BIT-green?style=for-the-badge) ![Network](https://img.shields.io/badge/Network-Arbitrum%20One-blue?style=for-the-badge)
 
-## 🚀 The #1 Platform for Earning FREE Crypto by Playing Games
+## 🎮 Play Classic Arcade Games. Compete Globally. Earn Crypto.
 
-**Make thousands of dollars per month - completely FREE!** No investment required. Just play retro arcade games and get paid in cryptocurrency.
+A blockchain-powered retro gaming platform where players compete in skill-based tournaments and earn cryptocurrency rewards. Built on Arbitrum for ultra-low gas fees and fast transactions.
 
-### 💰 This is THE BEST Way to Earn Free Money in Crypto
+### 💰 Play-to-Earn Gaming Done Right
 
-**8-Bit Arcade is the most lucrative free-to-play crypto earning platform in existence.** Unlike other platforms that require hundreds or thousands of dollars to start, you can begin earning immediately with zero investment.
+8-Bit Arcade is a **free-to-play Web3 gaming platform** that rewards skilled players with daily crypto distributions. No NFT purchases or upfront investment required to start earning.
 
-**Real earning potential at $10M market cap (conservative for GameFi):**
-- 🔥 **Top daily player:** $12,187/month ($406/day)
-- 💎 **2nd-5th place:** $6,093/month ($203/day)
-- ✨ **6th-10th place:** $2,437/month ($81/day)
-- 🎯 **Even casual players:** $300-1,000/month playing multiple games
+**Earning potential at $10M market cap (conservative projection for GameFi):**
+- 🔥 **Top daily player:** Up to $12,187/month ($406/day)*
+- 💎 **2nd-5th place:** Up to $6,093/month ($203/day)*
+- ✨ **6th-10th place:** Up to $2,437/month ($81/day)*
+- 🎯 **Casual competitive players:** Up to $300-1,000/month across multiple games*
 
-**This beats:**
-- ❌ Crypto faucets: $0.10-$1/day (100x less)
-- ❌ Axie Infinity: Requires $500+ to start (we're FREE)
-- ❌ StepN: Requires $200+ for shoes (we're FREE)
-- ❌ Traditional staking: Requires thousands invested (we're FREE)
-- ❌ Most jobs in many countries: Make more gaming than working!
+**Key advantages:**
+- ✅ **Zero investment required** - Unlike Axie Infinity or StepN
+- ✅ **No NFT purchases** - Start playing immediately
+- ✅ **Skill-based rewards** - Fair competition with anti-cheat
+- ✅ **Ultra-low fees** - Built on Arbitrum L2 (~$0.10/tx)
+- ✅ **True ownership** - Crypto rewards sent directly to your wallet
 
-### 🎮 How It Works - Get Paid to Play Games
+*Earnings based on projected market conditions and performance
 
-1. **Connect Wallet** - Takes 2 minutes (MetaMask)
-2. **Play Classic Games** - Space Rocks, Chomper, Block Drop, and more
-3. **Rank Top 10** - Beat other players' daily scores
-4. **Get Paid Automatically** - Crypto sent to your wallet every 24 hours
+### 🎮 How It Works
 
-**No catch. No hidden fees. No investment required. Just pure skill-based earning.**
+1. **Connect Wallet** - Link your MetaMask or compatible Web3 wallet
+2. **Play Classic Games** - 12+ retro arcade games (Space Rocks, Chomper, Block Drop, etc.)
+3. **Compete Daily** - Climb the leaderboards with your best scores
+4. **Earn Rewards** - Top 10 players per game receive automatic daily 8BIT distributions
 
-### 🏆 Massive Free Daily Rewards
+Simple, skill-based gameplay with transparent reward mechanics.
 
-**50,000 8BIT distributed FREE every single day** across all games:
+### 🏆 Daily Reward Distribution
 
-- **1st Place:** 12,500 8BIT per game = up to **$406/day** at $10M mcap
-- **2nd-5th Place:** 6,250 8BIT each = up to **$203/day** at $10M mcap
-- **6th-10th Place:** 2,500 8BIT each = up to **$81/day** at $10M mcap
+**50,000 8BIT tokens distributed daily** to top performers across all games:
 
-**Play multiple games = multiply your earnings!** Rank in 3 games daily = $10,000+/month possible.
+- **1st Place:** 12,500 8BIT per game = up to **$406/day*** at projected $10M market cap
+- **2nd-5th Place:** 6,250 8BIT each = up to **$203/day*** at projected $10M market cap
+- **6th-10th Place:** 2,500 8BIT each = up to **$81/day*** at projected $10M market cap
 
-### 🔥 Why 8-Bit Arcade is REVOLUTIONARY
+Players can compete in multiple games to maximize earning potential.
 
-**For Players (Free Money):**
-- ✅ **Zero investment required** - Start earning today with $0
-- ✅ **Life-changing income** - Earn more than most jobs in many countries
-- ✅ **Unlimited earning potential** - Rank in all games for maximum rewards
-- ✅ **Fair competition** - Skill-based, advanced anti-cheat system
-- ✅ **Instant payouts** - Automatic daily distributions at 00:00 UTC
-- ✅ **Play what you love** - Classic games everyone knows
+*Projected earnings based on estimated market conditions
 
-**For Investors (Massive Upside):**
-- ✅ **Ultra-low entry** - $0.0005 presale price (ground floor)
-- ✅ **10x-1000x potential** - Similar projects hit $10M-1B+ market caps
-- ✅ **Deflationary** - Supply decreases over time (buyback & burn)
-- ✅ **Deep liquidity** - 75M tokens (15% of supply) for stable trading
-- ✅ **Real utility** - Not speculation, actual use case from day 1
-- ✅ **Minimal inflation** - 5-year distribution vs typical 20-30 years
+### 🔥 Why Choose 8-Bit Arcade
+
+**For Players:**
+- ✅ **Zero investment required** - No upfront costs to start earning
+- ✅ **Competitive earnings** - Top players can earn meaningful crypto rewards
+- ✅ **Multiple earning streams** - Compete across 12+ games
+- ✅ **Fair competition** - Skill-based gameplay with anti-cheat protection
+- ✅ **Automated payouts** - Daily distributions at 00:00 UTC
+- ✅ **Familiar gameplay** - Classic arcade games with modern Web3 integration
+
+**For Investors:**
+- ✅ **Early entry opportunity** - $0.0005 presale price
+- ✅ **Growth potential** - GameFi projects historically achieve significant market caps
+- ✅ **Deflationary mechanics** - Token supply decreases via buyback & burn
+- ✅ **Deep liquidity planned** - 75M tokens (15% of supply) for stable trading
+- ✅ **Real utility** - Active use case with daily player engagement
+- ✅ **Sustainable tokenomics** - 5-year accelerated reward distribution
 
 ### 📊 Quick Stats
 
-- **Daily Free Rewards:** 50,000 8BIT ($1,625 at $10M mcap)
-- **Monthly Free Distribution:** 1,500,000 8BIT (~$48,750 at $10M mcap)
+- **Daily Reward Distribution:** 50,000 8BIT (up to $1,625 at projected $10M market cap)
+- **Monthly Distribution:** 1,500,000 8BIT (~$48,750 at projected $10M market cap)
 - **Total Supply:** 500,000,000 8BIT (fixed max supply)
 - **Presale Price:** $0.0005 per token
-- **Network:** Arbitrum One (ultra-low fees ~$0.10)
+- **Network:** Arbitrum One (ultra-low fees ~$0.10 per transaction)
 - **Games Available:** 12+ classic arcade games
 
-### 💎 Earning Examples (At $10M Market Cap)
+### 💎 Earning Potential Examples (Based on Projected $10M Market Cap)
 
-**Conservative Scenario - Casual Player:**
+**Casual Competitive Player:**
 - Rank 8th in one game daily
-- Earnings: $81/day = **$2,437/month**
-- Time investment: 30 minutes/day
-- **Beats minimum wage in most countries!**
+- Potential earnings: Up to $81/day = **$2,437/month***
+- Time investment: ~30 minutes/day
+- Competitive income in many global markets
 
-**Moderate Scenario - Dedicated Player:**
+**Dedicated Player:**
 - Rank top 5 in two games daily
-- Earnings: $406/day = **$12,187/month**
+- Potential earnings: Up to $406/day = **$12,187/month***
 - Time investment: 1-2 hours/day
-- **Beats median US income!**
+- Significant earning opportunity for skilled players
 
-**Optimistic Scenario - Pro Gamer:**
+**Professional Gamer:**
 - Rank 1st in one game, top 10 in three others daily
-- Earnings: $650+/day = **$19,500/month**
+- Potential earnings: Up to $650+/day = **$19,500/month***
 - Time investment: 2-3 hours/day
-- **Replaces high-paying job!**
+- Full-time income potential from competitive gaming
 
-**At even $1M market cap (10x presale, very achievable), top players still earn $1,200/month completely FREE.**
+**At even a $1M market cap (10x from presale), top players could still earn up to $1,200/month.*
 
-### 🌍 This Could Change Your Life
+### 🌍 Globally Accessible
 
-In many countries, earning **$600-$1,200 per month** is:
-- More than minimum wage
-- Enough to support a family
-- Complete financial freedom
-- Life-changing money
+The platform is designed to be accessible worldwide:
+- Play from any country with internet access
+- Earnings can provide meaningful income in various global markets
+- Fair, skill-based competition regardless of location
+- Crypto payments eliminate banking barriers
 
-**And it's 100% FREE to start. No investment. No risk. Just play and earn.**
+*All earnings projections are estimates based on assumed market conditions and individual performance. Actual results may vary.
 
-### 🚀 Tournament Prizes (Optional, Bigger Rewards)
+### 🚀 Tournament System (Optional Competitive Play)
 
-Want even MORE money? Enter paid tournaments:
+For players seeking higher stakes competition, paid tournaments offer larger prize pools:
 
-- **Standard Tournaments:** $1-5 entry, 25K-45K 8BIT prizes
-- **High Roller Weekly:** $10-15 entry, 80K 8BIT prizes ($2,600 at $10M)
-- **High Roller Monthly:** $25 entry, 500K 8BIT prizes ($16,250 at $10M)
+- **Standard Tournaments:** $1-5 entry, 25K-45K 8BIT prize pools
+- **High Roller Weekly:** $10-15 entry, up to 80K 8BIT prizes (~$2,600 at projected $10M market cap)
+- **High Roller Monthly:** $25 entry, up to 500K 8BIT prizes (~$16,250 at projected $10M market cap)
 
-**First place in monthly tournament = $16,250** (at $10M mcap) for just $25 entry!
+Tournament winnings are in addition to daily free rewards.
 
-### 🎯 Ready to Start Earning?
+### 🎯 Get Started
 
-1. **[🎮 Play FREE Now](https://play.8bitarcade.games)** - Start earning in 2 minutes
-2. **[💰 Join Presale](tokenomics/token-sale.md)** - Invest at $0.0005 (100x potential)
-3. **[📖 How to Play](getting-started/how-to-play.md)** - Master the games & maximize earnings
-4. **[💎 Tokenomics](tokenomics/overview.md)** - See the numbers (5-year $48M+ distribution)
+1. **[🎮 Play Now](https://play.8bitarcade.games)** - Connect wallet and start competing
+2. **[💰 Token Sale](tokenomics/token-sale.md)** - Join the presale at $0.0005
+3. **[📖 How to Play](getting-started/how-to-play.md)** - Learn the games and strategy
+4. **[💎 Tokenomics](tokenomics/overview.md)** - Explore the reward economics
 
 ### 🌐 Join the Community
 
@@ -126,20 +130,26 @@ Want even MORE money? Enter paid tournaments:
 
 ---
 
-## 💰 THE BOTTOM LINE
+## 🎮 Why 8-Bit Arcade
 
-**8-Bit Arcade is the BEST platform in crypto for earning free money.** No other platform comes close to our earning potential with zero investment required. While others nickel-and-dime you with $1/day, we're paying top players $400+/day to play games.
+8-Bit Arcade combines nostalgic arcade gaming with Web3 technology to create a skill-based play-to-earn platform. Our unique approach offers:
 
-**This is your opportunity to:**
-- Turn gaming skills into real income
-- Earn life-changing money for FREE
-- Get in early before everyone discovers this
-- Potentially make more than your job
+**Competitive Advantages:**
+- **Zero entry barrier** - No NFT or token purchase required to start earning
+- **Skill-based rewards** - Your gaming ability determines your earnings, not investment size
+- **Sustainable tokenomics** - 5-year distribution model with deflationary mechanics
+- **Proven game mechanics** - Classic arcade games with transparent, verifiable scoring
 
-**Start playing today. Start earning today. Change your life today.**
+**Earning Opportunity:**
+- Top players can potentially earn competitive income through daily rewards
+- Additional earning opportunities via optional tournament system
+- Multiple games provide diversified earning streams
+- Early participants benefit from presale token pricing
+
+Join a growing community of competitive gamers earning crypto through skill-based gameplay.
 
 ---
 
-*8-Bit Arcade - Where gaming skill = real wealth*
+*8-Bit Arcade - Blockchain Gaming Built on Skill*
 
 ⚠️ *Not financial advice. Cryptocurrency is volatile and carries risk. See [Risk Disclaimer](legal/disclaimer.md). Only play with time you can afford to spend.*
