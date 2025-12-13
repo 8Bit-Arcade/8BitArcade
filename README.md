@@ -6,7 +6,7 @@ A blockchain-powered retro gaming platform built on Arbitrum. Play classic 8-bit
 
 ## ✨ Features
 
-- **12 Retro Games** - Fully playable classic arcade game clones
+- **12 Retro Games** - Fully playable classic arcade game clones (more coming)
 - **Free to Play** - No cost to play, earn tokens through skill
 - **Two-Tier Tournaments** - Standard ($1-$5) and High Roller ($5-$25) entry levels
 - **Daily Rewards** - Top 10 players per game earn tokens every day
