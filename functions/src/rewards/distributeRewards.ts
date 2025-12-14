@@ -43,17 +43,6 @@ interface LeaderboardEntry {
 }
 
 /**
- * Get today's day ID in YYYYMMDD format
- */
-function getTodayDayId(): number {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(now.getUTCDate()).padStart(2, '0');
-  return parseInt(`${year}${month}${day}`);
-}
-
-/**
  * Get yesterday's day ID (for distributing previous day's rewards)
  */
 function getYesterdayDayId(): number {
