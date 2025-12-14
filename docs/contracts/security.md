@@ -149,7 +149,7 @@ Security is the foundation of 8-Bit Arcade. This page outlines all security meas
 
 1. **Find a vulnerability**
 2. **Do NOT exploit it**
-3. **Report privately:** security@8bitarcade.games
+3. **Report privately:** admin@8bitarcade.games
 4. **Include:** Description, proof-of-concept, impact
 5. **Wait for response** (within 48 hours)
 6. **Receive bounty** if confirmed
@@ -454,7 +454,7 @@ This section will document any security incidents post-launch with full transpar
 ## Contact Security Team
 
 **Report security issues:**
-- Email: security@8bitarcade.games
+- Email: admin@8bitarcade.games
 - PGP Key: [Available on website]
 - Bug Bounty: Follow process above
 - Response time: <48 hours

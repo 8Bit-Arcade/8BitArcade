@@ -325,7 +325,7 @@ Contact support if:
 - Steps to reproduce
 
 **Contact Methods:**
-- Email: support@8bitarcade.games
+- Email: admin@8bitarcade.games
 - Discord: #support channel
 - [Contact form](contact.md)
 
@@ -369,8 +369,7 @@ Contact support if:
 
 - [FAQ](faq.md) - Quick answers
 - [User Guides](../getting-started/how-to-play.md) - Step-by-step instructions
-- [Discord #help](../community/social.md) - Community assistance
-- [Video Tutorials](https://youtube.com/@8BitArcade) - Visual guides
+- [Discord](https://discord.gg/AKrdPvHz4P) - Community assistance
 
 ---
 

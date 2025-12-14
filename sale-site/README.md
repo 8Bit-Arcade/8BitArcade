@@ -215,8 +215,9 @@ MIT License - feel free to customize!
 
 - **Game App**: [play.8bitarcade.games](https://play.8bitarcade.games)
 - **Documentation**: [docs.8bitarcade.games](https://docs.8bitarcade.games)
-- **Discord**: [discord.gg/8bitarcade](https://discord.gg/8bitarcade)
-- **Twitter**: [@8bitarcade](https://twitter.com/8bitarcade)
+- **Discord**: https://discord.gg/AKrdPvHz4P
+- **Telegram**: https://t.me/eight_bit_arcade
+- **X/Twitter**: https://x.com/8_Bit_Arcade_
 
 ---
 

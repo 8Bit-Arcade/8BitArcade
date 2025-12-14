@@ -49,11 +49,6 @@
 * [Development Phases](roadmap/phases.md)
 * [Upcoming Features](roadmap/upcoming.md)
 
-## Community
-
-* [Social Links](community/social.md)
-* [Contributing](community/contributing.md)
-
 ## Support
 
 * [FAQ](support/faq.md)

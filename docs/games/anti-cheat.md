@@ -334,7 +334,7 @@ Result: REJECTED (duplicate session ID)
 ### When in Doubt
 
 **Ask first:**
-- Email: support@8bitarcade.games
+- Email: admin@8bitarcade.games
 - Discord: #support channel
 - Better to ask than risk ban
 
@@ -354,7 +354,7 @@ Result: REJECTED (duplicate session ID)
 2. **Submit Report**
    - Go to [play.8bitarcade.games/report](https://play.8bitarcade.games/report)
    - Or Discord: #report-cheating channel
-   - Or Email: cheating@8bitarcade.games
+   - Or Email: admin@8bitarcade.games
 
 3. **Investigation**
    - Team reviews within 48 hours

@@ -123,7 +123,7 @@ A: No. Open source contracts, professional audit, transparent team, locked liqui
 A: No. Advanced anti-cheat detects cheating. Automatic bans. [Anti-cheat details](../games/anti-cheat.md)
 
 **Q: What happens if I find a bug?**
-A: Report it immediately! Bug bounty rewards. Don't exploit it. security@8bitarcade.games
+A: Report it immediately! Bug bounty rewards. Don't exploit it. admin@8bitarcade.games
 
 **Q: Can I play with a controller/gamepad?**
 A: Not yet. Planned for Phase 3. Currently keyboard/mouse only.
@@ -200,16 +200,16 @@ A: Refresh page. Clear cache. Try different browser. Check internet connection.
 ### Community & Support
 
 **Q: Where can I get help?**
-A: Discord #support channel, email support@8bitarcade.games, or [contact page](contact.md).
+A: Discord #support channel, email admin@8bitarcade.games, or [contact page](contact.md).
 
 **Q: Is there a Discord?**
-A: Yes! [Join here](../community/social.md) - Active community, announcements, support.
+A: Yes! https://discord.gg/AKrdPvHz4P - Active community, announcements, support.
 
 **Q: Can I suggest features?**
-A: Absolutely! Discord #suggestions or forum. Community feedback valued.
+A: Absolutely! Discord #suggestions channel. Community feedback valued.
 
 **Q: How do I report a bug?**
-A: Discord #bug-reports, email bugs@8bitarcade.games, or GitHub issues.
+A: Discord #bug-reports or email admin@8bitarcade.games.
 
 ---
 
@@ -231,9 +231,10 @@ A: Minimal collection. Wallet address, gameplay data. [Privacy policy](../legal/
 
 ## Still Have Questions?
 
-- **Discord:** [Join server](../community/social.md)
-- **Email:** support@8bitarcade.games
-- **Twitter:** [@8BitArcadeGame](https://twitter.com/8BitArcadeGame)
+- **Discord:** https://discord.gg/AKrdPvHz4P
+- **Telegram:** https://t.me/eight_bit_arcade
+- **X/Twitter:** https://x.com/8_Bit_Arcade_
+- **Email:** admin@8bitarcade.games
 - **Docs:** Browse full [documentation](../README.md)
 
 ---
