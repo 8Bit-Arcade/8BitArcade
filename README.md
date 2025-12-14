@@ -205,10 +205,9 @@ See [SMART_CONTRACTS_GUIDE.md](SMART_CONTRACTS_GUIDE.md) for detailed instructio
 
 1. **Get testnet ETH**: https://faucet.quicknode.com/arbitrum/sepolia
 2. **Connect wallet** to Arbitrum Sepolia
-3. **Claim test tokens** from faucet (10,000 8BIT per 24h)
-4. **Play games** and earn daily rewards
-5. **Test tournaments** (both tiers)
-6. **Provide feedback**
+3. **Play games** and earn daily rewards
+4. **Test tournaments** (both tiers)
+5. **Provide feedback**
 
 ## 📊 Development Phases
 
@@ -265,27 +264,28 @@ This is a 2-person project currently in active development. Community contributi
 
 ## 📞 Links
 
-- **Website**: Coming soon
-- **Discord**: Coming soon
-- **Twitter**: Coming soon
-- **Docs**: In this repository
+- **Website**: https://8bitarcade.games/
+- **Discord**: https://discord.gg/AKrdPvHz4P
+- **Twitter**: https://x.com/8_Bit_Arcade_
+- **Docs**: https://docs.8bitarcade.games/
 
 ## 🎯 Roadmap
 
-**Q1 2025**
+**Q4 2025**
 - ✅ Complete all 12 games
 - ✅ Finalize tokenomics
 - 🚧 Build tournament system
-- 📋 Deploy to testnet
+- ✅ Deploy to testnet
 - 📋 Community testing (3-6 months)
 
-**Q2 2025**
+**Q1 2026**
 - 📋 Public token sale
 - 📋 Mainnet deployment
+- 📋 Additional games
 - 📋 Marketing campaign
 - 📋 First high roller tournament
 
-**Q3-Q4 2025**
+**Q1-Q2 2026**
 - 📋 DAO governance launch
 - 📋 Staking system
 - 📋 Additional games
