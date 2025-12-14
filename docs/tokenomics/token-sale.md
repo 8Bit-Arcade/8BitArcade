@@ -133,7 +133,7 @@ Every dollar raised goes directly to project success:
 
 - **$75,000 in USDC** + **75M 8BIT tokens** → Uniswap V3
 - Creates initial price around $0.001 (2x presale)
-- Locked for 6-12 months (exact period announced)
+- Locked for 3-4 years
 - LP tokens sent to time-lock contract
 - Ensures stable, liquid market
 

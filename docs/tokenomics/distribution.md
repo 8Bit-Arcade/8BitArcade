@@ -86,7 +86,7 @@ Total Supply: 500,000,000 8BIT (100%)
 | Detail | Information |
 |--------|-------------|
 | **Amount** | 50,000,000 8BIT |
-| **Distribution Period** | 8+ years |
+| **Distribution Period** | 5 years |
 | **Launch Timeline** | Phase 3 (Months 7-12) |
 | **Lock/Vest** | Smart contract controlled |
 
@@ -115,7 +115,7 @@ Total Supply: 500,000,000 8BIT (100%)
 | **Value at Presale** | $37,500 USD |
 | **Paired With** | $37,500+ USDC from presale |
 | **Platform** | Uniswap V3 (Arbitrum) |
-| **Lock Period** | 6-12 months minimum |
+| **Lock Period** | 3-4 years |
 
 **Why 15% is Exceptional:**
 - Most projects: 5-10% liquidity

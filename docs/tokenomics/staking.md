@@ -10,7 +10,7 @@ Staking allows you to lock your 8BIT tokens and earn passive rewards over time. 
 |--------|-------------|
 | **Launch Timeline** | Phase 3 (Months 7-12) |
 | **Staking Pool** | 50,000,000 8BIT (10% of supply) |
-| **Distribution Period** | 8+ years |
+| **Distribution Period** | 5 years |
 | **Estimated APY** | 15-30% (to be determined) |
 | **Lock Periods** | Flexible (likely tiered) |
 | **Rewards** | Paid in 8BIT |
@@ -28,7 +28,7 @@ Staking allows you to lock your 8BIT tokens and earn passive rewards over time. 
 
 ✅ **Price Stability** - Reduces circulating supply
 ✅ **Community Alignment** - Rewards long-term believers
-✅ **Sustainable Growth** - 8+ year distribution (low inflation)
+✅ **Sustainable Growth** - 5 year distribution (low inflation)
 ✅ **Investor Confidence** - Professional tokenomics
 
 ## Planned Staking Mechanics
@@ -99,12 +99,12 @@ Beyond passive rewards, stakers may receive:
 
 ## Staking Pool Sustainability
 
-### 50M Token Pool = 8+ Year Distribution
+### 50M Token Pool = 5 Year Distribution
 
 **Monthly Distribution:**
-- 520,000 8BIT per month
-- 96 months (8 years) to deplete
-- Very low inflation impact (0.104% monthly)
+- 833,333 8BIT per month
+- 60 months (5 years) to deplete
+- Low inflation impact (0.167% monthly)
 
 **Why This Works:**
 - Game rewards end after Year 5

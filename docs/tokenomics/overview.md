@@ -45,8 +45,8 @@ Total Supply: 500,000,000 8BIT (100%)
 |------------|--------|---|---------|-----------|
 | **Token Sale** | 200M | 40% | Public presale at $0.0005 | None - immediate |
 | **Rewards Pool** | 150M | 30% | Player rewards & tournaments | 5-year distribution |
-| **Staking Pool** | 50M | 10% | Long-term holder incentives | 8+ years |
-| **DEX Liquidity** | 75M | 15% | Uniswap V3 deep pool | Locked 6-12 months |
+| **Staking Pool** | 50M | 10% | Long-term holder incentives | 5 years |
+| **DEX Liquidity** | 75M | 15% | Uniswap V3 deep pool | Locked 3-4 years |
 | **Marketing** | 15M | 3% | Partnerships, listings, growth | Performance-based |
 | **Team** | 10M | 2% | Team allocation | Vested |
 
@@ -77,7 +77,7 @@ Unlike typical projects that distribute rewards over 20-30 years, 8-Bit Arcade u
 75M tokens (15% of supply) allocated to DEX liquidity:
 
 - **$75K+ value** at presale price
-- Locked on Uniswap V3 for 6-12 months
+- Locked on Uniswap V3 for 3-4 years
 - Creates deep trading pool
 - Minimizes slippage for large trades
 - Professional launch vs typical micro-cap projects

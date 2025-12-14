@@ -234,8 +234,8 @@ Separate from the main rewards pool:
 | Detail | Information |
 |--------|-------------|
 | **Pool Size** | 50,000,000 8BIT |
-| **Distribution** | 8+ years |
-| **Monthly Rate** | ~520,000 8BIT (much lower) |
+| **Distribution** | 5 years |
+| **Monthly Rate** | ~833,333 8BIT (much lower) |
 | **Launch** | Phase 3 (Months 7-12) |
 
 Staking emissions are conservative and designed for long-term holders, not immediate payouts.

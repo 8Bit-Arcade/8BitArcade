@@ -47,7 +47,7 @@ Security is the foundation of 8-Bit Arcade. This page outlines all security meas
 - ❌ Cannot pause trading
 - ❌ Cannot blacklist addresses
 - ❌ Cannot modify max supply
-- ✅ Liquidity locked 6-12 months
+- ✅ Liquidity locked 3-4 years
 - ✅ Team allocation vested
 - ✅ Transparent on-chain
 
@@ -179,7 +179,7 @@ Security is the foundation of 8-Bit Arcade. This page outlines all security meas
 - Investors lose everything
 
 **Our Protection:**
-- ✅ Liquidity locked (6-12 months)
+- ✅ Liquidity locked (3-4 years)
 - ✅ Team tokens vested
 - ✅ Multi-sig controls
 - ✅ Transparent operations
