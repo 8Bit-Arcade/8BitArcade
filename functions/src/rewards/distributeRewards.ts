@@ -23,7 +23,7 @@ import { ethers } from 'ethers';
 
 // Import contract configuration
 // ⚠️ UPDATE: Make sure this points to your contracts config
-import { GAME_REWARDS_ADDRESS, ARBITRUM_RPC_URL, USE_TESTNET } from '../../config';
+import { GAME_REWARDS_ADDRESS, ARBITRUM_RPC_URL, USE_TESTNET } from '../config';
 
 // Import Discord webhook integration
 import { postWinnersToDiscord } from '../notifications/discordWebhook';
