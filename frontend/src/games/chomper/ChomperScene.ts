@@ -382,6 +382,11 @@ export class ChomperScene extends Phaser.Scene {
       this.mazeGraphics = this.add.graphics();
       this.pelletGraphics = this.add.graphics();
       this.player = this.add.graphics();
+
+      // Set depths to control rendering order
+      this.pelletGraphics.setDepth(0);  // Pellets on bottom
+      this.mazeGraphics.setDepth(1);     // Walls on top of pellets
+      this.player.setDepth(2);           // Player on top of everything
     } else {
       this.mazeGraphics.clear();
       this.pelletGraphics.clear();
@@ -436,6 +441,7 @@ export class ChomperScene extends Phaser.Scene {
 
     for (const data of ghostData) {
       const ghost = this.add.graphics();
+      ghost.setDepth(2); // Ghosts render on top with player
       this.ghosts.push({
         graphics: ghost,
         gridX: data.gridX,
