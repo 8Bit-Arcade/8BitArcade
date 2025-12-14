@@ -39,6 +39,7 @@ interface LeaderboardEntry {
   address: string;
   score: number;
   username?: string;
+  displayName?: string; // User's preferred display (username, ENS, or address)
 }
 
 /**
@@ -81,16 +82,39 @@ async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
 
   const players: LeaderboardEntry[] = [];
 
-  snapshot.forEach((doc) => {
+  // Fetch display preferences for each player
+  for (const doc of snapshot.docs) {
     const data = doc.data();
     if (data.address) {
+      let displayName = data.address; // Default to address
+
+      try {
+        // Fetch user's display preference from users collection
+        const userDoc = await db.collection('users').doc(data.address.toLowerCase()).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          const displayPreference = userData?.displayPreference || 'address';
+
+          if (displayPreference === 'username' && userData?.username) {
+            displayName = userData.username;
+          } else if (displayPreference === 'ens' && userData?.ensName) {
+            displayName = userData.ensName;
+          }
+          // If 'address' or no preference, displayName stays as address
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch display preference for ${data.address}:`, error);
+        // Continue with address as displayName
+      }
+
       players.push({
         address: data.address,
         score: data.score || 0,
         username: data.username,
+        displayName,
       });
     }
-  });
+  }
 
   return players;
 }
@@ -223,6 +247,7 @@ export const distributeDaily Rewards = functions
               address: p.address,
               score: p.score,
               reward: ethers.formatEther(rewardAmount),
+              displayName: p.displayName,
             };
           })
         );

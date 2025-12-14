@@ -12,6 +12,7 @@ interface Winner {
   address: string;
   score: number;
   reward: string; // Amount of tokens earned
+  displayName?: string; // Username, ENS, or address based on user preference
 }
 
 interface DiscordEmbedField {
@@ -63,11 +64,18 @@ export async function postWinnersToDiscord(
     }
 
     // Build winner list for embed
-    const winnerFields: DiscordEmbedField[] = winners.map(w => ({
-      name: `🏆 Rank #${w.rank} - ${w.reward} 8BIT`,
-      value: `\`${w.address}\`\nScore: ${w.score.toLocaleString()}`,
-      inline: false,
-    }));
+    const winnerFields: DiscordEmbedField[] = winners.map(w => {
+      const displayName = w.displayName || w.address;
+      const showAddress = w.displayName && w.displayName !== w.address;
+
+      return {
+        name: `${getRankEmoji(w.rank)} Rank #${w.rank} - ${w.reward} 8BIT`,
+        value: showAddress
+          ? `**${displayName}**\n\`${w.address}\`\nScore: ${w.score.toLocaleString()}`
+          : `\`${w.address}\`\nScore: ${w.score.toLocaleString()}`,
+        inline: false,
+      };
+    });
 
     // Create embed with winner information
     const embed: DiscordEmbed = {
@@ -135,11 +143,16 @@ export async function postAllGamesWinnersToDiscord(
 
     // Create embeds for each game
     const embeds: DiscordEmbed[] = gameWinners.map(({ gameName, winners }) => {
-      const winnerFields: DiscordEmbedField[] = winners.slice(0, 3).map(w => ({
-        name: `${getRankEmoji(w.rank)} Rank #${w.rank} - ${w.reward} 8BIT`,
-        value: `\`${w.address}\``,
-        inline: true,
-      }));
+      const winnerFields: DiscordEmbedField[] = winners.slice(0, 3).map(w => {
+        const displayName = w.displayName || w.address;
+        const showAddress = w.displayName && w.displayName !== w.address;
+
+        return {
+          name: `${getRankEmoji(w.rank)} Rank #${w.rank} - ${w.reward} 8BIT`,
+          value: showAddress ? `**${displayName}**\n\`${w.address}\`` : `\`${w.address}\``,
+          inline: true,
+        };
+      });
 
       return {
         title: `🎮 ${gameName}`,

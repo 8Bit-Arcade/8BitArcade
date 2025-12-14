@@ -75,13 +75,19 @@ After each daily reward distribution, Discord will receive a message with:
 Day: 2025-01-15
 Rewards distributed on-chain
 
-🏆 Rank #1 - 12500 8BIT
+🥇 Rank #1 - 12500 8BIT
+CryptoGamer123
 0x1234567890abcdef1234567890abcdef12345678
 Score: 125,000
 
-🏆 Rank #2 - 6250 8BIT
+🥈 Rank #2 - 6250 8BIT
+vitalik.eth
 0xabcdef1234567890abcdef1234567890abcdef12
 Score: 98,500
+
+🥉 Rank #3 - 6250 8BIT
+0xdef1234567890abcdef1234567890abcdef12345
+Score: 87,300
 
 ... (top 10 players)
 
@@ -91,11 +97,25 @@ Score: 98,500
 8-Bit Arcade • Transparent & Verifiable Rewards
 ```
 
+**Display Names:**
+- Shows each user's preferred display setting (username, ENS domain, or wallet address)
+- Wallet address is ALWAYS shown for transparency and verification
+- If a user has set a username or ENS, it appears above their address
+- Users control their own display preference in the app settings
+
+**How Display Preferences Work:**
+1. System checks user's `displayPreference` setting in Firestore (`users` collection)
+2. If set to `username` → shows their username (if they have one set)
+3. If set to `ens` → shows their ENS domain (if they have one)
+4. If set to `address` or no preference → shows wallet address only
+5. Wallet address is ALWAYS included for verification, regardless of preference
+
 ## Security Notes
 
 - ⚠️ **Never commit the webhook URL to git**
 - ✅ Webhook URL is stored securely in Firebase config
-- ✅ Only wallet addresses are shown (no usernames or emails)
+- ✅ User display names shown based on their preference (username/ENS/address)
+- ✅ Wallet addresses ALWAYS shown for transparency and verification
 - ✅ Discord posting is non-critical - if it fails, rewards still distribute
 
 ## Testing
