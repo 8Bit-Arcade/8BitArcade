@@ -58,6 +58,26 @@ async function main() {
   console.log("✅ TournamentManager deployed to:", tournamentsAddress);
   console.log();
 
+  // Deploy TreasuryGasManager
+  console.log("📝 Deploying TreasuryGasManager...");
+  // Initial configuration:
+  // - Minimum threshold: 0.05 ETH (when payout wallet drops below this, trigger refill)
+  // - Refill amount: 0.1 ETH (send this much on each refill)
+  // - Payout wallet: deployer address initially (update later with setPayoutWallet)
+  const minThreshold = ethers.parseEther("0.05"); // 0.05 ETH
+  const refillAmount = ethers.parseEther("0.1");  // 0.1 ETH
+
+  const TreasuryGasManager = await ethers.getContractFactory("TreasuryGasManager");
+  const treasury = await TreasuryGasManager.deploy(
+    deployer.address, // Initial payout wallet (update this later!)
+    minThreshold,
+    refillAmount
+  );
+  await treasury.waitForDeployment();
+  const treasuryAddress = await treasury.getAddress();
+  console.log("✅ TreasuryGasManager deployed to:", treasuryAddress);
+  console.log();
+
   // Link contracts
   console.log("🔗 Linking contracts...");
   const tx = await token.setGameRewards(rewardsAddress);
@@ -133,6 +153,7 @@ async function main() {
   console.log("GameRewards:", rewardsAddress);
   console.log("TournamentManager:", tournamentsAddress);
   console.log("TokenSale:", tokenSaleAddress);
+  console.log("TreasuryGasManager:", treasuryAddress);
   if (faucetAddress) {
     console.log("TestnetFaucet:", faucetAddress);
   }
@@ -147,12 +168,19 @@ async function main() {
   console.log("   - Call: rewards.setRewardsDistributor(BACKEND_WALLET)");
   console.log("4. Set tournamentManager in TournamentManager:");
   console.log("   - Call: tournaments.setTournamentManager(BACKEND_WALLET)");
-  console.log("5. Verify contracts on Arbiscan:");
+  console.log("5. Configure TreasuryGasManager:");
+  console.log("   - Call: treasury.setPayoutWallet(BACKEND_WALLET)");
+  console.log("   - Fund treasury: Send ETH to", treasuryAddress);
+  console.log("   - Recommended: 1 ETH for testnet, 5+ ETH for mainnet");
+  console.log("6. Add Treasury address to Firebase functions config:");
+  console.log("   firebase functions:config:set treasury.address=\"" + treasuryAddress + "\"");
+  console.log("7. Verify contracts on Arbiscan:");
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${rewardsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 0`);
-  console.log("6. Add liquidity to DEX for 8BIT token trading");
+  console.log(`   npx hardhat verify --network arbitrumSepolia ${treasuryAddress} ${deployer.address} ${minThreshold} ${refillAmount}`);
+  console.log("8. Add liquidity to DEX for 8BIT token trading");
   console.log();
   console.log("For mainnet deployment, run: npm run deploy:mainnet");
   console.log("═══════════════════════════════════════════════════");

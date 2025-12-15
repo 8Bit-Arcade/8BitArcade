@@ -28,6 +28,9 @@ import { GAME_REWARDS_ADDRESS, ARBITRUM_RPC_URL, USE_TESTNET } from '../config';
 // Import Discord webhook integration
 import { postWinnersToDiscord } from '../notifications/discordWebhook';
 
+// Import Treasury gas manager
+import { ensureGasFunding, logTreasuryStatus, getTreasuryAddress } from '../utils/treasuryManager';
+
 // GameRewards contract ABI (minimal)
 const GAME_REWARDS_ABI = [
   'function distributeRewards(uint256 dayId, address[] calldata players, uint256[] calldata ranks) external',
@@ -137,6 +140,36 @@ export const distributeDailyRewards = functions
       const wallet = new ethers.Wallet(privateKey, provider);
       console.log('Distributor wallet:', wallet.address);
 
+      // === AUTO-REFILL GAS WALLET ===
+      // Check if treasury is configured and ensure gas funding
+      try {
+        const treasuryAddress = getTreasuryAddress();
+        console.log('Treasury contract:', treasuryAddress);
+
+        // Ensure payout wallet has sufficient gas
+        const { refilled, status } = await ensureGasFunding(provider, treasuryAddress, wallet);
+
+        if (refilled) {
+          console.log(`✅ Payout wallet refilled: ${status.payoutBalance} ETH`);
+        }
+
+        // Log full treasury status for monitoring
+        await logTreasuryStatus(provider, treasuryAddress);
+
+      } catch (treasuryError: any) {
+        // Treasury not configured or error - log warning but continue
+        // This allows backward compatibility if treasury isn't set up yet
+        console.warn('Treasury auto-refill not available:', treasuryError.message);
+        console.warn('Continuing with manual gas management...');
+
+        // Check if wallet has enough gas manually
+        const balance = await provider.getBalance(wallet.address);
+        if (balance < ethers.parseEther("0.01")) {
+          console.error('⚠️  WARNING: Wallet balance is very low:', ethers.formatEther(balance), 'ETH');
+          console.error('Please fund the wallet or configure TreasuryGasManager');
+        }
+      }
+
       // Connect to GameRewards contract
       const rewardsContract = new ethers.Contract(
         GAME_REWARDS_ADDRESS,
@@ -165,12 +198,9 @@ export const distributeDailyRewards = functions
       const playerAddresses = top10.map(p => p.address);
       const playerRanks = top10.map((_, index) => index + 1);
 
-      // Check gas price and wallet balance
+      // Check gas price
       const gasPrice = (await provider.getFeeData()).gasPrice;
-      const balance = await provider.getBalance(wallet.address);
-
       console.log('Gas price:', ethers.formatUnits(gasPrice || 0, 'gwei'), 'gwei');
-      console.log('Wallet balance:', ethers.formatEther(balance), 'ETH');
 
       // Estimate gas
       const estimatedGas = await rewardsContract.distributeRewards.estimateGas(
