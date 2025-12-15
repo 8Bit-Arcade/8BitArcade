@@ -7,7 +7,7 @@ import { collections } from '../config/firebase';
  * TODO: Move to environment config or Firestore admin collection
  */
 const ADMIN_ADDRESSES = [
-  '0x742d35cc6634c0532925a3b844bc9e7595f0beb2', // Main admin address
+  '0x92f5523c2329ee281e7feb8808fce4b49ab1ebf8', // 8BitToken owner wallet
   // Add more admin addresses here as needed
 ];
 
