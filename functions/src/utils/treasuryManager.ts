@@ -46,7 +46,6 @@ export async function checkTreasuryStatus(
     const [currentBalance, needsRefill, refillAvailable] = await treasury.getWalletStatus();
 
     // Get configuration
-    const payoutWallet = await treasury.payoutWallet();
     const minimumThreshold = await treasury.minimumThreshold();
     const refillAmountValue = await treasury.refillAmount();
 
