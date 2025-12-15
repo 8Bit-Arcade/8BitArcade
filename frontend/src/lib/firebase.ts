@@ -41,9 +41,7 @@ if (typeof window !== 'undefined') {
 export { app, auth, db };
 
 // Helper to check if Firebase is configured
+// Always returns true since we have hardcoded fallback values
 export const isFirebaseConfigured = (): boolean => {
-  return !!(
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-  );
+  return true;
 };

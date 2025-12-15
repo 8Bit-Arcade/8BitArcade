@@ -7,15 +7,13 @@ let appInstance: any = null;
 
 /**
  * Check if Firebase is configured
+ * Always returns true since we have hardcoded fallback values
  */
 export function isFirebaseConfigured(): boolean {
   if (typeof window === 'undefined') return false;
 
-  return !!(
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-  );
+  // Always configured - we have hardcoded fallback values
+  return true;
 }
 
 /**
@@ -23,9 +21,6 @@ export function isFirebaseConfigured(): boolean {
  */
 async function initializeFirebaseApp() {
   if (appInstance) return appInstance;
-  if (!isFirebaseConfigured()) {
-    throw new Error('Firebase is not configured');
-  }
 
   // Dynamic import - only loads at runtime
   const { initializeApp, getApps } = await import('firebase/app');
@@ -37,6 +32,7 @@ async function initializeFirebaseApp() {
   }
 
   // Firebase config - hardcoded with fallback to env vars for static export builds
+  // These values are already public in Firebase-config.txt
   const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBqFKw6v6RB0P1HHup9jO10Cziqfnuiig4",
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "bitarcade-679b7.firebaseapp.com",
