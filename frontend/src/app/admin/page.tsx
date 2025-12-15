@@ -1,16 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { callFunction } from '@/lib/firebase-functions';
 
 export default function AdminPanel() {
   const { address } = useAuthStore();
+  const { signInWithWallet, isAuthenticating, isFirebaseAuthenticated } = useWalletAuth();
   const [playerId, setPlayerId] = useState('');
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Automatically sign in when wallet is connected
+  useEffect(() => {
+    if (address && !isFirebaseAuthenticated && !isAuthenticating) {
+      signInWithWallet();
+    }
+  }, [address, isFirebaseAuthenticated, isAuthenticating, signInWithWallet]);
 
   const showMessage = (msg: string, isError = false) => {
     if (isError) {
@@ -93,6 +102,34 @@ export default function AdminPanel() {
         <div className="bg-arcade-dark p-8 max-w-md w-full">
           <h1 className="text-2xl font-pixel text-arcade-green mb-4">ADMIN PANEL</h1>
           <p className="text-gray-400 font-pixel text-sm">Please connect your wallet to access the admin panel.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isFirebaseAuthenticated) {
+    return (
+      <div className="min-h-screen bg-arcade-black flex items-center justify-center p-4">
+        <div className="bg-arcade-dark p-8 max-w-md w-full">
+          <h1 className="text-2xl font-pixel text-arcade-green mb-4">ADMIN PANEL</h1>
+          {isAuthenticating ? (
+            <div className="space-y-3">
+              <p className="text-gray-400 font-pixel text-sm">Authenticating with wallet...</p>
+              <p className="text-gray-500 font-pixel text-xs">Please sign the message in your wallet</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-gray-400 font-pixel text-sm mb-4">
+                You need to sign a message to authenticate.
+              </p>
+              <button
+                onClick={signInWithWallet}
+                className="bg-arcade-green text-arcade-black px-6 py-3 font-pixel text-sm hover:bg-arcade-green/80 w-full"
+              >
+                SIGN IN WITH WALLET
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
