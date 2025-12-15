@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { useAuthStore } from '@/stores/authStore';
+import { callFunction } from '@/lib/firebase-functions';
 
 export default function AdminPanel() {
-  const { address } = useAuth();
+  const { address } = useAuthStore();
   const [playerId, setPlayerId] = useState('');
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -35,9 +34,10 @@ export default function AdminPanel() {
 
     setLoading(true);
     try {
-      const getUserBanInfo = httpsCallable(functions, 'getUserBanInfo');
-      const result = await getUserBanInfo({ playerId: playerId.trim().toLowerCase() });
-      setUserInfo(result.data);
+      const result = await callFunction<any, any>('getUserBanInfo', {
+        playerId: playerId.trim().toLowerCase()
+      });
+      setUserInfo(result);
       showMessage('User info loaded successfully');
     } catch (err: any) {
       showMessage(err.message || 'Failed to load user info', true);
@@ -55,8 +55,9 @@ export default function AdminPanel() {
 
     setLoading(true);
     try {
-      const unbanAccount = httpsCallable(functions, 'unbanAccount');
-      await unbanAccount({ playerId: playerId.trim().toLowerCase() });
+      await callFunction<any, any>('unbanAccount', {
+        playerId: playerId.trim().toLowerCase()
+      });
       showMessage('User unbanned successfully');
       await getUserInfo(); // Refresh user info
     } catch (err: any) {
@@ -74,8 +75,9 @@ export default function AdminPanel() {
 
     setLoading(true);
     try {
-      const clearUserFlags = httpsCallable(functions, 'clearUserFlags');
-      await clearUserFlags({ playerId: playerId.trim().toLowerCase() });
+      await callFunction<any, any>('clearUserFlags', {
+        playerId: playerId.trim().toLowerCase()
+      });
       showMessage('Flags cleared successfully');
       await getUserInfo(); // Refresh user info
     } catch (err: any) {
