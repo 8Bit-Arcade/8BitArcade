@@ -11,9 +11,10 @@ const CONFIG = {
   GHOST_POINTS: 100,
   POWER_DURATION: 6000,
   LIVES: 3,
-  GHOST_RELEASE_DELAY: 3000,
+  GHOST_RELEASE_DELAY: 1500, // Release ghosts faster (was 3000)
   GRID_WIDTH: 28,
   GRID_HEIGHT: 31,
+  TWEEN_DURATION: 180, // Smooth movement duration in ms
 };
 
 // Tile types
@@ -79,19 +80,20 @@ const MAZES: MazeData[] = [
     ghostHouse: { x: 14, y: 14 },
   },
 
-  // MAZE 2: Wide corridors
+  // MAZE 2: Open corridors (no dead ends)
   {
     walls: [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
       [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
       [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
-      [1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
@@ -99,17 +101,17 @@ const MAZES: MazeData[] = [
       [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
-      [1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1],
-      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
-      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
-      [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1],
+      [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+      [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+      [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
@@ -291,6 +293,8 @@ interface Ghost {
   graphics: Phaser.GameObjects.Graphics;
   gridX: number;
   gridY: number;
+  pixelX: number;
+  pixelY: number;
   targetGridX: number;
   targetGridY: number;
   color: number;
@@ -304,6 +308,7 @@ interface Ghost {
   dirX: number;
   dirY: number;
   moveTimer: number;
+  moveTween?: Phaser.Tweens.Tween;
 }
 
 export class ChomperScene extends Phaser.Scene {
@@ -327,10 +332,13 @@ export class ChomperScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Graphics;
   private playerGridX: number = 14;
   private playerGridY: number = 23;
+  private playerPixelX: number = 14 * CONFIG.TILE_SIZE;
+  private playerPixelY: number = 23 * CONFIG.TILE_SIZE;
   private playerDir: { x: number; y: number } = { x: 0, y: 0 };
   private nextDir: { x: number; y: number } = { x: 0, y: 0 };
   private mouthAngle: number = 0;
   private playerMoveTimer: number = 0;
+  private playerMoveTween?: Phaser.Tweens.Tween;
 
   private ghosts: Ghost[] = [];
   private powered: boolean = false;
@@ -374,8 +382,14 @@ export class ChomperScene extends Phaser.Scene {
     // Reset player position
     this.playerGridX = this.mazeData.playerStart.x;
     this.playerGridY = this.mazeData.playerStart.y;
+    this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+    this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
     this.playerDir = { x: 0, y: 0 };
     this.nextDir = { x: 0, y: 0 };
+    if (this.playerMoveTween) {
+      this.playerMoveTween.stop();
+      this.playerMoveTween = undefined;
+    }
 
     // Create or clear graphics
     if (!this.mazeGraphics) {
@@ -446,6 +460,8 @@ export class ChomperScene extends Phaser.Scene {
         graphics: ghost,
         gridX: data.gridX,
         gridY: data.gridY,
+        pixelX: data.gridX * CONFIG.TILE_SIZE,
+        pixelY: data.gridY * CONFIG.TILE_SIZE,
         targetGridX: data.gridX,
         targetGridY: data.gridY,
         color: data.color,
@@ -459,6 +475,7 @@ export class ChomperScene extends Phaser.Scene {
         dirX: 0,
         dirY: 0,
         moveTimer: 0,
+        moveTween: undefined,
       });
     }
 
@@ -544,8 +561,8 @@ export class ChomperScene extends Phaser.Scene {
     else if (this.playerDir.y === -1) rotation = -Math.PI / 2;
 
     this.player.setRotation(rotation);
-    const px = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    const py = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const px = this.playerPixelX + CONFIG.TILE_SIZE / 2;
+    const py = this.playerPixelY + CONFIG.TILE_SIZE / 2;
     this.player.setPosition(px, py);
   }
 
@@ -599,8 +616,8 @@ export class ChomperScene extends Phaser.Scene {
       }
     }
 
-    const px = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    const py = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const px = ghost.pixelX + CONFIG.TILE_SIZE / 2;
+    const py = ghost.pixelY + CONFIG.TILE_SIZE / 2;
     ghost.graphics.setPosition(px, py);
   }
 
@@ -671,26 +688,44 @@ export class ChomperScene extends Phaser.Scene {
       this.playerDir = { ...this.nextDir };
     }
 
-    // Move only when timer allows
-    if (this.playerMoveTimer >= CONFIG.PLAYER_MOVE_DELAY) {
+    // Move only when timer allows and not currently tweening
+    if (this.playerMoveTimer >= CONFIG.PLAYER_MOVE_DELAY && !this.playerMoveTween) {
       if (this.playerDir.x !== 0 || this.playerDir.y !== 0) {
         const targetGridX = this.playerGridX + this.playerDir.x;
         const targetGridY = this.playerGridY + this.playerDir.y;
 
         if (this.canPlayerMoveTo(targetGridX, targetGridY)) {
+          // Update grid position
           this.playerGridX = targetGridX;
           this.playerGridY = targetGridY;
-          this.checkPelletCollision();
+
+          // Tunnel wraparound
+          if (this.playerGridX < 0) this.playerGridX = CONFIG.GRID_WIDTH - 1;
+          if (this.playerGridX >= CONFIG.GRID_WIDTH) this.playerGridX = 0;
+
+          // Calculate target pixel position
+          const targetPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+          const targetPixelY = this.playerGridY * CONFIG.TILE_SIZE;
+
+          // Create smooth tween
+          this.playerMoveTween = this.tweens.add({
+            targets: this,
+            playerPixelX: targetPixelX,
+            playerPixelY: targetPixelY,
+            duration: CONFIG.TWEEN_DURATION,
+            ease: 'Linear',
+            onComplete: () => {
+              this.playerMoveTween = undefined;
+              this.checkPelletCollision();
+            }
+          });
+
           this.playerMoveTimer = 0;
         } else {
           this.playerDir = { x: 0, y: 0 };
         }
       }
     }
-
-    // Tunnel wraparound
-    if (this.playerGridX < 0) this.playerGridX = CONFIG.GRID_WIDTH - 1;
-    if (this.playerGridX >= CONFIG.GRID_WIDTH) this.playerGridX = 0;
   }
 
   moveGhosts(dt: number): void {
@@ -705,8 +740,8 @@ export class ChomperScene extends Phaser.Scene {
         ? CONFIG.FRIGHTENED_MOVE_DELAY
         : CONFIG.GHOST_MOVE_DELAY;
 
-      // Move only when timer allows
-      if (ghost.moveTimer < moveDelay) continue;
+      // Move only when timer allows and not currently tweening
+      if (ghost.moveTimer < moveDelay || ghost.moveTween) continue;
 
       ghost.moveTimer = 0;
 
@@ -770,6 +805,23 @@ export class ChomperScene extends Phaser.Scene {
         // Wraparound
         if (ghost.gridX < 0) ghost.gridX = CONFIG.GRID_WIDTH - 1;
         if (ghost.gridX >= CONFIG.GRID_WIDTH) ghost.gridX = 0;
+
+        // Calculate target pixel position
+        const targetPixelX = ghost.gridX * CONFIG.TILE_SIZE;
+        const targetPixelY = ghost.gridY * CONFIG.TILE_SIZE;
+
+        // Create smooth tween
+        const tweenDuration = ghost.frightened ? CONFIG.TWEEN_DURATION * 2 : CONFIG.TWEEN_DURATION;
+        ghost.moveTween = this.tweens.add({
+          targets: ghost,
+          pixelX: targetPixelX,
+          pixelY: targetPixelY,
+          duration: tweenDuration,
+          ease: 'Linear',
+          onComplete: () => {
+            ghost.moveTween = undefined;
+          }
+        });
       }
     }
   }
@@ -843,15 +895,25 @@ export class ChomperScene extends Phaser.Scene {
     if (this.lives <= 0) {
       this.endGame();
     } else {
+      // Reset player
       this.playerGridX = this.mazeData.playerStart.x;
       this.playerGridY = this.mazeData.playerStart.y;
+      this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+      this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
       this.playerDir = { x: 0, y: 0 };
       this.playerMoveTimer = 0;
       this.powered = false;
+      if (this.playerMoveTween) {
+        this.playerMoveTween.stop();
+        this.playerMoveTween = undefined;
+      }
 
+      // Reset ghosts
       this.ghosts.forEach((g, i) => {
         g.gridX = g.homeX;
         g.gridY = g.homeY;
+        g.pixelX = g.gridX * CONFIG.TILE_SIZE;
+        g.pixelY = g.gridY * CONFIG.TILE_SIZE;
         g.released = i === 0;
         g.exitedHouse = i === 0;
         g.frightened = false;
@@ -859,6 +921,10 @@ export class ChomperScene extends Phaser.Scene {
         g.dirX = 0;
         g.dirY = 0;
         g.moveTimer = 0;
+        if (g.moveTween) {
+          g.moveTween.stop();
+          g.moveTween = undefined;
+        }
       });
 
       this.paused = true;
