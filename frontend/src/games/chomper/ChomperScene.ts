@@ -696,57 +696,32 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   movePlayer(dt: number): void {
-    // Store old grid position
-    const oldGridX = this.playerGridX;
-    const oldGridY = this.playerGridY;
-
-    // Pac-Man style predictive turning - check if queued direction is valid
-    // Allow turning when close to the perpendicular axis center
+    // Calculate distance from current tile center
     const centerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
     const centerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
     const distFromCenterX = Math.abs(this.playerPixelX + CONFIG.TILE_SIZE / 2 - centerX);
     const distFromCenterY = Math.abs(this.playerPixelY + CONFIG.TILE_SIZE / 2 - centerY);
 
-    // If we have a queued direction that's different from current
+    // Check if we have a queued direction
     if (this.playerNextDirX !== 0 || this.playerNextDirY !== 0) {
-      const isDifferentDir = this.playerNextDirX !== this.playerDirX || this.playerNextDirY !== this.playerDirY;
+      const is180Turn = (this.playerNextDirX === -this.playerDirX && this.playerNextDirY === -this.playerDirY);
 
-      if (isDifferentDir) {
-        // Horizontal to vertical turn: check if vertically centered
-        // Vertical to horizontal turn: check if horizontally centered
-        const turnTolerance = CONFIG.TILE_SIZE / 2; // Half tile tolerance for responsive turning
-        let canTurn = false;
+      // 180-degree turns: allow immediately (classic Pac-Man behavior)
+      if (is180Turn) {
+        this.playerDirX = this.playerNextDirX;
+        this.playerDirY = this.playerNextDirY;
+      }
+      // 90-degree turns: only when reasonably close to tile center (8px tolerance)
+      else if (distFromCenterX < 8 && distFromCenterY < 8) {
+        const nextGridX = this.playerGridX + this.playerNextDirX;
+        const nextGridY = this.playerGridY + this.playerNextDirY;
 
-        if (this.playerNextDirY !== 0 && this.playerDirY === 0) {
-          // Want to turn vertically while moving horizontally
-          canTurn = distFromCenterY < turnTolerance;
-        } else if (this.playerNextDirX !== 0 && this.playerDirX === 0) {
-          // Want to turn horizontally while moving vertically
-          canTurn = distFromCenterX < turnTolerance;
-        } else if (this.playerDirX === 0 && this.playerDirY === 0) {
-          // Not moving, allow any direction
-          canTurn = true;
-        }
-
-        if (canTurn) {
-          const nextGridX = this.playerGridX + this.playerNextDirX;
-          const nextGridY = this.playerGridY + this.playerNextDirY;
-
-          if (this.canPlayerMoveTo(nextGridX, nextGridY)) {
-            // Execute the turn
-            this.playerDirX = this.playerNextDirX;
-            this.playerDirY = this.playerNextDirY;
-
-            // Snap to grid center on the axis we're turning on
-            if (this.playerNextDirY !== 0) {
-              // Turning vertically, snap to vertical center
-              this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
-            }
-            if (this.playerNextDirX !== 0) {
-              // Turning horizontally, snap to horizontal center
-              this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
-            }
-          }
+        if (this.canPlayerMoveTo(nextGridX, nextGridY)) {
+          this.playerDirX = this.playerNextDirX;
+          this.playerDirY = this.playerNextDirY;
+          // Snap to tile center for clean 90-degree turns
+          this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+          this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
         }
       }
     }
@@ -845,7 +820,7 @@ export class ChomperScene extends Phaser.Scene {
 
           // Skip reverse direction (unless ghost is stuck)
           if (dir.x === -ghost.dirX && dir.y === -ghost.dirY && (ghost.dirX !== 0 || ghost.dirY !== 0)) continue;
-          if (!this.canGhostMoveTo(nextX, nextY, ghost.eaten)) continue;
+          if (!this.canGhostMoveTo(nextX, nextY, ghost)) continue;
 
           const dist = Math.abs(nextX - targetGridX) + Math.abs(nextY - targetGridY);
           if (dist < bestDist) {
@@ -903,11 +878,12 @@ export class ChomperScene extends Phaser.Scene {
     return tile === TILE.EMPTY;
   }
 
-  canGhostMoveTo(x: number, y: number, isEaten: boolean): boolean {
+  canGhostMoveTo(x: number, y: number, ghost: Ghost): boolean {
     if (y < 0 || y >= this.mazeData.walls.length) return false;
     if (x < 0 || x >= this.mazeData.walls[0].length) return true; // Tunnel
     const tile = this.mazeData.walls[y][x];
-    return tile === TILE.EMPTY || (isEaten && tile === TILE.DOOR);
+    // Ghosts can go through doors when eaten OR when leaving/entering house
+    return tile === TILE.EMPTY || tile === TILE.DOOR;
   }
 
   checkPelletCollision(): void {
