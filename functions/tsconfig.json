@@ -9,7 +9,8 @@
     "target": "es2020",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "incremental": false
   },
   "compileOnSave": true,
   "include": ["src"]

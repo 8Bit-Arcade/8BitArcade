@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Firebase Cloud Functions for 8-Bit Arcade",
   "scripts": {
+    "prebuild": "rm -rf lib .tsbuildinfo",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
