@@ -370,7 +370,7 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   loadLevel(level: number): void {
-    // Select maze
+    // Select maze (in classic Pac-Man, all levels use same maze layout)
     const mazeIndex = (level - 1) % MAZES.length;
     this.mazeData = MAZES[mazeIndex];
 
@@ -387,6 +387,9 @@ export class ChomperScene extends Phaser.Scene {
     this.playerDirY = 0;
     this.playerNextDirX = 0;
     this.playerNextDirY = 0;
+
+    // Reset ghost release timer
+    this.ghostReleaseTimer = 0;
 
     // Create or clear graphics
     if (!this.mazeGraphics) {
@@ -445,9 +448,9 @@ export class ChomperScene extends Phaser.Scene {
   createGhosts(): void {
     const ghostData = [
       { name: 'red', color: GHOST_COLORS.red, gridX: 14, gridY: 11, released: true, exitedHouse: true },
-      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: false, exitedHouse: false },
-      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 12, gridY: 14, released: false, exitedHouse: false },
-      { name: 'orange', color: GHOST_COLORS.orange, gridX: 16, gridY: 14, released: false, exitedHouse: false },
+      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: true, exitedHouse: false }, // Pink starts ready to leave
+      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 13, gridY: 15, released: false, exitedHouse: false },
+      { name: 'orange', color: GHOST_COLORS.orange, gridX: 15, gridY: 15, released: false, exitedHouse: false },
     ];
 
     for (const data of ghostData) {
@@ -762,8 +765,14 @@ export class ChomperScene extends Phaser.Scene {
         let targetGridY: number;
 
         if (!ghost.exitedHouse) {
-          targetGridX = 14;
-          targetGridY = 11;
+          // Exit ghost house: first move to center x, then move up
+          if (ghost.gridX !== 14) {
+            targetGridX = 14; // Move to center horizontally first
+            targetGridY = ghost.gridY; // Stay at current y
+          } else {
+            targetGridX = 14; // Already centered, move up
+            targetGridY = 11; // Exit position
+          }
         } else if (ghost.eaten) {
           targetGridX = this.mazeData.ghostHouse.x;
           targetGridY = this.mazeData.ghostHouse.y;
@@ -888,7 +897,12 @@ export class ChomperScene extends Phaser.Scene {
     for (const ghost of this.ghosts) {
       if (!ghost.released) continue;
 
-      if (ghost.gridX === this.playerGridX && ghost.gridY === this.playerGridY) {
+      // Check collision with player using distance (more reliable than grid position)
+      const dx = Math.abs(ghost.pixelX - this.playerPixelX);
+      const dy = Math.abs(ghost.pixelY - this.playerPixelY);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < CONFIG.TILE_SIZE * 0.6) {
         if (ghost.frightened && !ghost.eaten) {
           // Eat ghost
           this.score += CONFIG.GHOST_POINTS;
@@ -898,13 +912,27 @@ export class ChomperScene extends Phaser.Scene {
         } else if (!ghost.eaten) {
           // Die
           this.loseLife();
+          return; // Exit early to prevent multiple deaths
         }
       }
 
-      // Respawn eaten ghost
-      if (ghost.eaten && ghost.gridX === this.mazeData.ghostHouse.x && ghost.gridY === this.mazeData.ghostHouse.y) {
-        ghost.eaten = false;
-        ghost.exitedHouse = false;
+      // Respawn eaten ghost when close to ghost house (use distance check)
+      if (ghost.eaten) {
+        const houseX = this.mazeData.ghostHouse.x * CONFIG.TILE_SIZE;
+        const houseY = this.mazeData.ghostHouse.y * CONFIG.TILE_SIZE;
+        const houseDx = Math.abs(ghost.pixelX - houseX);
+        const houseDy = Math.abs(ghost.pixelY - houseY);
+
+        if (houseDx < CONFIG.TILE_SIZE / 2 && houseDy < CONFIG.TILE_SIZE / 2) {
+          ghost.eaten = false;
+          ghost.exitedHouse = false;
+          ghost.gridX = this.mazeData.ghostHouse.x;
+          ghost.gridY = this.mazeData.ghostHouse.y;
+          ghost.pixelX = ghost.gridX * CONFIG.TILE_SIZE;
+          ghost.pixelY = ghost.gridY * CONFIG.TILE_SIZE;
+          ghost.dirX = 0;
+          ghost.dirY = 0;
+        }
       }
     }
   }
