@@ -2,11 +2,6 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { unbanAccount as unbanAccountInternal, clearFlags as clearFlagsInternal, getFlaggedAccounts } from '../anticheat/flagging';
 import { collections } from '../config/firebase';
 
-// CORS configuration for admin functions
-const adminCorsOptions = {
-  cors: ['https://play.8bitarcade.games', 'http://localhost:3000'],
-};
-
 /**
  * Admin wallet addresses (lowercase)
  * TODO: Move to environment config or Firestore admin collection
@@ -37,9 +32,7 @@ async function isAdmin(uid: string | undefined): Promise<boolean> {
 /**
  * Unban a user account (admin only)
  */
-export const unbanAccount = onCall<{ playerId: string }, Promise<{ success: boolean; message: string }>>(
-  adminCorsOptions,
-  async (request) => {
+export const unbanAccount = onCall<{ playerId: string }, Promise<{ success: boolean; message: string }>>(async (request) => {
     // Verify authentication
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Must be logged in');
@@ -76,9 +69,7 @@ export const unbanAccount = onCall<{ playerId: string }, Promise<{ success: bool
 /**
  * Clear flags from a user account (admin only)
  */
-export const clearUserFlags = onCall<{ playerId: string }, Promise<{ success: boolean; message: string }>>(
-  adminCorsOptions,
-  async (request) => {
+export const clearUserFlags = onCall<{ playerId: string }, Promise<{ success: boolean; message: string }>>(async (request) => {
     // Verify authentication
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Must be logged in');
@@ -115,9 +106,7 @@ export const clearUserFlags = onCall<{ playerId: string }, Promise<{ success: bo
 /**
  * Get list of flagged accounts (admin only)
  */
-export const getFlaggedUsers = onCall<{ limit?: number }, Promise<any[]>>(
-  adminCorsOptions,
-  async (request) => {
+export const getFlaggedUsers = onCall<{ limit?: number }, Promise<any[]>>(async (request) => {
     // Verify authentication
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Must be logged in');
@@ -146,9 +135,7 @@ export const getFlaggedUsers = onCall<{ limit?: number }, Promise<any[]>>(
 /**
  * Get user ban status and flags (admin only)
  */
-export const getUserBanInfo = onCall<{ playerId: string }, Promise<any>>(
-  adminCorsOptions,
-  async (request) => {
+export const getUserBanInfo = onCall<{ playerId: string }, Promise<any>>(async (request) => {
     // Verify authentication
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Must be logged in');
