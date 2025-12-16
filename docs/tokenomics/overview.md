@@ -134,6 +134,21 @@ Unlike typical projects that distribute rewards over 20-30 years, 8-Bit Arcade u
 | **Team** | $5,000 | Vested, not liquid |
 | **Break-even Mcap** | ~$200,000 | 2x ROI at $200K market cap |
 
+## Automated Infrastructure
+
+### Treasury Gas Manager
+
+8-Bit Arcade uses an **automated Treasury Gas Manager** to ensure sustainable token distribution:
+
+- **Self-Sustaining** - 1 ETH deposit funds ~2-3 years of operations
+- **Zero Manual Intervention** - Automatic refills when needed
+- **Minimal Cost** - ~$75/year to distribute 30M 8BIT annually
+- **Full Automation** - Makes daily rewards truly automatic
+
+**Cost Efficiency:** Less than 0.025% of emissions value at $5M market cap
+
+Read more: [Gas Sustainability](gas-sustainability.md)
+
 ## What's Next?
 
 - [Token Distribution Details](distribution.md)
@@ -141,6 +156,7 @@ Unlike typical projects that distribute rewards over 20-30 years, 8-Bit Arcade u
 - [Emissions Schedule](emissions.md)
 - [Market Cap Scenarios](market-scenarios.md)
 - [Deflationary Mechanics](deflationary.md)
+- [Gas Sustainability](gas-sustainability.md)
 
 ---
 
