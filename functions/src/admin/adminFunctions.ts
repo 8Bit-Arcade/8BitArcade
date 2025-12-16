@@ -3,7 +3,7 @@ import { unbanAccount as unbanAccountInternal, clearFlags as clearFlagsInternal,
 import { collections } from '../config/firebase';
 
 // CORS configuration for admin functions
-const corsOptions = {
+const adminCorsOptions = {
   cors: ['https://play.8bitarcade.games', 'http://localhost:3000'],
 };
 
@@ -51,7 +51,7 @@ async function isAdmin(uid: string | undefined): Promise<boolean> {
  * Unban a user account (admin only)
  */
 export const unbanAccount = onCall<{ playerId: string }, Promise<{ success: boolean; message: string }>>(
-  corsOptions,
+  adminCorsOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -90,7 +90,7 @@ export const unbanAccount = onCall<{ playerId: string }, Promise<{ success: bool
  * Clear flags from a user account (admin only)
  */
 export const clearUserFlags = onCall<{ playerId: string }, Promise<{ success: boolean; message: string }>>(
-  corsOptions,
+  adminCorsOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -129,7 +129,7 @@ export const clearUserFlags = onCall<{ playerId: string }, Promise<{ success: bo
  * Get list of flagged accounts (admin only)
  */
 export const getFlaggedUsers = onCall<{ limit?: number }, Promise<any[]>>(
-  corsOptions,
+  adminCorsOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -160,7 +160,7 @@ export const getFlaggedUsers = onCall<{ limit?: number }, Promise<any[]>>(
  * Get user ban status and flags (admin only)
  */
 export const getUserBanInfo = onCall<{ playerId: string }, Promise<any>>(
-  corsOptions,
+  adminCorsOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {

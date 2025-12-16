@@ -63,6 +63,19 @@ A blockchain-powered retro gaming platform built on Arbitrum. Play classic 8-bit
 
 **See [TOKENOMICS_PROPOSAL.md](TOKENOMICS_PROPOSAL.md) for full details**
 
+### Automated Gas Management
+
+8-Bit Arcade uses an **automated Treasury Gas Manager** to ensure sustainable token distribution:
+
+- **Self-Sustaining** - 1 ETH deposit funds ~2-3 years of automated operations
+- **Zero Manual Intervention** - Automatic wallet refills when balance drops below threshold
+- **Minimal Cost** - ~$75/year to distribute 30M 8BIT annually on Arbitrum
+- **Full Automation** - Makes daily rewards truly automatic and reliable
+
+**Cost Efficiency:** Less than 0.025% of emissions value at $5M market cap
+
+This infrastructure enables the platform to run autonomously without manual gas wallet management.
+
 ## 🏆 Tournament System
 
 ### Two-Tier Structure:

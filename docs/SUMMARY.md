@@ -32,6 +32,7 @@
 * [Emissions Schedule](tokenomics/emissions.md)
 * [Market Cap Scenarios](tokenomics/market-scenarios.md)
 * [Deflationary Model](tokenomics/deflationary.md)
+* [Gas Sustainability](tokenomics/gas-sustainability.md)
 * [Staking (Coming Soon)](tokenomics/staking.md)
 
 ## Smart Contracts
