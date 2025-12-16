@@ -754,8 +754,12 @@ export class ChomperScene extends Phaser.Scene {
     const distFromCenterX = Math.abs(this.playerPixelX + CONFIG.TILE_SIZE / 2 - centerX);
     const distFromCenterY = Math.abs(this.playerPixelY + CONFIG.TILE_SIZE / 2 - centerY);
 
-    // Check if we have a queued direction
-    if (this.playerNextDirX !== 0 || this.playerNextDirY !== 0) {
+    // Only process direction changes if the queued direction is DIFFERENT from current
+    // or if player is stopped (both directions are 0)
+    const isStopped = this.playerDirX === 0 && this.playerDirY === 0;
+    const isDifferentDirection = this.playerNextDirX !== this.playerDirX || this.playerNextDirY !== this.playerDirY;
+
+    if ((this.playerNextDirX !== 0 || this.playerNextDirY !== 0) && (isStopped || isDifferentDirection)) {
       const is180Turn = (this.playerNextDirX === -this.playerDirX && this.playerNextDirY === -this.playerDirY);
 
       // 180-degree turns: allow immediately (classic Pac-Man behavior)
@@ -763,7 +767,7 @@ export class ChomperScene extends Phaser.Scene {
         this.playerDirX = this.playerNextDirX;
         this.playerDirY = this.playerNextDirY;
       }
-      // 90-degree turns: only when reasonably close to tile center (8px tolerance)
+      // 90-degree turns or starting from stopped: only when close to tile center
       else if (distFromCenterX < 8 && distFromCenterY < 8) {
         const nextGridX = this.playerGridX + this.playerNextDirX;
         const nextGridY = this.playerGridY + this.playerNextDirY;

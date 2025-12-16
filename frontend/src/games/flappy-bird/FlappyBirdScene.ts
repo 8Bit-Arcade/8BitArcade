@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   BIRD_X: 100,
@@ -56,12 +57,17 @@ export class FlappyBirdScene extends Phaser.Scene {
   private groundOffset: number = 0;
   private cloudPositions: Array<{ x: number; y: number }> = [];
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'FlappyBirdScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -69,11 +75,30 @@ export class FlappyBirdScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sound system
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        // Register sounds
+        this.sounds.registerSound('flap', this.sounds.generateJump());
+        this.sounds.registerSound('score', this.sounds.generateCoin());
+        this.sounds.registerSound('hit', this.sounds.generateHit());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     // Initialize bird position
     this.birdY = this.scale.height / 2;
+
+    // Setup cleanup handler
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Draw background (sky)
     this.backgroundGraphics = this.add.graphics();
@@ -310,6 +335,18 @@ export class FlappyBirdScene extends Phaser.Scene {
       this.pipeSpawnTimer = CONFIG.PIPE_SPAWN_INTERVAL_START;
     }
     this.birdVelocity = CONFIG.FLAP_VELOCITY;
+
+    // Play flap sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('flap');
+    }
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 
   checkCollision(): boolean {
@@ -398,6 +435,11 @@ export class FlappyBirdScene extends Phaser.Scene {
           this.score += CONFIG.POINTS_PER_PIPE;
           this.scoreText.setText(this.score.toString());
           this.onScoreUpdate(this.score);
+
+          // Play score sound
+          if (this.sounds && this.soundEnabled) {
+            this.sounds.play('score');
+          }
         }
 
         // Remove off-screen pipes
@@ -413,6 +455,17 @@ export class FlappyBirdScene extends Phaser.Scene {
       // Check collision
       if (this.checkCollision()) {
         this.gameOver = true;
+
+        // Play hit and game over sounds
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play('hit');
+          setTimeout(() => {
+            if (this.sounds && this.soundEnabled) {
+              this.sounds.play('gameOver');
+            }
+          }, 200);
+        }
+
         this.onGameOver(this.score);
       }
     }
