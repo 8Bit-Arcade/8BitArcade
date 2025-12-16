@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { ChomperSounds } from './sounds';
 
 const CONFIG = {
   TILE_SIZE: 21,
@@ -350,12 +351,20 @@ export class ChomperScene extends Phaser.Scene {
   private powerPelletVisible: boolean = true;
   private powerPelletTimer: number = 0;
 
+  // Audio
+  private sounds: ChomperSounds | null = null;
+  private soundEnabled: boolean = true;
+  private wakaToggle: boolean = false; // Alternate between waka1 and waka2
+  private wakaTimer: number = 0;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'ChomperScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -363,10 +372,37 @@ export class ChomperScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sounds if enabled
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new ChomperSounds(soundVolume);
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     this.loadLevel(this.level);
+
+    // Play level start sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('levelStart');
+    }
+
+    // Register shutdown handler for cleanup
+    this.events.on('shutdown', this.onShutdown, this);
+  }
+
+  onShutdown(): void {
+    // Clean up audio
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 
   loadLevel(level: number): void {
@@ -642,6 +678,22 @@ export class ChomperScene extends Phaser.Scene {
         this.ghosts.forEach(g => {
           if (!g.eaten) g.frightened = false;
         });
+        // Stop siren sound
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.stopLoop('siren');
+        }
+      }
+    }
+
+    // Play waka-waka sound when moving
+    if ((this.playerDirX !== 0 || this.playerDirY !== 0) && !this.gameOver && !this.paused) {
+      this.wakaTimer += delta;
+      if (this.wakaTimer > 150) {
+        this.wakaTimer = 0;
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play(this.wakaToggle ? 'waka1' : 'waka2');
+          this.wakaToggle = !this.wakaToggle;
+        }
       }
     }
 
@@ -906,6 +958,11 @@ export class ChomperScene extends Phaser.Scene {
         if (!g.eaten) g.frightened = true;
       });
       this.drawPellets();
+
+      // Start power pellet siren
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.startLoop('siren');
+      }
     }
   }
 
@@ -925,6 +982,11 @@ export class ChomperScene extends Phaser.Scene {
           this.onScoreUpdate(this.score);
           ghost.eaten = true;
           ghost.frightened = false;
+
+          // Play eat ghost sound
+          if (this.sounds && this.soundEnabled) {
+            this.sounds.play('eatGhost');
+          }
         } else if (!ghost.eaten) {
           // Die
           this.loseLife();
@@ -956,6 +1018,12 @@ export class ChomperScene extends Phaser.Scene {
   loseLife(): void {
     this.lives--;
     this.livesText.setText(`LIVES: ${this.lives}`);
+
+    // Stop all sounds and play death sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.stopAll();
+      this.sounds.play('death');
+    }
 
     if (this.lives <= 0) {
       this.endGame();
@@ -999,6 +1067,13 @@ export class ChomperScene extends Phaser.Scene {
     this.level++;
     this.score += 500;
     this.onScoreUpdate(this.score);
+
+    // Stop all sounds and play level complete sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.stopAll();
+      this.sounds.play('levelStart'); // Reuse level start for level complete
+    }
+
     this.loadLevel(this.level);
   }
 
