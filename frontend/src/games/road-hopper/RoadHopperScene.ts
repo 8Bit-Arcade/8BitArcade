@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   TILE_SIZE: 40,
@@ -84,12 +85,17 @@ export class RoadHopperScene extends Phaser.Scene {
   private timeText!: Phaser.GameObjects.Text;
   private backgroundGraphics!: Phaser.GameObjects.Graphics;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'RoadHopperScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -97,9 +103,25 @@ export class RoadHopperScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        this.sounds.registerSound('hop', this.sounds.generateJump());
+        this.sounds.registerSound('goalReached', this.sounds.generateCoin());
+        this.sounds.registerSound('hit', this.sounds.generateHit());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
+    this.events.on('shutdown', this.onShutdown, this);
+
     // Draw background
     this.backgroundGraphics = this.add.graphics();
     this.drawBackground();
@@ -503,6 +525,10 @@ export class RoadHopperScene extends Phaser.Scene {
     this.playerMoveTimer = 0;
     this.onPlatform = null;
 
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('hop');
+    }
+
     // Award points for moving forward
     if (dy < 0 && newY < this.highestRow) {
       this.highestRow = newY;
@@ -582,6 +608,10 @@ export class RoadHopperScene extends Phaser.Scene {
         goal.filled = true;
         this.drawGoal(goal);
 
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play('goalReached');
+        }
+
         this.score += CONFIG.POINTS_PER_GOAL;
         this.score += Math.floor(this.timeRemaining / 1000) * CONFIG.TIME_BONUS;
         this.onScoreUpdate(this.score);
@@ -610,6 +640,9 @@ export class RoadHopperScene extends Phaser.Scene {
 
   loseLife(): void {
     this.lives--;
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('hit');
+    }
     this.livesText.setText(`LIVES: ${this.lives}`);
 
     if (this.lives <= 0) {
@@ -640,6 +673,9 @@ export class RoadHopperScene extends Phaser.Scene {
 
   endGame(): void {
     this.gameOver = true;
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
     this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
       fontSize: '24px',
@@ -649,5 +685,12 @@ export class RoadHopperScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }
