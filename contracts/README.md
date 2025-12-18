@@ -1,68 +1,114 @@
 # 8-Bit Arcade Smart Contracts
 
-Smart contracts for the 8-Bit Arcade game rewards system on Arbitrum.
+Smart contracts for the 8-Bit Arcade gaming platform on Arbitrum.
 
 ## 📋 Contracts Overview
 
 ### EightBitToken (8BIT)
 - **Type**: ERC20 Token
-- **Max Supply**: 100,000,000 8BIT
-- **Purpose**: Reward token for players
-- **Features**: Mintable by GameRewards contract only
+- **Total Supply**: 1,000,000,000 (1 Billion)
+- **Decimals**: 18
+- **Purpose**: Platform utility token for rewards and tournaments
+- **Features**: Standard ERC20 with owner-controlled minting
 
 ### GameRewards
 - **Purpose**: Distributes daily leaderboard rewards
-- **Rewards**: Top 10 players receive tokens daily
-- **Distribution**: Automated by backend server
+- **Rewards**: Top 10 players per game receive tokens daily
+- **Distribution**: Automated by backend Firebase function
+- **Daily Pool**: 10,000 8BIT per game
 
-## 🚀 Deployment Guide
+### TournamentManager
+- **Purpose**: Manages two-tier tournament system
+- **Tiers**: Standard ($1-$5 entry) and High Roller ($5-$25 entry)
+- **Periods**: Weekly and Monthly tournaments
+- **Features**:
+  - Entry fee collection
+  - Prize pool management
+  - 50% fee burn mechanism
+  - Winner declaration and payouts
+
+### TournamentPayments
+- **Purpose**: Handles tournament entry fees in multiple currencies
+- **Payment Methods**: USDC or ETH
+- **Features**:
+  - Automatic ETH→USDC conversion via Uniswap V3
+  - Real-time pricing from Uniswap TWAP oracles
+  - Buyback & burn mechanism (50% of fees)
+  - Prize pool funding (50% of fees)
+  - Slippage protection
+
+### TokenSale
+- **Purpose**: Public token sale contract
+- **Sale Amount**: 100M tokens (10% of supply)
+- **Target Raise**: $50,000
+- **Price**: $0.0005 per token
+- **Payment**: ETH or USDC
+- **Features**: Time-limited sale with purchase tracking
+
+### TreasuryGasManager
+- **Purpose**: Automated gas wallet management
+- **Features**:
+  - Auto-refills payout wallet when balance is low
+  - Configurable threshold and refill amounts
+  - Enables fully automated reward distribution
+- **Sustainability**: 1 ETH funds ~2-3 years of operations
+
+### TestnetFaucet (Testnet Only)
+- **Purpose**: Provides free tokens for testing
+- **Amount**: 10,000 8BIT per claim
+- **Cooldown**: 24 hours between claims
+- **Features**: Anti-spam protection, balance tracking
+
+## 🚀 Quick Start Deployment
 
 ### Prerequisites
 
 1. **Node.js** (v18 or higher)
-2. **npm** or **yarn**
-3. **Deployer wallet** with ETH on Arbitrum Sepolia (testnet)
-4. **Arbiscan API key** for contract verification
+2. **Deployer wallet** with Arbitrum Sepolia ETH
+3. **Arbiscan API key** for verification
 
-### Step 1: Install Dependencies
+### Install Dependencies
 
 ```bash
 cd contracts
 npm install
 ```
 
-### Step 2: Configure Environment
+### Configure Environment
+
+Create `.env` file:
 
 ```bash
-# Copy example environment file
-cp .env.example .env
+# Deployer wallet private key (NEVER COMMIT THIS!)
+PRIVATE_KEY=0xyour_private_key_here
 
-# Edit .env and fill in:
-# - PRIVATE_KEY: Your deployer wallet private key
-# - ARBISCAN_API_KEY: Your Arbiscan API key
+# Arbiscan API key for contract verification
+ARBISCAN_API_KEY=your_arbiscan_api_key_here
 ```
 
-### Step 3: Get Testnet ETH
+**Get Testnet ETH**: https://faucet.quicknode.com/arbitrum/sepolia
+**Get Arbiscan Key**: https://arbiscan.io/myapikey
 
-Visit: https://faucet.quicknode.com/arbitrum/sepolia
-
-Send some Arbitrum Sepolia ETH to your deployer wallet.
-
-### Step 4: Deploy to Testnet
+### Deploy All Contracts
 
 ```bash
 npm run deploy:testnet
 ```
 
-This will:
-- Deploy EightBitToken
-- Deploy GameRewards
-- Link the contracts together
-- Display deployment addresses
+This deploys all 7 contracts in the correct order:
+1. ✅ EightBitToken
+2. ✅ GameRewards
+3. ✅ TournamentManager
+4. ✅ TournamentPayments
+5. ✅ TokenSale
+6. ✅ TreasuryGasManager
+7. ✅ TestnetFaucet (testnet only)
 
-**⚠️ SAVE THE DEPLOYMENT ADDRESSES!**
+**⚠️ SAVE ALL DEPLOYMENT ADDRESSES!**
 
-### Step 5: Update Frontend Config
+## 📝 Post-Deployment Configuration
+
+### 1. Update Frontend Config
 
 Edit `frontend/src/config/contracts.ts`:
 
@@ -70,58 +116,132 @@ Edit `frontend/src/config/contracts.ts`:
 const TESTNET_CONTRACTS = {
   EIGHT_BIT_TOKEN: '0xYourTokenAddress',
   GAME_REWARDS: '0xYourRewardsAddress',
-  // ... rest of config
+  TOURNAMENT_MANAGER: '0xYourTournamentAddress',
+  TOURNAMENT_PAYMENTS: '0xYourPaymentsAddress',
+  TOKEN_SALE: '0xYourSaleAddress',
+  TESTNET_FAUCET: '0xYourFaucetAddress',
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
+  CHAIN_ID: 421614,
+  CHAIN_NAME: 'Arbitrum Sepolia',
+  RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
+  BLOCK_EXPLORER: 'https://sepolia.arbiscan.io',
 };
 ```
 
-### Step 6: Set Rewards Distributor
-
-The rewards distributor is the backend wallet that will call `distributeRewards()`.
-
-1. Create a new secure wallet for the backend
-2. Call the setter function:
+### 2. Verify Contracts on Arbiscan
 
 ```bash
-# Using Hardhat console
-npx hardhat console --network arbitrumSepolia
-
-# In the console:
-const GameRewards = await ethers.getContractFactory("GameRewards");
-const rewards = await GameRewards.attach("0xYourRewardsAddress");
-await rewards.setRewardsDistributor("0xYourBackendWalletAddress");
+# The deployment script will print these commands with actual addresses
+npx hardhat verify --network arbitrumSepolia <TOKEN_ADDRESS>
+npx hardhat verify --network arbitrumSepolia <REWARDS_ADDRESS> <TOKEN_ADDRESS>
+npx hardhat verify --network arbitrumSepolia <TOURNAMENT_MANAGER_ADDRESS> <TOKEN_ADDRESS>
+npx hardhat verify --network arbitrumSepolia <TOURNAMENT_PAYMENTS_ADDRESS> <TOKEN_ADDRESS> <USDC> <WETH> <SWAP_ROUTER>
+npx hardhat verify --network arbitrumSepolia <TOKEN_SALE_ADDRESS> <TOKEN_ADDRESS> <USDC> 0
+npx hardhat verify --network arbitrumSepolia <TREASURY_ADDRESS> <DEPLOYER> <MIN_THRESHOLD> <REFILL_AMOUNT>
+npx hardhat verify --network arbitrumSepolia <FAUCET_ADDRESS> <TOKEN_ADDRESS>
 ```
 
-Or use Arbiscan's "Write Contract" interface.
+### 3. Set Permissions
 
-### Step 7: Verify Contracts
+#### A. Set Rewards Distributor
+```javascript
+const rewards = await ethers.getContractAt("GameRewards", REWARDS_ADDRESS);
+await rewards.setRewardsDistributor(BACKEND_WALLET_ADDRESS);
+```
+
+#### B. Set Tournament Manager
+```javascript
+const tournaments = await ethers.getContractAt("TournamentManager", TOURNAMENT_MANAGER_ADDRESS);
+await tournaments.setTournamentManager(BACKEND_WALLET_ADDRESS);
+```
+
+### 4. Fund Treasury
 
 ```bash
-npx hardhat verify --network arbitrumSepolia 0xYourTokenAddress
-npx hardhat verify --network arbitrumSepolia 0xYourRewardsAddress 0xYourTokenAddress
+# Send 1 ETH for automated gas management
+cast send <TREASURY_ADDRESS> --value 1ether --private-key <PRIVATE_KEY> --rpc-url https://sepolia-rollup.arbitrum.io/rpc
 ```
 
-## 🎯 Mainnet Deployment
+### 5. Configure Tournament Payments
 
-### When Ready to Launch
+```javascript
+const payments = await ethers.getContractAt("TournamentPayments", PAYMENTS_ADDRESS);
 
-1. **Test thoroughly on testnet** - Play games, distribute rewards, verify everything works
-2. **Deploy to mainnet**:
-   ```bash
-   npm run deploy:mainnet
-   ```
-3. **Update frontend config** with mainnet addresses
-4. **Switch to mainnet** in `frontend/src/config/contracts.ts`:
-   ```typescript
-   export const USE_TESTNET = false; // Set to false for mainnet
-   ```
-5. **Verify mainnet contracts**:
-   ```bash
-   npm run verify:mainnet 0xTokenAddress 0xRewardsAddress
-   ```
+// Set tournament fees (USDC has 6 decimals)
+await payments.setTournamentFee(1, 1000000);   // Standard Weekly: $1
+await payments.setTournamentFee(2, 5000000);   // Standard Monthly: $5
+await payments.setTournamentFee(3, 5000000);   // High Roller Weekly: $5
+await payments.setTournamentFee(4, 25000000);  // High Roller Monthly: $25
 
-## 📊 Reward Distribution
+// After adding liquidity, set Uniswap pool addresses
+await payments.setPools(EIGHTBIT_USDC_POOL, WETH_USDC_POOL);
+```
 
-### Daily Reward Structure
+### 6. Configure Firebase Functions
+
+```bash
+cd functions
+
+# Tournament automation
+firebase functions:config:set tournament.manager="<TOURNAMENT_MANAGER_ADDRESS>"
+firebase functions:config:set deployer.private_key="<DEPLOYER_PRIVATE_KEY>"
+firebase functions:config:set network="testnet"
+
+# Deploy functions
+npm run build
+firebase deploy --only functions
+```
+
+## 🤖 Automated Tournament Creation
+
+Tournaments are created automatically via scheduled Firebase Cloud Functions:
+
+### Weekly Tournaments
+- **Schedule**: Every Monday at 00:00 UTC
+- **Creates**: Standard + High Roller weekly tournaments
+- **Duration**: 7 days
+- **Entry Fees**: $1 (Standard), $5 (High Roller)
+- **Prizes**: $25 (Standard), $75 (High Roller)
+
+### Monthly Tournaments
+- **Schedule**: 1st of each month at 00:00 UTC
+- **Creates**: Standard + High Roller monthly tournaments
+- **Duration**: 30 days
+- **Entry Fees**: $5 (Standard), $25 (High Roller)
+- **Prizes**: $50 (Standard), $250 (High Roller)
+
+### Functions
+- `createWeeklyTournaments` - Weekly automation
+- `createMonthlyTournaments` - Monthly automation
+- `createTournamentManual` - Manual testing trigger
+
+**Location**: `functions/src/tournaments/scheduleTournaments.ts`
+
+## 💰 Tournament Fee Structure
+
+### Standard Tier (Accessible Entry)
+| Period | Entry Fee | Prize Pool |
+|--------|-----------|------------|
+| Weekly | $1 | $25 |
+| Monthly | $5 | $50 |
+
+### High Roller Tier (Premium Entry)
+| Period | Entry Fee | Prize Pool |
+|--------|-----------|------------|
+| Weekly | $5 | $75 |
+| Monthly | $25 | $250 |
+
+### Payment Options
+- **USDC**: Direct payment
+- **ETH**: Auto-converted to USDC via Uniswap V3
+
+### Fee Allocation
+- **50%**: Buyback 8BIT and burn (deflationary)
+- **50%**: Prize pool
+
+## 📊 Daily Reward Structure
+
+Top 10 players per game receive daily rewards:
 
 | Rank | Percentage | Amount (10K pool) |
 |------|-----------|-------------------|
@@ -129,71 +249,44 @@ npx hardhat verify --network arbitrumSepolia 0xYourRewardsAddress 0xYourTokenAdd
 | 2-5  | 12.5% each| 1,250 8BIT each   |
 | 6-10 | 5% each   | 500 8BIT each     |
 
-**Total Daily**: 10,000 8BIT
+**Total Daily Per Game**: 10,000 8BIT
+**Total Daily (12 games)**: 120,000 8BIT
 
-### Backend Integration
+## 🎯 Mainnet Deployment
 
-Your Firebase function should call `distributeRewards()` daily:
+### When Ready to Launch
 
-```typescript
-// Example Firebase function
-import { ethers } from 'ethers';
+1. **Test Thoroughly on Testnet** (3-6 months recommended)
+   - Play all games
+   - Test tournament system
+   - Verify automated creation
+   - Monitor for bugs
 
-async function distributeDaily Rewards() {
-  const provider = new ethers.JsonRpcProvider(RPC_URL);
-  const wallet = new ethers.Wallet(BACKEND_PRIVATE_KEY, provider);
+2. **Deploy to Mainnet**
+   ```bash
+   npm run deploy:mainnet
+   ```
 
-  const rewards = new ethers.Contract(
-    GAME_REWARDS_ADDRESS,
-    GAME_REWARDS_ABI,
-    wallet
-  );
+3. **Update Frontend**
+   ```typescript
+   export const USE_TESTNET = false; // Enable mainnet
+   ```
 
-  // Get top 10 players from Firestore
-  const topPlayers = await getTop10FromLeaderboard();
+4. **Add Liquidity**
+   - Create Uniswap V3 pools
+   - Add 8BIT/USDC liquidity
+   - Lock liquidity for 3 years
 
-  // Format for contract
-  const players = topPlayers.map(p => p.address);
-  const ranks = topPlayers.map((p, i) => i + 1);
-  const dayId = getTodayDayId(); // e.g., 20250107 for Jan 7, 2025
-
-  // Distribute rewards
-  const tx = await rewards.distributeRewards(dayId, players, ranks);
-  await tx.wait();
-
-  console.log('Rewards distributed for day:', dayId);
-}
-```
-
-## 🔒 Security Checklist
-
-- [ ] Never commit .env file
-- [ ] Use separate wallet for deployment
-- [ ] Use separate wallet for rewards distribution
-- [ ] Test all functions on testnet first
-- [ ] Verify contracts on Arbiscan
-- [ ] Set proper rewardsDistributor address
-- [ ] Keep private keys in secure environment variables
-- [ ] Audit contracts before mainnet deployment
-- [ ] Set up monitoring for contract events
-
-## 📝 Contract Addresses
-
-### Testnet (Arbitrum Sepolia)
-- **8BIT Token**: `TBD` (update after deployment)
-- **GameRewards**: `TBD` (update after deployment)
-- **Explorer**: https://sepolia.arbiscan.io
-
-### Mainnet (Arbitrum One)
-- **8BIT Token**: `TBD` (update after deployment)
-- **GameRewards**: `TBD` (update after deployment)
-- **Explorer**: https://arbiscan.io
+5. **Launch** 🚀
+   - Public announcement
+   - Token sale begins
+   - Tournaments go live
 
 ## 🛠️ Development
 
 ### Compile Contracts
 ```bash
-npm run compile
+npx hardhat compile
 ```
 
 ### Run Tests
@@ -203,37 +296,127 @@ npm test
 
 ### Local Development
 ```bash
-npx hardhat node  # Start local node
-npm run deploy    # Deploy to local node
+npx hardhat node  # Start local blockchain
+npm run deploy    # Deploy to localhost
 ```
 
-## 📚 Additional Resources
+### Hardhat Console
+```bash
+npx hardhat console --network arbitrumSepolia
+```
 
-- [Hardhat Documentation](https://hardhat.org/docs)
-- [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts)
-- [Arbitrum Documentation](https://docs.arbitrum.io)
-- [Arbiscan](https://arbiscan.io)
-- [WalletConnect Cloud](https://cloud.walletconnect.com)
+## 🔒 Security Checklist
 
-## ⚠️ Important Notes
+- [ ] Never commit `.env` file
+- [ ] Use separate wallet for deployment
+- [ ] Use separate wallet for operations
+- [ ] Test all functions on testnet first
+- [ ] Verify all contracts on Arbiscan
+- [ ] Set proper permissions (distributors, managers)
+- [ ] Keep private keys in secure environment
+- [ ] Audit contracts before mainnet (recommended)
+- [ ] Monitor contract events post-deployment
+- [ ] Set up alerts for unusual activity
+- [ ] Document all admin operations
 
-1. **Gas Costs**: Arbitrum has very low gas fees compared to Ethereum mainnet
-2. **Network**: Always double-check you're on the correct network (testnet vs mainnet)
-3. **Private Keys**: Never share or commit private keys
-4. **Testing**: Thoroughly test on testnet before mainnet deployment
-5. **Backup**: Keep backup of deployment addresses and configuration
+## 📝 Contract Addresses
+
+### Testnet (Arbitrum Sepolia)
+- **8BIT Token**: `TBD` (update after deployment)
+- **GameRewards**: `TBD` (update after deployment)
+- **TournamentManager**: `TBD` (update after deployment)
+- **TournamentPayments**: `TBD` (update after deployment)
+- **TokenSale**: `TBD` (update after deployment)
+- **TreasuryGasManager**: `TBD` (update after deployment)
+- **TestnetFaucet**: `TBD` (update after deployment)
+- **Explorer**: https://sepolia.arbiscan.io
+
+### Mainnet (Arbitrum One)
+- **8BIT Token**: `TBD` (update after deployment)
+- **GameRewards**: `TBD` (update after deployment)
+- **TournamentManager**: `TBD` (update after deployment)
+- **TournamentPayments**: `TBD` (update after deployment)
+- **TokenSale**: `TBD` (update after deployment)
+- **TreasuryGasManager**: `TBD` (update after deployment)
+- **TestnetFaucet**: N/A (testnet only)
+- **Explorer**: https://arbiscan.io
 
 ## 🐛 Troubleshooting
 
-### "Insufficient funds" error
-- Make sure your wallet has enough ETH for gas
-- Get testnet ETH from the faucet
+### Compilation Errors
 
-### "Network not supported" error
-- Check your RPC URL in hardhat.config.ts
-- Verify you're connected to the right network
+**"ReentrancyGuard not found"**
+- OpenZeppelin v5 moved it to `utils/ReentrancyGuard`
+- Already fixed in current version
 
-### "Verification failed" error
-- Make sure contract is deployed
-- Check you're using the correct constructor arguments
-- Verify on the correct network (testnet vs mainnet)
+**"Uniswap imports not found"**
+```bash
+npm install @uniswap/v3-periphery @uniswap/v3-core
+```
+
+### Deployment Errors
+
+**"Insufficient funds"**
+- Get more testnet ETH from faucet
+- Check wallet balance
+
+**"Nonce too low"**
+- Wait a few minutes
+- Retry deployment
+
+**"Network not supported"**
+- Verify hardhat.config.ts network settings
+- Check RPC URL is correct
+
+### Verification Errors
+
+**"Already verified"**
+- Contract already verified on Arbiscan
+- No action needed
+
+**"Constructor arguments required"**
+- Use exact arguments from deployment
+- Check deployment script output
+
+### Tournament Creation Fails
+
+**"Only owner can create"**
+- Check deployer is contract owner
+- Verify wallet address matches
+
+**"Start time must be in future"**
+- Ensure startTime > current block.timestamp
+- Account for clock skew
+
+## 📚 Additional Resources
+
+- [Full Deployment Guide](../docs/deployment/testnet-deployment.md)
+- [Hardhat Documentation](https://hardhat.org/docs)
+- [OpenZeppelin Contracts v5](https://docs.openzeppelin.com/contracts/5.x/)
+- [Arbitrum Documentation](https://docs.arbitrum.io)
+- [Uniswap V3 Documentation](https://docs.uniswap.org/contracts/v3/overview)
+- [Arbiscan Block Explorer](https://arbiscan.io)
+
+## ⚠️ Important Notes
+
+1. **Gas Costs**: Arbitrum has 90%+ lower gas fees than Ethereum mainnet
+2. **Network**: Always verify you're on correct network (testnet/mainnet)
+3. **Private Keys**: NEVER share or commit private keys
+4. **Testing**: Thoroughly test on testnet before mainnet (3-6 months recommended)
+5. **Backups**: Keep backups of all deployment addresses and configs
+6. **Monitoring**: Set up event monitoring after deployment
+7. **Audits**: Consider professional audit before mainnet launch
+8. **Liquidity**: Lock DEX liquidity for minimum 3 years
+
+## 📞 Support
+
+For deployment assistance or questions:
+- Review [Testnet Deployment Guide](../docs/deployment/testnet-deployment.md)
+- Check Firebase logs: `firebase functions:log`
+- Monitor contract events on Arbiscan
+- Verify all environment variables are set
+
+---
+
+**Built for Arbitrum One** 🎮
+*Low fees, fast finality, Ethereum security*

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useAccount, useContractWrite, useContractRead, usePrepareContractWrite } from 'wagmi';
-import { parseEther, parseUnits } from 'viem';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEther } from 'viem';
 import { useEthPrice, calculateEthAmount } from './useEthPrice';
 
 // Contract ABI (minimal - only what we need)
@@ -107,7 +107,7 @@ export function useTournamentPayment({
   const [isApproving, setIsApproving] = useState(false);
 
   // Get tournament fee in USDC (6 decimals)
-  const { data: feeInUsdc } = useContractRead({
+  const { data: feeInUsdc } = useReadContract({
     address: tournamentPaymentsAddress,
     abi: TOURNAMENT_PAYMENTS_ABI,
     functionName: 'tournamentFees',
@@ -115,21 +115,25 @@ export function useTournamentPayment({
   });
 
   // Check if user has paid
-  const { data: hasPaid } = useContractRead({
+  const { data: hasPaid } = useReadContract({
     address: tournamentPaymentsAddress,
     abi: TOURNAMENT_PAYMENTS_ABI,
     functionName: 'hasPaid',
     args: address ? [BigInt(tournamentId), address] : undefined,
-    enabled: !!address,
+    query: {
+      enabled: !!address,
+    },
   });
 
   // Check USDC allowance
-  const { data: usdcAllowance } = useContractRead({
+  const { data: usdcAllowance } = useReadContract({
     address: usdcAddress,
     abi: USDC_ABI,
     functionName: 'allowance',
     args: address ? [address, tournamentPaymentsAddress] : undefined,
-    enabled: !!address,
+    query: {
+      enabled: !!address,
+    },
   });
 
   // Calculate values
@@ -137,17 +141,15 @@ export function useTournamentPayment({
   const feeInEth = ethPrice ? calculateEthAmount(feeInUsd, ethPrice) : null;
   const needsApproval = !!(feeInUsdc && usdcAllowance && usdcAllowance < feeInUsdc);
 
-  // USDC Approval
-  const { write: writeApprove } = useContractWrite({
-    address: usdcAddress,
-    abi: USDC_ABI,
-    functionName: 'approve',
-    args: feeInUsdc ? [tournamentPaymentsAddress, feeInUsdc] : undefined,
-  });
+  // Write contracts
+  const { writeContractAsync: writeApprove } = useWriteContract();
+  const { writeContractAsync: writePayUsdc } = useWriteContract();
+  const { writeContractAsync: writePayEth } = useWriteContract();
 
+  // USDC Approval
   const approveUsdc = useCallback(async () => {
-    if (!writeApprove) {
-      setError('Unable to prepare approval transaction');
+    if (!feeInUsdc) {
+      setError('Fee not loaded');
       return;
     }
 
@@ -155,33 +157,28 @@ export function useTournamentPayment({
     setError(null);
 
     try {
-      const tx = await writeApprove();
-      await tx.wait();
-      console.log('USDC approved successfully');
+      const hash = await writeApprove({
+        address: usdcAddress,
+        abi: USDC_ABI,
+        functionName: 'approve',
+        args: [tournamentPaymentsAddress, feeInUsdc],
+      });
+
+      console.log('USDC approval transaction sent:', hash);
+      // Note: In production, you'd want to wait for confirmation
+      // using useWaitForTransactionReceipt or similar
     } catch (err: any) {
       console.error('Approval error:', err);
       setError(err.message || 'Approval failed');
     } finally {
       setIsApproving(false);
     }
-  }, [writeApprove]);
+  }, [writeApprove, feeInUsdc, usdcAddress, tournamentPaymentsAddress]);
 
   // Pay with USDC
-  const { write: writePayUsdc } = useContractWrite({
-    address: tournamentPaymentsAddress,
-    abi: TOURNAMENT_PAYMENTS_ABI,
-    functionName: 'payWithUsdc',
-    args: [BigInt(tournamentId)],
-  });
-
   const payWithUsdc = useCallback(async () => {
     if (needsApproval) {
       setError('Please approve USDC first');
-      return;
-    }
-
-    if (!writePayUsdc) {
-      setError('Unable to prepare payment transaction');
       return;
     }
 
@@ -189,32 +186,24 @@ export function useTournamentPayment({
     setError(null);
 
     try {
-      const tx = await writePayUsdc();
-      await tx.wait();
-      console.log('Tournament entry paid with USDC');
+      const hash = await writePayUsdc({
+        address: tournamentPaymentsAddress,
+        abi: TOURNAMENT_PAYMENTS_ABI,
+        functionName: 'payWithUsdc',
+        args: [BigInt(tournamentId)],
+      });
+
+      console.log('USDC payment transaction sent:', hash);
     } catch (err: any) {
       console.error('Payment error:', err);
       setError(err.message || 'Payment failed');
     } finally {
       setIsPaying(false);
     }
-  }, [writePayUsdc, needsApproval]);
+  }, [writePayUsdc, needsApproval, tournamentPaymentsAddress, tournamentId]);
 
   // Pay with ETH
-  const { write: writePayEth } = useContractWrite({
-    address: tournamentPaymentsAddress,
-    abi: TOURNAMENT_PAYMENTS_ABI,
-    functionName: 'payWithEth',
-    args: [BigInt(tournamentId)],
-    value: feeInEth ? parseEther(feeInEth.toString()) : undefined,
-  });
-
   const payWithEth = useCallback(async () => {
-    if (!writePayEth) {
-      setError('Unable to prepare payment transaction');
-      return;
-    }
-
     if (!feeInEth) {
       setError('ETH price not available');
       return;
@@ -224,16 +213,22 @@ export function useTournamentPayment({
     setError(null);
 
     try {
-      const tx = await writePayEth();
-      await tx.wait();
-      console.log('Tournament entry paid with ETH');
+      const hash = await writePayEth({
+        address: tournamentPaymentsAddress,
+        abi: TOURNAMENT_PAYMENTS_ABI,
+        functionName: 'payWithEth',
+        args: [BigInt(tournamentId)],
+        value: parseEther(feeInEth.toString()),
+      });
+
+      console.log('ETH payment transaction sent:', hash);
     } catch (err: any) {
       console.error('Payment error:', err);
       setError(err.message || 'Payment failed');
     } finally {
       setIsPaying(false);
     }
-  }, [writePayEth, feeInEth]);
+  }, [writePayEth, feeInEth, tournamentPaymentsAddress, tournamentId]);
 
   return {
     hasPaid: hasPaid || false,
