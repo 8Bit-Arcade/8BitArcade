@@ -19,6 +19,7 @@ export { resetDailyLeaderboards, resetWeeklyLeaderboards } from './leaderboard/r
 export { unbanAccount, clearUserFlags, getFlaggedUsers, getUserBanInfo } from './admin/adminFunctions';
 
 // Tournament functions
+export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual } from './tournaments/scheduleTournaments';
 export { getTournaments } from './tournaments/getTournaments';
 export { getTournamentLeaderboard } from './tournaments/getTournamentLeaderboard';
 export { enterTournament } from './tournaments/enterTournament';
