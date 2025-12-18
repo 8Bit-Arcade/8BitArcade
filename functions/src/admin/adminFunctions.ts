@@ -3,19 +3,6 @@ import { unbanAccount as unbanAccountInternal, clearFlags as clearFlagsInternal,
 import { collections } from '../config/firebase';
 
 /**
- * CORS configuration for admin functions
- * Allow admin panel from both localhost and production
- */
-const corsOptions = {
-  cors: [
-    'http://localhost:3000',
-    'https://play.8bitarcade.games',
-    'https://www.8bitarcade.games',
-    'https://8bitarcade.games',
-  ],
-};
-
-/**
  * Admin wallet addresses (lowercase)
  * TODO: Move to environment config or Firestore admin collection
  */
