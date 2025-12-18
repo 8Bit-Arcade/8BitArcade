@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 // Game configuration
 const CONFIG = {
@@ -46,12 +47,18 @@ export class SpaceRocksScene extends Phaser.Scene {
   private livesText!: Phaser.GameObjects.Text;
   private levelText!: Phaser.GameObjects.Text;
 
+  // Audio
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'SpaceRocksScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -59,6 +66,21 @@ export class SpaceRocksScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sounds
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        this.sounds.registerSound('shoot', this.sounds.generateLaser(800, 200, 0.1));
+        this.sounds.registerSound('explode', this.sounds.generateExplosion(0.3));
+        this.sounds.registerSound('death', this.sounds.generateExplosion(0.8));
+        this.sounds.registerSound('levelUp', this.sounds.generatePowerUp());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
@@ -98,6 +120,16 @@ export class SpaceRocksScene extends Phaser.Scene {
 
     // Start invincible
     this.setInvincible();
+
+    // Register shutdown handler
+    this.events.on('shutdown', this.onShutdown, this);
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 
   createPlayer(x: number, y: number): void {
@@ -220,6 +252,11 @@ export class SpaceRocksScene extends Phaser.Scene {
 
     this.bullets.add(bullet);
 
+    // Play shoot sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('shoot');
+    }
+
     // Auto-destroy after lifetime
     this.time.delayedCall(CONFIG.BULLET_LIFETIME, () => {
       bullet.destroy();
@@ -246,6 +283,11 @@ export class SpaceRocksScene extends Phaser.Scene {
     const y = asteroid.y;
     asteroid.destroy();
 
+    // Play explosion sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('explode');
+    }
+
     if (size === 'large') {
       this.createAsteroid(x - 20, y, 'medium');
       this.createAsteroid(x + 20, y, 'medium');
@@ -264,6 +306,11 @@ export class SpaceRocksScene extends Phaser.Scene {
     this.level++;
     this.levelText.setText(`LEVEL ${this.level}`);
 
+    // Play level up sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('levelUp');
+    }
+
     // Brief pause then spawn new asteroids
     this.time.delayedCall(1000, () => {
       this.spawnAsteroids(
@@ -277,6 +324,11 @@ export class SpaceRocksScene extends Phaser.Scene {
 
     this.lives--;
     this.livesText.setText(`LIVES: ${this.lives}`);
+
+    // Play death sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('death');
+    }
 
     if (this.lives <= 0) {
       this.endGame();

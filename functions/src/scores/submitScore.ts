@@ -194,7 +194,45 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       verified: true,
     });
 
-    // Only save ranked/tournament scores to leaderboards
+    // Handle tournament scores separately
+    if (sessionData.mode === 'tournament') {
+      if (!sessionData.tournamentId) {
+        throw new HttpsError('invalid-argument', 'Tournament ID missing for tournament session');
+      }
+
+      // Update tournament entry
+      const tournamentEntryRef = collections.tournaments
+        .doc(sessionData.tournamentId)
+        .collection('entries')
+        .doc(playerAddress);
+
+      const entryDoc = await tournamentEntryRef.get();
+
+      if (!entryDoc.exists) {
+        throw new HttpsError('not-found', 'Tournament entry not found. Must enter tournament first.');
+      }
+
+      const entryData = entryDoc.data();
+      const currentBest = entryData?.bestScore || 0;
+      const newBest = verifiedScore > currentBest;
+
+      // Update tournament entry
+      await tournamentEntryRef.update({
+        bestScore: newBest ? verifiedScore : currentBest,
+        lastPlayedAt: now,
+        totalPlays: FieldValue.increment(1),
+      });
+
+      return {
+        success: true,
+        verified: true,
+        score: verifiedScore,
+        newBest,
+        flags: analysis.flags.length > 0 ? analysis.flags : undefined,
+      };
+    }
+
+    // Only save ranked scores to regular leaderboards (skip free play)
     if (sessionData.mode === 'free') {
       return {
         success: true,

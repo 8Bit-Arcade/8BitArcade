@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   PLAYER_SPEED: 300,
@@ -52,6 +53,9 @@ export class GalaxyFighterScene extends Phaser.Scene {
   private waveText!: Phaser.GameObjects.Text;
   private stars!: Phaser.GameObjects.Graphics;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
@@ -69,6 +73,8 @@ export class GalaxyFighterScene extends Phaser.Scene {
 
   create(): void {
     const { width, height } = this.scale;
+
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Starfield background
     this.stars = this.add.graphics();
@@ -221,6 +227,10 @@ export class GalaxyFighterScene extends Phaser.Scene {
   }
 
   fireBullet(): void {
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('shoot');
+    }
+
     const bullet = this.add.graphics();
     bullet.fillStyle(0x00ff41);
     bullet.fillRect(-2, -8, 4, 8);
@@ -297,6 +307,9 @@ export class GalaxyFighterScene extends Phaser.Scene {
 
           enemy.hp--;
           if (enemy.hp <= 0) {
+            if (this.sounds && this.soundEnabled) {
+              this.sounds.play('explode');
+            }
             const points = enemy.isBoss ? CONFIG.BOSS_POINTS : CONFIG.ENEMY_POINTS;
             this.score += points;
             this.onScoreUpdate(this.score);
@@ -326,11 +339,17 @@ export class GalaxyFighterScene extends Phaser.Scene {
     this.waveText.setText(`WAVE ${this.wave}`);
     this.enemiesSpawned = 0;
     this.spawnTimer = 1000; // Delay before next wave
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('nextWave');
+    }
   }
 
   loseLife(): void {
     this.lives--;
     this.livesText.setText(`LIVES: ${this.lives}`);
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('hit');
+    }
 
     // Clear bullets
     this.enemyBullets.forEach(b => b.graphics.destroy());
@@ -348,6 +367,9 @@ export class GalaxyFighterScene extends Phaser.Scene {
 
   endGame(): void {
     this.gameOver = true;
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
     this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
       fontSize: '32px',
@@ -357,5 +379,12 @@ export class GalaxyFighterScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }

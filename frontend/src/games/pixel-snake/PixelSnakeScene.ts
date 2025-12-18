@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   GRID_SIZE: 20,
@@ -42,12 +43,17 @@ export class PixelSnakeScene extends Phaser.Scene {
 
   private graphics!: Phaser.GameObjects.Graphics;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'PixelSnakeScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -55,12 +61,30 @@ export class PixelSnakeScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sound system
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        // Register sounds
+        this.sounds.registerSound('eatFood', this.sounds.generateCoin());
+        this.sounds.registerSound('eatBonus', this.sounds.generatePowerUp());
+        this.sounds.registerSound('gameOver', this.sounds.generateHit());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
     this.gridWidth = Math.floor(width / CONFIG.GRID_SIZE);
     this.gridHeight = Math.floor(height / CONFIG.GRID_SIZE);
+
+    // Setup cleanup handler
+    this.events.on('shutdown', this.onShutdown, this);
 
     this.graphics = this.add.graphics();
 
@@ -153,6 +177,11 @@ export class PixelSnakeScene extends Phaser.Scene {
       const points = this.food.isBonus ? CONFIG.BONUS_FOOD_POINTS : CONFIG.FOOD_POINTS;
       this.score += points;
       this.onScoreUpdate(this.score);
+
+      // Play eat sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play(this.food.isBonus ? 'eatBonus' : 'eatFood');
+      }
 
       // Speed up
       this.moveDelay = Math.max(CONFIG.MIN_SPEED, this.moveDelay - CONFIG.SPEED_INCREASE);
@@ -269,6 +298,11 @@ export class PixelSnakeScene extends Phaser.Scene {
   endGame(): void {
     this.gameOver = true;
 
+    // Play game over sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
+
     // Flash snake red
     this.graphics.clear();
     this.snake.forEach((seg) => {
@@ -294,6 +328,13 @@ export class PixelSnakeScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 
   update(time: number, delta: number): void {

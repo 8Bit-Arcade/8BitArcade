@@ -91,3 +91,42 @@ export interface ValidationResult {
   flags: string[];
   confidence: number;
 }
+
+// Tournament types
+export type TournamentTier = 'standard' | 'highRoller';
+export type TournamentPeriod = 'weekly' | 'monthly';
+export type TournamentStatus = 'upcoming' | 'active' | 'ended' | 'finalized';
+
+export interface TournamentDocument {
+  id: string;
+  tier: TournamentTier;
+  period: TournamentPeriod;
+  startTime: Timestamp;
+  endTime: Timestamp;
+  entryFee: number; // In 8BIT tokens
+  prizePool: number; // In 8BIT tokens
+  status: TournamentStatus;
+  participants: string[]; // Array of wallet addresses
+  createdAt: Timestamp;
+  finalizedAt: Timestamp | null;
+  winnerId: string | null;
+}
+
+export interface TournamentEntryDocument {
+  tournamentId: string;
+  player: string; // wallet address
+  enteredAt: Timestamp;
+  bestScore: number;
+  lastPlayedAt: Timestamp | null;
+  totalPlays: number;
+  paid: boolean; // Whether entry fee was paid
+  txHash: string | null; // Transaction hash of entry fee payment
+}
+
+export interface TournamentLeaderboardEntry {
+  player: string;
+  username: string;
+  score: number;
+  timestamp: Timestamp;
+  rank: number;
+}

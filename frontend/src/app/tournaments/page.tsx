@@ -6,6 +6,7 @@ import { formatEther, parseEther } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
+import { callFunction } from '@/lib/firebase-functions';
 import {
   TOURNAMENT_MANAGER_ADDRESS,
   TOURNAMENT_MANAGER_ABI,
@@ -38,6 +39,8 @@ export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<number | null>(null);
   const [needsApproval, setNeedsApproval] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [entering, setEntering] = useState(false);
 
   // Read tournament fees
   const { data: standardWeeklyFee } = useReadContract({
@@ -109,84 +112,57 @@ export default function TournamentsPage() {
     hash: enterHash,
   });
 
-  // Placeholder tournament data (in production, fetch from backend/contract events)
+  // Fetch tournaments from backend
   useEffect(() => {
-    const now = new Date();
+    async function fetchTournaments() {
+      setLoading(true);
+      try {
+        const result = await callFunction<
+          { player?: string },
+          { success: boolean; tournaments: any[] }
+        >('getTournaments', {
+          player: address ? address.toLowerCase() : undefined,
+        });
 
-    // Create sample tournaments using contract constants
-    const sampleTournaments: Tournament[] = [];
+        if (result.success) {
+          // Convert backend format to frontend format
+          const formattedTournaments: Tournament[] = result.tournaments.map((t: any) => {
+            // Convert tier and period to display format
+            const tier = t.tier === 'standard' ? 'Standard' : 'High Roller';
+            const period = t.period === 'weekly' ? 'Weekly' : 'Monthly';
 
-    // Standard Weekly
-    if (standardWeeklyFee && standardWeeklyPrize) {
-      sampleTournaments.push({
-        id: 1,
-        tier: 'Standard',
-        period: 'Weekly',
-        startTime: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
-        endTime: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
-        entryFee: standardWeeklyFee as bigint,
-        prizePool: standardWeeklyPrize as bigint,
-        totalEntries: 42,
-        winner: '0x0000000000000000000000000000000000000000',
-        isActive: true,
-        status: 'active',
-      });
+            // Convert Firestore timestamps to dates
+            const startTime = new Date(t.startTime.seconds * 1000);
+            const endTime = new Date(t.endTime.seconds * 1000);
+
+            return {
+              id: parseInt(t.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000),
+              tier,
+              period,
+              startTime,
+              endTime,
+              entryFee: parseEther(t.entryFee.toString()),
+              prizePool: parseEther(t.prizePool.toString()),
+              totalEntries: t.participants?.length || 0,
+              winner: t.winnerId || '0x0000000000000000000000000000000000000000',
+              isActive: t.status === 'active',
+              status: t.status as TournamentStatus,
+              hasEntered: t.hasEntered || false,
+            };
+          });
+
+          setTournaments(formattedTournaments);
+        }
+      } catch (error) {
+        console.error('Error fetching tournaments:', error);
+        // Keep existing tournaments or show empty state
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // Standard Monthly
-    if (standardMonthlyFee && standardMonthlyPrize) {
-      sampleTournaments.push({
-        id: 2,
-        tier: 'Standard',
-        period: 'Monthly',
-        startTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
-        endTime: new Date(now.getTime() + 33 * 24 * 60 * 60 * 1000),
-        entryFee: standardMonthlyFee as bigint,
-        prizePool: standardMonthlyPrize as bigint,
-        totalEntries: 15,
-        winner: '0x0000000000000000000000000000000000000000',
-        isActive: true,
-        status: 'upcoming',
-      });
-    }
-
-    // High Roller Weekly
-    if (highRollerWeeklyFee && highRollerWeeklyPrize) {
-      sampleTournaments.push({
-        id: 3,
-        tier: 'High Roller',
-        period: 'Weekly',
-        startTime: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
-        endTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000),
-        entryFee: highRollerWeeklyFee as bigint,
-        prizePool: highRollerWeeklyPrize as bigint,
-        totalEntries: 18,
-        winner: '0x0000000000000000000000000000000000000000',
-        isActive: true,
-        status: 'active',
-      });
-    }
-
-    // High Roller Monthly
-    if (highRollerMonthlyFee && highRollerMonthlyPrize) {
-      sampleTournaments.push({
-        id: 4,
-        tier: 'High Roller',
-        period: 'Monthly',
-        startTime: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-        endTime: new Date(now.getTime() + 37 * 24 * 60 * 60 * 1000),
-        entryFee: highRollerMonthlyFee as bigint,
-        prizePool: highRollerMonthlyPrize as bigint,
-        totalEntries: 8,
-        winner: '0x0000000000000000000000000000000000000000',
-        isActive: true,
-        status: 'upcoming',
-      });
-    }
-
-    setTournaments(sampleTournaments);
-  }, [standardWeeklyFee, standardMonthlyFee, highRollerWeeklyFee, highRollerMonthlyFee,
-      standardWeeklyPrize, standardMonthlyPrize, highRollerWeeklyPrize, highRollerMonthlyPrize]);
+    fetchTournaments();
+  }, [address]);
 
   // Check if approval is needed
   useEffect(() => {
@@ -209,8 +185,11 @@ export default function TournamentsPage() {
     });
   };
 
-  const handleEnter = async (tournamentId: number) => {
-    if (!isConnected) return;
+  const handleEnter = async (tournamentId: string) => {
+    if (!isConnected || !address) return;
+
+    setEntering(true);
+    setSelectedTournament(parseInt(tournamentId));
 
     enterTournament({
       address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
@@ -219,6 +198,69 @@ export default function TournamentsPage() {
       args: [BigInt(tournamentId)],
     });
   };
+
+  // Handle successful tournament entry
+  useEffect(() => {
+    async function registerEntry() {
+      if (isEnterSuccess && enterHash && selectedTournament && address) {
+        try {
+          // Find the tournament
+          const tournament = tournaments.find((t) => t.id === selectedTournament);
+          if (!tournament) return;
+
+          // Call backend to register entry
+          await callFunction<
+            { tournamentId: string; player: string; txHash: string },
+            { success: boolean }
+          >('enterTournament', {
+            tournamentId: selectedTournament.toString(),
+            player: address.toLowerCase(),
+            txHash: enterHash,
+          });
+
+          // Refresh tournaments to show updated entry status
+          const result = await callFunction<
+            { player?: string },
+            { success: boolean; tournaments: any[] }
+          >('getTournaments', {
+            player: address.toLowerCase(),
+          });
+
+          if (result.success) {
+            const formattedTournaments: Tournament[] = result.tournaments.map((t: any) => {
+              const tier = t.tier === 'standard' ? 'Standard' : 'High Roller';
+              const period = t.period === 'weekly' ? 'Weekly' : 'Monthly';
+              const startTime = new Date(t.startTime.seconds * 1000);
+              const endTime = new Date(t.endTime.seconds * 1000);
+
+              return {
+                id: parseInt(t.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000),
+                tier,
+                period,
+                startTime,
+                endTime,
+                entryFee: parseEther(t.entryFee.toString()),
+                prizePool: parseEther(t.prizePool.toString()),
+                totalEntries: t.participants?.length || 0,
+                winner: t.winnerId || '0x0000000000000000000000000000000000000000',
+                isActive: t.status === 'active',
+                status: t.status as TournamentStatus,
+                hasEntered: t.hasEntered || false,
+              };
+            });
+
+            setTournaments(formattedTournaments);
+          }
+        } catch (error) {
+          console.error('Error registering tournament entry:', error);
+        } finally {
+          setEntering(false);
+        }
+      }
+    }
+
+    registerEntry();
+  }, [isEnterSuccess, enterHash, selectedTournament, address, tournaments]);
 
   const filteredTournaments =
     filter === 'all'
@@ -313,7 +355,23 @@ export default function TournamentsPage() {
 
         {/* Tournament List */}
         <div className="space-y-4">
-          {filteredTournaments.map((tournament) => (
+          {loading ? (
+            <Card>
+              <div className="text-center py-8">
+                <p className="font-arcade text-gray-400">Loading tournaments...</p>
+              </div>
+            </Card>
+          ) : filteredTournaments.length === 0 ? (
+            <Card>
+              <div className="text-center py-8">
+                <p className="font-pixel text-gray-400 mb-2">No tournaments available</p>
+                <p className="font-arcade text-sm text-gray-500">
+                  Check back soon for upcoming tournaments!
+                </p>
+              </div>
+            </Card>
+          ) : (
+            filteredTournaments.map((tournament) => (
             <Card key={tournament.id} className="hover:border-arcade-pink/60">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {/* Tournament Info */}
@@ -390,12 +448,15 @@ export default function TournamentsPage() {
                               variant="primary"
                               size="sm"
                               onClick={() => {
-                                setSelectedTournament(tournament.id);
-                                handleEnter(tournament.id);
+                                handleEnter(tournament.id.toString());
                               }}
-                              disabled={!!enterHash}
+                              disabled={!!enterHash || entering || tournament.hasEntered}
                             >
-                              {enterHash ? 'Entering...' : 'Enter Now'}
+                              {entering || enterHash
+                                ? 'Entering...'
+                                : tournament.hasEntered
+                                ? 'Entered'
+                                : 'Enter Now'}
                             </Button>
                           )}
                         </>
@@ -425,7 +486,8 @@ export default function TournamentsPage() {
                 </div>
               </div>
             </Card>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Info Cards */}

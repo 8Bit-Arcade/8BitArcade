@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   PLAYER_SPEED: 300,
@@ -56,12 +57,17 @@ export class AlienAssaultScene extends Phaser.Scene {
   private livesText!: Phaser.GameObjects.Text;
   private levelText!: Phaser.GameObjects.Text;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'AlienAssaultScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -69,10 +75,27 @@ export class AlienAssaultScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        this.sounds.registerSound('shoot', this.sounds.generateLaser());
+        this.sounds.registerSound('alienKill', this.sounds.generateExplosion(0.2));
+        this.sounds.registerSound('playerHit', this.sounds.generateExplosion(0.5));
+        this.sounds.registerSound('nextLevel', this.sounds.generatePowerUp());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
+
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Create player
     this.player = this.add.graphics();
@@ -177,6 +200,10 @@ export class AlienAssaultScene extends Phaser.Scene {
     const now = this.time.now;
     if (now - this.lastFired < CONFIG.FIRE_RATE) return;
     this.lastFired = now;
+
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('shoot');
+    }
 
     const bullet = this.add.graphics();
     bullet.fillStyle(0x00ff41);
@@ -284,6 +311,10 @@ export class AlienAssaultScene extends Phaser.Scene {
           alien.active = false;
           alien.graphics.setVisible(false);
 
+          if (this.sounds && this.soundEnabled) {
+            this.sounds.play('alienKill');
+          }
+
           this.score += CONFIG.ALIEN_POINTS[alien.row];
           this.onScoreUpdate(this.score);
 
@@ -329,6 +360,10 @@ export class AlienAssaultScene extends Phaser.Scene {
     this.lives--;
     this.livesText.setText(`LIVES: ${this.lives}`);
 
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('playerHit');
+    }
+
     if (this.lives <= 0) {
       this.endGame();
     } else {
@@ -343,6 +378,10 @@ export class AlienAssaultScene extends Phaser.Scene {
   nextWave(): void {
     this.level++;
     this.levelText.setText(`WAVE ${this.level}`);
+
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('nextLevel');
+    }
 
     // Clear bullets
     this.bullets.clear(true, true);
@@ -363,6 +402,10 @@ export class AlienAssaultScene extends Phaser.Scene {
 
   endGame(): void {
     this.gameOver = true;
+
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
 
     const { width, height } = this.scale;
     this.add
@@ -416,6 +459,13 @@ export class AlienAssaultScene extends Phaser.Scene {
 
     // Check collisions
     this.checkCollisions();
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }
 

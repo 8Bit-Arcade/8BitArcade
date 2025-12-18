@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   GRID_SIZE: 20,
@@ -57,12 +58,17 @@ export class BugBlasterScene extends Phaser.Scene {
   private livesText!: Phaser.GameObjects.Text;
   private levelText!: Phaser.GameObjects.Text;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'BugBlasterScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -70,10 +76,28 @@ export class BugBlasterScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        this.sounds.registerSound('shoot', this.sounds.generateLaser(800, 200, 0.08));
+        this.sounds.registerSound('killSegment', this.sounds.generateExplosion(0.15));
+        this.sounds.registerSound('killSpider', this.sounds.generateExplosion(0.25));
+        this.sounds.registerSound('hit', this.sounds.generateHit());
+        this.sounds.registerSound('nextLevel', this.sounds.generatePowerUp());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
+
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Create player
     this.player = this.add.graphics();
@@ -340,6 +364,10 @@ export class BugBlasterScene extends Phaser.Scene {
   }
 
   fireBullet(): void {
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('shoot');
+    }
+
     const bullet = this.add.graphics();
 
     // Outer glow
@@ -461,6 +489,10 @@ export class BugBlasterScene extends Phaser.Scene {
           segment.graphics.destroy();
           this.centipedeSegments.splice(j, 1);
 
+          if (this.sounds && this.soundEnabled) {
+            this.sounds.play('killSegment');
+          }
+
           this.score += CONFIG.SEGMENT_POINTS;
           this.onScoreUpdate(this.score);
 
@@ -523,6 +555,11 @@ export class BugBlasterScene extends Phaser.Scene {
           this.spider.graphics.destroy();
           this.spider = null;
           this.spiderTimer = 0; // Reset timer to prevent instant respawn
+
+          if (this.sounds && this.soundEnabled) {
+            this.sounds.play('killSpider');
+          }
+
           this.score += CONFIG.SPIDER_POINTS;
           this.onScoreUpdate(this.score);
         }
@@ -544,6 +581,9 @@ export class BugBlasterScene extends Phaser.Scene {
 
   loseLife(): void {
     this.lives--;
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('hit');
+    }
     this.livesText.setText(`LIVES: ${this.lives}`);
 
     if (this.lives <= 0) {
@@ -561,6 +601,11 @@ export class BugBlasterScene extends Phaser.Scene {
   levelComplete(): void {
     this.level++;
     this.levelText.setText(`LEVEL ${this.level}`);
+
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('nextLevel');
+    }
+
     this.score += 1000;
     this.onScoreUpdate(this.score);
 
@@ -578,6 +623,9 @@ export class BugBlasterScene extends Phaser.Scene {
 
   endGame(): void {
     this.gameOver = true;
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
     this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
       fontSize: '32px',
@@ -587,5 +635,12 @@ export class BugBlasterScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }

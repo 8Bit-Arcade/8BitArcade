@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   CROSSHAIR_SPEED: 200,
@@ -95,12 +96,17 @@ export class MissileCommandScene extends Phaser.Scene {
   private waveText!: Phaser.GameObjects.Text;
   private ammoText!: Phaser.GameObjects.Text;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'MissileCommandScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -108,10 +114,27 @@ export class MissileCommandScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        this.sounds.registerSound('launch', this.sounds.generateLaser(600, 800, 0.15));
+        this.sounds.registerSound('explode', this.sounds.generateExplosion(0.3));
+        this.sounds.registerSound('baseHit', this.sounds.generateExplosion(0.6));
+        this.sounds.registerSound('nextWave', this.sounds.generatePowerUp());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
+
+    this.events.on('shutdown', this.onShutdown, this);
 
     this.graphics = this.add.graphics();
     this.crosshairGraphics = this.add.graphics();
@@ -372,6 +395,10 @@ export class MissileCommandScene extends Phaser.Scene {
 
     closestBattery.missiles--;
 
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('launch');
+    }
+
     const dx = this.crosshairX - closestBattery.x;
     const dy = this.crosshairY - closestBattery.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -391,6 +418,10 @@ export class MissileCommandScene extends Phaser.Scene {
   }
 
   createExplosion(x: number, y: number): void {
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('explode');
+    }
+
     const graphics = this.add.graphics();
 
     this.explosions.push({
@@ -409,6 +440,9 @@ export class MissileCommandScene extends Phaser.Scene {
     for (const city of this.cities) {
       if (city.alive && Math.abs(city.x - x) < 20 && Math.abs(city.y - y) < 20) {
         city.alive = false;
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play('baseHit');
+        }
         this.createExplosion(x, y);
         return;
       }
@@ -418,6 +452,9 @@ export class MissileCommandScene extends Phaser.Scene {
     for (const battery of this.batteries) {
       if (battery.alive && Math.abs(battery.x - x) < 20 && Math.abs(battery.y - y) < 20) {
         battery.alive = false;
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play('baseHit');
+        }
         this.createExplosion(x, y);
         return;
       }
@@ -429,6 +466,10 @@ export class MissileCommandScene extends Phaser.Scene {
 
   waveComplete(): void {
     this.waveActive = false;
+
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('nextWave');
+    }
 
     // Bonus points for surviving cities and batteries
     const aliveCities = this.cities.filter(c => c.alive).length;
@@ -606,6 +647,10 @@ export class MissileCommandScene extends Phaser.Scene {
   endGame(): void {
     this.gameOver = true;
 
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
+
     this.add.text(this.scale.width / 2, this.scale.height / 2 - 40, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
       fontSize: '28px',
@@ -637,5 +682,12 @@ export class MissileCommandScene extends Phaser.Scene {
     this.time.delayedCall(3000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }

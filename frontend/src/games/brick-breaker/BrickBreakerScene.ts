@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   PADDLE_WIDTH: 100,
@@ -39,12 +40,17 @@ export class BrickBreakerScene extends Phaser.Scene {
   private levelText!: Phaser.GameObjects.Text;
   private instructionText!: Phaser.GameObjects.Text;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'BrickBreakerScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -52,10 +58,32 @@ export class BrickBreakerScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sound system
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        // Register sounds
+        this.sounds.registerSound('launch', this.sounds.generateBeep(600, 0.1));
+        this.sounds.registerSound('paddleHit', this.sounds.generateBeep(440, 0.08));
+        this.sounds.registerSound('wallBounce', this.sounds.generateBeep(330, 0.06));
+        this.sounds.registerSound('brickBreak', this.sounds.generateCoin());
+        this.sounds.registerSound('nextLevel', this.sounds.generatePowerUp());
+        this.sounds.registerSound('loseLife', this.sounds.generateHit());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
+
+    // Setup cleanup handler
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Create paddle
     this.paddle = this.add.graphics();
@@ -149,6 +177,11 @@ export class BrickBreakerScene extends Phaser.Scene {
     this.ballLaunched = true;
     this.instructionText.setVisible(false);
 
+    // Play launch sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('launch');
+    }
+
     // Random angle between -45 and 45 degrees upward
     const angle = this.rng.nextFloat(-0.7, 0.7) - Math.PI / 2;
     const speed = CONFIG.BALL_SPEED + (this.level - 1) * CONFIG.BALL_SPEED_INCREASE;
@@ -161,6 +194,11 @@ export class BrickBreakerScene extends Phaser.Scene {
   loseLife(): void {
     this.lives--;
     this.livesText.setText(`LIVES: ${this.lives}`);
+
+    // Play lose life sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('loseLife');
+    }
 
     if (this.lives <= 0) {
       this.endGame();
@@ -190,6 +228,11 @@ export class BrickBreakerScene extends Phaser.Scene {
         // Hit brick
         brick.setData('active', false);
         brick.setVisible(false);
+
+        // Play brick break sound
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play('brickBreak');
+        }
 
         // Score
         const row = brick.getData('row');
@@ -225,6 +268,11 @@ export class BrickBreakerScene extends Phaser.Scene {
     this.level++;
     this.levelText.setText(`LEVEL ${this.level}`);
 
+    // Play next level sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('nextLevel');
+    }
+
     // Reset bricks
     this.bricks.forEach((brick) => {
       brick.setData('active', true);
@@ -238,6 +286,11 @@ export class BrickBreakerScene extends Phaser.Scene {
   endGame(): void {
     this.gameOver = true;
 
+    // Play game over sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
+
     const { width, height } = this.scale;
     this.add
       .text(width / 2, height / 2, 'GAME OVER', {
@@ -250,6 +303,13 @@ export class BrickBreakerScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 
   update(time: number, delta: number): void {
@@ -293,10 +353,20 @@ export class BrickBreakerScene extends Phaser.Scene {
     if (this.ball.x <= CONFIG.BALL_SIZE || this.ball.x >= width - CONFIG.BALL_SIZE) {
       this.ballVelocity.x *= -1;
       this.ball.x = Phaser.Math.Clamp(this.ball.x, CONFIG.BALL_SIZE, width - CONFIG.BALL_SIZE);
+
+      // Play wall bounce sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('wallBounce');
+      }
     }
     if (this.ball.y <= CONFIG.BALL_SIZE) {
       this.ballVelocity.y *= -1;
       this.ball.y = CONFIG.BALL_SIZE;
+
+      // Play wall bounce sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('wallBounce');
+      }
     }
 
     // Bottom - lose life
@@ -312,6 +382,11 @@ export class BrickBreakerScene extends Phaser.Scene {
       this.ball.x >= this.paddle.x - CONFIG.PADDLE_WIDTH / 2 &&
       this.ball.x <= this.paddle.x + CONFIG.PADDLE_WIDTH / 2
     ) {
+      // Play paddle hit sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('paddleHit');
+      }
+
       // Bounce angle based on where ball hit paddle
       const hitPos = (this.ball.x - this.paddle.x) / (CONFIG.PADDLE_WIDTH / 2);
       const angle = hitPos * 0.7 - Math.PI / 2;

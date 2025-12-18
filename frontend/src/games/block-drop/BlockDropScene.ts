@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   GRID_WIDTH: 10,
@@ -62,12 +63,17 @@ export class BlockDropScene extends Phaser.Scene {
   private levelText!: Phaser.GameObjects.Text;
   private linesText!: Phaser.GameObjects.Text;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'BlockDropScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -75,10 +81,32 @@ export class BlockDropScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sound system
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        // Register sounds
+        this.sounds.registerSound('rotate', this.sounds.generateBeep(440, 0.05));
+        this.sounds.registerSound('move', this.sounds.generateBeep(330, 0.04));
+        this.sounds.registerSound('drop', this.sounds.generateHit());
+        this.sounds.registerSound('lineClear', this.sounds.generateCoin());
+        this.sounds.registerSound('tetris', this.sounds.generatePowerUp()); // 4 lines
+        this.sounds.registerSound('levelUp', this.sounds.generatePowerUp());
+        this.sounds.registerSound('gameOver', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
+
+    // Setup cleanup handler
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Initialize grid
     for (let y = 0; y < CONFIG.GRID_HEIGHT; y++) {
@@ -197,6 +225,12 @@ export class BlockDropScene extends Phaser.Scene {
 
     this.currentPiece.x = newX;
     this.currentPiece.y = newY;
+
+    // Play move sound only for horizontal movement (dx)
+    if (dx !== 0 && this.sounds && this.soundEnabled) {
+      this.sounds.play('move');
+    }
+
     return true;
   }
 
@@ -207,6 +241,11 @@ export class BlockDropScene extends Phaser.Scene {
 
     if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y, rotated)) {
       this.currentPiece.shape = rotated;
+
+      // Play rotate sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('rotate');
+      }
     }
   }
 
@@ -261,6 +300,11 @@ export class BlockDropScene extends Phaser.Scene {
         }
       }
     }
+
+    // Play drop sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('drop');
+    }
   }
 
   clearLines(): void {
@@ -284,7 +328,17 @@ export class BlockDropScene extends Phaser.Scene {
       this.linesText.setText(`LINES: ${this.lines}`);
       this.scoreText.setText(`SCORE: ${this.score}`);
 
+      // Play line clear sound (special tetris sound for 4 lines)
+      if (this.sounds && this.soundEnabled) {
+        if (linesCleared === 4) {
+          this.sounds.play('tetris');
+        } else {
+          this.sounds.play('lineClear');
+        }
+      }
+
       // Level up
+      const previousLevel = this.level;
       if (this.lines >= this.level * CONFIG.LINES_PER_LEVEL) {
         this.level++;
         this.levelText.setText(`LEVEL: ${this.level}`);
@@ -292,6 +346,15 @@ export class BlockDropScene extends Phaser.Scene {
           CONFIG.MIN_FALL_SPEED,
           CONFIG.INITIAL_FALL_SPEED - (this.level - 1) * CONFIG.SPEED_DECREASE
         );
+
+        // Play level up sound
+        if (this.sounds && this.soundEnabled) {
+          setTimeout(() => {
+            if (this.sounds && this.soundEnabled) {
+              this.sounds.play('levelUp');
+            }
+          }, 300);
+        }
       }
     }
   }
@@ -384,6 +447,12 @@ export class BlockDropScene extends Phaser.Scene {
 
   endGame(): void {
     this.gameOver = true;
+
+    // Play game over sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('gameOver');
+    }
+
     this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
       fontFamily: '"Press Start 2P"',
       fontSize: '32px',
@@ -393,5 +462,12 @@ export class BlockDropScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(this.score);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }

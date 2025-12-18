@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { RetroSounds } from '../engine/RetroSounds';
 
 const CONFIG = {
   PADDLE_WIDTH: 15,
@@ -33,12 +34,17 @@ export class PaddleBattleScene extends Phaser.Scene {
   private centerLine!: Phaser.GameObjects.Graphics;
   private serving: boolean = true;
 
+  private sounds: RetroSounds | null = null;
+  private soundEnabled: boolean = true;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'PaddleBattleScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -46,10 +52,31 @@ export class PaddleBattleScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sound system
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new RetroSounds(soundVolume);
+        // Register sounds - classic Pong frequencies
+        this.sounds.registerSound('paddleHit', this.sounds.generateBeep(440, 0.08));
+        this.sounds.registerSound('wallBounce', this.sounds.generateBeep(330, 0.06));
+        this.sounds.registerSound('playerScore', this.sounds.generateCoin());
+        this.sounds.registerSound('cpuScore', this.sounds.generateHit());
+        this.sounds.registerSound('win', this.sounds.generatePowerUp());
+        this.sounds.registerSound('lose', this.sounds.generateGameOver());
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     const { width, height } = this.scale;
+
+    // Setup cleanup handler
+    this.events.on('shutdown', this.onShutdown, this);
 
     // Draw center line
     this.centerLine = this.add.graphics();
@@ -160,6 +187,11 @@ export class PaddleBattleScene extends Phaser.Scene {
     if (this.ball.y - CONFIG.BALL_SIZE < 0 || this.ball.y + CONFIG.BALL_SIZE > height) {
       this.ballVelocity.y *= -1;
       this.ball.y = Math.max(CONFIG.BALL_SIZE, Math.min(height - CONFIG.BALL_SIZE, this.ball.y));
+
+      // Play wall bounce sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('wallBounce');
+      }
     }
 
     // Paddle collisions
@@ -172,12 +204,22 @@ export class PaddleBattleScene extends Phaser.Scene {
       this.cpuScore++;
       this.updateScoreDisplay();
       this.resetBall();
+
+      // Play CPU score sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('cpuScore');
+      }
     } else if (this.ball.x > width) {
       // Player scores
       this.score++;
       this.onScoreUpdate(this.score);
       this.updateScoreDisplay();
       this.resetBall();
+
+      // Play player score sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('playerScore');
+      }
     }
 
     // Check game over
@@ -205,6 +247,11 @@ export class PaddleBattleScene extends Phaser.Scene {
     ) {
       // Hit paddle
       this.ballVelocity.x *= -1;
+
+      // Play paddle hit sound
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.play('paddleHit');
+      }
 
       // Add angle based on hit position
       const hitPos = (this.ball.y - paddle.y) / (CONFIG.PADDLE_HEIGHT / 2);
@@ -239,6 +286,11 @@ export class PaddleBattleScene extends Phaser.Scene {
     const wonGame = this.score >= CONFIG.WINNING_SCORE;
     const finalScore = wonGame ? this.score * 100 : 0; // Only count if player wins
 
+    // Play win/lose sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play(wonGame ? 'win' : 'lose');
+    }
+
     this.add.text(this.scale.width / 2, this.scale.height / 2,
       wonGame ? 'YOU WIN!' : 'CPU WINS!', {
       fontFamily: '"Press Start 2P"',
@@ -249,5 +301,12 @@ export class PaddleBattleScene extends Phaser.Scene {
     this.time.delayedCall(2000, () => {
       this.onGameOver(finalScore);
     });
+  }
+
+  onShutdown(): void {
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 }

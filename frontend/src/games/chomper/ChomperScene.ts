@@ -1,17 +1,18 @@
 import * as Phaser from 'phaser';
 import { SeededRNG } from '../engine/SeededRNG';
+import { ChomperSounds } from './sounds';
 
 const CONFIG = {
   TILE_SIZE: 21,
-  PLAYER_MOVE_DELAY: 200, // Milliseconds between moves (5 tiles/sec)
-  GHOST_MOVE_DELAY: 250, // Milliseconds between moves (4 tiles/sec)
-  FRIGHTENED_MOVE_DELAY: 400, // Milliseconds between moves (2.5 tiles/sec)
+  PLAYER_SPEED: 105, // Pixels per second (5 tiles/sec)
+  GHOST_SPEED: 84, // Pixels per second (4 tiles/sec)
+  FRIGHTENED_SPEED: 52.5, // Pixels per second (2.5 tiles/sec)
   PELLET_POINTS: 5,
   POWER_PELLET_POINTS: 25,
   GHOST_POINTS: 100,
   POWER_DURATION: 6000,
   LIVES: 3,
-  GHOST_RELEASE_DELAY: 3000,
+  GHOST_RELEASE_DELAY: 2000, // Release ghosts every 2 seconds
   GRID_WIDTH: 28,
   GRID_HEIGHT: 31,
 };
@@ -79,19 +80,20 @@ const MAZES: MazeData[] = [
     ghostHouse: { x: 14, y: 14 },
   },
 
-  // MAZE 2: Wide corridors
+  // MAZE 2: Open corridors (no dead ends)
   {
     walls: [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
       [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
       [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
-      [1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,1,1,1,2,2,1,1,1,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
@@ -99,17 +101,17 @@ const MAZES: MazeData[] = [
       [1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1,1],
-      [1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1],
-      [1,0,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
-      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+      [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
-      [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1],
+      [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+      [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+      [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
@@ -291,6 +293,8 @@ interface Ghost {
   graphics: Phaser.GameObjects.Graphics;
   gridX: number;
   gridY: number;
+  pixelX: number;
+  pixelY: number;
   targetGridX: number;
   targetGridY: number;
   color: number;
@@ -303,7 +307,8 @@ interface Ghost {
   exitedHouse: boolean;
   dirX: number;
   dirY: number;
-  moveTimer: number;
+  nextDirX: number;
+  nextDirY: number;
 }
 
 export class ChomperScene extends Phaser.Scene {
@@ -327,10 +332,13 @@ export class ChomperScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Graphics;
   private playerGridX: number = 14;
   private playerGridY: number = 23;
-  private playerDir: { x: number; y: number } = { x: 0, y: 0 };
-  private nextDir: { x: number; y: number } = { x: 0, y: 0 };
+  private playerPixelX: number = 14 * CONFIG.TILE_SIZE;
+  private playerPixelY: number = 23 * CONFIG.TILE_SIZE;
+  private playerDirX: number = 0;
+  private playerDirY: number = 0;
+  private playerNextDirX: number = 0;
+  private playerNextDirY: number = 0;
   private mouthAngle: number = 0;
-  private playerMoveTimer: number = 0;
 
   private ghosts: Ghost[] = [];
   private powered: boolean = false;
@@ -343,12 +351,20 @@ export class ChomperScene extends Phaser.Scene {
   private powerPelletVisible: boolean = true;
   private powerPelletTimer: number = 0;
 
+  // Audio
+  private sounds: ChomperSounds | null = null;
+  private soundEnabled: boolean = true;
+  private wakaToggle: boolean = false; // Alternate between waka1 and waka2
+  private wakaTimer: number = 0;
+
   constructor(
     onScoreUpdate: (score: number) => void,
     onGameOver: (finalScore: number) => void,
     getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
     getAction: () => boolean,
-    seed: number
+    seed: number,
+    soundEnabled: boolean = true,
+    soundVolume: number = 0.7
   ) {
     super({ key: 'ChomperScene' });
     this.onScoreUpdate = onScoreUpdate;
@@ -356,14 +372,41 @@ export class ChomperScene extends Phaser.Scene {
     this.getDirection = getDirection;
     this.getAction = getAction;
     this.rng = new SeededRNG(seed);
+    this.soundEnabled = soundEnabled;
+
+    // Initialize sounds if enabled
+    if (this.soundEnabled) {
+      try {
+        this.sounds = new ChomperSounds(soundVolume);
+      } catch (e) {
+        console.warn('Failed to initialize audio:', e);
+        this.sounds = null;
+      }
+    }
   }
 
   create(): void {
     this.loadLevel(this.level);
+
+    // Play level start sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.play('levelStart');
+    }
+
+    // Register shutdown handler for cleanup
+    this.events.on('shutdown', this.onShutdown, this);
+  }
+
+  onShutdown(): void {
+    // Clean up audio
+    if (this.sounds) {
+      this.sounds.destroy();
+      this.sounds = null;
+    }
   }
 
   loadLevel(level: number): void {
-    // Select maze
+    // Select maze (in classic Pac-Man, all levels use same maze layout)
     const mazeIndex = (level - 1) % MAZES.length;
     this.mazeData = MAZES[mazeIndex];
 
@@ -374,8 +417,15 @@ export class ChomperScene extends Phaser.Scene {
     // Reset player position
     this.playerGridX = this.mazeData.playerStart.x;
     this.playerGridY = this.mazeData.playerStart.y;
-    this.playerDir = { x: 0, y: 0 };
-    this.nextDir = { x: 0, y: 0 };
+    this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+    this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
+    this.playerDirX = 0;
+    this.playerDirY = 0;
+    this.playerNextDirX = 0;
+    this.playerNextDirY = 0;
+
+    // Reset ghost release timer
+    this.ghostReleaseTimer = 0;
 
     // Create or clear graphics
     if (!this.mazeGraphics) {
@@ -434,9 +484,9 @@ export class ChomperScene extends Phaser.Scene {
   createGhosts(): void {
     const ghostData = [
       { name: 'red', color: GHOST_COLORS.red, gridX: 14, gridY: 11, released: true, exitedHouse: true },
-      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: false, exitedHouse: false },
-      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 12, gridY: 14, released: false, exitedHouse: false },
-      { name: 'orange', color: GHOST_COLORS.orange, gridX: 16, gridY: 14, released: false, exitedHouse: false },
+      { name: 'pink', color: GHOST_COLORS.pink, gridX: 14, gridY: 14, released: true, exitedHouse: false }, // Pink starts ready to leave
+      { name: 'cyan', color: GHOST_COLORS.cyan, gridX: 13, gridY: 15, released: false, exitedHouse: false },
+      { name: 'orange', color: GHOST_COLORS.orange, gridX: 15, gridY: 15, released: false, exitedHouse: false },
     ];
 
     for (const data of ghostData) {
@@ -446,6 +496,8 @@ export class ChomperScene extends Phaser.Scene {
         graphics: ghost,
         gridX: data.gridX,
         gridY: data.gridY,
+        pixelX: data.gridX * CONFIG.TILE_SIZE,
+        pixelY: data.gridY * CONFIG.TILE_SIZE,
         targetGridX: data.gridX,
         targetGridY: data.gridY,
         color: data.color,
@@ -458,7 +510,8 @@ export class ChomperScene extends Phaser.Scene {
         exitedHouse: data.exitedHouse,
         dirX: 0,
         dirY: 0,
-        moveTimer: 0,
+        nextDirX: 0,
+        nextDirY: 0,
       });
     }
 
@@ -538,14 +591,14 @@ export class ChomperScene extends Phaser.Scene {
 
     // Rotate based on direction
     let rotation = 0;
-    if (this.playerDir.x === 1) rotation = 0;
-    else if (this.playerDir.x === -1) rotation = Math.PI;
-    else if (this.playerDir.y === 1) rotation = Math.PI / 2;
-    else if (this.playerDir.y === -1) rotation = -Math.PI / 2;
+    if (this.playerDirX === 1) rotation = 0;
+    else if (this.playerDirX === -1) rotation = Math.PI;
+    else if (this.playerDirY === 1) rotation = Math.PI / 2;
+    else if (this.playerDirY === -1) rotation = -Math.PI / 2;
 
     this.player.setRotation(rotation);
-    const px = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    const py = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const px = this.playerPixelX + CONFIG.TILE_SIZE / 2;
+    const py = this.playerPixelY + CONFIG.TILE_SIZE / 2;
     this.player.setPosition(px, py);
   }
 
@@ -599,8 +652,8 @@ export class ChomperScene extends Phaser.Scene {
       }
     }
 
-    const px = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-    const py = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const px = ghost.pixelX + CONFIG.TILE_SIZE / 2;
+    const py = ghost.pixelY + CONFIG.TILE_SIZE / 2;
     ghost.graphics.setPosition(px, py);
   }
 
@@ -625,6 +678,22 @@ export class ChomperScene extends Phaser.Scene {
         this.ghosts.forEach(g => {
           if (!g.eaten) g.frightened = false;
         });
+        // Stop siren sound
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.stopLoop('siren');
+        }
+      }
+    }
+
+    // Play waka-waka sound when moving
+    if ((this.playerDirX !== 0 || this.playerDirY !== 0) && !this.gameOver && !this.paused) {
+      this.wakaTimer += delta;
+      if (this.wakaTimer > 150) {
+        this.wakaTimer = 0;
+        if (this.sounds && this.soundEnabled) {
+          this.sounds.play(this.wakaToggle ? 'waka1' : 'waka2');
+          this.wakaToggle = !this.wakaToggle;
+        }
       }
     }
 
@@ -640,10 +709,19 @@ export class ChomperScene extends Phaser.Scene {
 
     // Handle input
     const dir = this.getDirection();
-    if (dir.up) this.nextDir = { x: 0, y: -1 };
-    else if (dir.down) this.nextDir = { x: 0, y: 1 };
-    else if (dir.left) this.nextDir = { x: -1, y: 0 };
-    else if (dir.right) this.nextDir = { x: 1, y: 0 };
+    if (dir.up) {
+      this.playerNextDirX = 0;
+      this.playerNextDirY = -1;
+    } else if (dir.down) {
+      this.playerNextDirX = 0;
+      this.playerNextDirY = 1;
+    } else if (dir.left) {
+      this.playerNextDirX = -1;
+      this.playerNextDirY = 0;
+    } else if (dir.right) {
+      this.playerNextDirX = 1;
+      this.playerNextDirY = 0;
+    }
 
     // Move
     this.movePlayer(dt);
@@ -653,6 +731,15 @@ export class ChomperScene extends Phaser.Scene {
     this.checkCollisions();
     if (this.pellets.size === 0 && this.powerPellets.size === 0) {
       this.levelComplete();
+    } else if (this.pellets.size + this.powerPellets.size <= 5) {
+      // Debug: log remaining pellets when only a few left
+      console.log(`Remaining: ${this.pellets.size} pellets, ${this.powerPellets.size} power pellets`);
+      if (this.pellets.size > 0) {
+        console.log('Remaining pellet locations:', Array.from(this.pellets));
+      }
+      if (this.powerPellets.size > 0) {
+        console.log('Remaining power pellet locations:', Array.from(this.powerPellets));
+      }
     }
 
     // Draw
@@ -661,115 +748,180 @@ export class ChomperScene extends Phaser.Scene {
   }
 
   movePlayer(dt: number): void {
-    // Update move timer
-    this.playerMoveTimer += dt * 1000;
+    // Calculate distance from current tile center
+    const centerX = this.playerGridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const centerY = this.playerGridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+    const distFromCenterX = Math.abs(this.playerPixelX + CONFIG.TILE_SIZE / 2 - centerX);
+    const distFromCenterY = Math.abs(this.playerPixelY + CONFIG.TILE_SIZE / 2 - centerY);
 
-    // Try to turn
-    const nextGridX = this.playerGridX + this.nextDir.x;
-    const nextGridY = this.playerGridY + this.nextDir.y;
-    if (this.canPlayerMoveTo(nextGridX, nextGridY)) {
-      this.playerDir = { ...this.nextDir };
-    }
+    // Only process direction changes if the queued direction is DIFFERENT from current
+    // or if player is stopped (both directions are 0)
+    const isStopped = this.playerDirX === 0 && this.playerDirY === 0;
+    const isDifferentDirection = this.playerNextDirX !== this.playerDirX || this.playerNextDirY !== this.playerDirY;
 
-    // Move only when timer allows
-    if (this.playerMoveTimer >= CONFIG.PLAYER_MOVE_DELAY) {
-      if (this.playerDir.x !== 0 || this.playerDir.y !== 0) {
-        const targetGridX = this.playerGridX + this.playerDir.x;
-        const targetGridY = this.playerGridY + this.playerDir.y;
+    if ((this.playerNextDirX !== 0 || this.playerNextDirY !== 0) && (isStopped || isDifferentDirection)) {
+      const is180Turn = (this.playerNextDirX === -this.playerDirX && this.playerNextDirY === -this.playerDirY);
 
-        if (this.canPlayerMoveTo(targetGridX, targetGridY)) {
-          this.playerGridX = targetGridX;
-          this.playerGridY = targetGridY;
-          this.checkPelletCollision();
-          this.playerMoveTimer = 0;
-        } else {
-          this.playerDir = { x: 0, y: 0 };
+      // 180-degree turns: allow immediately (classic Pac-Man behavior)
+      if (is180Turn) {
+        this.playerDirX = this.playerNextDirX;
+        this.playerDirY = this.playerNextDirY;
+      }
+      // 90-degree turns or starting from stopped: only when close to tile center
+      else if (distFromCenterX < 8 && distFromCenterY < 8) {
+        const nextGridX = this.playerGridX + this.playerNextDirX;
+        const nextGridY = this.playerGridY + this.playerNextDirY;
+
+        if (this.canPlayerMoveTo(nextGridX, nextGridY)) {
+          this.playerDirX = this.playerNextDirX;
+          this.playerDirY = this.playerNextDirY;
+          // Snap to tile center for clean 90-degree turns
+          this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+          this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
         }
       }
     }
 
-    // Tunnel wraparound
-    if (this.playerGridX < 0) this.playerGridX = CONFIG.GRID_WIDTH - 1;
-    if (this.playerGridX >= CONFIG.GRID_WIDTH) this.playerGridX = 0;
+    // Move in current direction
+    if (this.playerDirX !== 0 || this.playerDirY !== 0) {
+      // Calculate movement
+      const speed = CONFIG.PLAYER_SPEED * dt;
+      this.playerPixelX += this.playerDirX * speed;
+      this.playerPixelY += this.playerDirY * speed;
+
+      // Update grid position based on pixel position
+      this.playerGridX = Math.floor((this.playerPixelX + CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
+      this.playerGridY = Math.floor((this.playerPixelY + CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
+
+      // Tunnel wraparound
+      if (this.playerGridX < 0) {
+        this.playerGridX = CONFIG.GRID_WIDTH - 1;
+        this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+      }
+      if (this.playerGridX >= CONFIG.GRID_WIDTH) {
+        this.playerGridX = 0;
+        this.playerPixelX = 0;
+      }
+
+      // Check for wall collision ahead
+      const nextGridX = this.playerGridX + this.playerDirX;
+      const nextGridY = this.playerGridY + this.playerDirY;
+      if (!this.canPlayerMoveTo(nextGridX, nextGridY)) {
+        // Stop at grid position but KEEP direction (classic Pac-Man behavior)
+        this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+        this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
+        // Don't reset direction - player should keep facing this way
+      }
+    }
+
+    // ALWAYS check pellet collision (not just when entering new tile)
+    // This prevents missing pellets due to timing issues
+    this.checkPelletCollision();
   }
 
   moveGhosts(dt: number): void {
     for (const ghost of this.ghosts) {
       if (!ghost.released) continue;
 
-      // Update move timer
-      ghost.moveTimer += dt * 1000;
+      // Check if we're at a grid center (decision point)
+      const centerX = ghost.gridX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const centerY = ghost.gridY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const atCenterX = Math.abs(ghost.pixelX + CONFIG.TILE_SIZE / 2 - centerX) < 2;
+      const atCenterY = Math.abs(ghost.pixelY + CONFIG.TILE_SIZE / 2 - centerY) < 2;
 
-      // Determine move delay based on state
-      const moveDelay = ghost.frightened
-        ? CONFIG.FRIGHTENED_MOVE_DELAY
-        : CONFIG.GHOST_MOVE_DELAY;
+      if (atCenterX && atCenterY) {
+        // Determine target based on state
+        let targetGridX: number;
+        let targetGridY: number;
 
-      // Move only when timer allows
-      if (ghost.moveTimer < moveDelay) continue;
-
-      ghost.moveTimer = 0;
-
-      // Determine target
-      if (!ghost.exitedHouse) {
-        ghost.targetGridX = 14;
-        ghost.targetGridY = 11;
-      } else if (ghost.eaten) {
-        ghost.targetGridX = this.mazeData.ghostHouse.x;
-        ghost.targetGridY = this.mazeData.ghostHouse.y;
-      } else if (ghost.frightened) {
-        // Flee
-        const dx = ghost.gridX - this.playerGridX;
-        const dy = ghost.gridY - this.playerGridY;
-        ghost.targetGridX = dx > 0 ? CONFIG.GRID_WIDTH - 2 : 1;
-        ghost.targetGridY = dy > 0 ? CONFIG.GRID_HEIGHT - 2 : 1;
-      } else {
-        // Chase player
-        ghost.targetGridX = this.playerGridX;
-        ghost.targetGridY = this.playerGridY;
-      }
-
-      // Choose direction
-      const directions = [
-        { x: 1, y: 0 },
-        { x: -1, y: 0 },
-        { x: 0, y: 1 },
-        { x: 0, y: -1 },
-      ];
-
-      let bestDir = { x: 0, y: 0 };
-      let bestDist = Infinity;
-
-      for (const dir of directions) {
-        const nextX = ghost.gridX + dir.x;
-        const nextY = ghost.gridY + dir.y;
-
-        // Skip reverse and invalid
-        if (dir.x === -ghost.dirX && dir.y === -ghost.dirY) continue;
-        if (!this.canGhostMoveTo(nextX, nextY, ghost.eaten)) continue;
-
-        const dist = Math.abs(nextX - ghost.targetGridX) + Math.abs(nextY - ghost.targetGridY);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestDir = dir;
+        if (!ghost.exitedHouse) {
+          // Exit ghost house: first move to center x, then move up
+          if (ghost.gridX !== 14) {
+            targetGridX = 14; // Move to center horizontally first
+            targetGridY = ghost.gridY; // Stay at current y
+          } else {
+            targetGridX = 14; // Already centered, move up
+            targetGridY = 11; // Exit position
+          }
+        } else if (ghost.eaten) {
+          targetGridX = this.mazeData.ghostHouse.x;
+          targetGridY = this.mazeData.ghostHouse.y;
+        } else if (ghost.frightened) {
+          // Flee from player
+          const dx = ghost.gridX - this.playerGridX;
+          const dy = ghost.gridY - this.playerGridY;
+          targetGridX = dx > 0 ? CONFIG.GRID_WIDTH - 2 : 1;
+          targetGridY = dy > 0 ? CONFIG.GRID_HEIGHT - 2 : 1;
+        } else {
+          // Chase player
+          targetGridX = this.playerGridX;
+          targetGridY = this.playerGridY;
         }
-      }
 
-      // Move
-      if (bestDir.x !== 0 || bestDir.y !== 0) {
+        // Choose best direction
+        const directions = [
+          { x: 1, y: 0 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 0, y: -1 },
+        ];
+
+        let bestDir = { x: ghost.dirX, y: ghost.dirY };
+        let bestDist = Infinity;
+
+        for (const dir of directions) {
+          const nextX = ghost.gridX + dir.x;
+          const nextY = ghost.gridY + dir.y;
+
+          // Skip reverse direction (unless ghost is stuck)
+          if (dir.x === -ghost.dirX && dir.y === -ghost.dirY && (ghost.dirX !== 0 || ghost.dirY !== 0)) continue;
+          if (!this.canGhostMoveTo(nextX, nextY, ghost)) continue;
+
+          const dist = Math.abs(nextX - targetGridX) + Math.abs(nextY - targetGridY);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestDir = dir;
+          }
+        }
+
+        // Update direction
         ghost.dirX = bestDir.x;
         ghost.dirY = bestDir.y;
-        ghost.gridX += bestDir.x;
-        ghost.gridY += bestDir.y;
 
-        // Check exit
+        // Snap to grid center for clean turns
+        ghost.pixelX = ghost.gridX * CONFIG.TILE_SIZE;
+        ghost.pixelY = ghost.gridY * CONFIG.TILE_SIZE;
+      }
+
+      // Move in current direction
+      if (ghost.dirX !== 0 || ghost.dirY !== 0) {
+        // Calculate speed based on state (eaten ghosts move faster to get home)
+        const speed = ghost.eaten ? CONFIG.GHOST_SPEED * 2 :
+                      ghost.frightened ? CONFIG.FRIGHTENED_SPEED :
+                      CONFIG.GHOST_SPEED;
+
+        // Move
+        ghost.pixelX += ghost.dirX * speed * dt;
+        ghost.pixelY += ghost.dirY * speed * dt;
+
+        // Update grid position
+        ghost.gridX = Math.floor((ghost.pixelX + CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
+        ghost.gridY = Math.floor((ghost.pixelY + CONFIG.TILE_SIZE / 2) / CONFIG.TILE_SIZE);
+
+        // Tunnel wraparound
+        if (ghost.gridX < 0) {
+          ghost.gridX = CONFIG.GRID_WIDTH - 1;
+          ghost.pixelX = ghost.gridX * CONFIG.TILE_SIZE;
+        }
+        if (ghost.gridX >= CONFIG.GRID_WIDTH) {
+          ghost.gridX = 0;
+          ghost.pixelX = 0;
+        }
+
+        // Check if exited house
         if (!ghost.exitedHouse && ghost.gridY <= 11) {
           ghost.exitedHouse = true;
         }
-
-        // Wraparound
-        if (ghost.gridX < 0) ghost.gridX = CONFIG.GRID_WIDTH - 1;
-        if (ghost.gridX >= CONFIG.GRID_WIDTH) ghost.gridX = 0;
       }
     }
   }
@@ -781,11 +933,12 @@ export class ChomperScene extends Phaser.Scene {
     return tile === TILE.EMPTY;
   }
 
-  canGhostMoveTo(x: number, y: number, isEaten: boolean): boolean {
+  canGhostMoveTo(x: number, y: number, ghost: Ghost): boolean {
     if (y < 0 || y >= this.mazeData.walls.length) return false;
     if (x < 0 || x >= this.mazeData.walls[0].length) return true; // Tunnel
     const tile = this.mazeData.walls[y][x];
-    return tile === TILE.EMPTY || (isEaten && tile === TILE.DOOR);
+    // Ghosts can go through doors when eaten OR when leaving/entering house
+    return tile === TILE.EMPTY || tile === TILE.DOOR;
   }
 
   checkPelletCollision(): void {
@@ -808,6 +961,11 @@ export class ChomperScene extends Phaser.Scene {
         if (!g.eaten) g.frightened = true;
       });
       this.drawPellets();
+
+      // Start power pellet siren
+      if (this.sounds && this.soundEnabled) {
+        this.sounds.startLoop('siren');
+      }
     }
   }
 
@@ -815,23 +973,47 @@ export class ChomperScene extends Phaser.Scene {
     for (const ghost of this.ghosts) {
       if (!ghost.released) continue;
 
-      if (ghost.gridX === this.playerGridX && ghost.gridY === this.playerGridY) {
+      // Check collision with player using distance (more reliable than grid position)
+      const dx = Math.abs(ghost.pixelX - this.playerPixelX);
+      const dy = Math.abs(ghost.pixelY - this.playerPixelY);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < CONFIG.TILE_SIZE * 0.6) {
         if (ghost.frightened && !ghost.eaten) {
           // Eat ghost
           this.score += CONFIG.GHOST_POINTS;
           this.onScoreUpdate(this.score);
           ghost.eaten = true;
           ghost.frightened = false;
+
+          // Play eat ghost sound
+          if (this.sounds && this.soundEnabled) {
+            this.sounds.play('eatGhost');
+          }
         } else if (!ghost.eaten) {
           // Die
           this.loseLife();
+          return; // Exit early to prevent multiple deaths
         }
       }
 
-      // Respawn eaten ghost
-      if (ghost.eaten && ghost.gridX === this.mazeData.ghostHouse.x && ghost.gridY === this.mazeData.ghostHouse.y) {
-        ghost.eaten = false;
-        ghost.exitedHouse = false;
+      // Respawn eaten ghost when close to ghost house (use distance check)
+      if (ghost.eaten) {
+        const houseX = this.mazeData.ghostHouse.x * CONFIG.TILE_SIZE;
+        const houseY = this.mazeData.ghostHouse.y * CONFIG.TILE_SIZE;
+        const houseDx = Math.abs(ghost.pixelX - houseX);
+        const houseDy = Math.abs(ghost.pixelY - houseY);
+
+        if (houseDx < CONFIG.TILE_SIZE / 2 && houseDy < CONFIG.TILE_SIZE / 2) {
+          ghost.eaten = false;
+          ghost.exitedHouse = false;
+          ghost.gridX = this.mazeData.ghostHouse.x;
+          ghost.gridY = this.mazeData.ghostHouse.y;
+          ghost.pixelX = ghost.gridX * CONFIG.TILE_SIZE;
+          ghost.pixelY = ghost.gridY * CONFIG.TILE_SIZE;
+          ghost.dirX = 0;
+          ghost.dirY = 0;
+        }
       }
     }
   }
@@ -840,27 +1022,43 @@ export class ChomperScene extends Phaser.Scene {
     this.lives--;
     this.livesText.setText(`LIVES: ${this.lives}`);
 
+    // Stop all sounds and play death sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.stopAll();
+      this.sounds.play('death');
+    }
+
     if (this.lives <= 0) {
       this.endGame();
     } else {
+      // Reset player
       this.playerGridX = this.mazeData.playerStart.x;
       this.playerGridY = this.mazeData.playerStart.y;
-      this.playerDir = { x: 0, y: 0 };
-      this.playerMoveTimer = 0;
+      this.playerPixelX = this.playerGridX * CONFIG.TILE_SIZE;
+      this.playerPixelY = this.playerGridY * CONFIG.TILE_SIZE;
+      this.playerDirX = 0;
+      this.playerDirY = 0;
+      this.playerNextDirX = 0;
+      this.playerNextDirY = 0;
       this.powered = false;
 
+      // Reset ghosts (red and pink start released, like real Pac-Man)
       this.ghosts.forEach((g, i) => {
         g.gridX = g.homeX;
         g.gridY = g.homeY;
-        g.released = i === 0;
-        g.exitedHouse = i === 0;
+        g.pixelX = g.gridX * CONFIG.TILE_SIZE;
+        g.pixelY = g.gridY * CONFIG.TILE_SIZE;
+        g.released = i <= 1; // Red (0) and pink (1) start released
+        g.exitedHouse = i === 0; // Only red starts outside
         g.frightened = false;
         g.eaten = false;
         g.dirX = 0;
         g.dirY = 0;
-        g.moveTimer = 0;
+        g.nextDirX = 0;
+        g.nextDirY = 0;
       });
 
+      this.ghostReleaseTimer = 0;
       this.paused = true;
       this.time.delayedCall(2000, () => {
         this.paused = false;
@@ -872,6 +1070,13 @@ export class ChomperScene extends Phaser.Scene {
     this.level++;
     this.score += 500;
     this.onScoreUpdate(this.score);
+
+    // Stop all sounds and play level complete sound
+    if (this.sounds && this.soundEnabled) {
+      this.sounds.stopAll();
+      this.sounds.play('levelStart'); // Reuse level start for level complete
+    }
+
     this.loadLevel(this.level);
   }
 

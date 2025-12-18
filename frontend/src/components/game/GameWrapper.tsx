@@ -18,7 +18,9 @@ type SceneConstructor = new (
   onGameOver: (finalScore: number) => void,
   getDirection: () => { up: boolean; down: boolean; left: boolean; right: boolean },
   getAction: () => boolean,
-  seed: number
+  seed: number,
+  soundEnabled?: boolean,
+  soundVolume?: number
 ) => Phaser.Scene;
 
 interface GameWrapperProps {
@@ -60,7 +62,7 @@ export default function GameWrapper({
     reset: resetGameState,
   } = useGameStore();
 
-  const { soundEnabled } = useAudioStore();
+  const { soundEnabled, soundVolume } = useAudioStore();
   const { createSession, submitScore: submitScoreToBackend } = useScoreSubmission();
   const { signInWithWallet, isFirebaseAuthenticated, isAuthenticating } = useWalletAuth();
 
@@ -272,7 +274,9 @@ export default function GameWrapper({
           handleGameOver,
           getDirection,
           getAction,
-          seed || Math.floor(Math.random() * 2147483647)
+          seed || Math.floor(Math.random() * 2147483647),
+          soundEnabled,
+          soundVolume
         );
         console.log('Scene instance created:', sceneInstance);
 
@@ -315,6 +319,7 @@ export default function GameWrapper({
     seed,
     config,
     soundEnabled,
+    soundVolume,
     sceneLoader,
     handleScoreUpdate,
     handleGameOver,
