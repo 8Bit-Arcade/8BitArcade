@@ -145,6 +145,28 @@ async function main() {
     console.log();
   }
 
+  // Deploy TournamentPayments (handles ETH/USDC payments + buyback/burn)
+  console.log("📝 Deploying TournamentPayments...");
+
+  // Arbitrum addresses
+  const wethAddress = network.name === "arbitrumSepolia"
+    ? "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73" // WETH on Arbitrum Sepolia
+    : "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"; // WETH on Arbitrum One
+
+  const swapRouterAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564"; // Uniswap V3 SwapRouter (same on both networks)
+
+  const TournamentPayments = await ethers.getContractFactory("TournamentPayments");
+  const tournamentPayments = await TournamentPayments.deploy(
+    tokenAddress,
+    usdcAddress,
+    wethAddress,
+    swapRouterAddress
+  );
+  await tournamentPayments.waitForDeployment();
+  const tournamentPaymentsAddress = await tournamentPayments.getAddress();
+  console.log("✅ TournamentPayments deployed to:", tournamentPaymentsAddress);
+  console.log();
+
   console.log("═══════════════════════════════════════════════════");
   console.log("  DEPLOYMENT SUMMARY");
   console.log("═══════════════════════════════════════════════════");
@@ -152,6 +174,7 @@ async function main() {
   console.log("EightBitToken (8BIT):", tokenAddress);
   console.log("GameRewards:", rewardsAddress);
   console.log("TournamentManager:", tournamentsAddress);
+  console.log("TournamentPayments:", tournamentPaymentsAddress);
   console.log("TokenSale:", tokenSaleAddress);
   console.log("TreasuryGasManager:", treasuryAddress);
   if (faucetAddress) {
@@ -172,15 +195,20 @@ async function main() {
   console.log("   - Call: treasury.setPayoutWallet(BACKEND_WALLET)");
   console.log("   - Fund treasury: Send ETH to", treasuryAddress);
   console.log("   - Recommended: 1 ETH for testnet, 5+ ETH for mainnet");
-  console.log("6. Add Treasury address to Firebase functions config:");
+  console.log("6. Configure TournamentPayments:");
+  console.log("   - Set tournament fees: tournamentPayments.setTournamentFee(id, feeInUsdc)");
+  console.log("   - After adding liquidity, set pools: tournamentPayments.setPools(8bitUsdcPool, wethUsdcPool)");
+  console.log("7. Add Treasury address to Firebase functions config:");
   console.log("   firebase functions:config:set treasury.address=\"" + treasuryAddress + "\"");
-  console.log("7. Verify contracts on Arbiscan:");
+  console.log("8. Verify contracts on Arbiscan:");
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${rewardsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentsAddress} ${tokenAddress}`);
+  console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentPaymentsAddress} ${tokenAddress} ${usdcAddress} ${wethAddress} ${swapRouterAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 0`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${treasuryAddress} ${deployer.address} ${minThreshold} ${refillAmount}`);
-  console.log("8. Add liquidity to DEX for 8BIT token trading");
+  console.log("9. Add liquidity to DEX for 8BIT/USDC and WETH/USDC pools");
+  console.log("10. Create automated tournament scheduler (Firebase Cloud Function)");
   console.log();
   console.log("For mainnet deployment, run: npm run deploy:mainnet");
   console.log("═══════════════════════════════════════════════════");

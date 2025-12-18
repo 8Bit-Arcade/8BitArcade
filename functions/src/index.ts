@@ -18,5 +18,8 @@ export { resetDailyLeaderboards, resetWeeklyLeaderboards } from './leaderboard/r
 // Admin functions
 export { unbanAccount, clearUserFlags, getFlaggedUsers, getUserBanInfo } from './admin/adminFunctions';
 
+// Tournament functions
+export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual } from './tournaments/scheduleTournaments';
+
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
