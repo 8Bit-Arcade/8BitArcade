@@ -16,8 +16,8 @@ A: Much cheaper gas fees ($0.10 vs $5-50) and faster transactions (5 seconds vs 
 **Q: Do I need to KYC/verify identity?**
 A: No. Wallet connection only. Anonymous and privacy-preserving.
 
-**Q: Can I play from my phone?**
-A: Yes! Mobile browsers work. Desktop keyboard recommended for competitive play.
+**Q: Can I play on mobile?**
+A: No. Our games are designed for desktop/laptop play with keyboard controls. Mobile support is not currently available. Please use a computer for the best experience.
 
 ---
 

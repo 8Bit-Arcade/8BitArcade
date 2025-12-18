@@ -10,6 +10,8 @@ Go to **[play.8bitarcade.games](https://play.8bitarcade.games)** in your web bro
 
 No download required - all games run directly in your browser!
 
+> **⚠️ Desktop Required:** Our games are optimized for desktop/laptop play with keyboard controls. Mobile devices are not currently supported.
+
 ### Step 2: Connect Your Wallet
 
 1. Click the **"Connect Wallet"** button in the top right
