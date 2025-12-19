@@ -37,7 +37,7 @@ A blockchain-powered retro gaming platform built on Arbitrum. Play classic 8-bit
 
 ### Coming Soon:
 - 📋 Testnet deployment
-- 📋 Public token sale ($50K raise)
+- 📋 Public token sale ($100K raise)
 - 📋 Mainnet launch
 - 📋 DAO governance
 
@@ -45,23 +45,27 @@ A blockchain-powered retro gaming platform built on Arbitrum. Play classic 8-bit
 
 **8BIT Token on Arbitrum**
 
-- **Total Supply**: 1,000,000,000 (1 Billion)
+- **Max Supply**: 500,000,000 (500 Million)
 - **Initial Price**: $0.0005
-- **Market Cap (FDV)**: $500,000
-- **Public Sale**: 10% (100M tokens, $50K raise)
-- **Community Rewards**: 45% (450M over 10 years)
-- **Liquidity**: 20% (200M locked 3 years)
+- **Market Cap (FDV)**: $250,000
+- **Public Sale**: 40% (200M tokens, $100K raise)
+- **Future Rewards**: 40% (200M over 5 years)
+- **Liquidity**: 12% (60M locked 3+ years)
+- **Deflationary**: Tournament fees used to buyback & burn
 
 ### Distribution:
-| Category | Allocation | Tokens |
-|----------|-----------|--------|
-| Community Rewards | 45% | 450M |
-| Liquidity Pool | 20% | 200M |
-| Founders | 15% | 150M |
-| Public Sale | 10% | 100M |
-| Ecosystem | 10% | 100M |
+| Category | Allocation | Tokens | Unlock |
+|----------|-----------|--------|---------|
+| **Public Sale** | 40% | 200M | Immediate |
+| **Future Rewards** | 40% | 200M | 5 years (linear) |
+| **Liquidity** | 12% | 60M | Immediate (locked 3+ years) |
+| **Tournament Prizes** | 4% | 20M | Immediate |
+| **Marketing** | 3% | 15M | 6-12 months |
+| **Team** | 1% | 5M | 2-3 years (vested) |
 
-**See [TOKENOMICS_PROPOSAL.md](TOKENOMICS_PROPOSAL.md) for full details**
+**Deflationary Mechanism:** 50% of tournament fees buyback & burn 8BIT
+
+**See [contracts/README.md](contracts/README.md) for full token distribution details**
 
 ### Automated Gas Management
 

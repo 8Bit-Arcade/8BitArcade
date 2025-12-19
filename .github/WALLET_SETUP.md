@@ -12,22 +12,35 @@ The 8-Bit Arcade platform uses multiple wallets for different purposes. This gui
 The **founder wallet** is the primary wallet that deploys all smart contracts and receives the initial token allocation. This is THE most important wallet in the system.
 
 ### Token Allocation
-When you deploy the EightBitToken contract, this wallet **automatically receives 100M 8BIT tokens (20% of max supply)**:
+When you deploy the EightBitToken contract, this wallet **automatically receives 300M 8BIT tokens (60% of max supply)**:
 
+**Mainnet Distribution (300M total):**
 ```
-100M 8BIT Distribution:
-├─ 75M (75%) → DEX Liquidity (Uniswap V3 8BIT/USDC pool)
-├─ 15M (15%) → Marketing & Community Growth
-└─ 10M (10%) → Team (with vesting recommended)
+300M 8BIT Distribution:
+├─ 200M (67%) → TokenSale ($100k raise at $0.0005/token)
+├─ 20M (7%)   → TournamentManager prize pools
+└─ 80M (26%)  → Deployer keeps:
+    ├─ 60M → DEX Liquidity (Uniswap V3 8BIT/USDC pool, locked 3+ years)
+    ├─ 15M → Marketing & Community Growth
+    └─ 5M  → Team & Advisors (vested 2-3 years)
+```
+
+**Testnet Distribution (300M total):**
+```
+300M 8BIT Distribution:
+├─ 200M (67%) → TokenSale
+├─ 50M (17%)  → TestnetFaucet (testing only)
+├─ 20M (7%)   → TournamentManager prize pools
+└─ 30M (10%)  → Deployer keeps (reduced for testing)
 ```
 
 ### Responsibilities
 - ✅ Deploy all 7 smart contracts to Arbitrum
 - ✅ Own all contracts (can configure settings, authorize minters)
-- ✅ Receive 100M initial token allocation
-- ✅ Fund contracts with tokens (tournaments, token sale, faucet)
+- ✅ Receive 300M initial token allocation
+- ✅ Fund contracts with tokens (200M sale, 20M tournaments, 50M faucet)
 - ✅ Configure contract parameters (fees, addresses, etc.)
-- ✅ Add DEX liquidity (75M 8BIT + USDC)
+- ✅ Add DEX liquidity (60M 8BIT + USDC, locked 3+ years)
 - ✅ Transfer ownership to multisig later (recommended for security)
 
 ### Setup Requirements
@@ -155,13 +168,24 @@ cast send <TREASURY_ADDRESS> --value 5ether --private-key $DEPLOYER_KEY
 
 ### At Deployment (Block 0)
 
+**Mainnet:**
+
 | Wallet/Contract | Amount | % of Max Supply | Purpose |
 |----------------|--------|-----------------|---------|
-| **Founder Wallet** | 100M | 20% | Initial allocation (DEX liquidity, marketing, team) |
-| TournamentManager | 10M | 2% | Tournament prize pools |
-| TokenSale | 100M | 20% | Token sale ($0.001/token) |
+| **Founder Wallet** | 80M | 16% | Keeps for liquidity (60M), marketing (15M), team (5M) |
+| TournamentManager | 20M | 4% | Tournament prize pools |
+| TokenSale | 200M | 40% | Token sale ($0.0005/token, raises $100k) |
+| **Total Minted** | **300M** | **60%** | Deployed immediately |
+
+**Testnet (same as mainnet plus faucet):**
+
+| Wallet/Contract | Amount | % of Max Supply | Purpose |
+|----------------|--------|-----------------|---------|
+| **Founder Wallet** | 30M | 6% | Keeps for testing (reduced allocation) |
+| TournamentManager | 20M | 4% | Tournament prize pools |
+| TokenSale | 200M | 40% | Token sale |
 | TestnetFaucet | 50M | 10% | Testnet testing only |
-| **Total Minted** | **260M** | **52%** | Deployed immediately |
+| **Total Minted** | **300M** | **60%** | Deployed immediately |
 
 ### Future Minting (Controlled by Authorized Minters)
 
@@ -175,7 +199,12 @@ cast send <TREASURY_ADDRESS> --value 5ether --private-key $DEPLOYER_KEY
 ### Maximum Supply Cap
 ```
 MAX_SUPPLY = 500M 8BIT
-Initial Mint (260M) + Future Emissions (200M) + Community Reserve (40M) = 500M
+Initial Mint (300M) + Future Emissions (200M) = 500M
+
+Note: Effective supply will be LOWER due to:
+- Unsold tokens from TokenSale burned at sale end
+- 50% of tournament fees used to buyback & burn 8BIT
+- Continuous deflationary pressure from tournament burns
 ```
 
 ---
@@ -195,9 +224,9 @@ Initial Mint (260M) + Future Emissions (200M) + Community Reserve (40M) = 500M
 
 - [ ] Run `npm run deploy:testnet` (or mainnet)
 - [ ] Save all deployed contract addresses
-- [ ] Verify deployer received 100M 8BIT tokens
-- [ ] Verify tournament manager received 10M 8BIT
-- [ ] Verify token sale received 100M 8BIT
+- [ ] Verify deployer received 300M 8BIT tokens
+- [ ] Verify tournament manager received 20M 8BIT
+- [ ] Verify token sale received 200M 8BIT
 - [ ] Verify faucet received 50M 8BIT (testnet only)
 
 ### Post-Deployment
@@ -347,9 +376,10 @@ npx hardhat console --network arbitrumSepolia
 
 1. **Founder Wallet** (deployer)
    - Deploys contracts
-   - Receives 100M 8BIT tokens
+   - Receives 300M 8BIT tokens
    - Owns all contracts initially
-   - Funds liquidity pools
+   - Distributes tokens to sale (200M), tournaments (20M), faucet (50M)
+   - Keeps 30-80M for liquidity, marketing, team
 
 2. **Backend Wallet** (operations)
    - Distributes game rewards

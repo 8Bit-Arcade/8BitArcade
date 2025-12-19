@@ -14,12 +14,13 @@ The smart contract system consists of:
 
 | Allocation | Amount | % | Purpose | Status |
 |------------|--------|---|---------|--------|
-| **Token Sale** | 200M | 40% | Public presale @ $0.0005 | ✅ TokenSale contract |
-| **Rewards Pool** | 150M | 30% | Daily rewards + tournaments (5-year distribution) | ✅ GameRewards minting |
-| **Staking Pool** | 50M | 10% | Long-term holder incentives | ⚠️ RESERVED (deploy later) |
-| **DEX Liquidity** | 75M | 15% | Uniswap V3 locked liquidity (deep pool) | 🔒 Initial mint |
+| **Token Sale** | 200M | 40% | Public presale @ $0.0005, raises $100k | ✅ TokenSale contract |
+| **Rewards Pool** | 150M | 30% | Daily leaderboard rewards (5-year distribution) | ✅ GameRewards minting |
+| **Staking Pool** | 50M | 10% | Long-term holder incentives (5-year distribution) | ⚠️ RESERVED (deploy later) |
+| **DEX Liquidity** | 60M | 12% | Uniswap V3 locked liquidity (deep pool) | 🔒 Initial mint |
+| **Tournament Prizes** | 20M | 4% | Tournament prize pools | ✅ TournamentManager |
 | **Marketing** | 15M | 3% | Partnerships, listings, growth | 🔒 Initial mint |
-| **Team** | 10M | 2% | Team allocation (vested) | 🔒 Initial mint |
+| **Team** | 5M | 1% | Team allocation (vested) | 🔒 Initial mint |
 
 ### ⚠️ Important Notes on Token Allocation
 
@@ -30,21 +31,26 @@ The smart contract system consists of:
 - Planned for Phase 3 (months 7-12)
 - 1.67% monthly distribution rate = 5 year runway (matches rewards schedule)
 
-**Initial Mint (100M tokens):**
+**Initial Mint (300M tokens):**
 - Minted to deployer wallet in EightBitToken constructor
-- Must be split: 75M DEX liquidity + 15M marketing + 10M team
-- Lock 75M DEX liquidity on Uniswap V3 for 3-4 years (deep pool!)
-- 15M for marketing: Partnerships, CEX listings, community growth
-- 10M for team: Vested allocation only (no emergency funds)
+- Distribution:
+  - 200M → TokenSale contract (public presale)
+  - 20M → TournamentManager (prize pools)
+  - 60M → DEX liquidity (Uniswap V3, locked 3-4 years)
+  - 15M → Marketing (partnerships, CEX listings, growth)
+  - 5M → Team (vested allocation only)
+  - Testnet adds 50M → TestnetFaucet (testing only)
 
 **Deployment Order:**
-1. ✅ EightBitToken (100M initial mint)
+1. ✅ EightBitToken (300M initial mint to deployer)
 2. ✅ GameRewards (authorized to mint daily rewards - 150M over 5 years)
-3. ✅ TokenSale (200M tokens transferred from treasury)
-4. 🔜 Uniswap V3 8BIT/USDC Pool (primary liquidity pair)
-5. 🔜 TournamentBuyback (after pool creation)
-6. 🔜 Uniswap V3 8BIT/ETH Pool (secondary pair, if needed)
-7. 🔜 Staking Contract (Phase 3, months 7-12 - 50M over 5 years)
+3. ✅ TournamentManager (receives 20M tokens for prize pools)
+4. ✅ TokenSale (receives 200M tokens for public sale)
+5. ✅ TestnetFaucet (testnet only - receives 50M tokens)
+6. 🔜 Uniswap V3 8BIT/USDC Pool (60M liquidity, locked 3+ years)
+7. 🔜 TournamentPayments (after pool creation, handles buyback/burn)
+8. 🔜 Uniswap V3 8BIT/ETH Pool (secondary pair, if needed)
+9. 🔜 Staking Contract (Phase 3, months 7-12 - 50M over 5 years)
 
 **Post-Deployment Setup:**
 - Authorize GameRewards: `token.setAuthorizedMinter(gameRewardsAddress, true)`

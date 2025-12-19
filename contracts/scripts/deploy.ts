@@ -86,9 +86,9 @@ async function main() {
   console.log();
 
   // Fund TournamentManager with tokens for prize pools
-  // Initially mint 10M tokens to TournamentManager for prizes
+  // Transfer 20M tokens to TournamentManager for prizes (4% of max supply)
   console.log("💰 Funding TournamentManager with prize pool tokens...");
-  const prizePoolAmount = ethers.parseEther("10000000"); // 10M tokens
+  const prizePoolAmount = ethers.parseEther("20000000"); // 20M tokens
   const mintTx = await token.transfer(tournamentsAddress, prizePoolAmount);
   await mintTx.wait();
   console.log("✅ TournamentManager funded with", ethers.formatEther(prizePoolAmount), "8BIT");
@@ -114,9 +114,9 @@ async function main() {
   console.log("✅ TokenSale deployed to:", tokenSaleAddress);
   console.log();
 
-  // Fund TokenSale with 100M tokens (10% of supply)
-  console.log("💰 Funding TokenSale with 100M tokens...");
-  const saleAmount = ethers.parseEther("100000000"); // 100M tokens
+  // Fund TokenSale with 200M tokens (40% of max supply)
+  console.log("💰 Funding TokenSale with 200M tokens...");
+  const saleAmount = ethers.parseEther("200000000"); // 200M tokens
   const saleFundTx = await token.transfer(tokenSaleAddress, saleAmount);
   await saleFundTx.wait();
   console.log("✅ TokenSale funded with", ethers.formatEther(saleAmount), "8BIT");

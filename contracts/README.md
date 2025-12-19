@@ -6,10 +6,11 @@ Smart contracts for the 8-Bit Arcade gaming platform on Arbitrum.
 
 ### EightBitToken (8BIT)
 - **Type**: ERC20 Token
-- **Total Supply**: 1,000,000,000 (1 Billion)
+- **Max Supply**: 500,000,000 (500 Million)
+- **Initial Mint**: 300,000,000 (60% at deployment)
 - **Decimals**: 18
 - **Purpose**: Platform utility token for rewards and tournaments
-- **Features**: Standard ERC20 with owner-controlled minting
+- **Features**: ERC20 with authorized minter system for controlled emissions
 
 ### GameRewards
 - **Purpose**: Distributes daily leaderboard rewards
@@ -39,11 +40,12 @@ Smart contracts for the 8-Bit Arcade gaming platform on Arbitrum.
 
 ### TokenSale
 - **Purpose**: Public token sale contract
-- **Sale Amount**: 100M tokens (10% of supply)
-- **Target Raise**: $50,000
+- **Sale Amount**: 200M tokens (40% of max supply)
+- **Target Raise**: $100,000
 - **Price**: $0.0005 per token
 - **Payment**: ETH or USDC
-- **Features**: Time-limited sale with purchase tracking
+- **Duration**: 6 weeks
+- **Features**: Time-limited sale, unsold tokens burned, immediate unlock
 
 ### TreasuryGasManager
 - **Purpose**: Automated gas wallet management
@@ -58,6 +60,50 @@ Smart contracts for the 8-Bit Arcade gaming platform on Arbitrum.
 - **Amount**: 10,000 8BIT per claim
 - **Cooldown**: 24 hours between claims
 - **Features**: Anti-spam protection, balance tracking
+
+## 💎 Token Distribution
+
+### Maximum Supply: 500M 8BIT
+
+#### Initial Distribution (At Deployment)
+
+**Mainnet: 300M minted (60% of max supply)**
+- **200M (40%)** → TokenSale ($100k raise at $0.0005/token)
+- **20M (4%)** → TournamentManager (prize pools)
+- **80M (16%)** → Founder/Deployer:
+  - 60M DEX liquidity (Uniswap V3 8BIT/USDC pool)
+  - 15M Marketing & partnerships
+  - 5M Team & advisors (vested)
+
+**Testnet: 300M minted (60% of max supply)**
+- **200M (40%)** → TokenSale
+- **50M (10%)** → TestnetFaucet (testing only)
+- **20M (4%)** → TournamentManager
+- **30M (6%)** → Founder (reduced allocation for testing)
+
+#### Future Emissions (Authorized Minters)
+
+**200M tokens (40% of max supply)** minted gradually over 5 years:
+- **150M (30%)** → GameRewards (daily leaderboard rewards)
+- **50M (10%)** → Staking (staking rewards, when implemented)
+
+#### Total Breakdown
+
+| Allocation | Amount | % of Max Supply | Unlock |
+|-----------|--------|-----------------|---------|
+| **Token Sale** | 200M | 40% | Immediate |
+| **Future Rewards** | 200M | 40% | 5 years (linear) |
+| **Liquidity** | 60M | 12% | Immediate (locked 3+ years) |
+| **Tournaments** | 20M | 4% | Immediate |
+| **Marketing** | 15M | 3% | 6-12 months |
+| **Team** | 5M | 1% | 2-3 years (vested) |
+| **Total** | **500M** | **100%** | |
+
+### Deflationary Mechanism
+- **50% of tournament fees** are used to buyback 8BIT from DEX and burn
+- **Tournament burns** reduce circulating supply over time
+- **Unsold tokens** from TokenSale are burned at sale end
+- **Effective max supply** decreases as platform grows
 
 ## 🚀 Quick Start Deployment
 
