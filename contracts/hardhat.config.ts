@@ -29,9 +29,10 @@ const config: HardhatUserConfig = {
   networks: {
     // Arbitrum Sepolia Testnet
     arbitrumSepolia: {
-      url: "https://sepolia-rollup.arbitrum.io/rpc",
+      url: process.env.ARBITRUM_SEPOLIA_RPC || "https://sepolia-rollup.arbitrum.io/rpc",
       chainId: 421614,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      timeout: 60000,
     },
     // Arbitrum One Mainnet
     arbitrumOne: {
