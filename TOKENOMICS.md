@@ -28,9 +28,10 @@ Total Supply: 500,000,000 8BIT (100%)
 │  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
 │  └─ 50,000,000 (10%) - Staking Rewards
 └─ 100,000,000 (20%) - Initial Distribution
-   ├─ 75,000,000 (15%) - DEX Liquidity (locked)
+   ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
+   ├─ 20,000,000 (4%) - Tournament Prize Pools
    ├─ 15,000,000 (3%) - Marketing & Partnerships
-   └─ 10,000,000 (2%) - Team (vested)
+   └─ 5,000,000 (1%) - Team (vested 2-3 years)
 ```
 
 ### Distribution Breakdown
@@ -40,9 +41,10 @@ Total Supply: 500,000,000 8BIT (100%)
 | **Token Sale** | 200,000,000 | 40% | Public presale at $0.0005 |
 | **Rewards Pool** | 150,000,000 | 30% | Player rewards, tournaments (distributed over 5 years) |
 | **Staking Pool** | 50,000,000 | 10% | Long-term holder incentives |
-| **DEX Liquidity** | 75,000,000 | 15% | Uniswap V3 locked liquidity (deep pool) |
+| **DEX Liquidity** | 60,000,000 | 12% | Uniswap V3 locked liquidity (locked 3+ years) |
+| **Tournament Prizes** | 20,000,000 | 4% | Tournament prize pools |
 | **Marketing** | 15,000,000 | 3% | Partnerships, listings, growth |
-| **Team** | 10,000,000 | 2% | Team allocation (vested) |
+| **Team** | 5,000,000 | 1% | Team allocation (vested 2-3 years) |
 
 **Presale Cap:** $100,000 USD (if all 200M tokens sold)
 
@@ -246,7 +248,7 @@ Top 10 players in each game earn daily rewards:
 | Month 6 | 15,000,000 | 315,000,000 | 63% |
 | Month 12 | 30,000,000 | 330,000,000 | 66% |
 
-*Initial 100M + Presale 200M (assuming full sale)
+*Initial mint of 300M includes: 200M presale + 60M liquidity + 20M tournaments + 15M marketing + 5M team (assuming full sale)
 
 ### 5-Year Projection (Accelerated Distribution)
 
@@ -393,7 +395,7 @@ Even at conservative market caps:
 
 5. **Professional Launch**
    - $100K presale for proper liquidity
-   - $75K+ locked DEX liquidity (15% of supply)
+   - $30K locked DEX liquidity (60M tokens = 12% of supply)
    - Deep liquidity pool minimizes slippage
    - Early adopter advantage
 
