@@ -102,7 +102,7 @@ contract TournamentManager is Ownable, ReentrancyGuard {
      * @dev Constructor
      * @param _tokenAddress Address of the 8BIT token contract
      */
-    constructor(address _tokenAddress) {
+    constructor(address _tokenAddress) Ownable(msg.sender) {
         require(_tokenAddress != address(0), "Invalid token address");
         eightBitToken = IERC20(_tokenAddress);
         tournamentManager = msg.sender;

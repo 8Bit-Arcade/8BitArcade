@@ -104,7 +104,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         address _tokenAddress,
         address _usdcAddress,
         uint256 _startTime
-    ) {
+    ) Ownable(msg.sender) {
         require(_tokenAddress != address(0), "Invalid token address");
         require(_usdcAddress != address(0), "Invalid USDC address");
 
