@@ -14,9 +14,10 @@ Total Supply: 500,000,000 8BIT (100%)
 │  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
 │  └─ 50,000,000 (10%) - Staking Rewards
 └─ 100,000,000 (20%) - Initial Distribution
-   ├─ 75,000,000 (15%) - DEX Liquidity (locked)
+   ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
+   ├─ 20,000,000 (4%) - Tournament Prize Pools
    ├─ 15,000,000 (3%) - Marketing & Partnerships
-   └─ 10,000,000 (2%) - Team (vested)
+   └─ 5,000,000 (1%) - Team (vested 2-3 years)
 ```
 
 ## Detailed Breakdown
@@ -105,21 +106,21 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ---
 
-### 💧 DEX Liquidity - 75,000,000 (15%)
+### 💧 DEX Liquidity - 60,000,000 (12%)
 
 **Purpose:** Deep trading liquidity on Uniswap V3
 
 | Detail | Information |
 |--------|-------------|
-| **Amount** | 75,000,000 8BIT |
-| **Value at Presale** | $37,500 USD |
-| **Paired With** | $37,500+ USDC from presale |
+| **Amount** | 60,000,000 8BIT |
+| **Value at Presale** | $30,000 USD |
+| **Paired With** | $30,000+ USDC from presale |
 | **Platform** | Uniswap V3 (Arbitrum) |
 | **Lock Period** | 3-4 years |
 
-**Why 15% is Exceptional:**
+**Why 12% is Strong:**
 - Most projects: 5-10% liquidity
-- **8-Bit Arcade: 15%** - ultra-deep pool
+- **8-Bit Arcade: 12%** - deep, professional pool
 - Minimizes slippage on large trades
 - Professional, sustainable launch
 - Prevents price manipulation
@@ -165,23 +166,50 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ---
 
-### 👥 Team Allocation - 10,000,000 (2%)
+### 🏆 Tournament Prize Pools - 20,000,000 (4%)
+
+**Purpose:** Initial tournament prize pool funding
+
+| Detail | Information |
+|--------|-------------|
+| **Amount** | 20,000,000 8BIT |
+| **Value at Presale** | $10,000 USD |
+| **Usage** | Tournament prizes |
+| **Lock/Vest** | Available immediately for tournaments |
+
+**Purpose:**
+- Funds initial tournament prize pools
+- Ensures tournaments can run immediately at launch
+- Provides runway while GameRewards emissions ramp up
+- Attracts competitive players from day one
+
+**Tournament Structure:**
+- **Standard Weekly:** $1 entry, $25 prize pool
+- **Standard Monthly:** $5 entry, $50 prize pool
+- **High Roller Weekly:** $5 entry, $75 prize pool
+- **High Roller Monthly:** $25 entry, $250 prize pool
+
+**Note:** After these initial prizes are distributed, ongoing tournament prizes come from the GameRewards 150M emissions pool over 5 years.
+
+---
+
+### 👥 Team Allocation - 5,000,000 (1%)
 
 **Purpose:** Team incentives and long-term alignment
 
 | Detail | Information |
 |--------|-------------|
-| **Amount** | 10,000,000 8BIT |
-| **Value at Presale** | $5,000 USD |
-| **Vesting Period** | Yes (details TBA) |
+| **Amount** | 5,000,000 8BIT |
+| **Value at Presale** | $2,500 USD |
+| **Vesting Period** | 2-3 years |
 | **Lock/Vest** | Fully vested |
 
-**Why Only 2%:**
-- **Lowest team allocation in crypto**
+**Why Only 1%:**
+- **Ultra-low team allocation**
 - Most projects: 10-20% team allocation
-- Shows commitment to community
+- Shows maximum commitment to community
 - Team earns through project success
-- No ability to dump on investors
+- Zero ability to dump on investors
 
 **Vesting Purpose:**
 - Aligns team with long-term success
@@ -196,9 +224,10 @@ Total Supply: 500,000,000 8BIT (100%)
 | Allocation | Amount | Status |
 |------------|--------|--------|
 | Token Sale | 200M | ✅ Circulating |
-| DEX Liquidity | 75M | 🔒 Locked in pool |
+| Tournament Prizes | 20M | ✅ Available for prizes |
+| DEX Liquidity | 60M | 🔒 Locked in pool |
 | Marketing | 15M | ⚠️ Treasury (used strategically) |
-| Team | 10M | 🔒 Vested |
+| Team | 5M | 🔒 Vested |
 | **Total Circulating** | **~200M** | **40% of supply** |
 
 ### Month 3
@@ -233,17 +262,18 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ## Comparison to Other Projects
 
-| Project | Token Sale | Rewards | Liquidity | Team | Marketing |
-|---------|-----------|---------|-----------|------|-----------|
-| **8-Bit Arcade** | **40%** | **40%** | **15%** | **2%** | **3%** |
-| Typical GameFi | 30% | 30% | 10% | 15% | 15% |
-| Axie Infinity | 29% | 29% | 8% | 21% | 13% |
-| DeFi Kingdoms | 25% | 40% | 5% | 20% | 10% |
+| Project | Token Sale | Rewards | Liquidity | Tournaments | Team | Marketing |
+|---------|-----------|---------|-----------|-------------|------|-----------|
+| **8-Bit Arcade** | **40%** | **40%** | **12%** | **4%** | **1%** | **3%** |
+| Typical GameFi | 30% | 30% | 10% | 0% | 15% | 15% |
+| Axie Infinity | 29% | 29% | 8% | 0% | 21% | 13% |
+| DeFi Kingdoms | 25% | 40% | 5% | 0% | 20% | 10% |
 
 **8-Bit Arcade Advantages:**
-- ✅ Highest liquidity allocation (15% vs typical 5-10%)
-- ✅ Lowest team allocation (2% vs typical 15-20%)
+- ✅ Strong liquidity allocation (12% vs typical 5-10%)
+- ✅ Ultra-low team allocation (1% vs typical 15-20%)
 - ✅ Lowest marketing allocation (3% vs typical 10-15%)
+- ✅ Dedicated tournament prize pool (4% upfront funding)
 - ✅ Front-loaded rewards (5 years vs 20-30 years)
 - ✅ More tokens to players and investors
 

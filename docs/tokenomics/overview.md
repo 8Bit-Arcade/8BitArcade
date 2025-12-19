@@ -34,9 +34,10 @@ Total Supply: 500,000,000 8BIT (100%)
 │  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
 │  └─ 50,000,000 (10%) - Staking Rewards
 └─ 100,000,000 (20%) - Initial Distribution
-   ├─ 75,000,000 (15%) - DEX Liquidity (locked)
+   ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
+   ├─ 20,000,000 (4%) - Tournament Prize Pools
    ├─ 15,000,000 (3%) - Marketing & Partnerships
-   └─ 10,000,000 (2%) - Team (vested)
+   └─ 5,000,000 (1%) - Team (vested 2-3 years)
 ```
 
 ### Allocation Breakdown
@@ -46,9 +47,10 @@ Total Supply: 500,000,000 8BIT (100%)
 | **Token Sale** | 200M | 40% | Public presale at $0.0005 | None - immediate |
 | **Rewards Pool** | 150M | 30% | Player rewards & tournaments | 5-year distribution |
 | **Staking Pool** | 50M | 10% | Long-term holder incentives | 5 years |
-| **DEX Liquidity** | 75M | 15% | Uniswap V3 deep pool | Locked 3-4 years |
+| **DEX Liquidity** | 60M | 12% | Uniswap V3 deep pool | Locked 3+ years |
+| **Tournament Prizes** | 20M | 4% | Initial tournament prize pools | Available immediately |
 | **Marketing** | 15M | 3% | Partnerships, listings, growth | Performance-based |
-| **Team** | 10M | 2% | Team allocation | Vested |
+| **Team** | 5M | 1% | Team allocation | Vested 2-3 years |
 
 ## Key Features
 
@@ -74,10 +76,10 @@ Unlike typical projects that distribute rewards over 20-30 years, 8-Bit Arcade u
 
 ### 💎 Deep Liquidity
 
-75M tokens (15% of supply) allocated to DEX liquidity:
+60M tokens (12% of supply) allocated to DEX liquidity:
 
-- **$75K+ value** at presale price
-- Locked on Uniswap V3 for 3-4 years
+- **$30K value** at presale price
+- Locked on Uniswap V3 for 3+ years
 - Creates deep trading pool
 - Minimizes slippage for large trades
 - Professional launch vs typical micro-cap projects
@@ -129,9 +131,10 @@ Unlike typical projects that distribute rewards over 20-30 years, 8-Bit Arcade u
 | Metric | Presale Raise | Implications |
 |--------|---------------|--------------|
 | **Total Raised** | $100,000 | Professional launch capital |
-| **Liquidity** | $75,000+ | 75% of raise → DEX liquidity |
+| **Liquidity** | $30,000 | 30% of raise → DEX liquidity |
+| **Tournaments** | $10,000 | 10% → Initial prize pools |
 | **Marketing** | $7,500 | Partnerships, listings, growth |
-| **Team** | $5,000 | Vested, not liquid |
+| **Team** | $2,500 | Vested, not liquid |
 | **Break-even Mcap** | ~$200,000 | 2x ROI at $200K market cap |
 
 ## Automated Infrastructure
