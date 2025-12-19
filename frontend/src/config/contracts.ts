@@ -36,12 +36,14 @@ export const USE_TESTNET = true;
  * Copy the deployed addresses here
  */
 const TESTNET_CONTRACTS = {
-  EIGHT_BIT_TOKEN: '0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8', // ← UPDATE: 8BIT token address
-  GAME_REWARDS: '0x193A7E1a8e840b514AdeD9a1D69a94002d87D678',    // ← UPDATE: GameRewards address
-  TOURNAMENT_MANAGER: '0xE01D484414e44f94F14A6B706c808A5f6941fdc6', // ← UPDATE: TournamentManager address
-  TOKEN_SALE: '0x6d747A95b847607674e1470A59ab2640E7c5794C',      // ← UPDATE: TokenSale address
-  TESTNET_FAUCET: '0x5cc8e7543B8445b8d4De6da0bab15d74C04DE45c', // ← UPDATE: TestnetFaucet address
-  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',            // Arbitrum Sepolia USDC
+  EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
+  GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E',
+  TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7',
+  TOURNAMENT_PAYMENTS: '0xb52aE08daFC310E6f858957Fa0a317fEF341dE85',
+  TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE',
+  TREASURY_GAS_MANAGER: '0x39F49a46CAB85CF079Cde25EAE311A563d3952EC',
+  TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952',
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
   CHAIN_ID: 421614, // Arbitrum Sepolia
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
@@ -59,12 +61,14 @@ const TESTNET_CONTRACTS = {
  * Copy the deployed addresses here
  */
 const MAINNET_CONTRACTS = {
-  EIGHT_BIT_TOKEN: '0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8', // ← UPDATE: 8BIT token address
-  GAME_REWARDS: '0x193A7E1a8e840b514AdeD9a1D69a94002d87D678',    // ← UPDATE: GameRewards address
-  TOURNAMENT_MANAGER: '0xE01D484414e44f94F14A6B706c808A5f6941fdc6', // ← UPDATE: TournamentManager address
-  TOKEN_SALE: '0x6d747A95b847607674e1470A59ab2640E7c5794C',      // ← UPDATE: TokenSale address
+  EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // ← UPDATE: 8BIT token address
+  GAME_REWARDS: '0x0000000000000000000000000000000000000000',    // ← UPDATE: GameRewards address
+  TOURNAMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentManager address
+  TOURNAMENT_PAYMENTS: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentPayments address
+  TOKEN_SALE: '0x0000000000000000000000000000000000000000',      // ← UPDATE: TokenSale address
+  TREASURY_GAS_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TreasuryGasManager address
   TESTNET_FAUCET: undefined, // Faucet not deployed on mainnet
-  USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',            // Arbitrum One USDC
+  USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One USDC
   CHAIN_ID: 42161, // Arbitrum One
   CHAIN_NAME: 'Arbitrum One',
   RPC_URL: 'https://arb1.arbitrum.io/rpc',
@@ -81,7 +85,9 @@ export const CONTRACTS = USE_TESTNET ? TESTNET_CONTRACTS : MAINNET_CONTRACTS;
 export const EIGHT_BIT_TOKEN_ADDRESS = CONTRACTS.EIGHT_BIT_TOKEN;
 export const GAME_REWARDS_ADDRESS = CONTRACTS.GAME_REWARDS;
 export const TOURNAMENT_MANAGER_ADDRESS = CONTRACTS.TOURNAMENT_MANAGER;
+export const TOURNAMENT_PAYMENTS_ADDRESS = CONTRACTS.TOURNAMENT_PAYMENTS;
 export const TOKEN_SALE_ADDRESS = CONTRACTS.TOKEN_SALE;
+export const TREASURY_GAS_MANAGER_ADDRESS = CONTRACTS.TREASURY_GAS_MANAGER;
 export const TESTNET_FAUCET_ADDRESS = CONTRACTS.TESTNET_FAUCET;
 export const USDC_ADDRESS = CONTRACTS.USDC;
 export const ARBITRUM_CHAIN_ID = CONTRACTS.CHAIN_ID;
@@ -94,21 +100,18 @@ export const BLOCK_EXPLORER_URL = CONTRACTS.BLOCK_EXPLORER;
 // ═══════════════════════════════════════════════════════════
 
 /**
- * ⚠️ CREATE A NEW SECURE WALLET FOR THIS ⚠️
+ * Backend wallet that distributes daily rewards and manages automated operations
  *
- * This wallet will be set as the rewardsDistributor in the GameRewards contract.
- * It's the backend wallet that calls distributeRewards() daily.
+ * This wallet is set as the rewardsDistributor in the GameRewards contract.
+ * It calls distributeRewards() daily via Firebase Functions.
  *
- * SECURITY TIPS:
- * - Create a new wallet specifically for this purpose
- * - Store private key securely (use environment variables)
- * - Only fund it with enough ETH for gas (not your main wallet)
- * - Keep the private key in backend .env file only
- *
- * After deployment, you must call:
- * gameRewards.setRewardsDistributor(REWARDS_DISTRIBUTOR_ADDRESS)
+ * SECURITY:
+ * - Private key stored securely in Firebase Functions config
+ * - Only funded with enough ETH for gas operations
+ * - Separate from deployer/founder wallet
+ * - Has MINTER_ROLE to distribute daily rewards
  */
-export const REWARDS_DISTRIBUTOR_ADDRESS = '0x0000000000000000000000000000000000000000'; // ← UPDATE: Backend wallet address
+export const REWARDS_DISTRIBUTOR_ADDRESS = '0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B';
 
 // ═══════════════════════════════════════════════════════════
 // ABI (Application Binary Interface)
