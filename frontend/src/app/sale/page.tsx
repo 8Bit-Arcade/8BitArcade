@@ -273,7 +273,7 @@ export default function TokenSalePage() {
                 ${formatNumber(totalRaised)}
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                Goal: $50,000
+                Goal: $100,000
               </p>
             </div>
           </Card>
@@ -423,15 +423,15 @@ export default function TokenSalePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Total Supply:</span>
-                <span className="text-white">1 Billion</span>
+                <span className="text-white">500 Million</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">For Sale:</span>
-                <span className="text-white">100M (10%)</span>
+                <span className="text-white">200M (40%)</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Raise Goal:</span>
-                <span className="text-arcade-yellow">$50,000</span>
+                <span className="text-arcade-yellow">$100,000</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Vesting:</span>
