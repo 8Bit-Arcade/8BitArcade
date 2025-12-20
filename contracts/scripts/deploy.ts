@@ -78,11 +78,11 @@ async function main() {
   console.log("✅ TreasuryGasManager deployed to:", treasuryAddress);
   console.log();
 
-  // Link contracts
-  console.log("🔗 Linking contracts...");
-  const tx = await token.setGameRewards(rewardsAddress);
-  await tx.wait();
-  console.log("✅ Contracts linked successfully");
+  // Authorize GameRewards as a minter
+  console.log("🔗 Authorizing GameRewards as minter...");
+  const authTx = await token.setAuthorizedMinter(rewardsAddress, true);
+  await authTx.wait();
+  console.log("✅ GameRewards authorized to mint rewards");
   console.log();
 
   // Fund TournamentManager with tokens for prize pools
@@ -181,6 +181,66 @@ async function main() {
     console.log("TestnetFaucet:", faucetAddress);
   }
   console.log("Deployer:", deployer.address);
+  console.log();
+
+  // Verify token balances
+  console.log("═══════════════════════════════════════════════════");
+  console.log("  TOKEN BALANCE VERIFICATION");
+  console.log("═══════════════════════════════════════════════════");
+  console.log();
+
+  const tournamentBalance = await token.balanceOf(tournamentsAddress);
+  const saleBalance = await token.balanceOf(tokenSaleAddress);
+  const faucetBalance = faucetAddress ? await token.balanceOf(faucetAddress) : BigInt(0);
+  const deployerBalance = await token.balanceOf(deployer.address);
+  const totalDistributed = tournamentBalance + saleBalance + faucetBalance + deployerBalance;
+
+  console.log("TournamentManager:", ethers.formatEther(tournamentBalance), "8BIT");
+  console.log("  Expected: 20,000,000 8BIT");
+  console.log("  Status:", tournamentBalance === ethers.parseEther("20000000") ? "✅ CORRECT" : "❌ INCORRECT");
+  console.log();
+
+  console.log("TokenSale:", ethers.formatEther(saleBalance), "8BIT");
+  console.log("  Expected: 200,000,000 8BIT");
+  console.log("  Status:", saleBalance === ethers.parseEther("200000000") ? "✅ CORRECT" : "❌ INCORRECT");
+  console.log();
+
+  if (faucetAddress) {
+    console.log("TestnetFaucet:", ethers.formatEther(faucetBalance), "8BIT");
+    console.log("  Expected: 50,000,000 8BIT");
+    console.log("  Status:", faucetBalance === ethers.parseEther("50000000") ? "✅ CORRECT" : "❌ INCORRECT");
+    console.log();
+  }
+
+  console.log("Deployer:", ethers.formatEther(deployerBalance), "8BIT");
+  const expectedDeployerBalance = faucetAddress
+    ? ethers.parseEther("30000000") // Testnet: 30M remaining
+    : ethers.parseEther("80000000"); // Mainnet: 80M remaining (no faucet)
+  console.log("  Expected:", ethers.formatEther(expectedDeployerBalance), "8BIT");
+  console.log("  Status:", deployerBalance === expectedDeployerBalance ? "✅ CORRECT" : "❌ INCORRECT");
+  console.log();
+
+  console.log("Total Distributed:", ethers.formatEther(totalDistributed), "8BIT");
+  console.log("  Expected: 300,000,000 8BIT");
+  console.log("  Status:", totalDistributed === ethers.parseEther("300000000") ? "✅ CORRECT" : "❌ INCORRECT");
+  console.log();
+
+  // Check if all balances are correct
+  const balancesCorrect =
+    tournamentBalance === ethers.parseEther("20000000") &&
+    saleBalance === ethers.parseEther("200000000") &&
+    (!faucetAddress || faucetBalance === ethers.parseEther("50000000")) &&
+    deployerBalance === expectedDeployerBalance &&
+    totalDistributed === ethers.parseEther("300000000");
+
+  if (!balancesCorrect) {
+    console.log("❌❌❌ TOKEN BALANCE MISMATCH DETECTED! ❌❌❌");
+    console.log("DEPLOYMENT MAY HAVE FAILED! CHECK BALANCES IMMEDIATELY!");
+    console.log("═══════════════════════════════════════════════════");
+    throw new Error("Token balance verification failed!");
+  }
+
+  console.log("✅✅✅ ALL TOKEN BALANCES VERIFIED CORRECT! ✅✅✅");
   console.log();
   console.log("⚠️  IMPORTANT NEXT STEPS:");
   console.log("───────────────────────────────────────────────────");
