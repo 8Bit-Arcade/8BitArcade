@@ -10,6 +10,7 @@ import {
   TESTNET_FAUCET_ADDRESS,
   TESTNET_FAUCET_ABI,
   USE_TESTNET,
+  ARBITRUM_CHAIN_ID,
 } from '@/config/contracts';
 
 export default function FaucetPage() {
@@ -21,12 +22,14 @@ export default function FaucetPage() {
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
     abi: TESTNET_FAUCET_ABI,
     functionName: 'CLAIM_AMOUNT',
+    chainId: ARBITRUM_CHAIN_ID,
   });
 
   const { data: minBalance } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
     abi: TESTNET_FAUCET_ABI,
     functionName: 'MIN_BALANCE_THRESHOLD',
+    chainId: ARBITRUM_CHAIN_ID,
   });
 
   const { data: userInfo, refetch: refetchUserInfo } = useReadContract({
@@ -34,12 +37,17 @@ export default function FaucetPage() {
     abi: TESTNET_FAUCET_ABI,
     functionName: 'getUserInfo',
     args: address ? [address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
+    query: {
+      enabled: !!address,
+    },
   });
 
   const { data: faucetStats } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
     abi: TESTNET_FAUCET_ABI,
     functionName: 'getFaucetStats',
+    chainId: ARBITRUM_CHAIN_ID,
   });
 
   // Claim tokens
