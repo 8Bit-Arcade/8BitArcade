@@ -80,7 +80,7 @@ async function main() {
 
   // Authorize GameRewards as a minter
   console.log("🔗 Authorizing GameRewards as minter...");
-  const authTx = await token.setAuthorizedMinter(rewardsAddress, true);
+  const tx = await token.setAuthorizedMinter(rewardsAddress, true);
   await authTx.wait();
   console.log("✅ GameRewards authorized to mint rewards");
   console.log();
