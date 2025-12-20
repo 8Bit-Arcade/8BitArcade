@@ -201,16 +201,17 @@ export const TESTNET_FAUCET_ABI = [
   "function getTimeUntilNextClaim(address user) view returns (uint256)",
   "function getUserInfo(address user) view returns (uint256 lastClaim, uint256 totalUserClaimed, bool canUserClaim, uint256 userBalance, uint256 timeUntilNext)",
   "function getFaucetStats() view returns (uint256 balance, uint256 distributed, uint256 claims, uint256 uniqueClaimers)",
-  // ✅ CORRECTED - public constants (no parentheses needed)
+  // CORRECTED - public constants (no parentheses needed)
   "uint256 public constant CLAIM_AMOUNT",
   "uint256 public constant COOLDOWN_PERIOD", 
   "uint256 public constant MIN_BALANCE_THRESHOLD",
-  // ✅ Add these for completeness
+  // Add these for completeness
   "mapping(address => uint256) public lastClaimTime",
   "mapping(address => uint256) public totalClaimed",
   "bool public isPaused",
   "event TokensClaimed(address indexed user, uint256 amount, uint256 timestamp)"
 ];
+
 
 // ═══════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
