@@ -132,7 +132,9 @@ export default function FaucetPage() {
     );
   }
 
-  const belowMinBalance = Number(userBalance) < Number(minBalanceValue ?? BigInt(0));
+  // Default to 5,000 8BIT (5000 * 10^18) if minBalance not loaded yet
+  const defaultMinBalance = BigInt("5000000000000000000000");
+  const belowMinBalance = Number(userBalance) < Number(minBalanceValue ?? defaultMinBalance);
 
   return (
     <div className="min-h-screen py-8">
