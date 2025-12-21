@@ -196,16 +196,67 @@ export const USDC_ABI = [
 ];
 
 export const TESTNET_FAUCET_ABI = [
-  "function claimTokens() external",
-  "function canClaim(address user) view returns (bool)",
-  "function getTimeUntilNextClaim(address user) view returns (uint256)",
-  "function getUserInfo(address user) view returns (uint256 lastClaim, uint256 totalUserClaimed, bool canUserClaim, uint256 userBalance, uint256 timeUntilNext)",
-  "function getFaucetStats() view returns (uint256 balance, uint256 distributed, uint256 claims, uint256 uniqueClaimers)",
-  "function CLAIM_AMOUNT() view returns (uint256)",
-  "function COOLDOWN_PERIOD() view returns (uint256)",
-  "function MIN_BALANCE_THRESHOLD() view returns (uint256)",
-  "event TokensClaimed(address indexed user, uint256 amount, uint256 timestamp)",
-];
+  {
+    inputs: [],
+    name: 'claimTokens',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'canClaim',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getUserInfo',
+    outputs: [
+      { internalType: 'uint256', name: 'lastClaim', type: 'uint256' },
+      { internalType: 'uint256', name: 'totalUserClaimed', type: 'uint256' },
+      { internalType: 'bool', name: 'canUserClaim', type: 'bool' },
+      { internalType: 'uint256', name: 'userBalance', type: 'uint256' },
+      { internalType: 'uint256', name: 'timeUntilNext', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getFaucetStats',
+    outputs: [
+      { internalType: 'uint256', name: 'balance', type: 'uint256' },
+      { internalType: 'uint256', name: 'distributed', type: 'uint256' },
+      { internalType: 'uint256', name: 'claims', type: 'uint256' },
+      { internalType: 'uint256', name: 'uniqueClaimers', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'CLAIM_AMOUNT',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'COOLDOWN_PERIOD',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'MIN_BALANCE_THRESHOLD',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 
 // ═══════════════════════════════════════════════════════════
