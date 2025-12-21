@@ -1,11 +1,12 @@
-'use client';  // ← FIXED: FIRST LINE
+'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts } from 'wagmi';
-import { formatEther } from 'viem';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { formatEther, parseEther } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
+import { callFunction } from '@/lib/firebase-functions';
 import {
   TOURNAMENT_MANAGER_ADDRESS,
   TOURNAMENT_MANAGER_ABI,
@@ -13,62 +14,104 @@ import {
   EIGHT_BIT_TOKEN_ABI,
 } from '@/config/contracts';
 
-// ... ALL YOUR EXISTING TYPE DEFINITIONS AND INTERFACES ...
+type Tier = 'Standard' | 'High Roller';
+type Period = 'Weekly' | 'Monthly';
+type TournamentStatus = 'upcoming' | 'active' | 'ended';
+
+interface Tournament {
+  id: number;
+  tier: Tier;
+  period: Period;
+  startTime: Date;
+  endTime: Date;
+  entryFee: bigint;
+  prizePool: bigint;
+  totalEntries: number;
+  winner: string;
+  isActive: boolean;
+  status: TournamentStatus;
+  hasEntered?: boolean;
+}
 
 export default function TournamentsPage() {
-  // ... ALL YOUR EXISTING CODE UNTIL THE FIREBASE useEffect ...
+  const { address, isConnected } = useAccount();
+  const [filter, setFilter] = useState<Tier | 'all'>('all');
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [selectedTournament, setSelectedTournament] = useState<number | null>(null);
+  const [needsApproval, setNeedsApproval] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [entering, setEntering] = useState(false);
 
-  // ✅ REPLACE ONLY THIS useEffect (around line 110):
+  // ✅ HARDCODE YOUR 3 TOURNAMENTS FROM ARBISCAN (INSTANT FIX)
   useEffect(() => {
-    const loadTournaments = async () => {
-      setLoading(true);
-      const tournamentsData = await Promise.all([
-        readContract({
-          address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
-          abi: TOURNAMENT_MANAGER_ABI,
-          functionName: 'getTournament',
-          args: [1n],
-        }),
-        readContract({
-          address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
-          abi: TOURNAMENT_MANAGER_ABI,
-          functionName: 'getTournament',
-          args: [2n],
-        }),
-        readContract({
-          address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
-          abi: TOURNAMENT_MANAGER_ABI,
-          functionName: 'getTournament',
-          args: [3n],
-        }),
-      ]);
+    setLoading(false);
+    const realTournaments: Tournament[] = [
+      {
+        id: 1,
+        tier: 'Standard',
+        period: 'Weekly',
+        startTime: new Date(1766347639 * 1000),
+        endTime: new Date(1766952439 * 1000),
+        entryFee: parseEther('2'),
+        prizePool: parseEther('50000'),
+        totalEntries: 0,
+        winner: '0x0000000000000000000000000000000000000000',
+        isActive: true,
+        status: 'active' as const,
+      },
+      {
+        id: 2,
+        tier: 'High Roller',
+        period: 'Weekly',
+        startTime: new Date(1766347639 * 1000),
+        endTime: new Date(1766952439 * 1000),
+        entryFee: parseEther('10'),
+        prizePool: parseEther('150000'),
+        totalEntries: 0,
+        winner: '0x0000000000000000000000000000000000000000',
+        isActive: true,
+        status: 'active' as const,
+      },
+      {
+        id: 3,
+        tier: 'Standard',
+        period: 'Monthly',
+        startTime: new Date(1766347639 * 1000),
+        endTime: new Date(1768939639 * 1000),
+        entryFee: parseEther('10'),
+        prizePool: parseEther('100000'),
+        totalEntries: 0,
+        winner: '0x0000000000000000000000000000000000000000',
+        isActive: true,
+        status: 'active' as const,
+      }
+    ];
+    setTournaments(realTournaments);
+  }, []);
 
-      const formattedTournaments: Tournament[] = tournamentsData
-        .map((t, index) => {
-          if (!t.result) return null;
-          const data = t.result as any;
-          return {
-            id: index + 1,
-            tier: Number(data[0]) === 0 ? 'Standard' : 'High Roller',
-            period: Number(data[1]) === 0 ? 'Weekly' : 'Monthly',
-            startTime: new Date(Number(data[2]) * 1000),
-            endTime: new Date(Number(data[3]) * 1000),
-            entryFee: data[4],
-            prizePool: data[5],
-            totalEntries: Number(data[6]),
-            winner: data[7],
-            isActive: Boolean(data[8]),
-            status: 'active' as TournamentStatus,
-          };
-        })
-        .filter(Boolean) as Tournament[];
+  // Read tournament fees (keep existing)
+  const { data: standardWeeklyFee } = useReadContract({
+    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'STANDARD_WEEKLY_FEE',
+  });
 
-      setTournaments(formattedTournaments);
-      setLoading(false);
-    };
+  const { data: standardMonthlyFee } = useReadContract({
+    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'STANDARD_MONTHLY_FEE',
+  });
 
-    if (isConnected) loadTournaments();
-  }, [isConnected]);
+  const { data: highRollerWeeklyFee } = useReadContract({
+    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'HIGH_ROLLER_WEEKLY_FEE',
+  });
 
-  // ... KEEP ALL YOUR EXISTING CODE BELOW (allowance, approve, enter, JSX) ...
-}
+  const { data: highRollerMonthlyFee } = useReadContract({
+    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'HIGH_ROLLER_MONTHLY_FEE',
+  });
+
+  // Read prize pools (keep
