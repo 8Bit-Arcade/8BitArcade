@@ -222,9 +222,12 @@ See [SMART_CONTRACTS_GUIDE.md](SMART_CONTRACTS_GUIDE.md) for detailed instructio
 
 1. **Get testnet ETH**: https://faucet.quicknode.com/arbitrum/sepolia
 2. **Connect wallet** to Arbitrum Sepolia
-3. **Play games** and earn daily rewards
-4. **Test tournaments** (both tiers)
-5. **Provide feedback**
+3. **Get test 8BIT tokens**: Visit https://play.8bitarcade.games/faucet
+   - Claim 10,000 8BIT every 24 hours (requires < 5,000 8BIT balance)
+   - Use test tokens to enter tournaments and test all features
+4. **Play games** and earn daily rewards
+5. **Test tournaments** (both tiers using faucet tokens)
+6. **Provide feedback**
 
 ## 📊 Development Phases
 
