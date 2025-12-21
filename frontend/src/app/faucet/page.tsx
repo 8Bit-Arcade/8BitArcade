@@ -17,22 +17,11 @@ export default function FaucetPage() {
   const { address, isConnected } = useAccount();
   const [timeUntilNext, setTimeUntilNext] = useState(0);
 
-  // Read faucet data
-  const { data: claimAmount } = useReadContract({
-    address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
-    abi: TESTNET_FAUCET_ABI,
-    functionName: 'CLAIM_AMOUNT',
-    chainId: ARBITRUM_CHAIN_ID,
-  });
+  // Hardcode faucet constants (from contract)
+  const claimAmount = BigInt("10000000000000000000000"); // 10,000 8BIT
+  const minBalance = BigInt("5000000000000000000000");  // 5,000 8BIT
 
-  const { data: minBalance } = useReadContract({
-    address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
-    abi: TESTNET_FAUCET_ABI,
-    functionName: 'MIN_BALANCE_THRESHOLD',
-    chainId: ARBITRUM_CHAIN_ID,
-  });
-
-  const { data: userInfo, refetch: refetchUserInfo } = useReadContract({
+  const { data: userInfo, refetch: refetchUserInfo, error: userInfoError } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
     abi: TESTNET_FAUCET_ABI,
     functionName: 'getUserInfo',
@@ -42,6 +31,19 @@ export default function FaucetPage() {
       enabled: !!address,
     },
   });
+
+  // Debug logging
+  useEffect(() => {
+    if (address) {
+      console.log('[Faucet Debug] Address:', address);
+      console.log('[Faucet Debug] Chain ID:', ARBITRUM_CHAIN_ID);
+      console.log('[Faucet Debug] Contract Address:', TESTNET_FAUCET_ADDRESS);
+      console.log('[Faucet Debug] UserInfo Data:', userInfo);
+      console.log('[Faucet Debug] UserInfo Error:', userInfoError);
+      console.log('[Faucet Debug] Claim Amount:', claimAmount);
+      console.log('[Faucet Debug] Min Balance:', minBalance);
+    }
+  }, [address, userInfo, userInfoError, claimAmount, minBalance]);
 
   const { data: faucetStats } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
@@ -56,11 +58,7 @@ export default function FaucetPage() {
     hash: claimHash,
   });
 
-  // Extract user info
-  // Type-safe extraction of contract data
-  const claimAmountValue = claimAmount as bigint | undefined;
-  const minBalanceValue = minBalance as bigint | undefined;
-
+  // Extract user info - getUserInfo returns [lastClaim, totalUserClaimed, canUserClaim, userBalance, timeUntilNext]
   const lastClaim = userInfo ? Number((userInfo as readonly [bigint, bigint, boolean, bigint, bigint])[0]) : 0;
   const totalClaimed = userInfo ? (userInfo as readonly [bigint, bigint, boolean, bigint, bigint])[1] : BigInt(0);
   const canClaim = userInfo ? (userInfo as readonly [bigint, bigint, boolean, bigint, bigint])[2] : false;
@@ -140,9 +138,8 @@ export default function FaucetPage() {
     );
   }
 
-  // Default to 5,000 8BIT (5000 * 10^18) if minBalance not loaded yet
-  const defaultMinBalance = BigInt("5000000000000000000000");
-  const belowMinBalance = Number(userBalance) < Number(minBalanceValue ?? defaultMinBalance);
+  // Check if user balance is below minimum threshold
+  const belowMinBalance = Number(userBalance) < Number(minBalance);
 
   return (
     <div className="min-h-screen py-8">
@@ -171,7 +168,7 @@ export default function FaucetPage() {
               <div className="p-4 bg-arcade-green/10 rounded border border-arcade-green/30 text-center">
                 <p className="font-arcade text-xs text-gray-400 mb-1">Claim Amount</p>
                 <p className="font-pixel text-2xl text-arcade-green">
-                  {formatNumber(Number(formatEther(claimAmountValue ?? BigInt(0))))} 8BIT
+                  {formatNumber(Number(formatEther(claimAmount)))} 8BIT
                 </p>
                 <p className="font-arcade text-xs text-gray-400 mt-2">
                   Every 24 hours
@@ -216,7 +213,7 @@ export default function FaucetPage() {
                   Balance Above Minimum
                 </Button>
                 <p className="font-arcade text-xs text-center text-gray-500 mt-2">
-                  Your balance must be below {formatNumber(Number(formatEther(minBalanceValue ?? BigInt(0))))} 8BIT to claim
+                  Your balance must be below {formatNumber(Number(formatEther(minBalance)))} 8BIT to claim
                 </p>
               </div>
             ) : !canClaim ? (
@@ -236,7 +233,7 @@ export default function FaucetPage() {
                 onClick={handleClaim}
                 disabled={!!claimHash}
               >
-                {claimHash ? 'Claiming...' : `Claim ${formatNumber(Number(formatEther(claimAmountValue ?? BigInt(0))))} 8BIT`}
+                {claimHash ? 'Claiming...' : `Claim ${formatNumber(Number(formatEther(claimAmount)))} 8BIT`}
               </Button>
             )}
 
