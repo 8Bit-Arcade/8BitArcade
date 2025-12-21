@@ -32,7 +32,7 @@ export default function FaucetPage() {
     chainId: ARBITRUM_CHAIN_ID,
   });
 
-  const { data: userInfo, refetch: refetchUserInfo } = useReadContract({
+  const { data: userInfo, refetch: refetchUserInfo, error: userInfoError } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
     abi: TESTNET_FAUCET_ABI,
     functionName: 'getUserInfo',
@@ -42,6 +42,19 @@ export default function FaucetPage() {
       enabled: !!address,
     },
   });
+
+  // Debug logging
+  useEffect(() => {
+    if (address) {
+      console.log('[Faucet Debug] Address:', address);
+      console.log('[Faucet Debug] Chain ID:', ARBITRUM_CHAIN_ID);
+      console.log('[Faucet Debug] Contract Address:', TESTNET_FAUCET_ADDRESS);
+      console.log('[Faucet Debug] UserInfo Data:', userInfo);
+      console.log('[Faucet Debug] UserInfo Error:', userInfoError);
+      console.log('[Faucet Debug] Claim Amount:', claimAmount);
+      console.log('[Faucet Debug] Min Balance:', minBalance);
+    }
+  }, [address, userInfo, userInfoError, claimAmount, minBalance]);
 
   const { data: faucetStats } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
