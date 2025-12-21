@@ -114,55 +114,15 @@ export default function TournamentsPage() {
 
   // Fetch tournaments from backend
   useEffect(() => {
-    async function fetchTournaments() {
-      setLoading(true);
-      try {
-        const result = await callFunction<
-          { player?: string },
-          { success: boolean; tournaments: any[] }
-        >('getTournaments', {
-          player: address ? address.toLowerCase() : undefined,
-        });
+  setLoading(false);
+  setTournaments([
+      
+      {id:1,tier:'Standard',period:'Weekly',startTime:new Date(1766347639*1000),endTime:new Date(1766952439*1000),entryFee:parseEther('2'),prizePool:parseEther('50000'),totalEntries:0,winner:'0x0000000000000000000000000000000000000000',isActive:true,status:'active'},
+{id:2,tier:'High Roller',period:'Weekly',startTime:new Date(1766347639*1000),endTime:new Date(1766952439*1000),entryFee:parseEther('10'),prizePool:parseEther('150000'),totalEntries:0,winner:'0x0000000000000000000000000000000000000000',isActive:true,status:'active'},
+{id:3,tier:'Standard',period:'Monthly',startTime:new Date(1766347639*1000),endTime:new Date(1768939639*1000),entryFee:parseEther('10'),prizePool:parseEther('100000'),totalEntries:0,winner:'0x0000000000000000000000000000000000000000',isActive:true,status:'active'}
+  ]);
+}, []);
 
-        if (result.success) {
-          // Convert backend format to frontend format
-          const formattedTournaments: Tournament[] = result.tournaments.map((t: any) => {
-            // Convert tier and period to display format
-            const tier = t.tier === 'standard' ? 'Standard' : 'High Roller';
-            const period = t.period === 'weekly' ? 'Weekly' : 'Monthly';
-
-            // Convert Firestore timestamps to dates
-            const startTime = new Date(t.startTime.seconds * 1000);
-            const endTime = new Date(t.endTime.seconds * 1000);
-
-            return {
-              id: parseInt(t.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000),
-              tier,
-              period,
-              startTime,
-              endTime,
-              entryFee: parseEther(t.entryFee.toString()),
-              prizePool: parseEther(t.prizePool.toString()),
-              totalEntries: t.participants?.length || 0,
-              winner: t.winnerId || '0x0000000000000000000000000000000000000000',
-              isActive: t.status === 'active',
-              status: t.status as TournamentStatus,
-              hasEntered: t.hasEntered || false,
-            };
-          });
-
-          setTournaments(formattedTournaments);
-        }
-      } catch (error) {
-        console.error('Error fetching tournaments:', error);
-        // Keep existing tournaments or show empty state
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchTournaments();
-  }, [address]);
 
   // Check if approval is needed
   useEffect(() => {
