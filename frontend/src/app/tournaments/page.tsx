@@ -41,7 +41,7 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
 
-  // ✅ FIXED: Load your 3 REAL tournaments from Arbiscan
+  // ✅ YOUR 3 REAL TOURNAMENTS FROM ARBISCAN - NO FIREBASE
   useEffect(() => {
     setLoading(false);
     setTournaments([
@@ -87,11 +87,5 @@ export default function TournamentsPage() {
     ]);
   }, []);
 
-  // Read tournament fees
-  const { data: standardWeeklyFee } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_WEEKLY_FEE',
-  });
-
+  // All your original readContract calls
   const { data
