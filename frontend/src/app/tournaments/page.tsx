@@ -169,15 +169,15 @@ useEffect(() => {
   console.log('🔄 Calling wagmi enterTournament hook...');  // ← ADD
   
   enterTournament({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'enterTournament',
-    args: [BigInt(tournamentId)],
-  });
-  
-  console.log('✅ enterTournament hook called');  // ← ADD
-};
+  address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+  abi: TOURNAMENT_MANAGER_ABI,
+  functionName: 'enterTournament',
+  args: [BigInt(tournamentId)],
+  value: tournaments.find(t => t.id === parseInt(tournamentId))?.entryFee || parseEther('2'),  // Dynamic fee
+});
 
+console.log('✅ enterTournament hook called');
+};
 
   // Handle successful tournament entry
   useEffect(() => {
