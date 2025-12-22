@@ -172,8 +172,7 @@ useEffect(() => {
   address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
   abi: TOURNAMENT_MANAGER_ABI,
   functionName: 'enterTournament',
-  args: [BigInt(tournamentId)],
-  value: tournaments.find(t => t.id === parseInt(tournamentId))?.entryFee || parseEther('2'),  // Dynamic fee
+  args: [BigInt(tournamentId)],  // NO value
 });
 
 console.log('✅ enterTournament hook called');
