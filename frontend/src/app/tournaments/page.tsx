@@ -146,25 +146,30 @@ export default function TournamentsPage() {
   };
 
   const handleEnter = async (tournamentId: string) => {
-  console.log('🔥 ENTER CLICKED - Starting tournament entry');  // ← ADD THIS
+  console.log('🔥 ENTER CLICKED - Starting tournament entry');
   
   if (!isConnected || !address) {
-    console.log(' Not connected:', { isConnected, address });  // ← ADD THIS
+    console.log('❌ Not connected:', { isConnected, address });
     return;
   }
 
-  console.log(' Wallet ready, entering tournament:', tournamentId);  // ← ADD THIS
+  console.log('✅ Wallet ready, entering tournament:', tournamentId);
   
   setEntering(true);
   setSelectedTournament(parseInt(tournamentId));
 
+  console.log('🔄 Calling wagmi enterTournament hook...');  // ← ADD
+  
   enterTournament({
     address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'enterTournament',
     args: [BigInt(tournamentId)],
   });
+  
+  console.log('✅ enterTournament hook called');  // ← ADD
 };
+
 
   // Handle successful tournament entry
   useEffect(() => {
