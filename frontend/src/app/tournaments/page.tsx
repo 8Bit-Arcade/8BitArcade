@@ -101,17 +101,25 @@ export default function TournamentsPage() {
   });
 
   // Approve tokens
-  const { writeContract: approve, data: approveHash } = useWriteContract();
-  const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
-    hash: approveHash,
-  });
+const { writeContract: approve, data: approveHash } = useWriteContract();
+const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
+  hash: approveHash,
+});
 
-  // Enter tournament
-  const { writeContract: enterTournament, data: enterHash } = useWriteContract();
-  const { isSuccess: isEnterSuccess } = useWaitForTransactionReceipt({
-    hash: enterHash,
-  });
+// Enter tournament
+const { writeContract: enterTournament, data: enterHash, error: enterError } = useWriteContract();
+const { isSuccess: isEnterSuccess } = useWaitForTransactionReceipt({
+  hash: enterHash,
+});
 
+// 🔥 DEBUG: Track wagmi errors & tx hash
+useEffect(() => {
+  if (enterError) {
+    console.error('❌ enterTournament ERROR:', enterError);
+    setEntering(false);
+  }
+}, [enterError]);
+  
   // Fetch tournaments from backend
   useEffect(() => {
   setLoading(false);
