@@ -146,18 +146,25 @@ export default function TournamentsPage() {
   };
 
   const handleEnter = async (tournamentId: string) => {
-    if (!isConnected || !address) return;
+  console.log('🔥 ENTER CLICKED - Starting tournament entry');  // ← ADD THIS
+  
+  if (!isConnected || !address) {
+    console.log(' Not connected:', { isConnected, address });  // ← ADD THIS
+    return;
+  }
 
-    setEntering(true);
-    setSelectedTournament(parseInt(tournamentId));
+  console.log(' Wallet ready, entering tournament:', tournamentId);  // ← ADD THIS
+  
+  setEntering(true);
+  setSelectedTournament(parseInt(tournamentId));
 
-    enterTournament({
-      address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
-      abi: TOURNAMENT_MANAGER_ABI,
-      functionName: 'enterTournament',
-      args: [BigInt(tournamentId)],
-    });
-  };
+  enterTournament({
+    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'enterTournament',
+    args: [BigInt(tournamentId)],
+  });
+};
 
   // Handle successful tournament entry
   useEffect(() => {
