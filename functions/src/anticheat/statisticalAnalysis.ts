@@ -43,17 +43,29 @@ export function analyzeGameplay(
 
   // Check 5: Inhuman reaction times
   const reactionTimes = calculateReactionTimes(inputs);
-  if (reactionTimes.length > 10) {
-    const avgReaction = average(reactionTimes);
-    const minReaction = Math.min(...reactionTimes);
+  if (reactionTimes.length > 20) {
+    // Use percentile-based detection instead of minimum/average
+    // Humans have variance in reaction times, bots are consistent
+    const sortedTimes = [...reactionTimes].sort((a, b) => a - b);
+    const p10 = sortedTimes[Math.floor(sortedTimes.length * 0.1)]; // 10th percentile
+    const p50 = sortedTimes[Math.floor(sortedTimes.length * 0.5)]; // Median
+    const variance = calculateVariance(reactionTimes);
 
-    // Average reaction time less than 50ms is suspicious
-    if (avgReaction < 50) {
-      flags.push('inhuman_avg_reaction');
+    // Flag if 10th percentile is under 15ms (90% of inputs faster than human reflex)
+    // This allows occasional fast keypresses during button mashing
+    if (p10 < 15) {
+      flags.push('inhuman_consistent_speed');
     }
-    // Any reaction under 20ms is physically impossible
-    if (minReaction < 20) {
-      flags.push('impossible_reaction_time');
+
+    // Flag if median is under 30ms (most inputs suspiciously fast)
+    if (p50 < 30) {
+      flags.push('inhuman_median_reaction');
+    }
+
+    // Flag if variance is too low (bot-like consistency)
+    // Bots have very little timing variance, humans are more random
+    if (variance < 100 && p50 < 50) {
+      flags.push('suspiciously_consistent_timing');
     }
   }
 
@@ -98,6 +110,16 @@ function calculateReactionTimes(inputs: GameInput[]): number[] {
 function average(nums: number[]): number {
   if (nums.length === 0) return 0;
   return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+/**
+ * Calculate variance of numbers
+ */
+function calculateVariance(nums: number[]): number {
+  if (nums.length === 0) return 0;
+  const mean = average(nums);
+  const squaredDiffs = nums.map(n => Math.pow(n - mean, 2));
+  return average(squaredDiffs);
 }
 
 /**
