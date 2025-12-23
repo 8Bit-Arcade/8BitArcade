@@ -97,7 +97,7 @@ export default function TournamentsPage() {
     address: EIGHT_BIT_TOKEN_ADDRESS as `0x${string}`,
     abi: EIGHT_BIT_TOKEN_ABI,
     functionName: 'allowance',
-    args: address ? [address, TOURNAMENT_MANAGER_ADDRESS] : undefined,
+    args: address ? [address, TOURNAMENT_MANAGER_ADDRESS as `0x${string}`] : undefined,
   });
 
   // Approve tokens
