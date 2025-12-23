@@ -148,25 +148,159 @@ export const GAME_REWARDS_ABI = [
 ];
 
 export const TOURNAMENT_MANAGER_ABI = [
-  "function enterTournament(uint256 tournamentId) external",
-  "function getTournament(uint256 tournamentId) view returns (uint8 tier, uint8 period, uint256 startTime, uint256 endTime, uint256 entryFee, uint256 prizePool, uint256 totalEntries, address winner, bool isActive)",
-  "function hasPlayerEntered(uint256 tournamentId, address player) view returns (bool)",
-  "function getPlayerScore(uint256 tournamentId, address player) view returns (uint256)",
-  "function getParticipants(uint256 tournamentId) view returns (address[])",
-  "function getActiveTournamentsCount() view returns (uint256)",
-  "function STANDARD_WEEKLY_FEE() view returns (uint256)",
-  "function STANDARD_MONTHLY_FEE() view returns (uint256)",
-  "function HIGH_ROLLER_WEEKLY_FEE() view returns (uint256)",
-  "function HIGH_ROLLER_MONTHLY_FEE() view returns (uint256)",
-  "function STANDARD_WEEKLY_PRIZE() view returns (uint256)",
-  "function STANDARD_MONTHLY_PRIZE() view returns (uint256)",
-  "function HIGH_ROLLER_WEEKLY_PRIZE() view returns (uint256)",
-  "function HIGH_ROLLER_MONTHLY_PRIZE() view returns (uint256)",
-  "event TournamentCreated(uint256 indexed tournamentId, uint8 tier, uint8 period, uint256 startTime, uint256 endTime, uint256 entryFee, uint256 prizePool)",
-  "event PlayerEntered(uint256 indexed tournamentId, address indexed player, uint256 entryFee)",
-  "event WinnerDeclared(uint256 indexed tournamentId, address indexed winner, uint256 prizeAmount)",
-  "event FeeBurned(uint256 indexed tournamentId, uint256 amount)",
-];
+  {
+    "inputs": [{"name": "tournamentId", "type": "uint256"}],
+    "name": "enterTournament",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "tournamentId", "type": "uint256"}],
+    "name": "getTournament",
+    "outputs": [
+      {"name": "tier", "type": "uint8"},
+      {"name": "period", "type": "uint8"},
+      {"name": "startTime", "type": "uint256"},
+      {"name": "endTime", "type": "uint256"},
+      {"name": "entryFee", "type": "uint256"},
+      {"name": "prizePool", "type": "uint256"},
+      {"name": "totalEntries", "type": "uint256"},
+      {"name": "winner", "type": "address"},
+      {"name": "isActive", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "tournamentId", "type": "uint256"}, {"name": "player", "type": "address"}],
+    "name": "hasPlayerEntered",
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "tournamentId", "type": "uint256"}, {"name": "player", "type": "address"}],
+    "name": "getPlayerScore",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "tournamentId", "type": "uint256"}],
+    "name": "getParticipants",
+    "outputs": [{"name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getActiveTournamentsCount",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "STANDARD_WEEKLY_FEE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "STANDARD_MONTHLY_FEE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "HIGH_ROLLER_WEEKLY_FEE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "HIGH_ROLLER_MONTHLY_FEE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "STANDARD_WEEKLY_PRIZE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "STANDARD_MONTHLY_PRIZE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "HIGH_ROLLER_WEEKLY_PRIZE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "HIGH_ROLLER_MONTHLY_PRIZE",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "tournamentId", "type": "uint256"},
+      {"name": "tier", "type": "uint8"},
+      {"name": "period", "type": "uint8"},
+      {"name": "startTime", "type": "uint256"},
+      {"name": "endTime", "type": "uint256"},
+      {"name": "entryFee", "type": "uint256"},
+      {"name": "prizePool", "type": "uint256"}
+    ],
+    "name": "TournamentCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "tournamentId", "type": "uint256"},
+      {"indexed": true, "name": "player", "type": "address"},
+      {"name": "entryFee", "type": "uint256"}
+    ],
+    "name": "PlayerEntered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "tournamentId", "type": "uint256"},
+      {"indexed": true, "name": "winner", "type": "address"},
+      {"name": "prizeAmount", "type": "uint256"}
+    ],
+    "name": "WinnerDeclared",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "tournamentId", "type": "uint256"},
+      {"name": "amount", "type": "uint256"}
+    ],
+    "name": "FeeBurned",
+    "type": "event"
+  }
+] as const;
+
 
 export const TOKEN_SALE_ABI = [
   "function buyWithEth() external payable",
