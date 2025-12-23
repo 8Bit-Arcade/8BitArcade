@@ -161,7 +161,7 @@ export default function TournamentsPage() {
     address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'hasPlayerEntered',
-    args: address ? [BigInt(3), address] : undefined,
+    args: [TOURNAMENT_MANAGER_ADDRESS as `0x${string}`, approvalAmount],
   });
 
   // Convert blockchain data to frontend format
