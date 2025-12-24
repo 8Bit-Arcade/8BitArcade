@@ -254,24 +254,21 @@ export default function TournamentsPage() {
   }, [selectedTournament, allowance, tournaments]);
 
   const handleApprove = async (tournament: Tournament) => {
-    if (!isConnected) return;
+  if (!isConnected) return;
 
-    console.log(`🔑 Approving 8BIT tokens for tournament ${tournament.id}`);
-    console.log(`💰 Entry fee: ${formatEther(tournament.entryFee)} 8BIT`);
+  console.log(`🔑 Approving 8BIT tokens for tournament ${tournament.id}`);
+  console.log(`💰 Entry fee: ${formatEther(tournament.entryFee)} 8BIT`);
 
-    // Approve 1,000,000 8BIT tokens (enough for multiple tournament entries)
-    // This prevents users from needing to approve every time
-    const approvalAmount = parseEther('1000000');
+  // Approve exactly the tournament entry fee
+  const approvalAmount = tournament.entryFee;
 
-    approve({
-      address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
-      abi: EIGHT_BIT_TOKEN_ABI,
-      functionName: 'approve',
-      args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER, approvalAmount],
-    });
-
-    console.log('✅ Approval transaction sent');
-  };
+  approve({
+    address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
+    abi: EIGHT_BIT_TOKEN_ABI,
+    functionName: 'approve',
+    args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER, approvalAmount],
+  });
+};
 
   const handleEnter = async (tournamentId: string) => {
     console.log('🎮 ENTER CLICKED - tournament:', tournamentId);
