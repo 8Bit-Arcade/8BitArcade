@@ -261,7 +261,7 @@ export default function TournamentsPage() {
   console.log(`💰 Entry fee: ${formatEther(tournament.entryFee)} 8BIT`);
 
   // Approve exactly the tournament entry fee
-  const approvalAmount = parseUnits(tournament.entryFee.toString(), 18);
+  const approvalAmount = tournament.entryFee;
 
 approve({
   address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
