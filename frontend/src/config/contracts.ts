@@ -35,7 +35,7 @@ export const USE_TESTNET = true;
  * After running: npm run deploy:testnet
  * Copy the deployed addresses here
  */
-const TESTNET_CONTRACTS = {
+export const TESTNET_CONTRACTS = {
   EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d' as `0x${string}`,
   GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E' as `0x${string}`,
   TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7' as `0x${string}`,
@@ -43,8 +43,8 @@ const TESTNET_CONTRACTS = {
   TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE' as `0x${string}`,
   TREASURY_GAS_MANAGER: '0x39F49a46CAB85CF079Cde25EAE311A563d3952EC' as `0x${string}`,
   TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952' as `0x${string}`,
-  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' as `0x${string}`, // Arbitrum Sepolia USDC
-  CHAIN_ID: 421614, // Arbitrum Sepolia
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' as `0x${string}`,
+  CHAIN_ID: 421614,
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
   BLOCK_EXPLORER: 'https://sepolia.arbiscan.io',
