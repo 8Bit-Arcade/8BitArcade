@@ -1,0 +1,4 @@
+# Now you can run the diagnostic
+node debug-tournament.js
+
+  run locally after pull
