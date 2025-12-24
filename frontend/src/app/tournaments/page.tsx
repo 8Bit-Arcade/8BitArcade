@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
-import { parseUnits } from 'ethers/lib/utils';
+import { parseUnits } from 'ethers';
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
