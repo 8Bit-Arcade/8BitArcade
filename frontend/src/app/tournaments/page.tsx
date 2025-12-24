@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
+import { parseUnits } from 'ethers/lib/utils';
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -260,15 +261,14 @@ export default function TournamentsPage() {
   console.log(`💰 Entry fee: ${formatEther(tournament.entryFee)} 8BIT`);
 
   // Approve exactly the tournament entry fee
-  const approvalAmount = tournament.entryFee;
+  const approvalAmount = parseUnits(tournament.entryFee.toString(), 18);
 
-  approve({
-    address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
-    abi: EIGHT_BIT_TOKEN_ABI,
-    functionName: 'approve',
-    args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER, approvalAmount],
-  });
-};
+approve({
+  address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
+  abi: EIGHT_BIT_TOKEN_ABI,
+  functionName: 'approve',
+  args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER, approvalAmount],
+});
 
   const handleEnter = async (tournamentId: string) => {
     console.log('🎮 ENTER CLICKED - tournament:', tournamentId);
