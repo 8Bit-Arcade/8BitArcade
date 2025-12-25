@@ -38,55 +38,31 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
 
-  // Read tournament fees
-  const { data: standardWeeklyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_WEEKLY_FEE',
-  });
+  // DYNAMIC TOURNAMENT DISCOVERY - Check first 12 tournament slots
+  const MAX_TOURNAMENTS = 12;
+  const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
-  const { data: standardMonthlyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_MONTHLY_FEE',
-  });
+  // Create dynamic tournament queries
+  const tournamentQueries = tournamentIds.map(id =>
+    useReadContract({
+      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+      abi: TOURNAMENT_MANAGER_ABI,
+      functionName: 'getTournament',
+      args: [BigInt(id)],
+    })
+  );
 
-  const { data: highRollerWeeklyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_WEEKLY_FEE',
-  });
-
-  const { data: highRollerMonthlyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_MONTHLY_FEE',
-  });
-
-  // Read prize pools
-  const { data: standardWeeklyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_WEEKLY_PRIZE',
-  });
-
-  const { data: standardMonthlyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_MONTHLY_PRIZE',
-  });
-
-  const { data: highRollerWeeklyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_WEEKLY_PRIZE',
-  });
-
-  const { data: highRollerMonthlyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_MONTHLY_PRIZE',
-  });
+  // Create dynamic hasEntered queries (only if wallet connected)
+  const hasEnteredQueries = address
+    ? tournamentIds.map(id =>
+        useReadContract({
+          address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+          abi: TOURNAMENT_MANAGER_ABI,
+          functionName: 'hasPlayerEntered',
+          args: [BigInt(id), address],
+        })
+      )
+    : [];
 
   // Check token allowance
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -133,700 +109,331 @@ export default function TournamentsPage() {
     }
   }, [enterError]);
 
-  // Fetch tournament data from blockchain
-  const { data: tournament1, isLoading: isLoading1, error: error1 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'getTournament',
-    args: [BigInt(1)],
-  });
-
-  const { data: tournament2 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'getTournament',
-    args: [BigInt(2)],
-  });
-
-  const { data: tournament3 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'getTournament',
-    args: [BigInt(3)],
-  });
-
-  const { data: tournament4 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'getTournament',
-    args: [BigInt(4)],
-  });
-
-  const { data: tournament5 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'getTournament',
-    args: [BigInt(5)],
-  });
-
-  // Check if user has entered tournaments
-  const { data: hasEntered1 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'hasPlayerEntered',
-    args: address ? [BigInt(1), address] : undefined,
-  });
-
-  const { data: hasEntered2 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'hasPlayerEntered',
-    args: address ? [BigInt(2), address] : undefined,
-  });
-
-  const { data: hasEntered3 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'hasPlayerEntered',
-    args: address ? [BigInt(3), address] : undefined,
-  });
-
-  const { data: hasEntered4 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'hasPlayerEntered',
-    args: address ? [BigInt(4), address] : undefined,
-  });
-
-  const { data: hasEntered5 } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'hasPlayerEntered',
-    args: address ? [BigInt(5), address] : undefined,
-  });
-
-  // DEBUG: Log hook states
+  // DYNAMIC TOURNAMENT PROCESSING - Process all tournament data
   useEffect(() => {
-    console.log('🔧 [HOOK STATUS]', {
-      tournament1: { exists: !!tournament1, isLoading: isLoading1, hasError: !!error1 },
-      tournament2: { exists: !!tournament2 },
-      tournament3: { exists: !!tournament3 },
-    });
-    if (error1) console.error('Tournament 1 error:', error1);
-  }, [tournament1, tournament2, tournament3, isLoading1, error1]);
-
-  // Convert blockchain data to frontend format
-  useEffect(() => {
-    console.log('🔍 [TOURNAMENT DEBUG] Processing tournament data...');
-    console.log('📊 Raw data:', {
-      tournament1: tournament1,
-      tournament2: tournament2,
-      tournament3: tournament3,
-      tournament1_type: typeof tournament1,
-      tournament1_keys: tournament1 ? Object.keys(tournament1) : 'null',
-    });
+    console.log('🔍 [DYNAMIC] Processing tournament data...');
 
     const formattedTournaments: Tournament[] = [];
+    let anyLoading = false;
 
-    // Helper to map tier enum to display string
-    const getTierName = (tier: number): Tier => {
-      return tier === 0 ? 'Standard' : 'High Roller';
-    };
+    tournamentQueries.forEach((tQuery, index) => {
+      // Check if still loading
+      if (tQuery.isLoading) {
+        anyLoading = true;
+        return;
+      }
 
-    // Helper to map period enum to display string
-    const getPeriodName = (period: number): Period => {
-      return period === 0 ? 'Weekly' : 'Monthly';
-    };
+      const tournamentData = tQuery.data;
+      const hasEntered = hasEnteredQueries[index]?.data ?? false;
 
-    // Helper to determine tournament status
-    const getStatus = (startTime: bigint, endTime: bigint, isActive: boolean): TournamentStatus => {
+      // Skip if no data or error
+      if (!tournamentData || tQuery.error) {
+        if (tQuery.error) {
+          console.log(`⚠️ Tournament ${tournamentIds[index]} error:`, tQuery.error);
+        }
+        return;
+      }
+
+      // Parse tournament data - wagmi returns tuple as array-like object
+      const data = tournamentData as any;
+      const fields = Object.values(data);
+
+      if (fields.length < 9) {
+        console.log(`⚠️ Tournament ${tournamentIds[index]} incomplete data:`, fields.length, 'fields');
+        return;
+      }
+
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = fields;
+
+      // Only include active tournaments
+      if (!isActive) {
+        console.log(`⏸️ Tournament ${tournamentIds[index]} is inactive`);
+        return;
+      }
+
+      // Determine tournament status
       const now = Math.floor(Date.now() / 1000);
-      if (!isActive) return 'ended';
-      if (now < Number(startTime)) return 'upcoming';
-      if (now >= Number(startTime) && now < Number(endTime)) return 'active';
-      return 'ended';
-    };
+      let status: TournamentStatus;
+      if (now < Number(startTime)) {
+        status = 'upcoming';
+      } else if (now < Number(endTime)) {
+        status = 'active';
+      } else {
+        status = 'ended';
+      }
 
-    // Process tournament 1
-    // With "as const" on ABI, wagmi returns tuples as objects with numeric properties
-    if (tournament1) {
-      console.log('✅ Processing tournament 1:', tournament1);
-      const data = tournament1 as any;
-      const tier = data[0];
-      const period = data[1];
-      const startTime = data[2];
-      const endTime = data[3];
-      const entryFee = data[4];
-      const prizePool = data[5];
-      const totalEntries = data[6];
-      const winner = data[7];
-      const isActive = data[8];
-
-      console.log('📋 Tournament 1 parsed:', {
+      console.log(`✅ Tournament ${tournamentIds[index]} processed:`, {
         tier: Number(tier),
         period: Number(period),
-        startTime: Number(startTime),
-        endTime: Number(endTime),
-        entryFee: String(entryFee),
-        prizePool: String(prizePool),
+        status,
         totalEntries: Number(totalEntries),
-        isActive: Boolean(isActive),
       });
-      formattedTournaments.push({
-        id: 1,
-        tier: getTierName(Number(tier)),
-        period: getPeriodName(Number(period)),
-        startTime: new Date(Number(startTime) * 1000),
-        endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee,
-        prizePool: prizePool,
-        totalEntries: Number(totalEntries),
-        winner: winner,
-        isActive: isActive,
-        status: getStatus(startTime, endTime, isActive),
-        hasEntered: (hasEntered1 as boolean) || false,
-      });
-    } else {
-      console.log('❌ Tournament 1 skipped - no data');
-    }
-
-    // Process tournament 2
-    if (tournament2) {
-      console.log('✅ Processing tournament 2:', tournament2);
-      const data = tournament2 as any;
-      const tier = data[0];
-      const period = data[1];
-      const startTime = data[2];
-      const endTime = data[3];
-      const entryFee = data[4];
-      const prizePool = data[5];
-      const totalEntries = data[6];
-      const winner = data[7];
-      const isActive = data[8];
 
       formattedTournaments.push({
-        id: 2,
-        tier: getTierName(Number(tier)),
-        period: getPeriodName(Number(period)),
+        id: tournamentIds[index],
+        tier: Number(tier) === 0 ? 'Standard' : 'High Roller',
+        period: Number(period) === 0 ? 'Weekly' : 'Monthly',
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee,
-        prizePool: prizePool,
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
         totalEntries: Number(totalEntries),
-        winner: winner,
-        isActive: isActive,
-        status: getStatus(startTime, endTime, isActive),
-        hasEntered: (hasEntered2 as boolean) || false,
+        winner: winner as string,
+        isActive: true,
+        status,
+        hasEntered: hasEntered as boolean,
       });
-    } else {
-      console.log('❌ Tournament 2 skipped - no data');
-    }
-
-    // Process tournament 3
-    if (tournament3) {
-      console.log('✅ Processing tournament 3:', tournament3);
-      const data = tournament3 as any;
-      const tier = data[0];
-      const period = data[1];
-      const startTime = data[2];
-      const endTime = data[3];
-      const entryFee = data[4];
-      const prizePool = data[5];
-      const totalEntries = data[6];
-      const winner = data[7];
-      const isActive = data[8];
-
-      formattedTournaments.push({
-        id: 3,
-        tier: getTierName(Number(tier)),
-        period: getPeriodName(Number(period)),
-        startTime: new Date(Number(startTime) * 1000),
-        endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee,
-        prizePool: prizePool,
-        totalEntries: Number(totalEntries),
-        winner: winner,
-        isActive: isActive,
-        status: getStatus(startTime, endTime, isActive),
-        hasEntered: (hasEntered3 as boolean) || false,
-      });
-    } else {
-      console.log('❌ Tournament 3 skipped - no data');
-    }
-
-    // Process tournament 4
-    if (tournament4) {
-      const data = tournament4 as any;
-      const tier = data[0];
-      const period = data[1];
-      const startTime = data[2];
-      const endTime = data[3];
-      const entryFee = data[4];
-      const prizePool = data[5];
-      const totalEntries = data[6];
-      const winner = data[7];
-      const isActive = data[8];
-
-      formattedTournaments.push({
-        id: 4,
-        tier: getTierName(Number(tier)),
-        period: getPeriodName(Number(period)),
-        startTime: new Date(Number(startTime) * 1000),
-        endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee,
-        prizePool: prizePool,
-        totalEntries: Number(totalEntries),
-        winner: winner,
-        isActive: isActive,
-        status: getStatus(startTime, endTime, isActive),
-        hasEntered: (hasEntered4 as boolean) || false,
-      });
-    }
-
-    // Process tournament 5
-    if (tournament5) {
-      const data = tournament5 as any;
-      const tier = data[0];
-      const period = data[1];
-      const startTime = data[2];
-      const endTime = data[3];
-      const entryFee = data[4];
-      const prizePool = data[5];
-      const totalEntries = data[6];
-      const winner = data[7];
-      const isActive = data[8];
-
-      formattedTournaments.push({
-        id: 5,
-        tier: getTierName(Number(tier)),
-        period: getPeriodName(Number(period)),
-        startTime: new Date(Number(startTime) * 1000),
-        endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee,
-        prizePool: prizePool,
-        totalEntries: Number(totalEntries),
-        winner: winner,
-        isActive: isActive,
-        status: getStatus(startTime, endTime, isActive),
-        hasEntered: (hasEntered5 as boolean) || false,
-      });
-    }
-
-    console.log('🏁 [FINAL] Formatted tournaments:', formattedTournaments);
-    console.log('📈 Total tournaments:', formattedTournaments.length);
-
-    const shouldLoad = formattedTournaments.length === 0 && (tournament1 === undefined || tournament2 === undefined || tournament3 === undefined);
-    console.log('⏳ Loading state:', shouldLoad);
-    console.log('🔍 Undefined check:', {
-      tournament1_undefined: tournament1 === undefined,
-      tournament2_undefined: tournament2 === undefined,
-      tournament3_undefined: tournament3 === undefined,
     });
+
+    console.log('🏁 [FINAL] Dynamic tournaments found:', formattedTournaments.length);
+    console.log('📊 Tournament IDs:', formattedTournaments.map(t => t.id));
 
     setTournaments(formattedTournaments);
-    setLoading(shouldLoad);
-  }, [tournament1, tournament2, tournament3, tournament4, tournament5, hasEntered1, hasEntered2, hasEntered3, hasEntered4, hasEntered5]);
+    setLoading(anyLoading);
+  }, [
+    ...tournamentQueries.map(q => q.data),
+    ...tournamentQueries.map(q => q.isLoading),
+    ...tournamentQueries.map(q => q.error),
+    ...(hasEnteredQueries?.map(q => q.data) ?? []),
+  ]);
 
-  // Check if approval is needed
+  // Handle successful entry
   useEffect(() => {
-    if (selectedTournament !== null && allowance !== undefined) {
+    if (isEnterSuccess && enterHash) {
+      console.log('✅ Tournament entry confirmed! Tx:', enterHash);
+      setEntering(false);
+      setSelectedTournament(null);
+
+      // Show success message
+      alert('Successfully entered tournament! Good luck! 🎮');
+    }
+  }, [isEnterSuccess, enterHash]);
+
+  const handleEnterTournament = async (tournamentId: number, entryFee: bigint) => {
+    if (!address) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    console.log('🎮 Entering tournament:', tournamentId);
+    console.log('💰 Entry fee:', formatEther(entryFee), '8BIT');
+    console.log('✅ Current allowance:', allowance ? formatEther(allowance as bigint) : '0');
+
+    setSelectedTournament(tournamentId);
+    setEntering(true);
+
+    try {
+      // Check if approval is needed
+      const currentAllowance = (allowance as bigint) || BigInt(0);
+      if (currentAllowance < entryFee) {
+        console.log('⚠️ Insufficient allowance, requesting approval for:', formatEther(entryFee));
+        setNeedsApproval(true);
+
+        // Approve tournament manager to spend entry fee
+        const approvalAmount = entryFee * BigInt(10); // Approve 10x for future entries
+        console.log('📝 Requesting approval for:', formatEther(approvalAmount), '8BIT');
+
+        approve({
+          address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN as `0x${string}`,
+          abi: EIGHT_BIT_TOKEN_ABI,
+          functionName: 'approve',
+          args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`, approvalAmount],
+        });
+
+        // Entry will happen after approval is confirmed
+        return;
+      }
+
+      console.log('✅ Sufficient allowance, entering tournament directly');
+
+      // Enter tournament
+      enterTournament({
+        address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+        abi: TOURNAMENT_MANAGER_ABI,
+        functionName: 'enterTournament',
+        args: [BigInt(tournamentId)],
+      });
+    } catch (error) {
+      console.error('❌ Error entering tournament:', error);
+      setEntering(false);
+      alert('Failed to enter tournament. Please try again.');
+    }
+  };
+
+  // When approval succeeds, automatically enter tournament
+  useEffect(() => {
+    if (isApproveSuccess && selectedTournament && needsApproval) {
+      console.log('✅ Approval successful, now entering tournament...');
+
       const tournament = tournaments.find(t => t.id === selectedTournament);
       if (tournament) {
-        setNeedsApproval((allowance as bigint) < tournament.entryFee);
+        setTimeout(() => {
+          console.log('🎮 Auto-entering tournament after approval');
+          enterTournament({
+            address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+            abi: TOURNAMENT_MANAGER_ABI,
+            functionName: 'enterTournament',
+            args: [BigInt(selectedTournament)],
+          });
+        }, 1500); // Wait for allowance to update
       }
     }
-  }, [selectedTournament, allowance, tournaments]);
-
-  const handleApprove = async (tournament: Tournament) => {
-  if (!isConnected) return;
-
-  console.log(`🔑 Approving 8BIT tokens for tournament ${tournament.id}`);
-  console.log(`💰 Entry fee: ${formatEther(tournament.entryFee)} 8BIT`);
-
-  // Approve exactly the tournament entry fee
-  const approvalAmount = tournament.entryFee;
-
-approve({
-  address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN as `0x${string}`,
-  abi: EIGHT_BIT_TOKEN_ABI,
-  functionName: 'approve',
-  args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`, approvalAmount],
-});
-};
-  
-  const handleEnter = async (tournamentId: string) => {
-    console.log('🎮 ENTER CLICKED - tournament:', tournamentId);
-
-    if (!address || !isConnected) {
-      console.log('❌ Wallet not connected');
-      return;
-    }
-
-    // Find the tournament
-    const tournament = tournaments.find(t => t.id === parseInt(tournamentId));
-    if (!tournament) {
-      console.error('❌ Tournament not found:', tournamentId);
-      return;
-    }
-
-    console.log('📊 Tournament data:', {
-      id: tournament.id,
-      entryFee: formatEther(tournament.entryFee),
-      allowance: allowance ? formatEther(allowance as bigint) : '0',
-    });
-
-    // Check if we have sufficient allowance
-    if (!allowance || (allowance as bigint) < tournament.entryFee) {
-      console.log('⚠️ Insufficient allowance - user needs to approve first');
-      // Set selected tournament so approval button appears
-      setSelectedTournament(parseInt(tournamentId));
-      return;
-    }
-
-    // We have sufficient allowance, proceed with entry
-    console.log('✅ Sufficient allowance detected, entering tournament...');
-    setEntering(true);
-    setSelectedTournament(parseInt(tournamentId));
-
-    enterTournament({
-      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-      abi: TOURNAMENT_MANAGER_ABI,
-      functionName: 'enterTournament',
-      args: [BigInt(tournamentId)],
-    });
-
-    console.log('🚀 Tournament entry transaction sent');
-  };
-
-  // Handle successful tournament entry
-  useEffect(() => {
-    async function handleEntrySuccess() {
-      if (isEnterSuccess && enterHash && selectedTournament) {
-        console.log(`✅ Tournament entry successful! Tx: ${enterHash}`);
-
-        // Optional: Notify backend for analytics/indexing (non-critical)
-        // The blockchain is the source of truth
-        if (address) {
-          try {
-            await callFunction('recordTournamentEntry', {
-              tournamentId: selectedTournament.toString(),
-              player: address.toLowerCase(),
-              txHash: enterHash,
-            }).catch(err => {
-              console.warn('Backend notification failed (non-critical):', err);
-            });
-          } catch (error) {
-            // Ignore backend errors - blockchain entry succeeded
-            console.warn('Backend notification skipped:', error);
-          }
-        }
-
-        setEntering(false);
-        setSelectedTournament(null);
-
-        // Tournament data will auto-refresh via useReadContract hooks
-        // The hasEntered check will update automatically
-      }
-    }
-
-    handleEntrySuccess();
-  }, [isEnterSuccess, enterHash, selectedTournament, address]);
+  }, [isApproveSuccess, selectedTournament, needsApproval, tournaments]);
 
   const filteredTournaments =
-    filter === 'all'
-      ? tournaments
-      : tournaments.filter((t) => t.tier === filter);
-
-  const getStatusColor = (status: TournamentStatus) => {
-    switch (status) {
-      case 'active':
-        return 'text-arcade-green';
-      case 'upcoming':
-        return 'text-arcade-cyan';
-      case 'ended':
-        return 'text-gray-500';
-    }
-  };
-
-  const getStatusBadge = (status: TournamentStatus) => {
-    switch (status) {
-      case 'active':
-        return (
-          <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
-            LIVE
-          </span>
-        );
-      case 'upcoming':
-        return (
-          <span className="px-2 py-1 bg-arcade-cyan/20 text-arcade-cyan font-pixel text-xs rounded">
-            SOON
-          </span>
-        );
-      case 'ended':
-        return (
-          <span className="px-2 py-1 bg-gray-500/20 text-gray-500 font-pixel text-xs rounded">
-            ENDED
-          </span>
-        );
-    }
-  };
-
-  const getTierBadge = (tier: Tier) => {
-    if (tier === 'High Roller') {
-      return (
-        <span className="px-2 py-1 bg-arcade-pink/20 text-arcade-pink font-pixel text-xs rounded">
-          ⭐ HIGH ROLLER
-        </span>
-      );
-    }
-    return (
-      <span className="px-2 py-1 bg-arcade-purple/20 text-arcade-purple font-pixel text-xs rounded">
-        STANDARD
-      </span>
-    );
-  };
+    filter === 'all' ? tournaments : tournaments.filter(t => t.tier === filter);
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-5xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
+      <div className="container mx-auto px-4 py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="font-pixel text-2xl md:text-3xl text-arcade-pink glow-pink mb-2">
-            TOURNAMENTS
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            8-Bit Tournaments
           </h1>
-          <p className="font-arcade text-gray-400 mb-4">
-            Two-Tier Competition System - Standard & High Roller
+          <p className="text-xl text-gray-300">
+            Compete for glory and prizes in weekly and monthly tournaments
           </p>
-          <div className="flex flex-wrap gap-4 justify-center text-sm font-arcade">
-            <div className="card-arcade px-4 py-2">
-              <span className="text-gray-400">Standard: </span>
-              <span className="text-arcade-green">$1 Weekly / $5 Monthly</span>
-            </div>
-            <div className="card-arcade px-4 py-2">
-              <span className="text-gray-400">High Roller: </span>
-              <span className="text-arcade-pink">$5 Weekly / $25 Monthly</span>
+        </div>
+
+        {/* Filter Buttons */}
+        <div className="flex justify-center gap-4 mb-8">
+          <Button
+            onClick={() => setFilter('all')}
+            variant={filter === 'all' ? 'primary' : 'secondary'}
+            size="md"
+          >
+            All Tournaments
+          </Button>
+          <Button
+            onClick={() => setFilter('Standard')}
+            variant={filter === 'Standard' ? 'primary' : 'secondary'}
+            size="md"
+          >
+            Standard
+          </Button>
+          <Button
+            onClick={() => setFilter('High Roller')}
+            variant={filter === 'High Roller' ? 'primary' : 'secondary'}
+            size="md"
+          >
+            High Roller
+          </Button>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="text-2xl text-purple-400 animate-pulse">Loading tournaments...</div>
+          </div>
+        )}
+
+        {/* No Tournaments */}
+        {!loading && filteredTournaments.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-2xl text-gray-400">
+              No tournaments available. Check back soon for upcoming tournaments!
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Filters */}
-        <div className="flex gap-2 mb-6 justify-center">
-          {(['all', 'Standard', 'High Roller'] as const).map((tierFilter) => (
-            <Button
-              key={tierFilter}
-              variant={filter === tierFilter ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setFilter(tierFilter)}
-            >
-              {tierFilter === 'all' ? 'All Tiers' : tierFilter}
-            </Button>
-          ))}
-        </div>
-
-        {/* Tournament List */}
-        <div className="space-y-4">
-          {loading ? (
-            <Card>
-              <div className="text-center py-8">
-                <p className="font-arcade text-gray-400">Loading tournaments...</p>
-              </div>
-            </Card>
-          ) : filteredTournaments.length === 0 ? (
-            <Card>
-              <div className="text-center py-8">
-                <p className="font-pixel text-gray-400 mb-2">No tournaments available</p>
-                <p className="font-arcade text-sm text-gray-500">
-                  Check back soon for upcoming tournaments!
-                </p>
-              </div>
-            </Card>
-          ) : (
-            filteredTournaments.map((tournament) => (
-            <Card key={tournament.id} className="hover:border-arcade-pink/60">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Tournament Info */}
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h3 className="font-pixel text-white text-sm">
-                      {tournament.tier} {tournament.period}
-                    </h3>
-                    {getTierBadge(tournament.tier)}
-                    {getStatusBadge(tournament.status)}
-                  </div>
-                  <p className="font-arcade text-gray-400 text-sm mb-2">
-                    Compete across all games for {tournament.period.toLowerCase()} glory
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-arcade-dark border border-arcade-green/30 text-arcade-green font-arcade text-xs rounded">
-                      All 12 Games
+        {/* Tournament Grid */}
+        {!loading && filteredTournaments.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTournaments.map(tournament => (
+              <Card key={tournament.id} className="bg-gray-800/50 backdrop-blur-sm border-purple-500/30">
+                <div className="p-6">
+                  {/* Tournament Header */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-purple-400">
+                        {tournament.tier} {tournament.period}
+                      </h3>
+                      <div className="text-sm text-gray-400 mt-1">Tournament #{tournament.id}</div>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        tournament.status === 'active'
+                          ? 'bg-green-500/20 text-green-400'
+                          : tournament.status === 'upcoming'
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-gray-500/20 text-gray-400'
+                      }`}
+                    >
+                      {tournament.status.toUpperCase()}
                     </span>
-                    {tournament.tier === 'High Roller' && (
-                      <span className="px-2 py-1 bg-arcade-dark border border-arcade-pink/30 text-arcade-pink font-arcade text-xs rounded">
-                        Premium Prizes
+                  </div>
+
+                  {/* Tournament Details */}
+                  <div className="space-y-3 mb-6">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Entry Fee:</span>
+                      <span className="font-semibold">{formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Prize Pool:</span>
+                      <span className="font-semibold text-yellow-400">
+                        {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
                       </span>
-                    )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Participants:</span>
+                      <span className="font-semibold">{tournament.totalEntries}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">
+                        {tournament.status === 'upcoming' ? 'Starts:' : tournament.status === 'active' ? 'Ends:' : 'Ended:'}
+                      </span>
+                      <span className="text-sm">
+                        {tournament.status === 'upcoming' || tournament.status === 'active'
+                          ? formatTimeRemaining(
+                              tournament.status === 'upcoming' ? tournament.startTime : tournament.endTime
+                            )
+                          : tournament.endTime.toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Prize & Stats */}
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-right">
-                    <p className="font-arcade text-xs text-gray-500">Prize Pool</p>
-                    <p className="font-pixel text-arcade-yellow">
-                      {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
-                    </p>
-                    <p className="font-arcade text-xs text-gray-400">
-                      ${(Number(formatEther(tournament.prizePool)) * 0.0005).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-arcade text-xs text-gray-500">Entry Fee</p>
-                    <p className="font-arcade text-arcade-cyan">
-                      {formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT
-                    </p>
-                    <p className="font-arcade text-xs text-gray-400">
-                      ${(Number(formatEther(tournament.entryFee)) * 0.0005).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-arcade text-xs text-gray-500">Players</p>
-                    <p className="font-arcade text-white">{tournament.totalEntries}</p>
-                  </div>
-                </div>
+                  {/* Entry Button */}
+                  {isConnected && tournament.status !== 'ended' && (
+                    <Button
+                      onClick={() => handleEnterTournament(tournament.id, tournament.entryFee)}
+                      variant="primary"
+                      size="lg"
+                      className="w-full"
+                      disabled={
+                        tournament.hasEntered ||
+                        (entering && selectedTournament === tournament.id)
+                      }
+                    >
+                      {tournament.hasEntered
+                        ? '✅ Already Entered'
+                        : entering && selectedTournament === tournament.id
+                        ? needsApproval
+                          ? 'Approving...'
+                          : 'Entering...'
+                        : 'Enter Tournament'}
+                    </Button>
+                  )}
 
-                {/* Action */}
-                <div className="flex flex-col items-center gap-2 md:ml-4 min-w-[120px]">
-                  {tournament.status === 'active' && (
-                    <>
-                      <p className="font-arcade text-xs text-gray-500">Ends in</p>
-                      <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                        {formatTimeRemaining(tournament.endTime)}
-                      </p>
-                      {isConnected ? (
-                        <>
-                          {needsApproval && selectedTournament === tournament.id ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleApprove(tournament)}
-                              disabled={!!approveHash}
-                            >
-                              {approveHash ? 'Approving...' : 'Approve 8BIT'}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTournament(tournament.id);
-                                handleEnter(tournament.id.toString());
-                              }}
-                              disabled={!!enterHash || entering || tournament.hasEntered}
-                            >
-                              {entering || enterHash
-                                ? 'Entering...'
-                                : tournament.hasEntered
-                                ? 'Entered'
-                                : 'Enter Now'}
-                            </Button>
-                          )}
-                        </>
-                      ) : (
-                        <Button variant="secondary" size="sm" disabled>
-                          Connect Wallet
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  {tournament.status === 'upcoming' && (
-                    <>
-                      <p className="font-arcade text-xs text-gray-500">Starts in</p>
-                      <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                        {formatTimeRemaining(tournament.startTime)}
-                      </p>
-                      <Button variant="ghost" size="sm">
-                        View Details
-                      </Button>
-                    </>
-                  )}
-                  {tournament.status === 'ended' && (
-                    <Button variant="ghost" size="sm">
-                      View Results
+                  {!isConnected && (
+                    <Button variant="secondary" size="lg" className="w-full" disabled>
+                      Connect Wallet to Enter
                     </Button>
                   )}
                 </div>
-              </div>
-            </Card>
-          ))
-          )}
-        </div>
-
-        {/* Info Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mt-12">
-          {/* How It Works */}
-          <Card>
-            <h2 className="font-pixel text-arcade-green text-sm mb-4">HOW TOURNAMENTS WORK</h2>
-            <ul className="font-arcade text-sm text-gray-300 space-y-2">
-              <li className="flex gap-2">
-                <span className="text-arcade-green">1.</span>
-                <span>Choose your tier: Standard or High Roller</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-arcade-green">2.</span>
-                <span>Pay entry fee in 8BIT tokens (50% burned)</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-arcade-green">3.</span>
-                <span>Play all 12 games during tournament period</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-arcade-green">4.</span>
-                <span>Highest combined score wins the prize pool</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-arcade-green">5.</span>
-                <span>Winner receives 8BIT tokens automatically</span>
-              </li>
-            </ul>
-          </Card>
-
-          {/* Fee Distribution */}
-          <Card>
-            <h2 className="font-pixel text-arcade-pink text-sm mb-4">ENTRY FEE BREAKDOWN</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center font-arcade text-sm">
-                <span className="text-gray-300">Prize Pool</span>
-                <span className="text-arcade-green font-pixel">Fixed Amount</span>
-              </div>
-              <div className="flex justify-between items-center font-arcade text-sm">
-                <span className="text-gray-300">Burned (Deflationary)</span>
-                <span className="text-arcade-red font-pixel">50%</span>
-              </div>
-              <div className="flex justify-between items-center font-arcade text-sm">
-                <span className="text-gray-300">Platform Reserve</span>
-                <span className="text-arcade-cyan font-pixel">50%</span>
-              </div>
-              <div className="mt-4 p-3 bg-arcade-dark/50 rounded border border-arcade-yellow/30">
-                <p className="font-arcade text-xs text-arcade-yellow">
-                  💡 Entry fees help reduce token supply while funding bigger prize pools!
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Free Daily Rewards Reminder */}
-        <Card className="mt-6 bg-gradient-to-r from-arcade-purple/10 to-arcade-pink/10 border-arcade-pink/30">
-          <div className="text-center">
-            <h3 className="font-pixel text-arcade-pink mb-2">FREE DAILY REWARDS</h3>
-            <p className="font-arcade text-sm text-gray-300">
-              Don't want to pay entry fees? Play for free and earn daily rewards!
-            </p>
-            <p className="font-arcade text-xs text-gray-400 mt-2">
-              Top 10 players per game earn 280-1,250 8BIT every day. No entry fee required.
-            </p>
+              </Card>
+            ))}
           </div>
-        </Card>
+        )}
+
+        {/* Info Section */}
+        <div className="mt-12 text-center text-gray-400">
+          <p className="mb-2">
+            Enter tournaments to compete for prizes! Your highest score during the tournament period will count.
+          </p>
+          <p>Entry fees are burned, and prize pools are distributed to top performers.</p>
+        </div>
       </div>
     </div>
   );
