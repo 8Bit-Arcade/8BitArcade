@@ -8,6 +8,7 @@ import AudioControls from '@/components/audio/AudioControls';
 import { useDisplayName } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { truncateAddress } from '@/lib/utils';
+import { USE_TESTNET } from '@/config/contracts';
 
 export default function Header() {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export default function Header() {
     { href: '/', label: 'Games' },
     { href: '/leaderboard', label: 'Ranks' },
     { href: '/tournaments', label: 'Tourneys' },
+    ...(USE_TESTNET ? [{ href: '/faucet', label: 'Faucet' }] : []),
   ];
 
   const isActive = (href: string) => {

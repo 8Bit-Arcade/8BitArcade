@@ -1,5 +1,6 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { arbitrum, arbitrumSepolia } from 'wagmi/chains';
+import { http } from 'viem';
 import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
 
 /**
@@ -23,8 +24,15 @@ const chains = USE_TESTNET
 
 export const config = getDefaultConfig({
   appName: '8-Bit Arcade',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   chains,
+  transports: {
+  [chains[0].id]: http(
+    USE_TESTNET 
+      ? 'https://sepolia-rollup.arbitrum.io/rpc'  // ← Official Arbitrum RPC
+      : 'https://arb-mainnet.g.alchemy.com/v2/demo'
+  ),
+},
   ssr: true,
 });
 

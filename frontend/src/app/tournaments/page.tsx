@@ -5,15 +5,10 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { formatEther, parseEther } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
-import {
-  TOURNAMENT_MANAGER_ADDRESS,
-  TOURNAMENT_MANAGER_ABI,
-  EIGHT_BIT_TOKEN_ADDRESS,
-  EIGHT_BIT_TOKEN_ABI,
-} from '@/config/contracts';
+import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
+import { parseUnits } from 'ethers';
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -45,60 +40,60 @@ export default function TournamentsPage() {
 
   // Read tournament fees
   const { data: standardWeeklyFee } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'STANDARD_WEEKLY_FEE',
   });
 
   const { data: standardMonthlyFee } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'STANDARD_MONTHLY_FEE',
   });
 
   const { data: highRollerWeeklyFee } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'HIGH_ROLLER_WEEKLY_FEE',
   });
 
   const { data: highRollerMonthlyFee } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'HIGH_ROLLER_MONTHLY_FEE',
   });
 
   // Read prize pools
   const { data: standardWeeklyPrize } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'STANDARD_WEEKLY_PRIZE',
   });
 
   const { data: standardMonthlyPrize } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'STANDARD_MONTHLY_PRIZE',
   });
 
   const { data: highRollerWeeklyPrize } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'HIGH_ROLLER_WEEKLY_PRIZE',
   });
 
   const { data: highRollerMonthlyPrize } = useReadContract({
-    address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'HIGH_ROLLER_MONTHLY_PRIZE',
   });
 
   // Check token allowance
-  const { data: allowance } = useReadContract({
-    address: EIGHT_BIT_TOKEN_ADDRESS as `0x${string}`,
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
     abi: EIGHT_BIT_TOKEN_ABI,
     functionName: 'allowance',
-    args: address ? [address, TOURNAMENT_MANAGER_ADDRESS] : undefined,
+    args: address ? [address, TESTNET_CONTRACTS.TOURNAMENT_MANAGER] : undefined,
   });
 
   // Approve tokens
@@ -108,62 +103,162 @@ export default function TournamentsPage() {
   });
 
   // Enter tournament
-  const { writeContract: enterTournament, data: enterHash } = useWriteContract();
+  const { writeContract: enterTournament, data: enterHash, error: enterError } = useWriteContract();
   const { isSuccess: isEnterSuccess } = useWaitForTransactionReceipt({
     hash: enterHash,
   });
 
-  // Fetch tournaments from backend
+  // Handle successful approval - refetch allowance
   useEffect(() => {
-    async function fetchTournaments() {
-      setLoading(true);
-      try {
-        const result = await callFunction<
-          { player?: string },
-          { success: boolean; tournaments: any[] }
-        >('getTournaments', {
-          player: address ? address.toLowerCase() : undefined,
-        });
+    if (isApproveSuccess && approveHash) {
+      console.log('✅ Approval confirmed! Tx:', approveHash);
+      console.log('🔄 Refetching allowance...');
 
-        if (result.success) {
-          // Convert backend format to frontend format
-          const formattedTournaments: Tournament[] = result.tournaments.map((t: any) => {
-            // Convert tier and period to display format
-            const tier = t.tier === 'standard' ? 'Standard' : 'High Roller';
-            const period = t.period === 'weekly' ? 'Weekly' : 'Monthly';
+      // Refetch allowance to update UI
+      refetchAllowance?.();
 
-            // Convert Firestore timestamps to dates
-            const startTime = new Date(t.startTime.seconds * 1000);
-            const endTime = new Date(t.endTime.seconds * 1000);
+      // Clear needsApproval flag after a brief delay to allow refetch
+      setTimeout(() => {
+        console.log('✅ Approval complete - button should change to "Enter Now"');
+      }, 1000);
+    }
+  }, [isApproveSuccess, approveHash, refetchAllowance]);
 
-            return {
-              id: parseInt(t.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000),
-              tier,
-              period,
-              startTime,
-              endTime,
-              entryFee: parseEther(t.entryFee.toString()),
-              prizePool: parseEther(t.prizePool.toString()),
-              totalEntries: t.participants?.length || 0,
-              winner: t.winnerId || '0x0000000000000000000000000000000000000000',
-              isActive: t.status === 'active',
-              status: t.status as TournamentStatus,
-              hasEntered: t.hasEntered || false,
-            };
-          });
+  // DEBUG: Track wagmi errors
+  useEffect(() => {
+    if (enterError) {
+      console.error('❌ enterTournament ERROR:', enterError);
+      setEntering(false);
+    }
+  }, [enterError]);
 
-          setTournaments(formattedTournaments);
-        }
-      } catch (error) {
-        console.error('Error fetching tournaments:', error);
-        // Keep existing tournaments or show empty state
-      } finally {
-        setLoading(false);
-      }
+  // Fetch tournament data from blockchain
+  const { data: tournament1 } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'getTournament',
+    args: [BigInt(1)],
+  });
+
+  const { data: tournament2 } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'getTournament',
+    args: [BigInt(2)],
+  });
+
+  const { data: tournament3 } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'getTournament',
+    args: [BigInt(3)],
+  });
+
+  // Check if user has entered tournaments
+  const { data: hasEntered1 } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'hasPlayerEntered',
+    args: address ? [BigInt(1), address] : undefined,
+  });
+
+  const { data: hasEntered2 } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'hasPlayerEntered',
+    args: address ? [BigInt(2), address] : undefined,
+  });
+
+  const { data: hasEntered3 } = useReadContract({
+  address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+  abi: TOURNAMENT_MANAGER_ABI,
+  functionName: 'hasPlayerEntered',
+  args: address ? [BigInt(3), address] : undefined,
+});
+
+  // Convert blockchain data to frontend format
+  useEffect(() => {
+    const formattedTournaments: Tournament[] = [];
+
+    // Helper to map tier enum to display string
+    const getTierName = (tier: number): Tier => {
+      return tier === 0 ? 'Standard' : 'High Roller';
+    };
+
+    // Helper to map period enum to display string
+    const getPeriodName = (period: number): Period => {
+      return period === 0 ? 'Weekly' : 'Monthly';
+    };
+
+    // Helper to determine tournament status
+    const getStatus = (startTime: bigint, endTime: bigint, isActive: boolean): TournamentStatus => {
+      const now = Math.floor(Date.now() / 1000);
+      if (!isActive) return 'ended';
+      if (now < Number(startTime)) return 'upcoming';
+      if (now >= Number(startTime) && now < Number(endTime)) return 'active';
+      return 'ended';
+    };
+
+    // Process tournament 1
+    if (tournament1 && Array.isArray(tournament1) && tournament1.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament1;
+      formattedTournaments.push({
+        id: 1,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered1 as boolean || false,
+      });
     }
 
-    fetchTournaments();
-  }, [address]);
+    // Process tournament 2
+    if (tournament2 && Array.isArray(tournament2) && tournament2.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament2;
+      formattedTournaments.push({
+        id: 2,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered2 as boolean || false,
+      });
+    }
+
+    // Process tournament 3
+    if (tournament3 && Array.isArray(tournament3) && tournament3.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament3;
+      formattedTournaments.push({
+        id: 3,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered3 as boolean || false,
+      });
+    }
+
+    setTournaments(formattedTournaments);
+    setLoading(formattedTournaments.length === 0 && (tournament1 === undefined || tournament2 === undefined || tournament3 === undefined));
+  }, [tournament1, tournament2, tournament3, hasEntered1, hasEntered2, hasEntered3]);
 
   // Check if approval is needed
   useEffect(() => {
@@ -176,92 +271,99 @@ export default function TournamentsPage() {
   }, [selectedTournament, allowance, tournaments]);
 
   const handleApprove = async (tournament: Tournament) => {
-    if (!isConnected) return;
+  if (!isConnected) return;
 
-    approve({
-      address: EIGHT_BIT_TOKEN_ADDRESS as `0x${string}`,
-      abi: EIGHT_BIT_TOKEN_ABI,
-      functionName: 'approve',
-      args: [TOURNAMENT_MANAGER_ADDRESS, tournament.entryFee],
-    });
-  };
+  console.log(`🔑 Approving 8BIT tokens for tournament ${tournament.id}`);
+  console.log(`💰 Entry fee: ${formatEther(tournament.entryFee)} 8BIT`);
 
+  // Approve exactly the tournament entry fee
+  const approvalAmount = tournament.entryFee;
+
+approve({
+  address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
+  abi: EIGHT_BIT_TOKEN_ABI,
+  functionName: 'approve',
+  args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER, approvalAmount],
+});
+};
+  
   const handleEnter = async (tournamentId: string) => {
-    if (!isConnected || !address) return;
+    console.log('🎮 ENTER CLICKED - tournament:', tournamentId);
 
+    if (!address || !isConnected) {
+      console.log('❌ Wallet not connected');
+      return;
+    }
+
+    // Find the tournament
+    const tournament = tournaments.find(t => t.id === parseInt(tournamentId));
+    if (!tournament) {
+      console.error('❌ Tournament not found:', tournamentId);
+      return;
+    }
+
+    console.log('📊 Tournament data:', {
+      id: tournament.id,
+      entryFee: formatEther(tournament.entryFee),
+      allowance: allowance ? formatEther(allowance as bigint) : '0',
+    });
+
+    // Check if we have sufficient allowance
+    if (!allowance || (allowance as bigint) < tournament.entryFee) {
+      console.log('⚠️ Insufficient allowance - user needs to approve first');
+      // Set selected tournament so approval button appears
+      setSelectedTournament(parseInt(tournamentId));
+      return;
+    }
+
+    // We have sufficient allowance, proceed with entry
+    console.log('✅ Sufficient allowance detected, entering tournament...');
     setEntering(true);
     setSelectedTournament(parseInt(tournamentId));
 
     enterTournament({
-      address: TOURNAMENT_MANAGER_ADDRESS as `0x${string}`,
+      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'enterTournament',
       args: [BigInt(tournamentId)],
     });
+
+    console.log('🚀 Tournament entry transaction sent');
   };
 
   // Handle successful tournament entry
   useEffect(() => {
-    async function registerEntry() {
-      if (isEnterSuccess && enterHash && selectedTournament && address) {
-        try {
-          // Find the tournament
-          const tournament = tournaments.find((t) => t.id === selectedTournament);
-          if (!tournament) return;
+    async function handleEntrySuccess() {
+      if (isEnterSuccess && enterHash && selectedTournament) {
+        console.log(`✅ Tournament entry successful! Tx: ${enterHash}`);
 
-          // Call backend to register entry
-          await callFunction<
-            { tournamentId: string; player: string; txHash: string },
-            { success: boolean }
-          >('enterTournament', {
-            tournamentId: selectedTournament.toString(),
-            player: address.toLowerCase(),
-            txHash: enterHash,
-          });
-
-          // Refresh tournaments to show updated entry status
-          const result = await callFunction<
-            { player?: string },
-            { success: boolean; tournaments: any[] }
-          >('getTournaments', {
-            player: address.toLowerCase(),
-          });
-
-          if (result.success) {
-            const formattedTournaments: Tournament[] = result.tournaments.map((t: any) => {
-              const tier = t.tier === 'standard' ? 'Standard' : 'High Roller';
-              const period = t.period === 'weekly' ? 'Weekly' : 'Monthly';
-              const startTime = new Date(t.startTime.seconds * 1000);
-              const endTime = new Date(t.endTime.seconds * 1000);
-
-              return {
-                id: parseInt(t.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000),
-                tier,
-                period,
-                startTime,
-                endTime,
-                entryFee: parseEther(t.entryFee.toString()),
-                prizePool: parseEther(t.prizePool.toString()),
-                totalEntries: t.participants?.length || 0,
-                winner: t.winnerId || '0x0000000000000000000000000000000000000000',
-                isActive: t.status === 'active',
-                status: t.status as TournamentStatus,
-                hasEntered: t.hasEntered || false,
-              };
+        // Optional: Notify backend for analytics/indexing (non-critical)
+        // The blockchain is the source of truth
+        if (address) {
+          try {
+            await callFunction('recordTournamentEntry', {
+              tournamentId: selectedTournament.toString(),
+              player: address.toLowerCase(),
+              txHash: enterHash,
+            }).catch(err => {
+              console.warn('Backend notification failed (non-critical):', err);
             });
-
-            setTournaments(formattedTournaments);
+          } catch (error) {
+            // Ignore backend errors - blockchain entry succeeded
+            console.warn('Backend notification skipped:', error);
           }
-        } catch (error) {
-          console.error('Error registering tournament entry:', error);
-        } finally {
-          setEntering(false);
         }
+
+        setEntering(false);
+        setSelectedTournament(null);
+
+        // Tournament data will auto-refresh via useReadContract hooks
+        // The hasEntered check will update automatically
       }
     }
 
-    registerEntry();
-  }, [isEnterSuccess, enterHash, selectedTournament, address, tournaments]);
+    handleEntrySuccess();
+  }, [isEnterSuccess, enterHash, selectedTournament, address]);
 
   const filteredTournaments =
     filter === 'all'
@@ -373,133 +475,121 @@ export default function TournamentsPage() {
             </Card>
           ) : (
             filteredTournaments.map((tournament) => (
-            <div key={tournament.id} className="space-y-0">
-              <Card className="hover:border-arcade-pink/60">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  {/* Tournament Info */}
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h3 className="font-pixel text-white text-sm">
-                        {tournament.tier} {tournament.period}
-                      </h3>
-                      {getTierBadge(tournament.tier)}
-                      {getStatusBadge(tournament.status)}
-                    </div>
-                    <p className="font-arcade text-gray-400 text-sm mb-2">
-                      Compete across all games for {tournament.period.toLowerCase()} glory
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-2 py-1 bg-arcade-dark border border-arcade-green/30 text-arcade-green font-arcade text-xs rounded">
-                        All 12 Games
+            <Card key={tournament.id} className="hover:border-arcade-pink/60">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Tournament Info */}
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="font-pixel text-white text-sm">
+                      {tournament.tier} {tournament.period}
+                    </h3>
+                    {getTierBadge(tournament.tier)}
+                    {getStatusBadge(tournament.status)}
+                  </div>
+                  <p className="font-arcade text-gray-400 text-sm mb-2">
+                    Compete across all games for {tournament.period.toLowerCase()} glory
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 bg-arcade-dark border border-arcade-green/30 text-arcade-green font-arcade text-xs rounded">
+                      All 12 Games
+                    </span>
+                    {tournament.tier === 'High Roller' && (
+                      <span className="px-2 py-1 bg-arcade-dark border border-arcade-pink/30 text-arcade-pink font-arcade text-xs rounded">
+                        Premium Prizes
                       </span>
-                      {tournament.tier === 'High Roller' && (
-                        <span className="px-2 py-1 bg-arcade-dark border border-arcade-pink/30 text-arcade-pink font-arcade text-xs rounded">
-                          Premium Prizes
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Prize & Stats */}
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-right">
-                      <p className="font-arcade text-xs text-gray-500">Prize Pool</p>
-                      <p className="font-pixel text-arcade-yellow">
-                        {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
-                      </p>
-                      <p className="font-arcade text-xs text-gray-400">
-                        ${(Number(formatEther(tournament.prizePool)) * 0.0005).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-arcade text-xs text-gray-500">Entry Fee</p>
-                      <p className="font-arcade text-arcade-cyan">
-                        {formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT
-                      </p>
-                      <p className="font-arcade text-xs text-gray-400">
-                        ${(Number(formatEther(tournament.entryFee)) * 0.0005).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-arcade text-xs text-gray-500">Players</p>
-                      <p className="font-arcade text-white">{tournament.totalEntries}</p>
-                    </div>
-                  </div>
-
-                  {/* Action */}
-                  <div className="flex flex-col items-center gap-2 md:ml-4 min-w-[120px]">
-                    {tournament.status === 'active' && (
-                      <>
-                        <p className="font-arcade text-xs text-gray-500">Ends in</p>
-                        <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                          {formatTimeRemaining(tournament.endTime)}
-                        </p>
-                        {isConnected ? (
-                          <>
-                            {needsApproval && selectedTournament === tournament.id ? (
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => handleApprove(tournament)}
-                                disabled={!!approveHash}
-                              >
-                                {approveHash ? 'Approving...' : 'Approve 8BIT'}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() => {
-                                  handleEnter(tournament.id.toString());
-                                }}
-                                disabled={!!enterHash || entering || tournament.hasEntered}
-                              >
-                                {entering || enterHash
-                                  ? 'Entering...'
-                                  : tournament.hasEntered
-                                  ? 'Entered'
-                                  : 'Enter Now'}
-                              </Button>
-                            )}
-                          </>
-                        ) : (
-                          <Button variant="secondary" size="sm" disabled>
-                            Connect Wallet
-                          </Button>
-                        )}
-                      </>
-                    )}
-                    {tournament.status === 'upcoming' && (
-                      <>
-                        <p className="font-arcade text-xs text-gray-500">Starts in</p>
-                        <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                          {formatTimeRemaining(tournament.startTime)}
-                        </p>
-                        <Button variant="ghost" size="sm">
-                          View Details
-                        </Button>
-                      </>
-                    )}
-                    {tournament.status === 'ended' && (
-                      <Button variant="ghost" size="sm">
-                        View Results
-                      </Button>
                     )}
                   </div>
                 </div>
 
-                {/* Tournament Leaderboard */}
-                {(tournament.status === 'active' || tournament.status === 'ended') && tournament.totalEntries > 0 && (
-                  <div className="mt-6 pt-6 border-t border-arcade-green/20">
-                    <TournamentLeaderboard
-                      tournamentId={tournament.id}
-                      tournamentName={`${tournament.tier} ${tournament.period}`}
-                      isActive={tournament.status === 'active'}
-                    />
+                {/* Prize & Stats */}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="text-right">
+                    <p className="font-arcade text-xs text-gray-500">Prize Pool</p>
+                    <p className="font-pixel text-arcade-yellow">
+                      {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
+                    </p>
+                    <p className="font-arcade text-xs text-gray-400">
+                      ${(Number(formatEther(tournament.prizePool)) * 0.0005).toFixed(2)}
+                    </p>
                   </div>
-                )}
-              </Card>
-            </div>
+                  <div className="text-right">
+                    <p className="font-arcade text-xs text-gray-500">Entry Fee</p>
+                    <p className="font-arcade text-arcade-cyan">
+                      {formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT
+                    </p>
+                    <p className="font-arcade text-xs text-gray-400">
+                      ${(Number(formatEther(tournament.entryFee)) * 0.0005).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-arcade text-xs text-gray-500">Players</p>
+                    <p className="font-arcade text-white">{tournament.totalEntries}</p>
+                  </div>
+                </div>
+
+                {/* Action */}
+                <div className="flex flex-col items-center gap-2 md:ml-4 min-w-[120px]">
+                  {tournament.status === 'active' && (
+                    <>
+                      <p className="font-arcade text-xs text-gray-500">Ends in</p>
+                      <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
+                        {formatTimeRemaining(tournament.endTime)}
+                      </p>
+                      {isConnected ? (
+                        <>
+                          {needsApproval && selectedTournament === tournament.id ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleApprove(tournament)}
+                              disabled={!!approveHash}
+                            >
+                              {approveHash ? 'Approving...' : 'Approve 8BIT'}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTournament(tournament.id);
+                                handleEnter(tournament.id.toString());
+                              }}
+                              disabled={!!enterHash || entering || tournament.hasEntered}
+                            >
+                              {entering || enterHash
+                                ? 'Entering...'
+                                : tournament.hasEntered
+                                ? 'Entered'
+                                : 'Enter Now'}
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        <Button variant="secondary" size="sm" disabled>
+                          Connect Wallet
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  {tournament.status === 'upcoming' && (
+                    <>
+                      <p className="font-arcade text-xs text-gray-500">Starts in</p>
+                      <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
+                        {formatTimeRemaining(tournament.startTime)}
+                      </p>
+                      <Button variant="ghost" size="sm">
+                        View Details
+                      </Button>
+                    </>
+                  )}
+                  {tournament.status === 'ended' && (
+                    <Button variant="ghost" size="sm">
+                      View Results
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
           ))
           )}
         </div>
