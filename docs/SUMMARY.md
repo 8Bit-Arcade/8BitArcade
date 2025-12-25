@@ -38,6 +38,7 @@
 ## Smart Contracts
 
 * [Contract Overview](contracts/overview.md)
+* [Contract Addresses](contracts/addresses.md)
 * [EightBitToken (8BIT)](contracts/eight-bit-token.md)
 * [GameRewards](contracts/game-rewards.md)
 * [TokenSale](contracts/token-sale.md)

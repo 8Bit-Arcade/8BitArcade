@@ -2,6 +2,12 @@
 
 Complete guide for deploying 8-Bit Arcade to Arbitrum Sepolia testnet.
 
+> **📋 Current Testnet Contracts**
+>
+> For the current deployed testnet contract addresses, see: [Contract Addresses](../contracts/addresses.md)
+>
+> This guide is for deploying your own instance or redeploying to testnet.
+
 ## Prerequisites
 
 ### 1. **Deployer Wallet**
