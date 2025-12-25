@@ -287,49 +287,40 @@ export default function TournamentsPage() {
   const filteredTournaments =
     filter === 'all' ? tournaments : tournaments.filter(t => t.tier === filter);
 
-  // Helper functions for styling
+  const getStatusBadge = (status: TournamentStatus) => {
+    switch (status) {
+      case 'active':
+        return (
+          <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
+            LIVE
+          </span>
+        );
+      case 'upcoming':
+        return (
+          <span className="px-2 py-1 bg-arcade-cyan/20 text-arcade-cyan font-pixel text-xs rounded">
+            SOON
+          </span>
+        );
+      case 'ended':
+        return (
+          <span className="px-2 py-1 bg-gray-500/20 text-gray-500 font-pixel text-xs rounded">
+            ENDED
+          </span>
+        );
+    }
+  };
+
   const getTierBadge = (tier: Tier) => {
     if (tier === 'High Roller') {
       return (
-        <span className="px-2 py-1 bg-arcade-pink/20 border border-arcade-pink text-arcade-pink font-arcade text-xs rounded">
-          High Roller
+        <span className="px-2 py-1 bg-arcade-pink/20 text-arcade-pink font-pixel text-xs rounded">
+          ⭐ HIGH ROLLER
         </span>
       );
     }
     return (
-      <span className="px-2 py-1 bg-arcade-cyan/20 border border-arcade-cyan text-arcade-cyan font-arcade text-xs rounded">
-        Standard
-      </span>
-    );
-  };
-
-  const getStatusBadge = (status: TournamentStatus) => {
-    const configs = {
-      active: {
-        bg: 'bg-arcade-green/20',
-        border: 'border-arcade-green',
-        text: 'text-arcade-green',
-        label: 'LIVE',
-      },
-      upcoming: {
-        bg: 'bg-arcade-yellow/20',
-        border: 'border-arcade-yellow',
-        text: 'text-arcade-yellow',
-        label: 'SOON',
-      },
-      ended: {
-        bg: 'bg-gray-500/20',
-        border: 'border-gray-500',
-        text: 'text-gray-400',
-        label: 'ENDED',
-      },
-    };
-    const config = configs[status];
-    return (
-      <span
-        className={`px-2 py-1 ${config.bg} border ${config.border} ${config.text} font-pixel text-xs rounded`}
-      >
-        {config.label}
+      <span className="px-2 py-1 bg-arcade-purple/20 text-arcade-purple font-pixel text-xs rounded">
+        STANDARD
       </span>
     );
   };
@@ -359,47 +350,48 @@ export default function TournamentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-arcade-dark via-arcade-purple/20 to-arcade-dark">
-      <div className="container mx-auto px-4 py-12">
+    <div className="min-h-screen py-8">
+      <div className="max-w-5xl mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="font-pixel text-arcade-green text-3xl mb-3">TOURNAMENTS</h1>
-          <p className="font-arcade text-gray-400">
-            Compete across all 12 games for weekly and monthly prizes
+        <div className="text-center mb-8">
+          <h1 className="font-pixel text-2xl md:text-3xl text-arcade-pink glow-pink mb-2">
+            TOURNAMENTS
+          </h1>
+          <p className="font-arcade text-gray-400 mb-4">
+            Two-Tier Competition System - Standard & High Roller
           </p>
+          <div className="flex flex-wrap gap-4 justify-center text-sm font-arcade">
+            <div className="card-arcade px-4 py-2">
+              <span className="text-gray-400">Standard: </span>
+              <span className="text-arcade-green">$1 Weekly / $5 Monthly</span>
+            </div>
+            <div className="card-arcade px-4 py-2">
+              <span className="text-gray-400">High Roller: </span>
+              <span className="text-arcade-pink">$5 Weekly / $25 Monthly</span>
+            </div>
+          </div>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex justify-center gap-4 mb-8">
-          <Button
-            onClick={() => setFilter('all')}
-            variant={filter === 'all' ? 'primary' : 'secondary'}
-            size="md"
-          >
-            All
-          </Button>
-          <Button
-            onClick={() => setFilter('Standard')}
-            variant={filter === 'Standard' ? 'primary' : 'secondary'}
-            size="md"
-          >
-            Standard
-          </Button>
-          <Button
-            onClick={() => setFilter('High Roller')}
-            variant={filter === 'High Roller' ? 'primary' : 'secondary'}
-            size="md"
-          >
-            High Roller
-          </Button>
+        {/* Filters */}
+        <div className="flex gap-2 mb-6 justify-center">
+          {(['all', 'Standard', 'High Roller'] as const).map((tierFilter) => (
+            <Button
+              key={tierFilter}
+              variant={filter === tierFilter ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => setFilter(tierFilter)}
+            >
+              {tierFilter === 'all' ? 'All Tiers' : tierFilter}
+            </Button>
+          ))}
         </div>
 
         {/* Tournament List */}
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4">
           {loading ? (
             <Card>
               <div className="text-center py-8">
-                <p className="font-pixel text-arcade-cyan animate-pulse">Loading tournaments...</p>
+                <p className="font-arcade text-gray-400">Loading tournaments...</p>
               </div>
             </Card>
           ) : filteredTournaments.length === 0 ? (
