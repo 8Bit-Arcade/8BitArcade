@@ -129,6 +129,16 @@ export default function TournamentsPage() {
 
   // Convert blockchain data to frontend format
   useEffect(() => {
+    // DEBUG: Log raw tournament data
+    console.log('🎮 Raw tournament data:', {
+      tournament1,
+      tournament2,
+      tournament3,
+      tournament1Type: typeof tournament1,
+      tournament1IsArray: Array.isArray(tournament1),
+      tournament1Length: Array.isArray(tournament1) ? tournament1.length : 'N/A',
+    });
+
     const formattedTournaments: Tournament[] = [];
 
     // Helper to map tier enum to display string
