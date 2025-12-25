@@ -38,12 +38,19 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
 
+  // DEBUG: Log contract address
+  console.log('Tournament Manager address:', TESTNET_CONTRACTS.TOURNAMENT_MANAGER);
+  console.log('TESTNET_CONTRACTS:', TESTNET_CONTRACTS);
+
   // Read tournament fees
   const { data: standardWeeklyFee } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'STANDARD_WEEKLY_FEE',
   });
+
+  // DEBUG: Log hook result
+  console.log('standardWeeklyFee hook result:', standardWeeklyFee);
 
   const { data: standardMonthlyFee } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
@@ -153,6 +160,9 @@ export default function TournamentsPage() {
     functionName: 'getTournament',
     args: [BigInt(3)],
   });
+
+  // DEBUG: Log tournament data
+  console.log('Tournament data:', { tournament1, tournament2, tournament3 });
 
   // Check if user has entered tournaments
   const { data: hasEntered1 } = useReadContract({
