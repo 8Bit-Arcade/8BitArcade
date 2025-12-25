@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { formatEther, parseEther } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
@@ -74,7 +75,7 @@ export default function TournamentsPage() {
   });
 
   // Approve tokens
-  const { writeContract: approve, data: approveHash } = useWriteContract();
+  const { writeContract: approve, data: approveHash, error: approveError } = useWriteContract();
   const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
     hash: approveHash,
   });
@@ -102,11 +103,22 @@ export default function TournamentsPage() {
     }
   }, [isApproveSuccess, approveHash, refetchAllowance]);
 
-  // DEBUG: Track wagmi errors
+  // DEBUG: Track approve errors
+  useEffect(() => {
+    if (approveError) {
+      console.error('❌ approve ERROR:', approveError);
+      setEntering(false);
+      setNeedsApproval(false);
+      alert(`Approval failed: ${approveError.message || 'Unknown error'}`);
+    }
+  }, [approveError]);
+
+  // DEBUG: Track enter errors
   useEffect(() => {
     if (enterError) {
       console.error('❌ enterTournament ERROR:', enterError);
       setEntering(false);
+      alert(`Entry failed: ${enterError.message || 'Unknown error'}`);
     }
   }, [enterError]);
 
@@ -236,6 +248,11 @@ export default function TournamentsPage() {
         // Approve tournament manager to spend entry fee
         const approvalAmount = entryFee * BigInt(10); // Approve 10x for future entries
         console.log('📝 Requesting approval for:', formatEther(approvalAmount), '8BIT');
+        console.log('💳 Approve call details:', {
+          tokenAddress: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
+          spenderAddress: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+          amount: approvalAmount.toString(),
+        });
 
         approve({
           address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN as `0x${string}`,
@@ -243,6 +260,8 @@ export default function TournamentsPage() {
           functionName: 'approve',
           args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`, approvalAmount],
         });
+
+        console.log('✅ Approve function executed, wallet should prompt for signature...');
 
         // Entry will happen after approval is confirmed
         return;
@@ -494,6 +513,17 @@ export default function TournamentsPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Tournament Leaderboard */}
+                {(tournament.status === 'active' || tournament.status === 'ended') && (
+                  <div className="mt-4 pt-4 border-t border-arcade-green/20">
+                    <TournamentLeaderboard
+                      tournamentId={tournament.id}
+                      tournamentName={`${tournament.tier} ${tournament.period}`}
+                      isActive={tournament.status === 'active'}
+                    />
+                  </div>
+                )}
               </Card>
             ))
           )}
