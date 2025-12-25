@@ -79,6 +79,9 @@ const MAINNET_CONTRACTS = {
 // ACTIVE CONFIGURATION (Auto-selected based on USE_TESTNET)
 // ═══════════════════════════════════════════════════════════
 
+// Export network-specific configs for direct access
+export { TESTNET_CONTRACTS, MAINNET_CONTRACTS };
+
 export const CONTRACTS = USE_TESTNET ? TESTNET_CONTRACTS : MAINNET_CONTRACTS;
 
 // Export individual addresses for convenience
