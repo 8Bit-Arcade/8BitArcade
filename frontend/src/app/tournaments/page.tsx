@@ -134,7 +134,7 @@ export default function TournamentsPage() {
   }, [enterError]);
 
   // Fetch tournament data from blockchain
-  const { data: tournament1 } = useReadContract({
+  const { data: tournament1, isLoading: isLoading1, error: error1 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'getTournament',
@@ -205,8 +205,28 @@ export default function TournamentsPage() {
     args: address ? [BigInt(5), address] : undefined,
   });
 
+  // DEBUG: Log hook states
+  useEffect(() => {
+    console.log('🔧 [HOOK STATUS]', {
+      tournament1: { exists: !!tournament1, isLoading: isLoading1, hasError: !!error1 },
+      tournament2: { exists: !!tournament2 },
+      tournament3: { exists: !!tournament3 },
+    });
+    if (error1) console.error('Tournament 1 error:', error1);
+  }, [tournament1, tournament2, tournament3, isLoading1, error1]);
+
   // Convert blockchain data to frontend format
   useEffect(() => {
+    console.log('🔍 [TOURNAMENT DEBUG] Processing tournament data...');
+    console.log('📊 Raw data:', {
+      tournament1: tournament1,
+      tournament2: tournament2,
+      tournament3: tournament3,
+      tournament1_isArray: Array.isArray(tournament1),
+      tournament1_type: typeof tournament1,
+      tournament1_length: tournament1 ? tournament1.length : 'null',
+    });
+
     const formattedTournaments: Tournament[] = [];
 
     // Helper to map tier enum to display string
@@ -230,7 +250,18 @@ export default function TournamentsPage() {
 
     // Process tournament 1
     if (tournament1 && Array.isArray(tournament1) && tournament1.length >= 9) {
+      console.log('✅ Processing tournament 1:', tournament1);
       const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament1;
+      console.log('📋 Tournament 1 parsed:', {
+        tier: Number(tier),
+        period: Number(period),
+        startTime: Number(startTime),
+        endTime: Number(endTime),
+        entryFee: String(entryFee),
+        prizePool: String(prizePool),
+        totalEntries: Number(totalEntries),
+        isActive: Boolean(isActive),
+      });
       formattedTournaments.push({
         id: 1,
         tier: getTierName(tier as number),
@@ -245,10 +276,17 @@ export default function TournamentsPage() {
         status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
         hasEntered: hasEntered1 as boolean || false,
       });
+    } else {
+      console.log('❌ Tournament 1 skipped:', {
+        exists: !!tournament1,
+        isArray: Array.isArray(tournament1),
+        length: tournament1 ? tournament1.length : 'null',
+      });
     }
 
     // Process tournament 2
     if (tournament2 && Array.isArray(tournament2) && tournament2.length >= 9) {
+      console.log('✅ Processing tournament 2:', tournament2);
       const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament2;
       formattedTournaments.push({
         id: 2,
@@ -264,10 +302,17 @@ export default function TournamentsPage() {
         status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
         hasEntered: hasEntered2 as boolean || false,
       });
+    } else {
+      console.log('❌ Tournament 2 skipped:', {
+        exists: !!tournament2,
+        isArray: Array.isArray(tournament2),
+        length: tournament2 ? tournament2.length : 'null',
+      });
     }
 
     // Process tournament 3
     if (tournament3 && Array.isArray(tournament3) && tournament3.length >= 9) {
+      console.log('✅ Processing tournament 3:', tournament3);
       const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament3;
       formattedTournaments.push({
         id: 3,
@@ -282,6 +327,12 @@ export default function TournamentsPage() {
         isActive: isActive as boolean,
         status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
         hasEntered: hasEntered3 as boolean || false,
+      });
+    } else {
+      console.log('❌ Tournament 3 skipped:', {
+        exists: !!tournament3,
+        isArray: Array.isArray(tournament3),
+        length: tournament3 ? tournament3.length : 'null',
       });
     }
 
@@ -323,8 +374,19 @@ export default function TournamentsPage() {
       });
     }
 
+    console.log('🏁 [FINAL] Formatted tournaments:', formattedTournaments);
+    console.log('📈 Total tournaments:', formattedTournaments.length);
+
+    const shouldLoad = formattedTournaments.length === 0 && (tournament1 === undefined || tournament2 === undefined || tournament3 === undefined);
+    console.log('⏳ Loading state:', shouldLoad);
+    console.log('🔍 Undefined check:', {
+      tournament1_undefined: tournament1 === undefined,
+      tournament2_undefined: tournament2 === undefined,
+      tournament3_undefined: tournament3 === undefined,
+    });
+
     setTournaments(formattedTournaments);
-    setLoading(formattedTournaments.length === 0 && (tournament1 === undefined || tournament2 === undefined || tournament3 === undefined));
+    setLoading(shouldLoad);
   }, [tournament1, tournament2, tournament3, tournament4, tournament5, hasEntered1, hasEntered2, hasEntered3, hasEntered4, hasEntered5]);
 
   // Check if approval is needed
