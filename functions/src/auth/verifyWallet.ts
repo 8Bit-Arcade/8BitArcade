@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getAuth } from 'firebase-admin/auth';
 import { verifyMessage } from 'viem';
+import { collections, Timestamp } from '../config/firebase';
 
 interface VerifyWalletRequest {
   address: string;
@@ -80,6 +81,38 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       const customToken = await auth.createCustomToken(address.toLowerCase());
 
       console.log('Custom token created successfully');
+
+      // Create or update user document in Firestore
+      const userAddress = address.toLowerCase();
+      const userRef = collections.users.doc(userAddress);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        // Create new user document
+        console.log('Creating new user document for:', userAddress);
+        await userRef.set({
+          address: userAddress,
+          username: null,
+          createdAt: Timestamp.now(),
+          lastActive: Timestamp.now(),
+          totalGamesPlayed: 0,
+          totalScore: 0,
+          isBanned: false,
+          banReason: null,
+          bannedAt: null,
+          displayPreference: 'address',
+          flags: {
+            count: 0,
+            lastFlagged: null,
+            reasons: [],
+          },
+        });
+      } else {
+        // Update last active timestamp
+        await userRef.update({
+          lastActive: Timestamp.now(),
+        });
+      }
 
       return { customToken };
     } catch (err: any) {
