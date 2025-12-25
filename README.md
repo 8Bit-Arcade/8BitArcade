@@ -144,6 +144,37 @@ All games feature:
 ### Audio
 - Howler.js
 
+## 📜 Smart Contract Addresses
+
+### Arbitrum Sepolia Testnet (Current)
+
+| Contract | Address | Explorer |
+|----------|---------|----------|
+| **8BIT Token** | `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d` | [View](https://sepolia.arbiscan.io/address/0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d) |
+| **Game Rewards** | `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E` | [View](https://sepolia.arbiscan.io/address/0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E) |
+| **Tournament Manager** | `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7` | [View](https://sepolia.arbiscan.io/address/0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7) |
+| **Tournament Payments** | `0xb52aE08daFC310E6f858957Fa0a317fEF341dE85` | [View](https://sepolia.arbiscan.io/address/0xb52aE08daFC310E6f858957Fa0a317fEF341dE85) |
+| **Token Sale** | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` | [View](https://sepolia.arbiscan.io/address/0x057B1130dD6E8FcBc144bb34172e45293C6839fE) |
+| **Treasury Gas Manager** | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` | [View](https://sepolia.arbiscan.io/address/0x39F49a46CAB85CF079Cde25EAE311A563d3952EC) |
+| **Testnet Faucet** | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` | [View](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) |
+| **USDC (Testnet)** | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` | [View](https://sepolia.arbiscan.io/address/0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d) |
+
+**Network:** Arbitrum Sepolia
+**Chain ID:** 421614
+**RPC:** https://sepolia-rollup.arbitrum.io/rpc
+**Explorer:** https://sepolia.arbiscan.io
+
+### Important Wallet Addresses
+
+| Wallet | Address | Purpose |
+|--------|---------|---------|
+| **Deployer** | TBD | Contract deployment & ownership |
+| **Game Rewards Wallet** | `0x193A7E1a8e840b514AdeD9a1D69a94002d87D678` | Daily reward distributions |
+| **Treasury** | TBD | Protocol fees & revenue |
+| **Liquidity Pool** | `0x1727B058B993eB9392fcE863Ec93C86e7BD725F4` | DEX liquidity (locked) |
+
+> **Note:** These are testnet addresses. Mainnet addresses will be updated here after public launch.
+
 ## 📂 Project Structure
 
 ```

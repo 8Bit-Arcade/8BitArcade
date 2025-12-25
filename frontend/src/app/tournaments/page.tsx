@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { formatEther, parseEther } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import {
@@ -372,120 +373,133 @@ export default function TournamentsPage() {
             </Card>
           ) : (
             filteredTournaments.map((tournament) => (
-            <Card key={tournament.id} className="hover:border-arcade-pink/60">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Tournament Info */}
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h3 className="font-pixel text-white text-sm">
-                      {tournament.tier} {tournament.period}
-                    </h3>
-                    {getTierBadge(tournament.tier)}
-                    {getStatusBadge(tournament.status)}
-                  </div>
-                  <p className="font-arcade text-gray-400 text-sm mb-2">
-                    Compete across all games for {tournament.period.toLowerCase()} glory
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-1 bg-arcade-dark border border-arcade-green/30 text-arcade-green font-arcade text-xs rounded">
-                      All 12 Games
-                    </span>
-                    {tournament.tier === 'High Roller' && (
-                      <span className="px-2 py-1 bg-arcade-dark border border-arcade-pink/30 text-arcade-pink font-arcade text-xs rounded">
-                        Premium Prizes
+            <div key={tournament.id} className="space-y-0">
+              <Card className="hover:border-arcade-pink/60">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  {/* Tournament Info */}
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h3 className="font-pixel text-white text-sm">
+                        {tournament.tier} {tournament.period}
+                      </h3>
+                      {getTierBadge(tournament.tier)}
+                      {getStatusBadge(tournament.status)}
+                    </div>
+                    <p className="font-arcade text-gray-400 text-sm mb-2">
+                      Compete across all games for {tournament.period.toLowerCase()} glory
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-arcade-dark border border-arcade-green/30 text-arcade-green font-arcade text-xs rounded">
+                        All 12 Games
                       </span>
+                      {tournament.tier === 'High Roller' && (
+                        <span className="px-2 py-1 bg-arcade-dark border border-arcade-pink/30 text-arcade-pink font-arcade text-xs rounded">
+                          Premium Prizes
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Prize & Stats */}
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="text-right">
+                      <p className="font-arcade text-xs text-gray-500">Prize Pool</p>
+                      <p className="font-pixel text-arcade-yellow">
+                        {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
+                      </p>
+                      <p className="font-arcade text-xs text-gray-400">
+                        ${(Number(formatEther(tournament.prizePool)) * 0.0005).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-arcade text-xs text-gray-500">Entry Fee</p>
+                      <p className="font-arcade text-arcade-cyan">
+                        {formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT
+                      </p>
+                      <p className="font-arcade text-xs text-gray-400">
+                        ${(Number(formatEther(tournament.entryFee)) * 0.0005).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-arcade text-xs text-gray-500">Players</p>
+                      <p className="font-arcade text-white">{tournament.totalEntries}</p>
+                    </div>
+                  </div>
+
+                  {/* Action */}
+                  <div className="flex flex-col items-center gap-2 md:ml-4 min-w-[120px]">
+                    {tournament.status === 'active' && (
+                      <>
+                        <p className="font-arcade text-xs text-gray-500">Ends in</p>
+                        <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
+                          {formatTimeRemaining(tournament.endTime)}
+                        </p>
+                        {isConnected ? (
+                          <>
+                            {needsApproval && selectedTournament === tournament.id ? (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleApprove(tournament)}
+                                disabled={!!approveHash}
+                              >
+                                {approveHash ? 'Approving...' : 'Approve 8BIT'}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  handleEnter(tournament.id.toString());
+                                }}
+                                disabled={!!enterHash || entering || tournament.hasEntered}
+                              >
+                                {entering || enterHash
+                                  ? 'Entering...'
+                                  : tournament.hasEntered
+                                  ? 'Entered'
+                                  : 'Enter Now'}
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <Button variant="secondary" size="sm" disabled>
+                            Connect Wallet
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    {tournament.status === 'upcoming' && (
+                      <>
+                        <p className="font-arcade text-xs text-gray-500">Starts in</p>
+                        <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
+                          {formatTimeRemaining(tournament.startTime)}
+                        </p>
+                        <Button variant="ghost" size="sm">
+                          View Details
+                        </Button>
+                      </>
+                    )}
+                    {tournament.status === 'ended' && (
+                      <Button variant="ghost" size="sm">
+                        View Results
+                      </Button>
                     )}
                   </div>
                 </div>
 
-                {/* Prize & Stats */}
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-right">
-                    <p className="font-arcade text-xs text-gray-500">Prize Pool</p>
-                    <p className="font-pixel text-arcade-yellow">
-                      {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
-                    </p>
-                    <p className="font-arcade text-xs text-gray-400">
-                      ${(Number(formatEther(tournament.prizePool)) * 0.0005).toFixed(2)}
-                    </p>
+                {/* Tournament Leaderboard */}
+                {(tournament.status === 'active' || tournament.status === 'ended') && tournament.totalEntries > 0 && (
+                  <div className="mt-6 pt-6 border-t border-arcade-green/20">
+                    <TournamentLeaderboard
+                      tournamentId={tournament.id}
+                      tournamentName={`${tournament.tier} ${tournament.period}`}
+                      isActive={tournament.status === 'active'}
+                    />
                   </div>
-                  <div className="text-right">
-                    <p className="font-arcade text-xs text-gray-500">Entry Fee</p>
-                    <p className="font-arcade text-arcade-cyan">
-                      {formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT
-                    </p>
-                    <p className="font-arcade text-xs text-gray-400">
-                      ${(Number(formatEther(tournament.entryFee)) * 0.0005).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-arcade text-xs text-gray-500">Players</p>
-                    <p className="font-arcade text-white">{tournament.totalEntries}</p>
-                  </div>
-                </div>
-
-                {/* Action */}
-                <div className="flex flex-col items-center gap-2 md:ml-4 min-w-[120px]">
-                  {tournament.status === 'active' && (
-                    <>
-                      <p className="font-arcade text-xs text-gray-500">Ends in</p>
-                      <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                        {formatTimeRemaining(tournament.endTime)}
-                      </p>
-                      {isConnected ? (
-                        <>
-                          {needsApproval && selectedTournament === tournament.id ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleApprove(tournament)}
-                              disabled={!!approveHash}
-                            >
-                              {approveHash ? 'Approving...' : 'Approve 8BIT'}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => {
-                                handleEnter(tournament.id.toString());
-                              }}
-                              disabled={!!enterHash || entering || tournament.hasEntered}
-                            >
-                              {entering || enterHash
-                                ? 'Entering...'
-                                : tournament.hasEntered
-                                ? 'Entered'
-                                : 'Enter Now'}
-                            </Button>
-                          )}
-                        </>
-                      ) : (
-                        <Button variant="secondary" size="sm" disabled>
-                          Connect Wallet
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  {tournament.status === 'upcoming' && (
-                    <>
-                      <p className="font-arcade text-xs text-gray-500">Starts in</p>
-                      <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                        {formatTimeRemaining(tournament.startTime)}
-                      </p>
-                      <Button variant="ghost" size="sm">
-                        View Details
-                      </Button>
-                    </>
-                  )}
-                  {tournament.status === 'ended' && (
-                    <Button variant="ghost" size="sm">
-                      View Results
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Card>
+                )}
+              </Card>
+            </div>
           ))
           )}
         </div>
