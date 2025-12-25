@@ -26,6 +26,15 @@
 export const USE_TESTNET = true;
 
 // ═══════════════════════════════════════════════════════════
+// TYPE DEFINITIONS
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Ethereum address type (required by wagmi v2)
+ */
+type Address = `0x${string}`;
+
+// ═══════════════════════════════════════════════════════════
 // TESTNET CONTRACT ADDRESSES (Arbitrum Sepolia)
 // ═══════════════════════════════════════════════════════════
 
@@ -35,20 +44,33 @@ export const USE_TESTNET = true;
  * After running: npm run deploy:testnet
  * Copy the deployed addresses here
  */
-const TESTNET_CONTRACTS = {
-  EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d' as `0x${string}`,
-  GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E' as `0x${string}`,
-  TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7' as `0x${string}`,
-  TOURNAMENT_PAYMENTS: '0xb52aE08daFC310E6f858957Fa0a317fEF341dE85' as `0x${string}`,
-  TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE' as `0x${string}`,
-  TREASURY_GAS_MANAGER: '0x39F49a46CAB85CF079Cde25EAE311A563d3952EC' as `0x${string}`,
-  TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952' as `0x${string}`,
-  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' as `0x${string}`, // Arbitrum Sepolia USDC
+const TESTNET_CONTRACTS: {
+  EIGHT_BIT_TOKEN: Address;
+  GAME_REWARDS: Address;
+  TOURNAMENT_MANAGER: Address;
+  TOURNAMENT_PAYMENTS: Address;
+  TOKEN_SALE: Address;
+  TREASURY_GAS_MANAGER: Address;
+  TESTNET_FAUCET: Address;
+  USDC: Address;
+  CHAIN_ID: number;
+  CHAIN_NAME: string;
+  RPC_URL: string;
+  BLOCK_EXPLORER: string;
+} = {
+  EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
+  GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E',
+  TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7',
+  TOURNAMENT_PAYMENTS: '0xb52aE08daFC310E6f858957Fa0a317fEF341dE85',
+  TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE',
+  TREASURY_GAS_MANAGER: '0x39F49a46CAB85CF079Cde25EAE311A563d3952EC',
+  TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952',
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
   CHAIN_ID: 421614, // Arbitrum Sepolia
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
   BLOCK_EXPLORER: 'https://sepolia.arbiscan.io',
-} as const;
+};
 
 // ═══════════════════════════════════════════════════════════
 // MAINNET CONTRACT ADDRESSES (Arbitrum One)
@@ -60,20 +82,33 @@ const TESTNET_CONTRACTS = {
  * After running: npm run deploy:mainnet
  * Copy the deployed addresses here
  */
-const MAINNET_CONTRACTS = {
-  EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000' as `0x${string}`, // ← UPDATE: 8BIT token address
-  GAME_REWARDS: '0x0000000000000000000000000000000000000000' as `0x${string}`,    // ← UPDATE: GameRewards address
-  TOURNAMENT_MANAGER: '0x0000000000000000000000000000000000000000' as `0x${string}`, // ← UPDATE: TournamentManager address
-  TOURNAMENT_PAYMENTS: '0x0000000000000000000000000000000000000000' as `0x${string}`, // ← UPDATE: TournamentPayments address
-  TOKEN_SALE: '0x0000000000000000000000000000000000000000' as `0x${string}`,      // ← UPDATE: TokenSale address
-  TREASURY_GAS_MANAGER: '0x0000000000000000000000000000000000000000' as `0x${string}`, // ← UPDATE: TreasuryGasManager address
+const MAINNET_CONTRACTS: {
+  EIGHT_BIT_TOKEN: Address;
+  GAME_REWARDS: Address;
+  TOURNAMENT_MANAGER: Address;
+  TOURNAMENT_PAYMENTS: Address;
+  TOKEN_SALE: Address;
+  TREASURY_GAS_MANAGER: Address;
+  TESTNET_FAUCET: undefined;
+  USDC: Address;
+  CHAIN_ID: number;
+  CHAIN_NAME: string;
+  RPC_URL: string;
+  BLOCK_EXPLORER: string;
+} = {
+  EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // ← UPDATE: 8BIT token address
+  GAME_REWARDS: '0x0000000000000000000000000000000000000000',    // ← UPDATE: GameRewards address
+  TOURNAMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentManager address
+  TOURNAMENT_PAYMENTS: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentPayments address
+  TOKEN_SALE: '0x0000000000000000000000000000000000000000',      // ← UPDATE: TokenSale address
+  TREASURY_GAS_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TreasuryGasManager address
   TESTNET_FAUCET: undefined, // Faucet not deployed on mainnet
-  USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as `0x${string}`, // Arbitrum One USDC
+  USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One USDC
   CHAIN_ID: 42161, // Arbitrum One
   CHAIN_NAME: 'Arbitrum One',
   RPC_URL: 'https://arb1.arbitrum.io/rpc',
   BLOCK_EXPLORER: 'https://arbiscan.io',
-} as const;
+};
 
 // ═══════════════════════════════════════════════════════════
 // ACTIVE CONFIGURATION (Auto-selected based on USE_TESTNET)
