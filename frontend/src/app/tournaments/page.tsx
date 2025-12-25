@@ -38,63 +38,6 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
 
-  // DEBUG: Log contract address
-  console.log('Tournament Manager address:', TESTNET_CONTRACTS.TOURNAMENT_MANAGER);
-  console.log('TESTNET_CONTRACTS:', TESTNET_CONTRACTS);
-
-  // Read tournament fees
-  const { data: standardWeeklyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_WEEKLY_FEE',
-  });
-
-  // DEBUG: Log hook result
-  console.log('standardWeeklyFee hook result:', standardWeeklyFee);
-
-  const { data: standardMonthlyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_MONTHLY_FEE',
-  });
-
-  const { data: highRollerWeeklyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_WEEKLY_FEE',
-  });
-
-  const { data: highRollerMonthlyFee } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_MONTHLY_FEE',
-  });
-
-  // Read prize pools
-  const { data: standardWeeklyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_WEEKLY_PRIZE',
-  });
-
-  const { data: standardMonthlyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'STANDARD_MONTHLY_PRIZE',
-  });
-
-  const { data: highRollerWeeklyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_WEEKLY_PRIZE',
-  });
-
-  const { data: highRollerMonthlyPrize } = useReadContract({
-    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
-    abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'HIGH_ROLLER_MONTHLY_PRIZE',
-  });
-
   // Check token allowance
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
@@ -124,8 +67,9 @@ export default function TournamentsPage() {
       // Refetch allowance to update UI
       refetchAllowance?.();
 
-      // Clear needsApproval flag after a brief delay to allow refetch
+      // Clear needsApproval flag after refetch
       setTimeout(() => {
+        setNeedsApproval(false);
         console.log('✅ Approval complete - button should change to "Enter Now"');
       }, 1000);
     }
@@ -160,9 +104,6 @@ export default function TournamentsPage() {
     functionName: 'getTournament',
     args: [BigInt(3)],
   });
-
-  // DEBUG: Log tournament data
-  console.log('Tournament data:', { tournament1, tournament2, tournament3 });
 
   // Check if user has entered tournaments
   const { data: hasEntered1 } = useReadContract({
@@ -267,7 +208,12 @@ export default function TournamentsPage() {
     }
 
     setTournaments(formattedTournaments);
-    setLoading(formattedTournaments.length === 0 && (tournament1 === undefined || tournament2 === undefined || tournament3 === undefined));
+
+    // Stop loading once we've received data (even if empty)
+    // This prevents infinite "Loading..." when tournaments don't exist
+    if (tournament1 !== undefined || tournament2 !== undefined || tournament3 !== undefined) {
+      setLoading(false);
+    }
   }, [tournament1, tournament2, tournament3, hasEntered1, hasEntered2, hasEntered3]);
 
   // Check if approval is needed
