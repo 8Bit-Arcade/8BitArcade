@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Card from '@/components/ui/Card';
 import { callFunction } from '@/lib/firebase-functions';
+import { useAuthStore } from '@/stores/authStore';
+import { shortenAddress } from '@/lib/utils';
 
 interface LeaderboardEntry {
   player: string;
@@ -26,6 +28,9 @@ export default function TournamentLeaderboard({
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { users } = useAuthStore();
 
   useEffect(() => {
     async function fetchLeaderboard() {
@@ -38,7 +43,7 @@ export default function TournamentLeaderboard({
           { success: boolean; leaderboard: LeaderboardEntry[]; total: number }
         >('getTournamentLeaderboard', {
           tournamentId: tournamentId.toString(),
-          limit: 10,
+          limit: 100, // Fetch more entries for search functionality
         });
 
         if (result.success) {
@@ -64,46 +69,101 @@ export default function TournamentLeaderboard({
     };
   }, [tournamentId, isActive]);
 
+  // Get display name for a player
+  const getPlayerDisplayName = (entry: LeaderboardEntry): string => {
+    const userData = users[entry.player.toLowerCase()];
+
+    if (!userData) {
+      return entry.username || shortenAddress(entry.player);
+    }
+
+    const preference = userData.displayPreference ||
+      (userData.ensName ? 'ens' : userData.username ? 'username' : 'address');
+
+    switch (preference) {
+      case 'ens':
+        return userData.ensName || userData.username || entry.username || shortenAddress(entry.player);
+      case 'username':
+        return userData.username || userData.ensName || entry.username || shortenAddress(entry.player);
+      case 'address':
+      default:
+        return shortenAddress(entry.player);
+    }
+  };
+
+  // Filter leaderboard based on search query
+  const filteredLeaderboard = useMemo(() => {
+    if (!searchQuery.trim()) return leaderboard;
+
+    const query = searchQuery.toLowerCase();
+    return leaderboard.filter((entry) => {
+      const displayName = getPlayerDisplayName(entry).toLowerCase();
+      const address = entry.player.toLowerCase();
+      const username = entry.username?.toLowerCase() || '';
+
+      return (
+        displayName.includes(query) ||
+        address.includes(query) ||
+        username.includes(query)
+      );
+    });
+  }, [leaderboard, searchQuery, users]);
+
   if (loading) {
     return (
-      <Card className="mt-4">
-        <h3 className="font-pixel text-arcade-cyan text-sm mb-3">LEADERBOARD</h3>
+      <div>
         <p className="font-arcade text-gray-500 text-sm text-center py-4">Loading...</p>
-      </Card>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="mt-4">
-        <h3 className="font-pixel text-arcade-cyan text-sm mb-3">LEADERBOARD</h3>
+      <div>
         <p className="font-arcade text-gray-500 text-sm text-center py-4">{error}</p>
-      </Card>
+      </div>
     );
   }
 
   if (leaderboard.length === 0) {
     return (
-      <Card className="mt-4">
-        <h3 className="font-pixel text-arcade-cyan text-sm mb-3">LEADERBOARD</h3>
+      <div>
         <p className="font-arcade text-gray-400 text-sm text-center py-4">
           No entries yet. Be the first to join!
         </p>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="mt-4">
+    <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-pixel text-arcade-cyan text-sm">LEADERBOARD</h3>
         <span className="font-arcade text-gray-500 text-xs">
-          {leaderboard.length} {leaderboard.length === 1 ? 'Player' : 'Players'}
+          {filteredLeaderboard.length} of {leaderboard.length} {leaderboard.length === 1 ? 'entry' : 'entries'}
         </span>
       </div>
 
-      <div className="space-y-2">
-        {leaderboard.map((entry, index) => (
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by address, ENS, or username..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-3 py-2 bg-arcade-dark border border-arcade-green/30 rounded text-white font-arcade text-sm placeholder:text-gray-500 focus:outline-none focus:border-arcade-green"
+        />
+      </div>
+
+      {/* Scrollable Leaderboard */}
+      <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+        {filteredLeaderboard.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="font-arcade text-gray-400 text-sm">
+              No players found matching "{searchQuery}"
+            </p>
+          </div>
+        ) : (
+          filteredLeaderboard.map((entry, index) => (
           <div
             key={entry.player}
             className={`flex items-center justify-between p-2 rounded ${
@@ -132,7 +192,7 @@ export default function TournamentLeaderboard({
                 {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''}
               </span>
               <div>
-                <p className="font-arcade text-white text-sm">{entry.username}</p>
+                <p className="font-arcade text-white text-sm">{getPlayerDisplayName(entry)}</p>
                 <p className="font-mono text-gray-500 text-xs">
                   {entry.player.slice(0, 6)}...{entry.player.slice(-4)}
                 </p>
@@ -143,7 +203,7 @@ export default function TournamentLeaderboard({
               <p className="font-arcade text-gray-500 text-xs">points</p>
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       {!isActive && (
@@ -151,6 +211,6 @@ export default function TournamentLeaderboard({
           <p className="font-arcade text-gray-400 text-xs">Tournament Ended</p>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
