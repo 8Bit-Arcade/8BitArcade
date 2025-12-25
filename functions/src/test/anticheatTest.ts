@@ -12,6 +12,7 @@ import * as admin from 'firebase-admin';
 import { GameInput } from '../types';
 import { analyzeGameplay, generateChecksum } from '../anticheat/statisticalAnalysis';
 import { replayAlienAssault } from '../anticheat/replay/alienAssaultReplay';
+import { replaySpaceRocks } from '../anticheat/replay/spaceRocksReplay';
 
 // Initialize Firebase Admin (if not already initialized)
 if (!admin.apps.length) {
@@ -80,6 +81,68 @@ function generateInhumanInputs(): GameInput[] {
 }
 
 /**
+ * Generate fast but legitimate Space Rocks inputs (button mashing)
+ * This tests the updated reaction time thresholds
+ */
+function generateFastSpaceRocksInputs(): GameInput[] {
+  const inputs: GameInput[] = [];
+  let time = 0;
+
+  // Simulate 60 seconds of fast but legitimate gameplay
+  // Mix of shooting and movement with realistic variance
+  for (let i = 0; i < 300; i++) {
+    // 80% shooting (rapid fire), 20% movement
+    if (Math.random() < 0.8) {
+      inputs.push({
+        t: time,
+        type: 'action',
+        data: { action: true },
+      });
+    } else {
+      inputs.push({
+        t: time,
+        type: 'direction',
+        data: {
+          up: Math.random() > 0.5,
+          down: Math.random() > 0.5,
+          left: Math.random() > 0.5,
+          right: Math.random() > 0.5,
+        },
+      });
+    }
+
+    // Fast button mashing: 150-300ms with natural human variance
+    // This is realistic for action games like Space Rocks
+    time += 150 + Math.random() * 150;
+  }
+
+  return inputs;
+}
+
+/**
+ * Generate bot-like Space Rocks inputs
+ * Should be detected by anti-cheat
+ */
+function generateBotSpaceRocksInputs(): GameInput[] {
+  const inputs: GameInput[] = [];
+  let time = 0;
+
+  // Bot with very consistent timing (no human variance)
+  for (let i = 0; i < 500; i++) {
+    inputs.push({
+      t: time,
+      type: 'action',
+      data: { action: true },
+    });
+
+    // Too consistent and fast (50-60ms)
+    time += 50 + Math.random() * 10;
+  }
+
+  return inputs;
+}
+
+/**
  * Test cases
  */
 const testCases: TestCase[] = [
@@ -118,6 +181,23 @@ const testCases: TestCase[] = [
     expectedResult: 'fail',
     expectedReason: 'score_mismatch',
   },
+  {
+    name: 'Space Rocks - Fast Legitimate Gameplay (Button Mashing)',
+    gameId: 'space-rocks',
+    score: 12000, // Realistic score for 60 seconds
+    inputs: generateFastSpaceRocksInputs(),
+    seed: 67890,
+    expectedResult: 'pass', // Should NOT be flagged despite fast inputs
+  },
+  {
+    name: 'Space Rocks - Bot Detection (Consistent Timing)',
+    gameId: 'space-rocks',
+    score: 20000, // High score
+    inputs: generateBotSpaceRocksInputs(),
+    seed: 67890,
+    expectedResult: 'fail', // Should be flagged as bot
+    expectedReason: 'inhuman_consistent_speed',
+  },
 ];
 
 /**
@@ -148,9 +228,12 @@ async function runTest(testCase: TestCase): Promise<void> {
     console.log(`    Confidence: ${(analysis.confidence * 100).toFixed(1)}%`);
     console.log(`    Valid: ${analysis.valid}`);
 
-    // Step 3: Server-Side Replay (for alien-assault)
-    if (testCase.gameId === 'alien-assault') {
-      const replayResult = await replayAlienAssault(testCase.seed, testCase.inputs);
+    // Step 3: Server-Side Replay (for games with replay support)
+    if (testCase.gameId === 'alien-assault' || testCase.gameId === 'space-rocks') {
+      const replayResult = testCase.gameId === 'alien-assault'
+        ? await replayAlienAssault(testCase.seed, testCase.inputs)
+        : await replaySpaceRocks(testCase.seed, testCase.inputs);
+
       const tolerance = Math.max(1, testCase.score * 0.01);
       const scoreDiff = Math.abs(replayResult.score - testCase.score);
 
@@ -162,7 +245,8 @@ async function runTest(testCase: TestCase): Promise<void> {
 
       // Determine if test should pass or fail
       const highSeverityFlags = analysis.flags.filter(
-        f => f === 'impossible_score' || f === 'impossible_reaction_time'
+        f => f === 'impossible_score' || f === 'impossible_reaction_time' ||
+            f === 'inhuman_consistent_speed' || f === 'inhuman_median_reaction'
       );
 
       const wouldReject =
