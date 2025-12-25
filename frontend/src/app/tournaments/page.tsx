@@ -110,7 +110,7 @@ export default function TournamentsPage() {
     }
   }, [enterError]);
 
-  // DYNAMIC TOURNAMENT PROCESSING - Process all tournament data
+  // DYNAMIC TOURNAMENT PROCESSING - BULLETPROOF VERSION
   useEffect(() => {
     console.log('🔍 [DYNAMIC] Processing tournament data...');
 
@@ -125,9 +125,8 @@ export default function TournamentsPage() {
       }
 
       const tournamentData = tQuery.data;
-      const hasEntered = hasEnteredQueries[index]?.data ?? false;
 
-      // Skip if no data or error
+      // SAFEGUARD: Skip if no tournament data or error
       if (!tournamentData || tQuery.error) {
         if (tQuery.error) {
           console.log(`⚠️ Tournament ${tournamentIds[index]} error:`, tQuery.error);
@@ -135,10 +134,21 @@ export default function TournamentsPage() {
         return;
       }
 
-      // Parse tournament data - wagmi returns tuple as array-like object
-      const data = tournamentData as any;
-      const fields = Object.values(data);
+      // SAFEGUARD: Safe hasEntered access - only check if wallet connected
+      const hasEntered = (address && hasEnteredQueries[index]?.data) ?? false;
 
+      // Parse tournament data safely
+      const data = tournamentData as any;
+
+      // ✅ FIX: Check if data has values before Object.values
+      if (!data || typeof data !== 'object') {
+        console.log(`⚠️ Tournament ${tournamentIds[index]} invalid data type:`, typeof data);
+        return;
+      }
+
+      const fields = Object.values(data) as any[];
+
+      // ✅ FIX: Validate fields length BEFORE destructuring
       if (fields.length < 9) {
         console.log(`⚠️ Tournament ${tournamentIds[index]} incomplete data:`, fields.length, 'fields');
         return;
@@ -146,22 +156,16 @@ export default function TournamentsPage() {
 
       const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = fields;
 
-      // Only include active tournaments
+      // Skip inactive tournaments
       if (!isActive) {
         console.log(`⏸️ Tournament ${tournamentIds[index]} is inactive`);
         return;
       }
 
-      // Determine tournament status
+      // Determine status
       const now = Math.floor(Date.now() / 1000);
-      let status: TournamentStatus;
-      if (now < Number(startTime)) {
-        status = 'upcoming';
-      } else if (now < Number(endTime)) {
-        status = 'active';
-      } else {
-        status = 'ended';
-      }
+      const status: TournamentStatus =
+        now < Number(startTime) ? 'upcoming' : now < Number(endTime) ? 'active' : 'ended';
 
       console.log(`✅ Tournament ${tournamentIds[index]} processed:`, {
         tier: Number(tier),
@@ -182,20 +186,19 @@ export default function TournamentsPage() {
         winner: winner as string,
         isActive: true,
         status,
-        hasEntered: hasEntered as boolean,
+        hasEntered: Boolean(hasEntered),
       });
     });
 
     console.log('🏁 [FINAL] Dynamic tournaments found:', formattedTournaments.length);
-    console.log('📊 Tournament IDs:', formattedTournaments.map(t => t.id));
-
     setTournaments(formattedTournaments);
     setLoading(anyLoading);
   }, [
+    // ✅ SAFE DEPENDENCIES - only tournamentQueries properties
     ...tournamentQueries.map(q => q.data),
     ...tournamentQueries.map(q => q.isLoading),
     ...tournamentQueries.map(q => q.error),
-    ...hasEnteredQueries.map(q => q.data),
+    address, // Only re-run when address changes (wallet connect/disconnect)
   ]);
 
   // Handle successful entry
