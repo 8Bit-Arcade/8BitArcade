@@ -212,7 +212,6 @@ export default function TournamentsPage() {
     // Stop loading once we've received data (even if empty)
     // This prevents infinite "Loading..." when tournaments don't exist
     setLoading(false);
-    }
   }, [tournament1, tournament2, tournament3, hasEntered1, hasEntered2, hasEntered3]);
 
   // Check if approval is needed
