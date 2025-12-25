@@ -224,7 +224,7 @@ export default function TournamentsPage() {
       tournament3: tournament3,
       tournament1_isArray: Array.isArray(tournament1),
       tournament1_type: typeof tournament1,
-      tournament1_length: tournament1 ? tournament1.length : 'null',
+      tournament1_length: Array.isArray(tournament1) ? tournament1.length : 'not array',
     });
 
     const formattedTournaments: Tournament[] = [];
@@ -280,7 +280,7 @@ export default function TournamentsPage() {
       console.log('❌ Tournament 1 skipped:', {
         exists: !!tournament1,
         isArray: Array.isArray(tournament1),
-        length: tournament1 ? tournament1.length : 'null',
+        length: Array.isArray(tournament1) ? tournament1.length : 'not array',
       });
     }
 
@@ -306,7 +306,7 @@ export default function TournamentsPage() {
       console.log('❌ Tournament 2 skipped:', {
         exists: !!tournament2,
         isArray: Array.isArray(tournament2),
-        length: tournament2 ? tournament2.length : 'null',
+        length: Array.isArray(tournament2) ? tournament2.length : 'not array',
       });
     }
 
@@ -332,7 +332,7 @@ export default function TournamentsPage() {
       console.log('❌ Tournament 3 skipped:', {
         exists: !!tournament3,
         isArray: Array.isArray(tournament3),
-        length: tournament3 ? tournament3.length : 'null',
+        length: Array.isArray(tournament3) ? tournament3.length : 'not array',
       });
     }
 
