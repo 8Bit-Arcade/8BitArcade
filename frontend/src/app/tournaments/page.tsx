@@ -222,9 +222,8 @@ export default function TournamentsPage() {
       tournament1: tournament1,
       tournament2: tournament2,
       tournament3: tournament3,
-      tournament1_isArray: Array.isArray(tournament1),
       tournament1_type: typeof tournament1,
-      tournament1_length: Array.isArray(tournament1) ? tournament1.length : 'not array',
+      tournament1_keys: tournament1 ? Object.keys(tournament1) : 'null',
     });
 
     const formattedTournaments: Tournament[] = [];
@@ -249,9 +248,20 @@ export default function TournamentsPage() {
     };
 
     // Process tournament 1
-    if (tournament1 && Array.isArray(tournament1) && tournament1.length >= 9) {
+    // With "as const" on ABI, wagmi returns tuples as objects with numeric properties
+    if (tournament1) {
       console.log('✅ Processing tournament 1:', tournament1);
-      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament1;
+      const data = tournament1 as any;
+      const tier = data[0];
+      const period = data[1];
+      const startTime = data[2];
+      const endTime = data[3];
+      const entryFee = data[4];
+      const prizePool = data[5];
+      const totalEntries = data[6];
+      const winner = data[7];
+      const isActive = data[8];
+
       console.log('📋 Tournament 1 parsed:', {
         tier: Number(tier),
         period: Number(period),
@@ -264,113 +274,141 @@ export default function TournamentsPage() {
       });
       formattedTournaments.push({
         id: 1,
-        tier: getTierName(tier as number),
-        period: getPeriodName(period as number),
+        tier: getTierName(Number(tier)),
+        period: getPeriodName(Number(period)),
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee as bigint,
-        prizePool: prizePool as bigint,
+        entryFee: entryFee,
+        prizePool: prizePool,
         totalEntries: Number(totalEntries),
-        winner: winner as string,
-        isActive: isActive as boolean,
-        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
-        hasEntered: hasEntered1 as boolean || false,
+        winner: winner,
+        isActive: isActive,
+        status: getStatus(startTime, endTime, isActive),
+        hasEntered: (hasEntered1 as boolean) || false,
       });
     } else {
-      console.log('❌ Tournament 1 skipped:', {
-        exists: !!tournament1,
-        isArray: Array.isArray(tournament1),
-        length: Array.isArray(tournament1) ? tournament1.length : 'not array',
-      });
+      console.log('❌ Tournament 1 skipped - no data');
     }
 
     // Process tournament 2
-    if (tournament2 && Array.isArray(tournament2) && tournament2.length >= 9) {
+    if (tournament2) {
       console.log('✅ Processing tournament 2:', tournament2);
-      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament2;
+      const data = tournament2 as any;
+      const tier = data[0];
+      const period = data[1];
+      const startTime = data[2];
+      const endTime = data[3];
+      const entryFee = data[4];
+      const prizePool = data[5];
+      const totalEntries = data[6];
+      const winner = data[7];
+      const isActive = data[8];
+
       formattedTournaments.push({
         id: 2,
-        tier: getTierName(tier as number),
-        period: getPeriodName(period as number),
+        tier: getTierName(Number(tier)),
+        period: getPeriodName(Number(period)),
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee as bigint,
-        prizePool: prizePool as bigint,
+        entryFee: entryFee,
+        prizePool: prizePool,
         totalEntries: Number(totalEntries),
-        winner: winner as string,
-        isActive: isActive as boolean,
-        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
-        hasEntered: hasEntered2 as boolean || false,
+        winner: winner,
+        isActive: isActive,
+        status: getStatus(startTime, endTime, isActive),
+        hasEntered: (hasEntered2 as boolean) || false,
       });
     } else {
-      console.log('❌ Tournament 2 skipped:', {
-        exists: !!tournament2,
-        isArray: Array.isArray(tournament2),
-        length: Array.isArray(tournament2) ? tournament2.length : 'not array',
-      });
+      console.log('❌ Tournament 2 skipped - no data');
     }
 
     // Process tournament 3
-    if (tournament3 && Array.isArray(tournament3) && tournament3.length >= 9) {
+    if (tournament3) {
       console.log('✅ Processing tournament 3:', tournament3);
-      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament3;
+      const data = tournament3 as any;
+      const tier = data[0];
+      const period = data[1];
+      const startTime = data[2];
+      const endTime = data[3];
+      const entryFee = data[4];
+      const prizePool = data[5];
+      const totalEntries = data[6];
+      const winner = data[7];
+      const isActive = data[8];
+
       formattedTournaments.push({
         id: 3,
-        tier: getTierName(tier as number),
-        period: getPeriodName(period as number),
+        tier: getTierName(Number(tier)),
+        period: getPeriodName(Number(period)),
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee as bigint,
-        prizePool: prizePool as bigint,
+        entryFee: entryFee,
+        prizePool: prizePool,
         totalEntries: Number(totalEntries),
-        winner: winner as string,
-        isActive: isActive as boolean,
-        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
-        hasEntered: hasEntered3 as boolean || false,
+        winner: winner,
+        isActive: isActive,
+        status: getStatus(startTime, endTime, isActive),
+        hasEntered: (hasEntered3 as boolean) || false,
       });
     } else {
-      console.log('❌ Tournament 3 skipped:', {
-        exists: !!tournament3,
-        isArray: Array.isArray(tournament3),
-        length: Array.isArray(tournament3) ? tournament3.length : 'not array',
-      });
+      console.log('❌ Tournament 3 skipped - no data');
     }
 
     // Process tournament 4
-    if (tournament4 && Array.isArray(tournament4) && tournament4.length >= 9) {
-      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament4;
+    if (tournament4) {
+      const data = tournament4 as any;
+      const tier = data[0];
+      const period = data[1];
+      const startTime = data[2];
+      const endTime = data[3];
+      const entryFee = data[4];
+      const prizePool = data[5];
+      const totalEntries = data[6];
+      const winner = data[7];
+      const isActive = data[8];
+
       formattedTournaments.push({
         id: 4,
-        tier: getTierName(tier as number),
-        period: getPeriodName(period as number),
+        tier: getTierName(Number(tier)),
+        period: getPeriodName(Number(period)),
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee as bigint,
-        prizePool: prizePool as bigint,
+        entryFee: entryFee,
+        prizePool: prizePool,
         totalEntries: Number(totalEntries),
-        winner: winner as string,
-        isActive: isActive as boolean,
-        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
-        hasEntered: hasEntered4 as boolean || false,
+        winner: winner,
+        isActive: isActive,
+        status: getStatus(startTime, endTime, isActive),
+        hasEntered: (hasEntered4 as boolean) || false,
       });
     }
 
     // Process tournament 5
-    if (tournament5 && Array.isArray(tournament5) && tournament5.length >= 9) {
-      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament5;
+    if (tournament5) {
+      const data = tournament5 as any;
+      const tier = data[0];
+      const period = data[1];
+      const startTime = data[2];
+      const endTime = data[3];
+      const entryFee = data[4];
+      const prizePool = data[5];
+      const totalEntries = data[6];
+      const winner = data[7];
+      const isActive = data[8];
+
       formattedTournaments.push({
         id: 5,
-        tier: getTierName(tier as number),
-        period: getPeriodName(period as number),
+        tier: getTierName(Number(tier)),
+        period: getPeriodName(Number(period)),
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
-        entryFee: entryFee as bigint,
-        prizePool: prizePool as bigint,
+        entryFee: entryFee,
+        prizePool: prizePool,
         totalEntries: Number(totalEntries),
-        winner: winner as string,
-        isActive: isActive as boolean,
-        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
-        hasEntered: hasEntered5 as boolean || false,
+        winner: winner,
+        isActive: isActive,
+        status: getStatus(startTime, endTime, isActive),
+        hasEntered: (hasEntered5 as boolean) || false,
       });
     }
 

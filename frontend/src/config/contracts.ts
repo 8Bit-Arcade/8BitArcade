@@ -139,7 +139,7 @@ export const EIGHT_BIT_TOKEN_ABI = [
   "function decimals() view returns (uint8)",
   "event Transfer(address indexed from, address indexed to, uint256 value)",
   "event Approval(address indexed owner, address indexed spender, uint256 value)",
-];
+] as const;
 
 export const GAME_REWARDS_ABI = [
   "function dailyRewardPool() view returns (uint256)",
@@ -148,7 +148,7 @@ export const GAME_REWARDS_ABI = [
   "function getPlayerRewards(address player) view returns (uint256)",
   "function isDistributed(uint256 dayId) view returns (bool)",
   "event RewardDistributed(uint256 indexed dayId, address indexed player, uint256 rank, uint256 amount)",
-];
+] as const;
 
 export const TOURNAMENT_MANAGER_ABI = [
   "function enterTournament(uint256 tournamentId) external",
@@ -169,7 +169,7 @@ export const TOURNAMENT_MANAGER_ABI = [
   "event PlayerEntered(uint256 indexed tournamentId, address indexed player, uint256 entryFee)",
   "event WinnerDeclared(uint256 indexed tournamentId, address indexed winner, uint256 prizeAmount)",
   "event FeeBurned(uint256 indexed tournamentId, uint256 amount)",
-];
+] as const;
 
 export const TOKEN_SALE_ABI = [
   "function buyWithEth() external payable",
@@ -189,14 +189,14 @@ export const TOKEN_SALE_ABI = [
   "function calculateTokensForEth(uint256 ethAmount) view returns (uint256)",
   "function calculateTokensForUsdc(uint256 usdcAmount) view returns (uint256)",
   "event TokensPurchased(address indexed buyer, uint256 amount, uint256 ethSpent, uint256 usdcSpent)",
-];
+] as const;
 
 export const USDC_ABI = [
   "function balanceOf(address account) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function decimals() view returns (uint8)",
-];
+] as const;
 
 export const TESTNET_FAUCET_ABI = [
   {
