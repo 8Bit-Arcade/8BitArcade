@@ -52,17 +52,18 @@ export default function TournamentsPage() {
     })
   );
 
-  // Create dynamic hasEntered queries (only if wallet connected)
-  const hasEnteredQueries = address
-    ? tournamentIds.map(id =>
-        useReadContract({
-          address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-          abi: TOURNAMENT_MANAGER_ABI,
-          functionName: 'hasPlayerEntered',
-          args: [BigInt(id), address],
-        })
-      )
-    : [];
+  // Create dynamic hasEntered queries (always create hooks, but disable when no wallet)
+  const hasEnteredQueries = tournamentIds.map(id =>
+    useReadContract({
+      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+      abi: TOURNAMENT_MANAGER_ABI,
+      functionName: 'hasPlayerEntered',
+      args: address ? [BigInt(id), address] : undefined,
+      query: {
+        enabled: !!address, // Only fetch when wallet is connected
+      },
+    })
+  );
 
   // Check token allowance
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -194,7 +195,7 @@ export default function TournamentsPage() {
     ...tournamentQueries.map(q => q.data),
     ...tournamentQueries.map(q => q.isLoading),
     ...tournamentQueries.map(q => q.error),
-    ...(hasEnteredQueries?.map(q => q.data) ?? []),
+    ...hasEnteredQueries.map(q => q.data),
   ]);
 
   // Handle successful entry
