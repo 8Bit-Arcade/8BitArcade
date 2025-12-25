@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
-import { parseUnits } from 'ethers';
+//import { parseUnits } from 'ethers';
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -211,8 +211,7 @@ export default function TournamentsPage() {
 
     // Stop loading once we've received data (even if empty)
     // This prevents infinite "Loading..." when tournaments don't exist
-    if (tournament1 !== undefined || tournament2 !== undefined || tournament3 !== undefined) {
-      setLoading(false);
+    setLoading(false);
     }
   }, [tournament1, tournament2, tournament3, hasEntered1, hasEntered2, hasEntered3]);
 
