@@ -234,14 +234,14 @@ async function runTest(testCase: TestCase): Promise<void> {
         ? await replayAlienAssault(testCase.seed, testCase.inputs)
         : await replaySpaceRocks(testCase.seed, testCase.inputs);
 
-      const maxAllowedScore = replayResult.score * 3.0;
-      const scoreTooHigh = testCase.score > maxAllowedScore;
+      const ratio = testCase.score / Math.max(1, replayResult.score);
+      const scoreTooHigh = ratio > 20.0;
 
       console.log(`  Server Replay:`);
       console.log(`    Server Score: ${replayResult.score}`);
       console.log(`    Claimed Score: ${testCase.score}`);
-      console.log(`    Max Allowed: ${maxAllowedScore.toFixed(0)} (3x replay)`);
-      console.log(`    Ratio: ${(testCase.score / replayResult.score).toFixed(2)}x`);
+      console.log(`    Ratio: ${ratio.toFixed(2)}x`);
+      console.log(`    Max Allowed Ratio: 20.0x (soft validation)`);
       console.log(`    Within Bounds: ${!scoreTooHigh ? 'YES' : 'NO'}`);
 
       // Determine if test should pass or fail

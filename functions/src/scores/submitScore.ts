@@ -161,14 +161,15 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
           throw new HttpsError('invalid-argument', 'Replay validation failed');
         }
 
-        // Replay validation: only reject if claimed score is EXCESSIVELY higher than replay
-        // Replay engines are simplified approximations, not perfect simulations
-        // Allow claimed score to be up to 3x the replay score (catches 10x+ cheating)
-        // If claimed is lower than replay, always accept (replay might have better RNG)
-        const maxAllowedScore = replayResult.score * 3.0;
+        // Replay validation: SOFT validation approach
+        // Replay engines are simplified approximations with significant variance from real gameplay
+        // Only reject scores that are EXTREMELY suspicious (20x+ the replay score)
+        // Log warnings for moderate mismatches for manual review
+        const ratio = finalScore / Math.max(1, replayResult.score);
 
-        if (finalScore > maxAllowedScore) {
-          // Claimed score is more than 3x what replay achieved - likely cheating
+        // Critical threshold: only reject if score is 20x+ higher than replay
+        // This catches blatant score manipulation while allowing legitimate gameplay variance
+        if (ratio > 20.0) {
           await flagAccountDetailed(playerAddress, {
             type: 'score_mismatch',
             severity: 'high',
@@ -178,22 +179,36 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
             calculatedScore: replayResult.score,
             details: {
               difference: finalScore - replayResult.score,
-              maxAllowed: maxAllowedScore,
-              ratio: finalScore / replayResult.score
+              ratio: ratio
             },
           });
-          throw new HttpsError('invalid-argument', `Score too high: claimed ${finalScore}, max expected ${Math.floor(maxAllowedScore)} (replay: ${replayResult.score})`);
+          throw new HttpsError('invalid-argument', `Score extremely high: claimed ${finalScore}, replay ${replayResult.score} (${ratio.toFixed(1)}x)`);
         }
 
-        // If score is reasonable, log for monitoring but accept
-        if (finalScore > replayResult.score * 1.5) {
-          console.warn(`⚠️  Score higher than expected for ${playerAddress} (${gameId}): claimed ${finalScore}, replay ${replayResult.score}`);
+        // Warning threshold: log suspicious scores for review (5x-20x)
+        if (ratio > 5.0) {
+          console.warn(`⚠️  Score significantly higher than replay for ${playerAddress} (${gameId}): claimed ${finalScore}, replay ${replayResult.score}, ratio ${ratio.toFixed(2)}x`);
+          // Flag for manual review but don't reject
+          await flagAccountDetailed(playerAddress, {
+            type: 'score_mismatch',
+            severity: 'low',
+            gameId,
+            sessionId,
+            claimedScore: finalScore,
+            calculatedScore: replayResult.score,
+            details: {
+              difference: finalScore - replayResult.score,
+              ratio: ratio,
+              note: 'Soft validation - flagged for review but allowed'
+            },
+          });
+        } else if (ratio > 2.0) {
+          console.log(`ℹ️  Score moderately higher than replay for ${playerAddress} (${gameId}): claimed ${finalScore}, replay ${replayResult.score}, ratio ${ratio.toFixed(2)}x`);
         }
 
-        // Use the claimed score if it passed validation
-        // Only use replay score if it's higher (edge case where replay got lucky with RNG)
-        verifiedScore = Math.max(finalScore, replayResult.score);
-        console.log(`✅ Replay validated for ${playerAddress} (${gameId}): claimed ${finalScore}, replay ${replayResult.score}, using ${verifiedScore}`);
+        // Use the claimed score (trust the client if statistical analysis passed)
+        verifiedScore = finalScore;
+        console.log(`✅ Replay soft-validated for ${playerAddress} (${gameId}): claimed ${finalScore}, replay ${replayResult.score}, ratio ${ratio.toFixed(2)}x`);
       }
     } catch (error: any) {
       if (error instanceof HttpsError) throw error;
