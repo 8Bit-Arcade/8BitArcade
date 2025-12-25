@@ -35,7 +35,7 @@ export const USE_TESTNET = true;
  * After running: npm run deploy:testnet
  * Copy the deployed addresses here
  */
-export const TESTNET_CONTRACTS = {
+const TESTNET_CONTRACTS = {
   EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
   GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E',
   TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7',
@@ -48,7 +48,7 @@ export const TESTNET_CONTRACTS = {
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
   BLOCK_EXPLORER: 'https://sepolia.arbiscan.io',
-} as const;
+};
 
 // ═══════════════════════════════════════════════════════════
 // MAINNET CONTRACT ADDRESSES (Arbitrum One)
@@ -60,7 +60,7 @@ export const TESTNET_CONTRACTS = {
  * After running: npm run deploy:mainnet
  * Copy the deployed addresses here
  */
-export const MAINNET_CONTRACTS = {
+const MAINNET_CONTRACTS = {
   EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // ← UPDATE: 8BIT token address
   GAME_REWARDS: '0x0000000000000000000000000000000000000000',    // ← UPDATE: GameRewards address
   TOURNAMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TournamentManager address
@@ -73,11 +73,14 @@ export const MAINNET_CONTRACTS = {
   CHAIN_NAME: 'Arbitrum One',
   RPC_URL: 'https://arb1.arbitrum.io/rpc',
   BLOCK_EXPLORER: 'https://arbiscan.io',
-} as const;
+};
 
 // ═══════════════════════════════════════════════════════════
 // ACTIVE CONFIGURATION (Auto-selected based on USE_TESTNET)
 // ═══════════════════════════════════════════════════════════
+
+// Export network-specific configs for direct access
+export { TESTNET_CONTRACTS, MAINNET_CONTRACTS };
 
 export const CONTRACTS = USE_TESTNET ? TESTNET_CONTRACTS : MAINNET_CONTRACTS;
 
@@ -154,6 +157,14 @@ export const TOURNAMENT_MANAGER_ABI = [
   "function getPlayerScore(uint256 tournamentId, address player) view returns (uint256)",
   "function getParticipants(uint256 tournamentId) view returns (address[])",
   "function getActiveTournamentsCount() view returns (uint256)",
+  "function STANDARD_WEEKLY_FEE() view returns (uint256)",
+  "function STANDARD_MONTHLY_FEE() view returns (uint256)",
+  "function HIGH_ROLLER_WEEKLY_FEE() view returns (uint256)",
+  "function HIGH_ROLLER_MONTHLY_FEE() view returns (uint256)",
+  "function STANDARD_WEEKLY_PRIZE() view returns (uint256)",
+  "function STANDARD_MONTHLY_PRIZE() view returns (uint256)",
+  "function HIGH_ROLLER_WEEKLY_PRIZE() view returns (uint256)",
+  "function HIGH_ROLLER_MONTHLY_PRIZE() view returns (uint256)",
   "event TournamentCreated(uint256 indexed tournamentId, uint8 tier, uint8 period, uint256 startTime, uint256 endTime, uint256 entryFee, uint256 prizePool)",
   "event PlayerEntered(uint256 indexed tournamentId, address indexed player, uint256 entryFee)",
   "event WinnerDeclared(uint256 indexed tournamentId, address indexed winner, uint256 prizeAmount)",

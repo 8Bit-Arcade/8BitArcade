@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
-//import { parseUnits } from 'ethers';
+import { parseUnits } from 'ethers';
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -37,23 +37,56 @@ export default function TournamentsPage() {
   const [needsApproval, setNeedsApproval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
-  const [tournamentCount, setTournamentCount] = useState(3); // Start with 3, will dynamically fetch
 
-  // Get active tournament count from contract
-  const { data: activeTournamentCount } = useReadContract({
+  // Read tournament fees
+  const { data: standardWeeklyFee } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
-    functionName: 'getActiveTournamentsCount',
+    functionName: 'STANDARD_WEEKLY_FEE',
   });
 
-  // Update tournament count when data is available
-  useEffect(() => {
-    if (activeTournamentCount !== undefined) {
-      const count = Number(activeTournamentCount);
-      console.log('📊 Active tournament count:', count);
-      setTournamentCount(Math.max(count, 3)); // Always check at least 3
-    }
-  }, [activeTournamentCount]);
+  const { data: standardMonthlyFee } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'STANDARD_MONTHLY_FEE',
+  });
+
+  const { data: highRollerWeeklyFee } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'HIGH_ROLLER_WEEKLY_FEE',
+  });
+
+  const { data: highRollerMonthlyFee } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'HIGH_ROLLER_MONTHLY_FEE',
+  });
+
+  // Read prize pools
+  const { data: standardWeeklyPrize } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'STANDARD_WEEKLY_PRIZE',
+  });
+
+  const { data: standardMonthlyPrize } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'STANDARD_MONTHLY_PRIZE',
+  });
+
+  const { data: highRollerWeeklyPrize } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'HIGH_ROLLER_WEEKLY_PRIZE',
+  });
+
+  const { data: highRollerMonthlyPrize } = useReadContract({
+    address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
+    abi: TOURNAMENT_MANAGER_ABI,
+    functionName: 'HIGH_ROLLER_MONTHLY_PRIZE',
+  });
 
   // Check token allowance
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -100,74 +133,72 @@ export default function TournamentsPage() {
     }
   }, [enterError]);
 
-  // Dynamically fetch tournaments based on count
-  // We'll use multiple useReadContract hooks - one for each tournament ID
-  // This is a workaround since hooks can't be called in loops
-  const tournament1 = useReadContract({
+  // Fetch tournament data from blockchain
+  const { data: tournament1 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'getTournament',
     args: [BigInt(1)],
   });
 
-  const tournament2 = useReadContract({
+  const { data: tournament2 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'getTournament',
     args: [BigInt(2)],
   });
 
-  const tournament3 = useReadContract({
+  const { data: tournament3 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'getTournament',
     args: [BigInt(3)],
   });
 
-  const tournament4 = useReadContract({
+  const { data: tournament4 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'getTournament',
     args: [BigInt(4)],
   });
 
-  const tournament5 = useReadContract({
+  const { data: tournament5 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'getTournament',
     args: [BigInt(5)],
   });
 
-  // Check if user has entered (only if wallet connected)
-  const hasEntered1 = useReadContract({
+  // Check if user has entered tournaments
+  const { data: hasEntered1 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'hasPlayerEntered',
     args: address ? [BigInt(1), address] : undefined,
   });
 
-  const hasEntered2 = useReadContract({
+  const { data: hasEntered2 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'hasPlayerEntered',
     args: address ? [BigInt(2), address] : undefined,
   });
 
-  const hasEntered3 = useReadContract({
+  const { data: hasEntered3 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'hasPlayerEntered',
     args: address ? [BigInt(3), address] : undefined,
   });
 
-  const hasEntered4 = useReadContract({
+  const { data: hasEntered4 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'hasPlayerEntered',
     args: address ? [BigInt(4), address] : undefined,
   });
 
-  const hasEntered5 = useReadContract({
+  const { data: hasEntered5 } = useReadContract({
     address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
     abi: TOURNAMENT_MANAGER_ABI,
     functionName: 'hasPlayerEntered',
@@ -176,82 +207,125 @@ export default function TournamentsPage() {
 
   // Convert blockchain data to frontend format
   useEffect(() => {
-    // Helper to process tournament data from wagmi v2 format
-    // wagmi v2 returns tuples as objects with both numeric indices AND named properties
-    const processTournament = (tournamentData: any, hasEntered: any, id: number) => {
-      if (!tournamentData || !tournamentData.data) return null;
+    const formattedTournaments: Tournament[] = [];
 
-      const data = tournamentData.data;
+    // Helper to map tier enum to display string
+    const getTierName = (tier: number): Tier => {
+      return tier === 0 ? 'Standard' : 'High Roller';
+    };
 
-      // Access fields by numeric index (wagmi v2 format)
-      const tier = Number(data[0]);
-      const period = Number(data[1]);
-      const startTime = data[2];
-      const endTime = data[3];
-      const entryFee = data[4];
-      const prizePool = data[5];
-      const totalEntries = Number(data[6]);
-      const winner = data[7];
-      const isActive = Boolean(data[8]);
+    // Helper to map period enum to display string
+    const getPeriodName = (period: number): Period => {
+      return period === 0 ? 'Weekly' : 'Monthly';
+    };
 
-      console.log(`🎮 Tournament ${id} data:`, {
-        tier,
-        period,
-        startTime: Number(startTime),
-        endTime: Number(endTime),
-        entryFee: String(entryFee),
-        isActive,
-      });
-
-      // Only include active tournaments
-      if (!isActive) {
-        console.log(`⏭️ Skipping tournament ${id} - not active`);
-        return null;
-      }
-
+    // Helper to determine tournament status
+    const getStatus = (startTime: bigint, endTime: bigint, isActive: boolean): TournamentStatus => {
       const now = Math.floor(Date.now() / 1000);
-      const status: TournamentStatus =
-        now < Number(startTime) ? 'upcoming' :
-        now >= Number(startTime) && now < Number(endTime) ? 'active' :
-        'ended';
+      if (!isActive) return 'ended';
+      if (now < Number(startTime)) return 'upcoming';
+      if (now >= Number(startTime) && now < Number(endTime)) return 'active';
+      return 'ended';
+    };
 
-      return {
-        id,
-        tier: tier === 0 ? 'Standard' as Tier : 'High Roller' as Tier,
-        period: period === 0 ? 'Weekly' as Period : 'Monthly' as Period,
+    // Process tournament 1
+    if (tournament1 && Array.isArray(tournament1) && tournament1.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament1;
+      formattedTournaments.push({
+        id: 1,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
         startTime: new Date(Number(startTime) * 1000),
         endTime: new Date(Number(endTime) * 1000),
         entryFee: entryFee as bigint,
         prizePool: prizePool as bigint,
-        totalEntries,
+        totalEntries: Number(totalEntries),
         winner: winner as string,
-        isActive,
-        status,
-        hasEntered: hasEntered?.data as boolean || false,
-      };
-    };
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered1 as boolean || false,
+      });
+    }
 
-    const formattedTournaments: Tournament[] = [];
+    // Process tournament 2
+    if (tournament2 && Array.isArray(tournament2) && tournament2.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament2;
+      formattedTournaments.push({
+        id: 2,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered2 as boolean || false,
+      });
+    }
 
-    // Process all tournaments
-    [
-      { data: tournament1, hasEntered: hasEntered1, id: 1 },
-      { data: tournament2, hasEntered: hasEntered2, id: 2 },
-      { data: tournament3, hasEntered: hasEntered3, id: 3 },
-      { data: tournament4, hasEntered: hasEntered4, id: 4 },
-      { data: tournament5, hasEntered: hasEntered5, id: 5 },
-    ].forEach(({ data, hasEntered, id }) => {
-      const tournament = processTournament(data, hasEntered, id);
-      if (tournament) {
-        formattedTournaments.push(tournament);
-      }
-    });
+    // Process tournament 3
+    if (tournament3 && Array.isArray(tournament3) && tournament3.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament3;
+      formattedTournaments.push({
+        id: 3,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered3 as boolean || false,
+      });
+    }
 
-    console.log(`✅ Total formatted tournaments: ${formattedTournaments.length}`);
+    // Process tournament 4
+    if (tournament4 && Array.isArray(tournament4) && tournament4.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament4;
+      formattedTournaments.push({
+        id: 4,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered4 as boolean || false,
+      });
+    }
+
+    // Process tournament 5
+    if (tournament5 && Array.isArray(tournament5) && tournament5.length >= 9) {
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = tournament5;
+      formattedTournaments.push({
+        id: 5,
+        tier: getTierName(tier as number),
+        period: getPeriodName(period as number),
+        startTime: new Date(Number(startTime) * 1000),
+        endTime: new Date(Number(endTime) * 1000),
+        entryFee: entryFee as bigint,
+        prizePool: prizePool as bigint,
+        totalEntries: Number(totalEntries),
+        winner: winner as string,
+        isActive: isActive as boolean,
+        status: getStatus(startTime as bigint, endTime as bigint, isActive as boolean),
+        hasEntered: hasEntered5 as boolean || false,
+      });
+    }
+
     setTournaments(formattedTournaments);
-    setLoading(false);
-  }, [tournament1.data, tournament2.data, tournament3.data, tournament4.data, tournament5.data,
-      hasEntered1.data, hasEntered2.data, hasEntered3.data, hasEntered4.data, hasEntered5.data]);
+    setLoading(formattedTournaments.length === 0 && (tournament1 === undefined || tournament2 === undefined || tournament3 === undefined));
+  }, [tournament1, tournament2, tournament3, tournament4, tournament5, hasEntered1, hasEntered2, hasEntered3, hasEntered4, hasEntered5]);
 
   // Check if approval is needed
   useEffect(() => {
