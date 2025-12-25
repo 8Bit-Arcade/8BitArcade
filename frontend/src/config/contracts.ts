@@ -35,20 +35,20 @@ export const USE_TESTNET = true;
  * After running: npm run deploy:testnet
  * Copy the deployed addresses here
  */
-export const TESTNET_CONTRACTS = {
-  EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d' as `0x${string}`,
-  GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E' as `0x${string}`,
-  TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7' as `0x${string}`,
-  TOURNAMENT_PAYMENTS: '0xb52aE08daFC310E6f858957Fa0a317fEF341dE85' as `0x${string}`,
-  TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE' as `0x${string}`,
-  TREASURY_GAS_MANAGER: '0x39F49a46CAB85CF079Cde25EAE311A563d3952EC' as `0x${string}`,
-  TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952' as `0x${string}`,
-  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' as `0x${string}`,
-  CHAIN_ID: 421614,
+const TESTNET_CONTRACTS = {
+  EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
+  GAME_REWARDS: '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E',
+  TOURNAMENT_MANAGER: '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7',
+  TOURNAMENT_PAYMENTS: '0xb52aE08daFC310E6f858957Fa0a317fEF341dE85',
+  TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE',
+  TREASURY_GAS_MANAGER: '0x39F49a46CAB85CF079Cde25EAE311A563d3952EC',
+  TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952',
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
+  CHAIN_ID: 421614, // Arbitrum Sepolia
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
   BLOCK_EXPLORER: 'https://sepolia.arbiscan.io',
-} as const;
+};
 
 // ═══════════════════════════════════════════════════════════
 // MAINNET CONTRACT ADDRESSES (Arbitrum One)
@@ -126,92 +126,17 @@ export const REWARDS_DISTRIBUTOR_ADDRESS = '0x3879aA591532B8a7BCe322Edff8fD09F7F
  */
 
 export const EIGHT_BIT_TOKEN_ABI = [
-  {
-    inputs: [{ name: 'account', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-    ],
-    name: 'transfer',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'spender', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-    ],
-    name: 'approve',
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'owner', type: 'address' },
-      { name: 'spender', type: 'address' },
-    ],
-    name: 'allowance',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'totalSupply',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'name',
-    outputs: [{ name: '', type: 'string' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'symbol',
-    outputs: [{ name: '', type: 'string' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'decimals',
-    outputs: [{ name: '', type: 'uint8' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      { indexed: true, name: 'from', type: 'address' },
-      { indexed: true, name: 'to', type: 'address' },
-      { name: 'value', type: 'uint256' },
-    ],
-    name: 'Transfer',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      { indexed: true, name: 'owner', type: 'address' },
-      { indexed: true, name: 'spender', type: 'address' },
-      { name: 'value', type: 'uint256' },
-    ],
-    name: 'Approval',
-    type: 'event',
-  },
-] as const;
+  "function balanceOf(address account) view returns (uint256)",
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function totalSupply() view returns (uint256)",
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function decimals() view returns (uint8)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+  "event Approval(address indexed owner, address indexed spender, uint256 value)",
+];
 
 export const GAME_REWARDS_ABI = [
   "function dailyRewardPool() view returns (uint256)",
@@ -223,159 +148,25 @@ export const GAME_REWARDS_ABI = [
 ];
 
 export const TOURNAMENT_MANAGER_ABI = [
-  {
-    "inputs": [{"name": "tournamentId", "type": "uint256"}],
-    "name": "enterTournament",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"name": "tournamentId", "type": "uint256"}],
-    "name": "getTournament",
-    "outputs": [
-      {"name": "tier", "type": "uint8"},
-      {"name": "period", "type": "uint8"},
-      {"name": "startTime", "type": "uint256"},
-      {"name": "endTime", "type": "uint256"},
-      {"name": "entryFee", "type": "uint256"},
-      {"name": "prizePool", "type": "uint256"},
-      {"name": "totalEntries", "type": "uint256"},
-      {"name": "winner", "type": "address"},
-      {"name": "isActive", "type": "bool"}
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"name": "tournamentId", "type": "uint256"}, {"name": "player", "type": "address"}],
-    "name": "hasPlayerEntered",
-    "outputs": [{"name": "", "type": "bool"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"name": "tournamentId", "type": "uint256"}, {"name": "player", "type": "address"}],
-    "name": "getPlayerScore",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"name": "tournamentId", "type": "uint256"}],
-    "name": "getParticipants",
-    "outputs": [{"name": "", "type": "address[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getActiveTournamentsCount",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "STANDARD_WEEKLY_FEE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "STANDARD_MONTHLY_FEE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "HIGH_ROLLER_WEEKLY_FEE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "HIGH_ROLLER_MONTHLY_FEE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "STANDARD_WEEKLY_PRIZE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "STANDARD_MONTHLY_PRIZE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "HIGH_ROLLER_WEEKLY_PRIZE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "HIGH_ROLLER_MONTHLY_PRIZE",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "name": "tournamentId", "type": "uint256"},
-      {"name": "tier", "type": "uint8"},
-      {"name": "period", "type": "uint8"},
-      {"name": "startTime", "type": "uint256"},
-      {"name": "endTime", "type": "uint256"},
-      {"name": "entryFee", "type": "uint256"},
-      {"name": "prizePool", "type": "uint256"}
-    ],
-    "name": "TournamentCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "name": "tournamentId", "type": "uint256"},
-      {"indexed": true, "name": "player", "type": "address"},
-      {"name": "entryFee", "type": "uint256"}
-    ],
-    "name": "PlayerEntered",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "name": "tournamentId", "type": "uint256"},
-      {"indexed": true, "name": "winner", "type": "address"},
-      {"name": "prizeAmount", "type": "uint256"}
-    ],
-    "name": "WinnerDeclared",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "name": "tournamentId", "type": "uint256"},
-      {"name": "amount", "type": "uint256"}
-    ],
-    "name": "FeeBurned",
-    "type": "event"
-  }
-] as const;
-
+  "function enterTournament(uint256 tournamentId) external",
+  "function getTournament(uint256 tournamentId) view returns (uint8 tier, uint8 period, uint256 startTime, uint256 endTime, uint256 entryFee, uint256 prizePool, uint256 totalEntries, address winner, bool isActive)",
+  "function hasPlayerEntered(uint256 tournamentId, address player) view returns (bool)",
+  "function getPlayerScore(uint256 tournamentId, address player) view returns (uint256)",
+  "function getParticipants(uint256 tournamentId) view returns (address[])",
+  "function getActiveTournamentsCount() view returns (uint256)",
+  "function STANDARD_WEEKLY_FEE() view returns (uint256)",
+  "function STANDARD_MONTHLY_FEE() view returns (uint256)",
+  "function HIGH_ROLLER_WEEKLY_FEE() view returns (uint256)",
+  "function HIGH_ROLLER_MONTHLY_FEE() view returns (uint256)",
+  "function STANDARD_WEEKLY_PRIZE() view returns (uint256)",
+  "function STANDARD_MONTHLY_PRIZE() view returns (uint256)",
+  "function HIGH_ROLLER_WEEKLY_PRIZE() view returns (uint256)",
+  "function HIGH_ROLLER_MONTHLY_PRIZE() view returns (uint256)",
+  "event TournamentCreated(uint256 indexed tournamentId, uint8 tier, uint8 period, uint256 startTime, uint256 endTime, uint256 entryFee, uint256 prizePool)",
+  "event PlayerEntered(uint256 indexed tournamentId, address indexed player, uint256 entryFee)",
+  "event WinnerDeclared(uint256 indexed tournamentId, address indexed winner, uint256 prizeAmount)",
+  "event FeeBurned(uint256 indexed tournamentId, uint256 amount)",
+];
 
 export const TOKEN_SALE_ABI = [
   "function buyWithEth() external payable",
@@ -405,12 +196,104 @@ export const USDC_ABI = [
 ];
 
 export const TESTNET_FAUCET_ABI = [
-  "function claimTokens() external",
-  "function canClaim(address user) view returns (bool)",
-  "function getTimeUntilNextClaim(address user) view returns (uint256)",
-  "function getUserInfo(address user) view returns (uint256 lastClaim, uint256 totalUserClaimed, bool canUserClaim, uint256 userBalance, uint256 timeUntilNext)",
-  "function getFaucetStats() view returns (uint256 balance, uint256 distributed, uint256 claims, uint256 uniqueClaimers)",
-  "event TokensClaimed(address indexed user, uint256 amount, uint256 timestamp)",
+  {
+    inputs: [],
+    name: 'claimTokens',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'canClaim',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getTimeUntilNextClaim',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getUserInfo',
+    outputs: [
+      { internalType: 'uint256', name: 'lastClaim', type: 'uint256' },
+      { internalType: 'uint256', name: 'totalUserClaimed', type: 'uint256' },
+      { internalType: 'bool', name: 'canUserClaim', type: 'bool' },
+      { internalType: 'uint256', name: 'userBalance', type: 'uint256' },
+      { internalType: 'uint256', name: 'timeUntilNext', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getFaucetStats',
+    outputs: [
+      { internalType: 'uint256', name: 'balance', type: 'uint256' },
+      { internalType: 'uint256', name: 'distributed', type: 'uint256' },
+      { internalType: 'uint256', name: 'claims', type: 'uint256' },
+      { internalType: 'uint256', name: 'uniqueClaimers', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'CLAIM_AMOUNT',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'COOLDOWN_PERIOD',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'MIN_BALANCE_THRESHOLD',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'lastClaimTime',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'totalClaimed',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'isPaused',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'user', type: 'address' },
+      { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'timestamp', type: 'uint256' },
+    ],
+    name: 'TokensClaimed',
+    type: 'event',
+  },
 ] as const;
 
 
