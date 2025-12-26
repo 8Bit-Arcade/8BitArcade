@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * Sale Parameters:
  * - Amount: 40% of supply (200M tokens)
  * - Price: $0.0005 per token
- * - Hard Cap: $100,000 USD
+ * - Hard Cap: $200,000 USD
  * - Duration: 4-6 weeks
  * - Payments: ETH + USDC
  * - Access: Fully public, no KYC
@@ -29,10 +29,9 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
     IERC20 public immutable usdcToken;
 
     // Sale parameters
-    uint256 public constant TOKENS_FOR_SALE = 200_000_000 * 10**18; // 200M tokens
+    uint256 public tokensForSale = 200_000_000 * 10**18; // 200M tokens (can be updated by owner)
     uint256 public constant TOKEN_PRICE_USD = 500; // $0.0005 (in millionths)
-    uint256 public constant SALE_DURATION = 6 weeks;
-    uint256 public constant SOFT_CAP_USD = 100_000 * 10**6; // $100K in USDC decimals (6)
+    uint256 public hardCapUsd = 200_000 * 10**6; // $200K in USDC decimals (6) - can be updated by owner
 
     // Pricing (can be updated by owner for market changes)
     uint256 public tokensPerEth = 10_000 * 10**18; // Default: 1 ETH = 10,000 8BIT ($5000 ETH price)
@@ -90,6 +89,16 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         uint256 usdcAmount
     );
 
+    event SaleTimesUpdated(
+        uint256 newStartTime,
+        uint256 newEndTime
+    );
+
+    event SaleCapUpdated(
+        uint256 newHardCap,
+        uint256 newTokensForSale
+    );
+
     // ═══════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════
@@ -123,7 +132,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         require(block.timestamp >= saleStartTime, "Sale has not started");
         require(block.timestamp < saleEndTime, "Sale has ended");
         require(!saleFinalized, "Sale is finalized");
-        require(tokensSold < TOKENS_FOR_SALE, "All tokens sold");
+        require(tokensSold < tokensForSale, "All tokens sold");
         _;
     }
 
@@ -183,7 +192,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         );
 
         require(
-            tokensSold + tokenAmount <= TOKENS_FOR_SALE,
+            tokensSold + tokenAmount <= tokensForSale,
             "Exceeds tokens available"
         );
 
@@ -229,7 +238,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         saleFinalized = true;
 
         // Burn unsold tokens
-        uint256 unsoldTokens = TOKENS_FOR_SALE - tokensSold;
+        uint256 unsoldTokens = tokensForSale - tokensSold;
         if (unsoldTokens > 0) {
             require(
                 eightBitToken.transfer(BURN_ADDRESS, unsoldTokens),
@@ -295,11 +304,45 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @dev Update sale start and end times
+     * @param _startTime New sale start timestamp
+     * @param _endTime New sale end timestamp
+     */
+    function setSaleTimes(uint256 _startTime, uint256 _endTime) external onlyOwner {
+        require(!saleFinalized, "Sale is finalized");
+        require(_endTime > _startTime, "End time must be after start time");
+        require(_startTime > 0, "Invalid start time");
+
+        saleStartTime = _startTime;
+        saleEndTime = _endTime;
+
+        emit SaleTimesUpdated(_startTime, _endTime);
+    }
+
+    /**
      * @dev Extend sale duration
      */
     function extendSale(uint256 additionalTime) external onlyOwner {
         require(!saleFinalized, "Sale is finalized");
         saleEndTime += additionalTime;
+
+        emit SaleTimesUpdated(saleStartTime, saleEndTime);
+    }
+
+    /**
+     * @dev Update sale cap and tokens for sale
+     * @param _hardCapUsd New hard cap in USD (6 decimals)
+     * @param _tokensForSale New amount of tokens for sale (18 decimals)
+     */
+    function setSaleCap(uint256 _hardCapUsd, uint256 _tokensForSale) external onlyOwner {
+        require(!saleFinalized, "Sale is finalized");
+        require(_hardCapUsd > 0, "Invalid hard cap");
+        require(_tokensForSale > 0, "Invalid tokens amount");
+
+        hardCapUsd = _hardCapUsd;
+        tokensForSale = _tokensForSale;
+
+        emit SaleCapUpdated(_hardCapUsd, _tokensForSale);
     }
 
     /**
@@ -321,7 +364,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
      * @dev Get sale progress percentage (0-100)
      */
     function getSaleProgress() external view returns (uint256) {
-        return (tokensSold * 100) / TOKENS_FOR_SALE;
+        return (tokensSold * 100) / tokensForSale;
     }
 
     /**
@@ -339,7 +382,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         return block.timestamp >= saleStartTime &&
                block.timestamp < saleEndTime &&
                !saleFinalized &&
-               tokensSold < TOKENS_FOR_SALE;
+               tokensSold < tokensForSale;
     }
 
     /**

@@ -14,10 +14,12 @@ const CONTRACTS = {
 const TOKEN_SALE_ABI = [
     "function buyWithEth() external payable",
     "function buyWithUsdc(uint256 usdcAmount) external",
-    "function TOKENS_FOR_SALE() view returns (uint256)",
+    "function tokensForSale() view returns (uint256)",
+    "function hardCapUsd() view returns (uint256)",
     "function tokensSold() view returns (uint256)",
     "function ethRaised() view returns (uint256)",
     "function usdcRaised() view returns (uint256)",
+    "function saleStartTime() view returns (uint256)",
     "function saleEndTime() view returns (uint256)",
     "function tokensPerEth() view returns (uint256)",
     "function tokensPerUsdc() view returns (uint256)",
@@ -25,6 +27,17 @@ const TOKEN_SALE_ABI = [
     "function isSaleActive() view returns (bool)",
     "function calculateTokensForEth(uint256 ethAmount) view returns (uint256)",
     "function calculateTokensForUsdc(uint256 usdcAmount) view returns (uint256)",
+    "function getBuyerCount() view returns (uint256)",
+    "function getBuyers() view returns (address[])",
+    "function getPurchaseInfo(address buyer) view returns (uint256 tokens, uint256 eth, uint256 usdc)",
+    // Admin functions
+    "function setSaleTimes(uint256 _startTime, uint256 _endTime) external",
+    "function setSaleCap(uint256 _hardCapUsd, uint256 _tokensForSale) external",
+    "function updatePrices(uint256 _tokensPerEth, uint256 _tokensPerUsdc) external",
+    "function pause() external",
+    "function unpause() external",
+    "function withdrawFunds(address payable recipient) external",
+    "function finalizeSale() external",
 ];
 
 const ERC20_ABI = [
@@ -223,9 +236,10 @@ async function loadSaleData() {
         }
 
         // Load sale stats
-        const [tokensForSale, tokensSold, ethRaised, usdcRaised, saleEndTime, isSaleActive, tokensPerEth, tokensPerUsdc] =
+        const [tokensForSale, hardCapUsd, tokensSold, ethRaised, usdcRaised, saleEndTime, isSaleActive, tokensPerEth, tokensPerUsdc] =
             await Promise.all([
-                saleContract.TOKENS_FOR_SALE(),
+                saleContract.tokensForSale(),
+                saleContract.hardCapUsd(),
                 saleContract.tokensSold(),
                 saleContract.ethRaised(),
                 saleContract.usdcRaised(),
@@ -242,7 +256,11 @@ async function loadSaleData() {
         // Calculate total raised using real-time ETH price
         const ethValue = parseFloat(ethers.utils.formatEther(ethRaised)) * currentEthPrice;
         const usdcValue = parseFloat(ethers.utils.formatUnits(usdcRaised, 6));
-        document.getElementById('totalRaised').textContent = '$' + formatNumber(ethValue + usdcValue);
+        const totalRaised = ethValue + usdcValue;
+        const hardCapValue = parseFloat(ethers.utils.formatUnits(hardCapUsd, 6));
+
+        document.getElementById('totalRaised').textContent = '$' + formatNumber(totalRaised);
+        document.getElementById('goalAmount').textContent = 'Goal: $' + formatNumber(hardCapValue);
 
         // Update progress
         const progress = (parseFloat(ethers.utils.formatEther(tokensSold)) / parseFloat(ethers.utils.formatEther(tokensForSale))) * 100;
@@ -375,8 +393,17 @@ async function buyWithEth(amount) {
     const tx = await saleContract.buyWithEth({ value: ethAmount });
     showStatus('Transaction submitted... waiting for confirmation', 'pending');
 
-    await tx.wait();
+    const receipt = await tx.wait();
     showStatus('✅ Tokens purchased successfully!', 'success');
+
+    // Track purchase in Firestore (if Firebase is available)
+    if (typeof firebase !== 'undefined' && firebase.functions) {
+        try {
+            await trackPurchase(receipt, amount, 'ETH');
+        } catch (error) {
+            console.error('Error tracking purchase:', error);
+        }
+    }
 
     // Refresh data
     await loadSaleData();
@@ -400,9 +427,18 @@ async function buyWithUsdc(amount) {
     const tx = await saleContract.buyWithUsdc(usdcAmount);
 
     showStatus('Transaction submitted... waiting for confirmation', 'pending');
-    await tx.wait();
+    const receipt = await tx.wait();
 
     showStatus('✅ Tokens purchased successfully!', 'success');
+
+    // Track purchase in Firestore (if Firebase is available)
+    if (typeof firebase !== 'undefined' && firebase.functions) {
+        try {
+            await trackPurchase(receipt, amount, 'USDC');
+        } catch (error) {
+            console.error('Error tracking purchase:', error);
+        }
+    }
 
     // Refresh data
     await loadSaleData();
@@ -442,6 +478,30 @@ function formatTimeRemaining(seconds) {
     if (days > 0) return days + 'd ' + hours + 'h';
     if (hours > 0) return hours + 'h ' + minutes + 'm';
     return minutes + 'm';
+}
+
+async function trackPurchase(receipt, amount, paymentMethod) {
+    // Parse the receipt to get purchase details
+    const event = receipt.events.find(e => e.event === 'TokensPurchased');
+    if (!event) {
+        console.error('TokensPurchased event not found in receipt');
+        return;
+    }
+
+    const { buyer, amount: tokenAmount, ethSpent, usdcSpent } = event.args;
+
+    // Call Firebase function to track purchase
+    const trackPurchaseFn = firebase.functions().httpsCallable('trackPurchase');
+    await trackPurchaseFn({
+        txHash: receipt.transactionHash,
+        buyer: buyer,
+        amount: tokenAmount.toString(),
+        ethSpent: ethSpent.toString(),
+        usdcSpent: usdcSpent.toString(),
+        timestamp: Math.floor(Date.now() / 1000),
+    });
+
+    console.log('Purchase tracked:', receipt.transactionHash);
 }
 
 function startRefreshInterval() {
