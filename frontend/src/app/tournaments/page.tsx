@@ -252,6 +252,41 @@ export default function TournamentsPage() {
     address, // Only re-run when address changes (wallet connect/disconnect)
   ]);
 
+  // 👇 ADD THIS NEW useEffect HERE - Tournament Data Sync Solution
+useEffect(() => {
+  if (tournaments.length > 0 && address) { // Only run if tournaments exist AND wallet connected
+    const syncTournaments = async () => {
+      for (const t of tournaments) { // Use for...of instead of forEach for sequential calls
+        if (t.isActive && t.status !== 'ended') {
+          try {
+            console.log(`🔄 Syncing tournament ${t.id} with Firebase...`);
+            await callFunction('initializeTournamentIfMissing', {
+              tournamentId: t.id,
+              tier: t.tier,
+              period: t.period,
+              startTime: Math.floor(t.startTime.getTime() / 1000),
+              endTime: Math.floor(t.endTime.getTime() / 1000),
+              entryFee: formatEther(t.entryFee),
+              prizePool: formatEther(t.prizePool),
+            });
+            console.log(`✅ Tournament ${t.id} synced`);
+          } catch (e) {
+            console.log(`⚠️ Tournament ${t.id} already initialized or error:`, e);
+          }
+        }
+      }
+    };
+
+    // Debounce to avoid spam - only sync once per 30 seconds
+    const now = Date.now();
+    const lastSync = (window as any).lastTournamentSync || 0;
+    if (now - lastSync > 30000) {
+      syncTournaments();
+      (window as any).lastTournamentSync = now;
+    }
+  }
+}, [tournaments, address]); // Only re-run when tournaments or address changes
+  
   // Handle successful entry
   useEffect(() => {
     if (isEnterSuccess && enterHash) {
@@ -625,15 +660,17 @@ export default function TournamentsPage() {
                 </div>
 
                 {/* Tournament Leaderboard */}
-                {(tournament.status === 'active' || tournament.status === 'ended') && (
-                  <div className="mt-4 pt-4 border-t border-arcade-green/20">
+                  {(tournament.status === 'active' || tournament.status === 'ended') && 
+                   tournament.totalEntries > 0 && (
+                    <div className="mt-4 pt-4 border-t border-arcade-green/20">
                     <TournamentLeaderboard
-                      tournamentId={tournament.id}
-                      tournamentName={`${tournament.tier} ${tournament.period}`}
-                      isActive={tournament.status === 'active'}
-                    />
-                  </div>
-                )}
+                  tournamentId={tournament.id}
+                  tournamentName={`${tournament.tier} ${tournament.period}`}
+                  isActive={tournament.status === 'active'}
+                />
+              </div>
+              )}
+
               </Card>
             ))
           )}
