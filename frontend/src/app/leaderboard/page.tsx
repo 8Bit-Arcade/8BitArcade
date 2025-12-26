@@ -48,30 +48,26 @@ export default function LeaderboardPage() {
     selectedPeriod
   );
 
-  // Fetch active/recent tournaments when view mode changes
+  // TEMP DISABLED - Tournament data coming from on-chain
   useEffect(() => {
     if (viewMode === 'tournaments') {
-      fetchTournaments();
+      console.log('🏆 Tournament view - on-chain data loading...');
+      setTournaments([]); // Show empty state until on-chain integration
     }
   }, [viewMode]);
 
   const fetchTournaments = async () => {
-    setLoadingTournaments(true);
-    try {
-      const result = await callFunction<{ limit?: number }, { success: boolean; tournaments: TournamentInfo[] }>(
-        'getActiveTournaments',
-        { limit: 10 }
-      );
-
-      if (result.success) {
-        setTournaments(result.tournaments || []);
-      }
-    } catch (err) {
-      console.error('Error fetching tournaments:', err);
-    } finally {
-      setLoadingTournaments(false);
-    }
-  };
+  setLoadingTournaments(true);
+  try {
+    // TEMP DISABLE - Use on-chain data instead of Firebase
+    console.log('⏸️ getActiveTournaments DISABLED - using on-chain data');
+    setTournaments([]); // Empty for now
+  } catch (err) {
+    console.error('Error fetching tournaments:', err);
+  } finally {
+    setLoadingTournaments(false);
+  }
+};
 
   return (
     <div className="min-h-screen py-8">
