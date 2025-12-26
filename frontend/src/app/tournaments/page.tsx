@@ -74,6 +74,14 @@ export default function TournamentsPage() {
     args: address ? [address, TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`] : undefined,
   });
 
+  // Check token balance
+  const { data: tokenBalance } = useReadContract({
+    address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN as `0x${string}`,
+    abi: EIGHT_BIT_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+  });
+
   // Approve tokens
   const { writeContract: approve, data: approveHash, error: approveError } = useWriteContract();
   const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
@@ -132,7 +140,24 @@ export default function TournamentsPage() {
     if (enterError) {
       console.error('❌ enterTournament ERROR:', enterError);
       setEntering(false);
-      alert(`Entry failed: ${enterError.message || 'Unknown error'}`);
+
+      // Parse error message to provide helpful feedback
+      const errorMsg = enterError.message || 'Unknown error';
+      let userMessage = 'Tournament entry failed!\n\n';
+
+      if (errorMsg.includes('Internal JSON-RPC error') || errorMsg.includes('reverted')) {
+        userMessage += 'Possible reasons:\n';
+        userMessage += '• You may have already entered this tournament\n';
+        userMessage += '• Tournament may be full or ended\n';
+        userMessage += '• Insufficient 8BIT tokens\n\n';
+        userMessage += 'Check the console for details.';
+      } else if (errorMsg.includes('User rejected')) {
+        userMessage += 'You cancelled the transaction.';
+      } else {
+        userMessage += `Error: ${errorMsg}`;
+      }
+
+      alert(userMessage);
     }
   }, [enterError]);
 
@@ -253,8 +278,33 @@ export default function TournamentsPage() {
       return;
     }
 
+    // Check if user already entered
+    const tournament = tournaments.find(t => t.id === tournamentId);
+    if (tournament?.hasEntered) {
+      console.log('⚠️ User already entered this tournament');
+      alert('You have already entered this tournament!');
+      return;
+    }
+
+    // Check 8BIT token balance
+    const currentBalance = (tokenBalance as bigint) || BigInt(0);
+    console.log('💰 Balance check:', {
+      balance: formatEther(currentBalance),
+      required: formatEther(entryFee),
+      hasEnough: currentBalance >= entryFee,
+    });
+
+    if (currentBalance < entryFee) {
+      console.log('❌ Insufficient 8BIT balance');
+      alert(
+        `Insufficient 8BIT tokens!\n\nYou need: ${formatEther(entryFee)} 8BIT\nYou have: ${formatEther(currentBalance)} 8BIT\n\nGet more tokens from the faucet or buy some.`
+      );
+      return;
+    }
+
     console.log('📊 Current state:', {
       allowance: allowance ? formatEther(allowance as bigint) : 'undefined',
+      balance: formatEther(currentBalance),
       selectedTournament,
       entering,
       needsApproval,
@@ -300,6 +350,9 @@ export default function TournamentsPage() {
     console.log('💳 enterTournament call:', {
       contractAddress: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
       tournamentId,
+      balance: formatEther(currentBalance),
+      allowance: formatEther(currentAllowance),
+      entryFee: formatEther(entryFee),
       abiHasFunction: TOURNAMENT_MANAGER_ABI.some((item: any) => item.name === 'enterTournament'),
     });
 
@@ -320,6 +373,22 @@ export default function TournamentsPage() {
 
       const tournament = tournaments.find(t => t.id === selectedTournament);
       if (tournament) {
+        // Double-check balance before auto-entering
+        const currentBalance = (tokenBalance as bigint) || BigInt(0);
+        console.log('💰 Pre-entry balance check:', {
+          balance: formatEther(currentBalance),
+          required: formatEther(tournament.entryFee),
+          hasEnough: currentBalance >= tournament.entryFee,
+        });
+
+        if (currentBalance < tournament.entryFee) {
+          console.log('❌ Insufficient balance for auto-entry');
+          setEntering(false);
+          setNeedsApproval(false);
+          alert(`Insufficient 8BIT tokens!\n\nYou need: ${formatEther(tournament.entryFee)} 8BIT\nYou have: ${formatEther(currentBalance)} 8BIT`);
+          return;
+        }
+
         setTimeout(() => {
           console.log('🎮 Auto-entering tournament after approval');
           enterTournament({
@@ -331,7 +400,7 @@ export default function TournamentsPage() {
         }, 1500); // Wait for allowance to update
       }
     }
-  }, [isApproveSuccess, selectedTournament, needsApproval, tournaments]);
+  }, [isApproveSuccess, selectedTournament, needsApproval, tournaments, tokenBalance]);
 
   const filteredTournaments =
     filter === 'all' ? tournaments : tournaments.filter(t => t.tier === filter);
