@@ -302,24 +302,21 @@
             <div id="tab-config" class="tab-content active">
                 <div class="control-section">
                     <h2 class="pixel-text">⚙️ SALE CONFIGURATION</h2>
+                    <p style="color: #888; margin-bottom: 1.5rem;">
+                        Note: Hard cap ($100k) and tokens for sale (200M) are fixed in the deployed contract and cannot be changed.
+                    </p>
                     <div class="form-group">
-                        <label>Sale Start Time</label>
-                        <input type="datetime-local" id="inputStartTime">
+                        <label>Sale Start Time (Read-only from contract)</label>
+                        <input type="datetime-local" id="inputStartTime" disabled>
                     </div>
                     <div class="form-group">
-                        <label>Sale End Time</label>
-                        <input type="datetime-local" id="inputEndTime">
+                        <label>Sale End Time (Read-only from contract)</label>
+                        <input type="datetime-local" id="inputEndTime" disabled>
                     </div>
-                    <div class="form-group">
-                        <label>Hard Cap (USD)</label>
-                        <input type="number" id="inputHardCap" placeholder="200000">
-                    </div>
-                    <div class="form-group">
-                        <label>Tokens For Sale</label>
-                        <input type="number" id="inputTokensForSale" placeholder="200000000">
-                    </div>
-                    <button id="btnUpdateConfig" class="btn-admin">Update Configuration</button>
-                    <button id="btnSyncToContract" class="btn-admin" style="margin-left: 1rem;">Sync to Smart Contract</button>
+                    <button id="btnExtendSale" class="btn-admin">Extend Sale Duration</button>
+                    <p style="color: #888; margin-top: 1rem; font-size: 0.85rem;">
+                        Use "Extend Sale Duration" to add more time to the sale. The current end time will be extended by the number of days you specify.
+                    </p>
                 </div>
             </div>
 

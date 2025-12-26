@@ -10,12 +10,14 @@ const CONTRACTS = {
     CHAIN_NAME: 'Arbitrum One'
 };
 
+// Contract constants (hard-coded from deployed contract)
+const TOKENS_FOR_SALE = ethers.BigNumber.from('200000000000000000000000000'); // 200M tokens
+const SOFT_CAP_USD = ethers.BigNumber.from('100000000000'); // $100K (6 decimals USDC)
+
 // Contract ABIs (minimal)
 const TOKEN_SALE_ABI = [
     "function buyWithEth() external payable",
     "function buyWithUsdc(uint256 usdcAmount) external",
-    "function tokensForSale() view returns (uint256)",
-    "function hardCapUsd() view returns (uint256)",
     "function tokensSold() view returns (uint256)",
     "function ethRaised() view returns (uint256)",
     "function usdcRaised() view returns (uint256)",
@@ -31,13 +33,12 @@ const TOKEN_SALE_ABI = [
     "function getBuyers() view returns (address[])",
     "function getPurchaseInfo(address buyer) view returns (uint256 tokens, uint256 eth, uint256 usdc)",
     // Admin functions
-    "function setSaleTimes(uint256 _startTime, uint256 _endTime) external",
-    "function setSaleCap(uint256 _hardCapUsd, uint256 _tokensForSale) external",
     "function updatePrices(uint256 _tokensPerEth, uint256 _tokensPerUsdc) external",
     "function pause() external",
     "function unpause() external",
     "function withdrawFunds(address payable recipient) external",
     "function finalizeSale() external",
+    "function extendSale(uint256 additionalTime) external",
 ];
 
 const ERC20_ABI = [
@@ -235,11 +236,9 @@ async function loadSaleData() {
             saleContract = new ethers.Contract(CONTRACTS.TOKEN_SALE, TOKEN_SALE_ABI, readProvider);
         }
 
-        // Load sale stats
-        const [tokensForSale, hardCapUsd, tokensSold, ethRaised, usdcRaised, saleEndTime, isSaleActive, tokensPerEth, tokensPerUsdc] =
+        // Load sale stats (use hard-coded constants for TOKENS_FOR_SALE and SOFT_CAP_USD)
+        const [tokensSold, ethRaised, usdcRaised, saleEndTime, isSaleActive, tokensPerEth, tokensPerUsdc] =
             await Promise.all([
-                saleContract.tokensForSale(),
-                saleContract.hardCapUsd(),
                 saleContract.tokensSold(),
                 saleContract.ethRaised(),
                 saleContract.usdcRaised(),
@@ -251,19 +250,17 @@ async function loadSaleData() {
 
         // Update UI
         document.getElementById('tokensSold').textContent = formatNumber(ethers.utils.formatEther(tokensSold));
-        document.getElementById('tokensSoldSub').textContent = '/ ' + formatNumber(ethers.utils.formatEther(tokensForSale)) + ' 8BIT';
+        document.getElementById('tokensSoldSub').textContent = '/ ' + formatNumber(ethers.utils.formatEther(TOKENS_FOR_SALE)) + ' 8BIT';
 
         // Calculate total raised using real-time ETH price
         const ethValue = parseFloat(ethers.utils.formatEther(ethRaised)) * currentEthPrice;
         const usdcValue = parseFloat(ethers.utils.formatUnits(usdcRaised, 6));
         const totalRaised = ethValue + usdcValue;
-        const hardCapValue = parseFloat(ethers.utils.formatUnits(hardCapUsd, 6));
 
         document.getElementById('totalRaised').textContent = '$' + formatNumber(totalRaised);
-        document.getElementById('goalAmount').textContent = 'Goal: $' + formatNumber(hardCapValue);
 
         // Update progress
-        const progress = (parseFloat(ethers.utils.formatEther(tokensSold)) / parseFloat(ethers.utils.formatEther(tokensForSale))) * 100;
+        const progress = (parseFloat(ethers.utils.formatEther(tokensSold)) / parseFloat(ethers.utils.formatEther(TOKENS_FOR_SALE))) * 100;
         document.getElementById('progressPercent').textContent = progress.toFixed(1) + '%';
         document.getElementById('progressFill').style.width = progress + '%';
 

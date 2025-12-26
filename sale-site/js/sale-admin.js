@@ -25,10 +25,12 @@ const CONTRACTS = {
     CHAIN_NAME: 'Arbitrum One'
 };
 
+// Contract constants (hard-coded from deployed contract)
+const TOKENS_FOR_SALE = ethers.BigNumber.from('200000000000000000000000000'); // 200M tokens
+const SOFT_CAP_USD = ethers.BigNumber.from('100000000000'); // $100K (6 decimals USDC)
+
 // Contract ABIs
 const TOKEN_SALE_ABI = [
-    "function tokensForSale() view returns (uint256)",
-    "function hardCapUsd() view returns (uint256)",
     "function tokensSold() view returns (uint256)",
     "function ethRaised() view returns (uint256)",
     "function usdcRaised() view returns (uint256)",
@@ -36,13 +38,12 @@ const TOKEN_SALE_ABI = [
     "function saleEndTime() view returns (uint256)",
     "function tokensPerEth() view returns (uint256)",
     "function tokensPerUsdc() view returns (uint256)",
-    "function setSaleTimes(uint256 _startTime, uint256 _endTime) external",
-    "function setSaleCap(uint256 _hardCapUsd, uint256 _tokensForSale) external",
     "function updatePrices(uint256 _tokensPerEth, uint256 _tokensPerUsdc) external",
     "function pause() external",
     "function unpause() external",
     "function withdrawFunds(address payable recipient) external",
     "function finalizeSale() external",
+    "function extendSale(uint256 additionalTime) external",
     "function paused() view returns (bool)",
     "function getBuyerCount() view returns (uint256)",
     "function getBuyers() view returns (address[])",
@@ -75,7 +76,7 @@ function setupEventListeners() {
 
     // Config
     document.getElementById('btnUpdateConfig').addEventListener('click', updateSaleConfig);
-    document.getElementById('btnSyncToContract').addEventListener('click', syncToContract);
+    document.getElementById('btnExtendSale').addEventListener('click', extendSale);
 
     // Contract controls
     document.getElementById('btnUpdatePrices').addEventListener('click', updatePrices);
@@ -246,26 +247,18 @@ async function loadSaleConfig() {
             const endDate = new Date(config.endTime * 1000);
             document.getElementById('inputEndTime').value = formatDateTimeLocal(endDate);
         }
-        if (config.hardCap) {
-            document.getElementById('inputHardCap').value = config.hardCap;
-        }
-        if (config.tokensForSale) {
-            document.getElementById('inputTokensForSale').value = config.tokensForSale;
-        }
 
-        // Also get contract values
-        const [startTime, endTime, hardCapUsd, tokensForSale] = await Promise.all([
+        // Also get contract values (using hard-coded constants for cap and tokens)
+        const [startTime, endTime] = await Promise.all([
             saleContract.saleStartTime(),
             saleContract.saleEndTime(),
-            saleContract.hardCapUsd(),
-            saleContract.tokensForSale(),
         ]);
 
         console.log('Contract config:', {
             startTime: new Date(startTime.toNumber() * 1000),
             endTime: new Date(endTime.toNumber() * 1000),
-            hardCap: ethers.utils.formatUnits(hardCapUsd, 6),
-            tokensForSale: ethers.utils.formatEther(tokensForSale),
+            hardCap: '$100,000 (hard-coded constant)',
+            tokensForSale: '200M (hard-coded constant)',
         });
     } catch (error) {
         console.error('Error loading sale config:', error);
@@ -373,46 +366,31 @@ async function updateSaleConfig() {
     }
 }
 
-async function syncToContract() {
+async function extendSale() {
     if (!isAdmin || !saleContract) {
         showStatus('Not authenticated or contract not loaded', 'error');
         return;
     }
 
     try {
-        const startTimeInput = document.getElementById('inputStartTime').value;
-        const endTimeInput = document.getElementById('inputEndTime').value;
-        const hardCap = document.getElementById('inputHardCap').value;
-        const tokensForSale = document.getElementById('inputTokensForSale').value;
-
-        if (!startTimeInput || !endTimeInput) {
-            showStatus('Please set start and end times first', 'error');
+        const daysToExtend = prompt('Enter number of days to extend the sale:');
+        if (!daysToExtend || isNaN(daysToExtend)) {
+            showStatus('Invalid number of days', 'error');
             return;
         }
 
-        const startTime = Math.floor(new Date(startTimeInput).getTime() / 1000);
-        const endTime = Math.floor(new Date(endTimeInput).getTime() / 1000);
+        const secondsToExtend = parseFloat(daysToExtend) * 24 * 60 * 60;
 
-        showStatus('Syncing to contract... Please confirm transaction', 'warning');
+        showStatus('Extending sale... Please confirm transaction', 'warning');
 
-        // Update sale times
-        const tx1 = await saleContract.setSaleTimes(startTime, endTime);
-        await tx1.wait();
+        const tx = await saleContract.extendSale(secondsToExtend);
+        await tx.wait();
 
-        // Update cap if provided
-        if (hardCap && tokensForSale) {
-            const hardCapWei = ethers.utils.parseUnits(hardCap, 6); // USDC has 6 decimals
-            const tokensForSaleWei = ethers.utils.parseEther(tokensForSale);
-
-            const tx2 = await saleContract.setSaleCap(hardCapWei, tokensForSaleWei);
-            await tx2.wait();
-        }
-
-        showStatus('Successfully synced to smart contract!', 'success');
+        showStatus(`Sale extended by ${daysToExtend} days!`, 'success');
         await refreshData();
     } catch (error) {
-        console.error('Error syncing to contract:', error);
-        showStatus('Error syncing to contract: ' + error.message, 'error');
+        console.error('Error extending sale:', error);
+        showStatus('Error extending sale: ' + error.message, 'error');
     }
 }
 

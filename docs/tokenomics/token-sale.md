@@ -13,7 +13,7 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 | **Sale Type** | Public Presale |
 | **Price** | $0.0005 per 8BIT |
 | **Total for Sale** | 200,000,000 8BIT (40% of supply) |
-| **Hard Cap** | $200,000 USD |
+| **Hard Cap** | $100,000 USD |
 | **Payment Methods** | USDC, ETH |
 | **Minimum Purchase** | $100 USD |
 | **Maximum Purchase** | No limit (until sold out) |
@@ -23,7 +23,7 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 ### Phase 1: Presale (Current)
 
 - **Status:** Open
-- **Duration:** Until $200K raised or time limit
+- **Duration:** Until $100K raised or time limit
 - **Price:** $0.0005 (locked, no price increases)
 - **Payment:** USDC or ETH on Arbitrum
 - **Claim:** Immediate upon purchase
@@ -33,7 +33,7 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 - **When:** Within 2 weeks after presale ends
 - **Platform:** Uniswap V3 (Arbitrum)
 - **Initial Price:** Market-determined
-- **Liquidity:** $150,000+ locked
+- **Liquidity:** $75,000+ locked
 
 ### Phase 3: Trading Begins
 
@@ -123,16 +123,16 @@ Click "Add Token" in MetaMask and paste contract address to view your balance.
 
 Every dollar raised goes directly to project success:
 
-| Allocation | % | Amount (at $200K raise) | Purpose |
+| Allocation | % | Amount (at $100K raise) | Purpose |
 |------------|---|------------------------|---------|
-| **DEX Liquidity** | 75% | $150,000 | Deep Uniswap V3 pool |
-| **Marketing** | 15% | $30,000 | Listings, influencers, growth |
-| **Development** | 10% | $20,000 | Operations, hosting, gas fees |
+| **DEX Liquidity** | 75% | $75,000 | Deep Uniswap V3 pool |
+| **Marketing** | 15% | $15,000 | Listings, influencers, growth |
+| **Development** | 10% | $10,000 | Operations, hosting, gas fees |
 
 ### Liquidity Details
 
-- **$150,000 in USDC** + **75M 8BIT tokens** → Uniswap V3
-- Creates initial price around $0.002 (4x presale)
+- **$75,000 in USDC** + **75M 8BIT tokens** → Uniswap V3
+- Creates initial price around $0.001 (2x presale)
 - Locked for 3-4 years
 - LP tokens sent to time-lock contract
 - Ensures stable, liquid market

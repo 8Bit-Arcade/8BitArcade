@@ -46,7 +46,7 @@ Total Supply: 500,000,000 8BIT (100%)
 | **Marketing** | 15,000,000 | 3% | Partnerships, listings, growth |
 | **Team** | 5,000,000 | 1% | Team allocation (vested 2-3 years) |
 
-**Presale Cap:** $200,000 USD (if all 200M tokens sold)
+**Presale Cap:** $100,000 USD (if all 200M tokens sold)
 
 ---
 
@@ -56,7 +56,7 @@ Total Supply: 500,000,000 8BIT (100%)
 
 - **Price:** $0.0005 per 8BIT
 - **Tokens Available:** 200,000,000 8BIT
-- **Hard Cap:** $200,000 USD
+- **Hard Cap:** $100,000 USD
 - **Payment Methods:** ETH, USDC
 - **Network:** Arbitrum One (low fees!)
 - **Vesting:** None - tokens available immediately after purchase
@@ -394,8 +394,8 @@ Even at conservative market caps:
    - Players benefit immediately, not decades later
 
 5. **Professional Launch**
-   - $200K presale for proper liquidity
-   - $150K locked DEX liquidity (60M tokens = 12% of supply)
+   - $100K presale for proper liquidity
+   - $75K locked DEX liquidity (60M tokens = 12% of supply)
    - Deep liquidity pool minimizes slippage
    - Early adopter advantage
 
