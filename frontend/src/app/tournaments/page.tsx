@@ -395,7 +395,7 @@ useEffect(() => {
       address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'enterTournament',
-      args: [tournamentId], // Pass number directly - wagmi converts to uint256
+      args: [tournamentId] as any, // Wagmi converts number to uint256 at runtime
     });
 
     console.log('📤 enterTournament() function called - waiting for wallet popup...');
