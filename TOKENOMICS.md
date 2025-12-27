@@ -395,7 +395,7 @@ Even at conservative market caps:
 
 5. **Professional Launch**
    - $100K presale for proper liquidity
-   - $30K locked DEX liquidity (60M tokens = 12% of supply)
+   - $75K locked DEX liquidity (60M tokens = 12% of supply)
    - Deep liquidity pool minimizes slippage
    - Early adopter advantage
 

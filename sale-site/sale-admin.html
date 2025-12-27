@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Admin Panel | 8-Bit Arcade</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 2px solid #00ff88;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card {
+            background: #1a1a2e;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #16213e;
+        }
+
+        .admin-card h3 {
+            color: #00ff88;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-large {
+            font-size: 2rem;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .control-section {
+            background: #1a1a2e;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid #16213e;
+            margin-bottom: 2rem;
+        }
+
+        .control-section h2 {
+            color: #00ff88;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #00ff88;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0f3460;
+            border: 2px solid #16213e;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .btn-admin {
+            background: #00ff88;
+            color: #000;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-admin:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .btn-admin:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #cc0000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        table th {
+            background: #0f3460;
+            color: #00ff88;
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        table td {
+            padding: 1rem;
+            border-bottom: 1px solid #16213e;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        table tr:hover {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .status-error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 2px solid #ff4444;
+            color: #ff4444;
+        }
+
+        .status-warning {
+            background: rgba(255, 204, 0, 0.1);
+            border: 2px solid #ffcc00;
+            color: #ffcc00;
+        }
+
+        .login-container {
+            max-width: 500px;
+            margin: 5rem auto;
+            background: #1a1a2e;
+            padding: 3rem;
+            border-radius: 12px;
+            border: 2px solid #00ff88;
+            text-align: center;
+        }
+
+        .login-container h1 {
+            color: #00ff88;
+            margin-bottom: 2rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .address-short {
+            font-family: monospace;
+            color: #00ff88;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #16213e;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #00ff88;
+            border-bottom-color: #00ff88;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <h1 class="pixel-text glow-yellow">SALE ADMIN PANEL</h1>
+        <p style="color: #888; margin-bottom: 2rem;">Connect your admin wallet to access the panel</p>
+        <button id="connectWalletBtn" class="btn-admin btn-large">Connect Wallet</button>
+        <div id="loginError" class="status-message status-error" style="margin-top: 1rem;"></div>
+    </div>
+
+    <!-- Admin Panel (hidden until authenticated) -->
+    <div id="adminPanel" class="hidden">
+        <!-- Header -->
+        <div class="admin-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 class="pixel-text glow-yellow" style="margin-bottom: 0.5rem;">SALE ADMIN PANEL</h1>
+                    <p style="color: #888;">Connected as: <span class="address-short" id="adminAddress"></span></p>
+                </div>
+                <div>
+                    <button id="refreshBtn" class="btn-admin" style="margin-right: 1rem;">🔄 Refresh</button>
+                    <button id="logoutBtn" class="btn-admin btn-danger">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-container">
+            <!-- Status Messages -->
+            <div id="statusMessage" class="status-message"></div>
+
+            <!-- Statistics Grid -->
+            <div class="admin-grid">
+                <div class="admin-card">
+                    <h3 class="pixel-text">TOTAL RAISED</h3>
+                    <div class="stat-large" id="statTotalRaised">$0</div>
+                    <div class="stat-label">ETH + USDC combined</div>
+                </div>
+                <div class="admin-card">
+                    <h3 class="pixel-text">TOKENS SOLD</h3>
+                    <div class="stat-large" id="statTokensSold">0</div>
+                    <div class="stat-label">8BIT tokens</div>
+                </div>
+                <div class="admin-card">
+                    <h3 class="pixel-text">TOTAL BUYERS</h3>
+                    <div class="stat-large" id="statTotalBuyers">0</div>
+                    <div class="stat-label">Unique addresses</div>
+                </div>
+                <div class="admin-card">
+                    <h3 class="pixel-text">AVERAGE PURCHASE</h3>
+                    <div class="stat-large" id="statAvgPurchase">0</div>
+                    <div class="stat-label">8BIT per buyer</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="config">Sale Configuration</button>
+                <button class="tab" data-tab="purchases">Recent Purchases</button>
+                <button class="tab" data-tab="buyers">Top Buyers</button>
+                <button class="tab" data-tab="contract">Contract Controls</button>
+            </div>
+
+            <!-- Tab: Sale Configuration -->
+            <div id="tab-config" class="tab-content active">
+                <div class="control-section">
+                    <h2 class="pixel-text">⚙️ SALE CONFIGURATION</h2>
+                    <p style="color: #888; margin-bottom: 1.5rem;">
+                        Note: Hard cap ($100k) and tokens for sale (200M) are fixed in the deployed contract and cannot be changed.
+                    </p>
+                    <div class="form-group">
+                        <label>Sale Start Time (Read-only from contract)</label>
+                        <input type="datetime-local" id="inputStartTime" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Sale End Time (Read-only from contract)</label>
+                        <input type="datetime-local" id="inputEndTime" disabled>
+                    </div>
+                    <button id="btnExtendSale" class="btn-admin">Extend Sale Duration</button>
+                    <p style="color: #888; margin-top: 1rem; font-size: 0.85rem;">
+                        Use "Extend Sale Duration" to add more time to the sale. The current end time will be extended by the number of days you specify.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab: Recent Purchases -->
+            <div id="tab-purchases" class="tab-content">
+                <div class="control-section">
+                    <h2 class="pixel-text">📋 RECENT PURCHASES</h2>
+                    <table id="purchasesTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Buyer</th>
+                                <th>Tokens</th>
+                                <th>Payment</th>
+                                <th>Method</th>
+                                <th>TX Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchasesTableBody">
+                            <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Top Buyers -->
+            <div id="tab-buyers" class="tab-content">
+                <div class="control-section">
+                    <h2 class="pixel-text">👥 TOP BUYERS</h2>
+                    <table id="buyersTable">
+                        <thead>
+                            <tr>
+                                <th>Address</th>
+                                <th>Total Tokens</th>
+                                <th>ETH Spent</th>
+                                <th>USDC Spent</th>
+                                <th>Purchases</th>
+                                <th>Last Purchase</th>
+                            </tr>
+                        </thead>
+                        <tbody id="buyersTableBody">
+                            <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Contract Controls -->
+            <div id="tab-contract" class="tab-content">
+                <div class="control-section">
+                    <h2 class="pixel-text">🔧 CONTRACT CONTROLS</h2>
+                    <div class="admin-grid">
+                        <div class="admin-card">
+                            <h3 class="pixel-text">PRICE UPDATE</h3>
+                            <div class="form-group">
+                                <label>Tokens per ETH</label>
+                                <input type="number" id="inputTokensPerEth" placeholder="10000">
+                            </div>
+                            <div class="form-group">
+                                <label>Tokens per USDC</label>
+                                <input type="number" id="inputTokensPerUsdc" placeholder="2000">
+                            </div>
+                            <button id="btnUpdatePrices" class="btn-admin">Update Prices</button>
+                        </div>
+                        <div class="admin-card">
+                            <h3 class="pixel-text">SALE STATUS</h3>
+                            <button id="btnPauseSale" class="btn-admin btn-danger" style="margin-bottom: 1rem; width: 100%;">Pause Sale</button>
+                            <button id="btnUnpauseSale" class="btn-admin" style="width: 100%;">Unpause Sale</button>
+                        </div>
+                        <div class="admin-card">
+                            <h3 class="pixel-text">FINALIZE</h3>
+                            <p style="color: #ff4444; margin-bottom: 1rem; font-size: 0.8rem;">⚠️ This will burn unsold tokens and end the sale permanently!</p>
+                            <button id="btnFinalizeSale" class="btn-admin btn-danger" style="width: 100%;">Finalize Sale</button>
+                        </div>
+                        <div class="admin-card">
+                            <h3 class="pixel-text">WITHDRAW FUNDS</h3>
+                            <div class="form-group">
+                                <label>Recipient Address</label>
+                                <input type="text" id="inputWithdrawAddress" placeholder="0x...">
+                            </div>
+                            <button id="btnWithdrawFunds" class="btn-admin" style="width: 100%;">Withdraw All Funds</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load ethers.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+    <!-- Firebase (for backend functions) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Load sale-admin.js -->
+    <script src="js/sale-admin.js" defer></script>
+</body>
+</html>
