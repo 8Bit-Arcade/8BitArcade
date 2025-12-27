@@ -340,7 +340,7 @@ async function updateBalance() {
 async function updateTokensReceive() {
     const amount = document.getElementById('amountInput').value;
 
-    if (!amount || isNaN(amount) || !saleContract) {
+    if (!amount || isNaN(amount)) {
         document.getElementById('tokensReceive').textContent = '0 8BIT';
         return;
     }
@@ -348,14 +348,20 @@ async function updateTokensReceive() {
     try {
         let tokens;
         if (paymentMethod === 'eth') {
-            const ethAmount = ethers.utils.parseEther(amount);
-            tokens = await saleContract.calculateTokensForEth(ethAmount);
+            // Calculate based on real-time ETH price for consistent display
+            const calculatedTokensPerEth = currentEthPrice / TOKEN_PRICE_USD;
+            tokens = parseFloat(amount) * calculatedTokensPerEth;
+            document.getElementById('tokensReceive').textContent = formatNumber(tokens) + ' 8BIT';
         } else {
+            // USDC is stable, use contract calculation
+            if (!saleContract) {
+                document.getElementById('tokensReceive').textContent = '0 8BIT';
+                return;
+            }
             const usdcAmount = ethers.utils.parseUnits(amount, 6);
-            tokens = await saleContract.calculateTokensForUsdc(usdcAmount);
+            const tokensBN = await saleContract.calculateTokensForUsdc(usdcAmount);
+            document.getElementById('tokensReceive').textContent = formatNumber(ethers.utils.formatEther(tokensBN)) + ' 8BIT';
         }
-
-        document.getElementById('tokensReceive').textContent = formatNumber(ethers.utils.formatEther(tokens)) + ' 8BIT';
     } catch (error) {
         console.error('Error calculating tokens:', error);
     }
