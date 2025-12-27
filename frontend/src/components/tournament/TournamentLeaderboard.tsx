@@ -37,7 +37,7 @@ export default function TournamentLeaderboard({
     address: CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
     abi: TournamentManagerABI,
     functionName: 'getParticipants',
-    args: [tournamentId], // Pass number directly - wagmi converts to uint256
+    args: [BigInt(tournamentId)],
   });
 
   // Build leaderboard from participants
@@ -63,7 +63,7 @@ export default function TournamentLeaderboard({
             address: CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
             abi: TournamentManagerABI,
             functionName: 'getPlayerScore',
-            args: [tournamentId, participant as `0x${string}`], // Pass number directly
+            args: [BigInt(tournamentId), participant as `0x${string}`],
           })
         );
 
