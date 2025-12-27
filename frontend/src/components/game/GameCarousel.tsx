@@ -241,9 +241,14 @@ export default function GameCarousel({
                               <span className={`font-pixel ${rankColors[playerIndex]} text-xs lg:text-sm flex-shrink-0`}>
                                 {playerIndex === 0 ? '1st' : playerIndex === 1 ? '2nd' : '3rd'}
                               </span>
-                              <span className="font-arcade text-white truncate">
-                                {getPlayerDisplayName(player)}
-                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-arcade text-white truncate">
+                                  {getPlayerDisplayName(player)}
+                                </p>
+                                <p className="font-mono text-gray-500 text-xs">
+                                  {player.odedId.slice(0, 6)}...{player.odedId.slice(-4)}
+                                </p>
+                              </div>
                             </div>
                             <span className="font-arcade text-arcade-cyan flex-shrink-0">
                               {player.score.toLocaleString()}
