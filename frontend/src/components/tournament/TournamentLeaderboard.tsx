@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Card from '@/components/ui/Card';
-import { callFunction } from '@/lib/firebase-functions';
+import { useReadContract, usePublicClient } from 'wagmi';
+import { TournamentManagerABI } from '@/lib/contracts';
+import { CONTRACTS } from '@/config/contracts';
 import { useAuthStore } from '@/stores/authStore';
 import { shortenAddress } from '@/lib/utils';
 
@@ -11,7 +12,6 @@ interface LeaderboardEntry {
   username: string;
   score: number;
   rank: number;
-  timestamp: any;
 }
 
 interface TournamentLeaderboardProps {
@@ -27,47 +27,86 @@ export default function TournamentLeaderboard({
 }: TournamentLeaderboardProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { users } = useAuthStore();
+  const publicClient = usePublicClient();
 
+  // Fetch participants from blockchain
+  const { data: participants, isLoading: loadingParticipants, refetch: refetchParticipants } = useReadContract({
+    address: CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+    abi: TournamentManagerABI,
+    functionName: 'getParticipants',
+    args: [BigInt(tournamentId)],
+  });
+
+  // Build leaderboard from participants
   useEffect(() => {
-    async function fetchLeaderboard() {
+    async function buildLeaderboard() {
+      if (!participants || !Array.isArray(participants) || participants.length === 0) {
+        setLeaderboard([]);
+        setLoading(false);
+        return;
+      }
+
+      if (!publicClient) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      setError(null);
 
       try {
-        const result = await callFunction<
-          { tournamentId: string; limit?: number },
-          { success: boolean; leaderboard: LeaderboardEntry[]; total: number }
-        >('getTournamentLeaderboard', {
-          tournamentId: tournamentId.toString(),
-          limit: 100, // Fetch more entries for search functionality
-        });
+        // Fetch scores for all participants in parallel
+        const scorePromises = participants.map((participant) =>
+          publicClient.readContract({
+            address: CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+            abi: TournamentManagerABI,
+            functionName: 'getPlayerScore',
+            args: [BigInt(tournamentId), participant as `0x${string}`],
+          })
+        );
 
-        if (result.success) {
-          setLeaderboard(result.leaderboard || []);
-        } else {
-          setError('Failed to load leaderboard');
-        }
-      } catch (err) {
-        console.error('Error fetching tournament leaderboard:', err);
-        setError('Failed to load leaderboard');
+        const scores = await Promise.all(scorePromises);
+
+        // Build entries
+        const entries = participants.map((participant, index) => ({
+          player: participant,
+          username: '', // Will be resolved by getPlayerDisplayName
+          score: Number(scores[index] || 0n),
+          rank: 0, // Will be set after sorting
+        }));
+
+        // Sort by score descending and assign ranks
+        const sortedEntries = entries
+          .sort((a, b) => b.score - a.score)
+          .map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+          }));
+
+        setLeaderboard(sortedEntries);
+      } catch (error) {
+        console.error('Error building tournament leaderboard:', error);
+        setLeaderboard([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchLeaderboard();
+    buildLeaderboard();
+  }, [participants, tournamentId, publicClient]);
 
-    // Refresh every 30 seconds if tournament is active
-    const interval = isActive ? setInterval(fetchLeaderboard, 30000) : null;
+  // Refresh every 30 seconds if tournament is active
+  useEffect(() => {
+    if (isActive) {
+      const interval = setInterval(() => {
+        refetchParticipants();
+      }, 30000);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [tournamentId, isActive]);
+      return () => clearInterval(interval);
+    }
+  }, [isActive, refetchParticipants]);
 
   // Get display name for a player
   const getPlayerDisplayName = (entry: LeaderboardEntry): string => {
@@ -109,18 +148,10 @@ export default function TournamentLeaderboard({
     });
   }, [leaderboard, searchQuery, users]);
 
-  if (loading) {
+  if (loading || loadingParticipants) {
     return (
       <div>
         <p className="font-arcade text-gray-500 text-sm text-center py-4">Loading...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <p className="font-arcade text-gray-500 text-sm text-center py-4">{error}</p>
       </div>
     );
   }
@@ -144,15 +175,17 @@ export default function TournamentLeaderboard({
       </div>
 
       {/* Search Input */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search by address, ENS, or username..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-3 py-2 bg-arcade-dark border border-arcade-green/30 rounded text-white font-arcade text-sm placeholder:text-gray-500 focus:outline-none focus:border-arcade-green"
-        />
-      </div>
+      {leaderboard.length > 5 && (
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by address, ENS, or username..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-3 py-2 bg-arcade-dark border border-arcade-green/30 rounded text-white font-arcade text-sm placeholder:text-gray-500 focus:outline-none focus:border-arcade-green"
+          />
+        </div>
+      )}
 
       {/* Scrollable Leaderboard */}
       <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">

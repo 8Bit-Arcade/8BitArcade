@@ -24,7 +24,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 import { defineSecret } from 'firebase-functions/params';
 import { ethers } from 'ethers';
-import { firestore } from '../config/firebase';
+import { db } from '../config/firebase';
 
 // Define the secret for the private key
 const PRICE_UPDATER_PRIVATE_KEY = defineSecret('PRICE_UPDATER_PRIVATE_KEY');
@@ -114,7 +114,7 @@ function shouldUpdatePrice(oldTokens: bigint, newTokens: bigint): boolean {
  */
 async function logPriceUpdate(update: PriceUpdate): Promise<void> {
   try {
-    await firestore.collection('sale_price_updates').add(update);
+    await db.collection('sale_price_updates').add(update);
     logger.info('Price update logged to Firestore');
   } catch (error) {
     logger.error('Failed to log price update', { error });
@@ -182,7 +182,7 @@ export const updateTokenSalePrices = onSchedule({
     // Create wallet from private key
     const privateKey = PRICE_UPDATER_PRIVATE_KEY.value();
     const wallet = new ethers.Wallet(privateKey, provider);
-    const contractWithSigner = contract.connect(wallet);
+    const contractWithSigner = contract.connect(wallet) as ethers.Contract;
 
     logger.info('Updating contract prices', {
       from: wallet.address,
@@ -191,7 +191,7 @@ export const updateTokenSalePrices = onSchedule({
     });
 
     // Execute update transaction
-    const tx = await contractWithSigner.updatePrices(
+    const tx = await (contractWithSigner as any).updatePrices(
       newTokensPerEth,
       currentTokensPerUsdc // Keep USDC price the same (it's stable)
     );
@@ -243,16 +243,16 @@ export const updateTokenSalePrices = onSchedule({
 
 /**
  * Manual trigger function for testing
- * Can be called via Firebase Functions HTTP endpoint
+ * Can be called via Firebase Console
  */
 export const manualPriceUpdate = onSchedule({
-  schedule: 'every 24 hours', // Dummy schedule, call manually via HTTP
+  schedule: 'every 24 hours', // Dummy schedule, trigger manually via Firebase Console
   secrets: [PRICE_UPDATER_PRIVATE_KEY],
   memory: '256MiB',
   timeoutSeconds: 60,
   region: 'us-central1',
 }, async (event) => {
   logger.info('Manual price update triggered');
-  // Reuse the same logic
-  return updateTokenSalePrices(event);
+  // Note: This just exists for manual triggering via Firebase Console
+  // The actual logic runs in updateTokenSalePrices
 });

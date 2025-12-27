@@ -103,6 +103,23 @@ export const TournamentManagerABI = [
     inputs: [{ name: 'tournamentId', type: 'uint256' }],
     outputs: [],
   },
+  {
+    name: 'getParticipants',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'tournamentId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'address[]' }],
+  },
+  {
+    name: 'getPlayerScore',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'tournamentId', type: 'uint256' },
+      { name: 'player', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
 ] as const;
 
 export const ScoreOracleABI = [
