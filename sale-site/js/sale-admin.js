@@ -3,12 +3,12 @@
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY", // TODO: Add your Firebase config
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBqFKw6v6RB0P1HHup9jO10Cziqfnuiig4",
+    authDomain: "bitarcade-679b7.firebaseapp.com",
+    projectId: "bitarcade-679b7",
+    storageBucket: "bitarcade-679b7.firebasestorage.app",
+    messagingSenderId: "163469341654",
+    appId: "1:163469341654:web:f5e231834fa4426a396a77"
 };
 
 // Initialize Firebase
