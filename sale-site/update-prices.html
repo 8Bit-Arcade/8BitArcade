@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Token Sale Prices</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff88;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background: #1a1f3a;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+        }
+        h1 {
+            color: #00ff88;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #0a0e27;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #00ff88;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0e27;
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #00ff88;
+            color: #0a0e27;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #00dd77;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background: #00ff8844;
+            border: 2px solid #00ff88;
+        }
+        .status.error {
+            background: #ff444444;
+            border: 2px solid #ff4444;
+            color: #ff4444;
+        }
+        .status.pending {
+            background: #ffaa0044;
+            border: 2px solid #ffaa00;
+            color: #ffaa00;
+        }
+        .calc {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .recommended {
+            background: #00ff8822;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Update Token Sale Prices</h1>
+
+        <div class="info-box">
+            <strong>Contract:</strong> 0x057B1130dD6E8FcBc144bb34172e45293C6839fE<br>
+            <strong>Network:</strong> Arbitrum Sepolia Testnet<br>
+            <strong>Target Token Price:</strong> $0.0005 per 8BIT
+        </div>
+
+        <div class="recommended">
+            <strong>📊 Recommended Prices (based on $0.0005 per token):</strong><br><br>
+            <strong>Tokens per ETH:</strong> 10,000,000 (assumes ETH ≈ $5,000)<br>
+            <div class="calc">→ If ETH = $3,000: use 6,000,000 instead</div>
+            <div class="calc">→ If ETH = $4,000: use 8,000,000 instead</div>
+            <br>
+            <strong>Tokens per USDC:</strong> 2,000 (1 USDC = $1)<br>
+            <div class="calc">→ Formula: 1 / $0.0005 = 2,000 tokens</div>
+        </div>
+
+        <div class="input-group">
+            <label>Tokens per ETH (without decimals):</label>
+            <input type="text" id="tokensPerEth" value="10000000" placeholder="e.g., 10000000">
+            <div class="calc">This will be converted to wei (× 10^18)</div>
+        </div>
+
+        <div class="input-group">
+            <label>Tokens per USDC (without decimals):</label>
+            <input type="text" id="tokensPerUsdc" value="2000" placeholder="e.g., 2000">
+            <div class="calc">This will be converted to wei (× 10^18)</div>
+        </div>
+
+        <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+        <button id="updateBtn" onclick="updatePrices()" style="display: none;">Update Prices</button>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script>
+        const CONTRACTS = {
+            TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE',
+            CHAIN_ID: 421614,
+            CHAIN_NAME: 'Arbitrum Sepolia'
+        };
+
+        const TOKEN_SALE_ABI = [
+            "function updatePrices(uint256 _tokensPerEth, uint256 _tokensPerUsdc) external",
+            "function tokensPerEth() view returns (uint256)",
+            "function tokensPerUsdc() view returns (uint256)",
+            "function owner() view returns (address)"
+        ];
+
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        let saleContract = null;
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    showStatus('Please install MetaMask or another Web3 wallet', 'error');
+                    return;
+                }
+
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                userAddress = await signer.getAddress();
+
+                const network = await provider.getNetwork();
+                if (network.chainId !== CONTRACTS.CHAIN_ID) {
+                    await switchNetwork();
+                    return;
+                }
+
+                saleContract = new ethers.Contract(CONTRACTS.TOKEN_SALE, TOKEN_SALE_ABI, signer);
+
+                document.getElementById('connectBtn').style.display = 'none';
+                document.getElementById('updateBtn').style.display = 'block';
+
+                showStatus(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, 'success');
+
+                // Load current prices
+                const [currentEth, currentUsdc] = await Promise.all([
+                    saleContract.tokensPerEth(),
+                    saleContract.tokensPerUsdc()
+                ]);
+
+                console.log('Current prices:');
+                console.log('Tokens per ETH:', ethers.utils.formatEther(currentEth));
+                console.log('Tokens per USDC:', ethers.utils.formatEther(currentUsdc));
+
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+                showStatus('Failed to connect wallet: ' + error.message, 'error');
+            }
+        }
+
+        async function switchNetwork() {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x' + CONTRACTS.CHAIN_ID.toString(16) }],
+                });
+
+                setTimeout(connectWallet, 1000);
+            } catch (error) {
+                console.error('Error switching network:', error);
+                showStatus('Please switch to ' + CONTRACTS.CHAIN_NAME + ' in your wallet', 'error');
+            }
+        }
+
+        async function updatePrices() {
+            if (!saleContract || !userAddress) {
+                showStatus('Please connect your wallet first', 'error');
+                return;
+            }
+
+            try {
+                const tokensPerEthInput = document.getElementById('tokensPerEth').value;
+                const tokensPerUsdcInput = document.getElementById('tokensPerUsdc').value;
+
+                if (!tokensPerEthInput || !tokensPerUsdcInput) {
+                    showStatus('Please enter both values', 'error');
+                    return;
+                }
+
+                // Convert to wei (18 decimals)
+                const tokensPerEthWei = ethers.utils.parseEther(tokensPerEthInput);
+                const tokensPerUsdcWei = ethers.utils.parseEther(tokensPerUsdcInput);
+
+                showStatus('Updating prices... Please confirm transaction in your wallet', 'pending');
+
+                const tx = await saleContract.updatePrices(tokensPerEthWei, tokensPerUsdcWei);
+
+                showStatus('Transaction submitted... Waiting for confirmation', 'pending');
+
+                const receipt = await tx.wait();
+
+                showStatus(`✅ Prices updated successfully! Transaction: ${receipt.transactionHash}`, 'success');
+
+                console.log('Transaction hash:', receipt.transactionHash);
+                console.log('New prices set:');
+                console.log('Tokens per ETH:', tokensPerEthInput);
+                console.log('Tokens per USDC:', tokensPerUsdcInput);
+
+            } catch (error) {
+                console.error('Error updating prices:', error);
+                showStatus('❌ Error: ' + (error.message || 'Transaction failed'), 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            statusEl.style.display = 'block';
+
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    if (type !== 'success') {
+                        statusEl.style.display = 'none';
+                    }
+                }, 10000);
+            }
+        }
+    </script>
+</body>
+</html>
