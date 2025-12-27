@@ -73,7 +73,7 @@ export default function TournamentLeaderboard({
         const entries = participants.map((participant, index) => ({
           player: participant,
           username: '', // Will be resolved by getPlayerDisplayName
-          score: Number(scores[index] || 0n),
+          score: Number(scores[index] || BigInt(0)),
           rank: 0, // Will be set after sorting
         }));
 
