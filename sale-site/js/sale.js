@@ -56,9 +56,12 @@ let usdcContract = null;
 let paymentMethod = 'eth';
 let currentEthPrice = 5000; // Fallback default
 
+// Token pricing
+const TOKEN_PRICE_USD = 0.0005; // $0.0005 per 8BIT token
+
 // Price cache settings
 const PRICE_CACHE_KEY = '8bit_eth_price';
-const PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const PRICE_CACHE_DURATION = 15 * 1000; // 15 seconds
 
 // Initialize - wait for ethers.js to be loaded
 document.addEventListener('DOMContentLoaded', async () => {
@@ -266,8 +269,9 @@ async function loadSaleData() {
         // Update sale status
         updateSaleStatus(isSaleActive, saleEndTime);
 
-        // Update price display
-        const ethPrice = '1 ETH = ' + formatNumber(ethers.utils.formatEther(tokensPerEth)) + ' 8BIT';
+        // Update price display - calculate based on real-time ETH price
+        const calculatedTokensPerEth = currentEthPrice / TOKEN_PRICE_USD; // ETH price / token price = tokens per ETH
+        const ethPrice = '1 ETH = ' + formatNumber(calculatedTokensPerEth) + ' 8BIT';
         const usdcPrice = '1 USDC = ' + formatNumber(ethers.utils.formatEther(tokensPerUsdc)) + ' 8BIT';
         document.getElementById('currentPrice').textContent = paymentMethod === 'eth' ? ethPrice : usdcPrice;
 
@@ -501,11 +505,14 @@ async function trackPurchase(receipt, amount, paymentMethod) {
 }
 
 function startRefreshInterval() {
+    // Refresh ETH price every 15 seconds and update display
+    setInterval(async () => {
+        await fetchEthPrice();
+        await loadSaleData(); // Reload to update price display with new ETH price
+    }, PRICE_CACHE_DURATION);
+
     // Refresh sale data every 30 seconds
     setInterval(loadSaleData, 30000);
-
-    // Refresh ETH price every 5 minutes (respects cache)
-    setInterval(fetchEthPrice, PRICE_CACHE_DURATION);
 
     // Update countdown every second
     setInterval(() => {
