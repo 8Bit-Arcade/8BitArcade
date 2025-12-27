@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import LeaderboardTable from '@/components/leaderboard/LeaderboardTable';
@@ -10,10 +10,11 @@ import GameSelector from '@/components/leaderboard/GameSelector';
 import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { formatNumber } from '@/lib/utils';
-import { callFunction } from '@/lib/firebase-functions';
+import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI } from '@/config/contracts';
 
 type Period = 'daily' | 'weekly' | 'allTime';
 type ViewMode = 'games' | 'tournaments';
+type TournamentStatus = 'upcoming' | 'active' | 'ended';
 
 interface TournamentInfo {
   id: number;
@@ -21,6 +22,7 @@ interface TournamentInfo {
   tier: string;
   period: string;
   isActive: boolean;
+  status: TournamentStatus;
   endTime: number;
 }
 
@@ -33,7 +35,7 @@ export default function LeaderboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('allTime');
   const [selectedGame, setSelectedGame] = useState(gameParam || 'all');
   const [tournaments, setTournaments] = useState<TournamentInfo[]>([]);
-  const [loadingTournaments, setLoadingTournaments] = useState(false);
+  const [loadingTournaments, setLoadingTournaments] = useState(true);
 
   // Update selected game when query param changes
   useEffect(() => {
@@ -48,26 +50,74 @@ export default function LeaderboardPage() {
     selectedPeriod
   );
 
-  // TEMP DISABLED - Tournament data coming from on-chain
-  useEffect(() => {
-    if (viewMode === 'tournaments') {
-      console.log('🏆 Tournament view - on-chain data loading...');
-      setTournaments([]); // Show empty state until on-chain integration
-    }
-  }, [viewMode]);
+  // Fetch tournaments from blockchain
+  const MAX_TOURNAMENTS = 12;
+  const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
-  const fetchTournaments = async () => {
-  setLoadingTournaments(true);
-  try {
-    // TEMP DISABLE - Use on-chain data instead of Firebase
-    console.log('⏸️ getActiveTournaments DISABLED - using on-chain data');
-    setTournaments([]); // Empty for now
-  } catch (err) {
-    console.error('Error fetching tournaments:', err);
-  } finally {
-    setLoadingTournaments(false);
-  }
-};
+  // Create dynamic tournament queries
+  const tournamentQueries = tournamentIds.map(id =>
+    useReadContract({
+      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+      abi: TOURNAMENT_MANAGER_ABI,
+      functionName: 'getTournament',
+      args: [BigInt(id)],
+    })
+  );
+
+  // Process tournament data from blockchain
+  useEffect(() => {
+    const formattedTournaments: TournamentInfo[] = [];
+    let anyLoading = false;
+
+    tournamentQueries.forEach((tQuery, index) => {
+      if (tQuery.isLoading) {
+        anyLoading = true;
+        return;
+      }
+
+      const tournamentData = tQuery.data;
+      if (!tournamentData || tQuery.error) return;
+
+      const data = tournamentData as any;
+      if (!data || typeof data !== 'object') return;
+
+      const fields = Object.values(data) as any[];
+      if (fields.length < 9) return;
+
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = fields;
+
+      // Skip inactive tournaments
+      if (!isActive) return;
+
+      // Determine status
+      const now = Math.floor(Date.now() / 1000);
+      const status: TournamentStatus =
+        now < Number(startTime) ? 'upcoming' : now < Number(endTime) ? 'active' : 'ended';
+
+      // Only show active and ended tournaments in leaderboard view
+      if (status === 'upcoming') return;
+
+      const tierName = Number(tier) === 0 ? 'Standard' : 'High Roller';
+      const periodName = Number(period) === 0 ? 'Weekly' : 'Monthly';
+
+      formattedTournaments.push({
+        id: tournamentIds[index],
+        name: `${tierName} ${periodName}`,
+        tier: tierName,
+        period: periodName,
+        isActive: status === 'active',
+        status,
+        endTime: Number(endTime),
+      });
+    });
+
+    setTournaments(formattedTournaments);
+    setLoadingTournaments(anyLoading);
+  }, [
+    ...tournamentQueries.map(q => q.data),
+    ...tournamentQueries.map(q => q.isLoading),
+    ...tournamentQueries.map(q => q.error),
+  ]);
 
   return (
     <div className="min-h-screen py-8">
@@ -217,20 +267,24 @@ export default function LeaderboardPage() {
                           {tournament.tier} • {tournament.period}
                         </p>
                       </div>
-                      {tournament.isActive ? (
+                      {tournament.status === 'active' ? (
                         <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
                           LIVE
                         </span>
-                      ) : (
+                      ) : tournament.status === 'ended' ? (
                         <span className="px-2 py-1 bg-gray-500/20 text-gray-500 font-pixel text-xs rounded">
                           ENDED
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-arcade-cyan/20 text-arcade-cyan font-pixel text-xs rounded">
+                          SOON
                         </span>
                       )}
                     </div>
                     <TournamentLeaderboard
                       tournamentId={tournament.id}
                       tournamentName={tournament.name}
-                      isActive={tournament.isActive}
+                      isActive={tournament.status === 'active'}
                     />
                   </div>
                 ))}
