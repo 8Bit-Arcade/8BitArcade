@@ -16,21 +16,19 @@ firebase.initializeApp(firebaseConfig);
 const functions = firebase.functions();
 const db = firebase.firestore();
 
-// Contract addresses (UPDATE THESE AFTER DEPLOYMENT)
+// Contract addresses
 const CONTRACTS = {
-    TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE', // Testnet contract
-    EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // UPDATE
+    TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE', // Arbitrum Sepolia testnet
+    EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d', // 8BIT token on Arbitrum Sepolia
     USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
     CHAIN_ID: 421614, // Arbitrum Sepolia Testnet
     CHAIN_NAME: 'Arbitrum Sepolia'
 };
 
-// Contract constants (hard-coded from deployed contract)
-const TOKENS_FOR_SALE = ethers.BigNumber.from('200000000000000000000000000'); // 200M tokens
-const SOFT_CAP_USD = ethers.BigNumber.from('100000000000'); // $100K (6 decimals USDC)
-
 // Contract ABIs
 const TOKEN_SALE_ABI = [
+    "function TOKENS_FOR_SALE() view returns (uint256)",
+    "function SOFT_CAP_USD() view returns (uint256)",
     "function tokensSold() view returns (uint256)",
     "function ethRaised() view returns (uint256)",
     "function usdcRaised() view returns (uint256)",
