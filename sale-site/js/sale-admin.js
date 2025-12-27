@@ -18,11 +18,11 @@ const db = firebase.firestore();
 
 // Contract addresses (UPDATE THESE AFTER DEPLOYMENT)
 const CONTRACTS = {
-    TOKEN_SALE: '0x0000000000000000000000000000000000000000', // UPDATE
+    TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE', // Testnet contract
     EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // UPDATE
-    USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One USDC
-    CHAIN_ID: 42161, // Arbitrum One
-    CHAIN_NAME: 'Arbitrum One'
+    USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
+    CHAIN_ID: 421614, // Arbitrum Sepolia Testnet
+    CHAIN_NAME: 'Arbitrum Sepolia'
 };
 
 // Contract constants (hard-coded from deployed contract)
