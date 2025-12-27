@@ -60,7 +60,7 @@ export default function LeaderboardPage() {
       address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'getTournament',
-      args: [id] as any, // Wagmi converts number to uint256 at runtime
+      args: [BigInt(id)],
     })
   );
 
