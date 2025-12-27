@@ -66,6 +66,7 @@ export default function LeaderboardPage() {
 
   // Process tournament data from blockchain
   useEffect(() => {
+    console.log('🏆 [Ranks] Processing tournament data...');
     const formattedTournaments: TournamentInfo[] = [];
     let anyLoading = false;
 
@@ -76,7 +77,12 @@ export default function LeaderboardPage() {
       }
 
       const tournamentData = tQuery.data;
-      if (!tournamentData || tQuery.error) return;
+      if (!tournamentData || tQuery.error) {
+        if (tQuery.error) {
+          console.log(`⚠️ [Ranks] Tournament ${tournamentIds[index]} error:`, tQuery.error);
+        }
+        return;
+      }
 
       const data = tournamentData as any;
       if (!data || typeof data !== 'object') return;
@@ -87,7 +93,10 @@ export default function LeaderboardPage() {
       const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = fields;
 
       // Skip inactive tournaments
-      if (!isActive) return;
+      if (!isActive) {
+        console.log(`⏸️ [Ranks] Tournament ${tournamentIds[index]} is inactive`);
+        return;
+      }
 
       // Determine status
       const now = Math.floor(Date.now() / 1000);
@@ -95,10 +104,19 @@ export default function LeaderboardPage() {
         now < Number(startTime) ? 'upcoming' : now < Number(endTime) ? 'active' : 'ended';
 
       // Only show active and ended tournaments in leaderboard view
-      if (status === 'upcoming') return;
+      if (status === 'upcoming') {
+        console.log(`⏭️ [Ranks] Tournament ${tournamentIds[index]} is upcoming, skipping`);
+        return;
+      }
 
       const tierName = Number(tier) === 0 ? 'Standard' : 'High Roller';
       const periodName = Number(period) === 0 ? 'Weekly' : 'Monthly';
+
+      console.log(`✅ [Ranks] Tournament ${tournamentIds[index]} added:`, {
+        name: `${tierName} ${periodName}`,
+        status,
+        entries: Number(totalEntries)
+      });
 
       formattedTournaments.push({
         id: tournamentIds[index],
@@ -111,6 +129,7 @@ export default function LeaderboardPage() {
       });
     });
 
+    console.log(`🏁 [Ranks] Total tournaments found: ${formattedTournaments.length}`);
     setTournaments(formattedTournaments);
     setLoadingTournaments(anyLoading);
   }, [
