@@ -28,6 +28,12 @@ export {
     getSaleConfig
 } from './sale/saleAdminFunctions';
 
+// Automated Price Updater
+export {
+    updateTokenSalePrices,
+    manualPriceUpdate
+} from './sale/autoPriceUpdater';
+
 // Tournament functions
 export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual } from './tournaments/scheduleTournaments';
 export { getTournaments } from './tournaments/getTournaments';
