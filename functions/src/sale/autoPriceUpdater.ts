@@ -5,10 +5,11 @@
  * based on real-time ETH prices from CoinGecko API.
  *
  * Features:
- * - Runs every 15 minutes via Cloud Scheduler
- * - Only updates when ETH price changes >5% (saves gas)
+ * - Runs every 3 minutes via Cloud Scheduler for high accuracy
+ * - Only updates when ETH price changes >0.5% (~$17.50 at $3500 ETH)
  * - Logs all updates to Firestore for tracking
  * - Uses secure wallet from environment variables
+ * - Minimal cost: ~$0.10/month in gas (Arbitrum L2)
  *
  * Setup Requirements:
  * 1. Create a dedicated "price updater" wallet
@@ -30,7 +31,7 @@ const PRICE_UPDATER_PRIVATE_KEY = defineSecret('PRICE_UPDATER_PRIVATE_KEY');
 
 // Constants
 const TOKEN_PRICE_USD = 0.0005; // $0.0005 per 8BIT token
-const PRICE_CHANGE_THRESHOLD = 5; // Only update if price changed >5%
+const PRICE_CHANGE_THRESHOLD = 0.5; // Update if price changed >0.5% (~$17.50 at $3500 ETH)
 const COINGECKO_API = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd';
 
 // Contract configuration (Arbitrum Sepolia Testnet)
@@ -122,10 +123,11 @@ async function logPriceUpdate(update: PriceUpdate): Promise<void> {
 
 /**
  * Scheduled function to auto-update token sale prices
- * Runs every 15 minutes
+ * Runs every 3 minutes for high accuracy pricing
+ * Only executes contract update when price changes >0.5%
  */
 export const updateTokenSalePrices = onSchedule({
-  schedule: 'every 15 minutes',
+  schedule: 'every 3 minutes',
   timeZone: 'UTC',
   secrets: [PRICE_UPDATER_PRIVATE_KEY],
   memory: '256MiB',

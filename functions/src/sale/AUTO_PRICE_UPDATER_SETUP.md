@@ -4,12 +4,12 @@ This guide explains how to set up the automated price updater that keeps your to
 
 ## 🎯 What It Does
 
-- **Runs every 15 minutes** via Cloud Scheduler
+- **Runs every 3 minutes** via Cloud Scheduler for high accuracy
 - **Fetches ETH price** from CoinGecko API
 - **Calculates** correct `tokensPerEth` based on $0.0005/token pricing
-- **Only updates** when price changes >5% (saves gas fees)
+- **Only updates** when price changes >0.5% (~$17.50 at $3,500 ETH)
 - **Logs everything** to Firestore for tracking
-- **Costs ~$0.02/month** in gas fees (minimal)
+- **Costs ~$0.10/month** in gas fees (still very minimal on Arbitrum L2)
 
 ## 📋 Prerequisites
 
@@ -85,7 +85,7 @@ Each log entry contains:
 - `oldTokensPerEth` - Previous rate
 - `newTokensPerEth` - New rate
 - `txHash` - Transaction hash (if updated)
-- `skipped` - If update was skipped (price change <5%)
+- `skipped` - If update was skipped (price change <0.5%)
 
 ## 🔧 Configuration Options
 
@@ -93,7 +93,7 @@ You can adjust these values in `autoPriceUpdater.ts`:
 
 ```typescript
 const TOKEN_PRICE_USD = 0.0005; // Your token price in USD
-const PRICE_CHANGE_THRESHOLD = 5; // Update if price changes >5%
+const PRICE_CHANGE_THRESHOLD = 0.5; // Update if price changes >0.5%
 ```
 
 ### Change Update Frequency
@@ -102,8 +102,9 @@ Edit the schedule in the function:
 
 ```typescript
 export const updateTokenSalePrices = onSchedule({
-  schedule: 'every 15 minutes', // Change this
-  // Options: 'every 5 minutes', 'every 30 minutes', 'every 1 hours'
+  schedule: 'every 3 minutes', // Current setting for high accuracy
+  // Options: 'every 1 minutes', 'every 5 minutes', 'every 15 minutes'
+  // Recommended: 3-5 minutes for best balance of accuracy and API limits
   // ...
 })
 ```
@@ -131,9 +132,11 @@ firebase functions:log --only updateTokenSalePrices
 
 ## 💰 Cost Estimate
 
-- **Gas per update:** ~0.0001 ETH (~$0.0003 on mainnet, much less on Arbitrum)
-- **Updates per day:** ~4 (assuming price changes >5% that often)
-- **Monthly cost:** ~$0.02 (extremely cheap on L2s like Arbitrum)
+- **Gas per update:** ~0.00001 ETH (~$0.00003 on Arbitrum L2)
+- **Checks:** 480/day (every 3 minutes, most will skip due to <0.5% change)
+- **Actual updates:** ~10-20/day (only when price moves >0.5%)
+- **Monthly cost:** ~$0.10 (extremely cheap on Arbitrum L2)
+- **API calls:** Well within CoinGecko free tier (10-50 calls/minute limit)
 
 ## 🔒 Security Best Practices
 
@@ -171,8 +174,9 @@ The wallet must have permission to call `updatePrices()`:
 
 CoinGecko free API has rate limits:
 - 10-50 calls/minute
-- We only call every 15 minutes, well within limits
-- If you need higher frequency, consider CoinGecko Pro
+- We call every 3 minutes (20 calls/hour), well within limits
+- 480 calls/day is far below the free tier limit
+- No need for CoinGecko Pro at this frequency
 
 ## 📊 Monitoring Dashboard
 
@@ -195,13 +199,13 @@ firebase deploy --only functions:updateTokenSalePrices
 ## ❓ FAQ
 
 **Q: What happens if CoinGecko API is down?**
-A: The function will log an error and retry on the next scheduled run (15 minutes later).
+A: The function will log an error and retry on the next scheduled run (3 minutes later).
 
 **Q: Will it update during high gas prices?**
-A: Yes. On Arbitrum L2, gas is very cheap (~$0.0003), so high gas isn't a concern.
+A: Yes. On Arbitrum L2, gas is very cheap (~$0.00003), so high gas isn't a concern.
 
 **Q: Can I change the threshold?**
-A: Yes, edit `PRICE_CHANGE_THRESHOLD` in the code (default is 5%).
+A: Yes, edit `PRICE_CHANGE_THRESHOLD` in the code (default is 0.5%, which equals ~$17.50 at $3,500 ETH).
 
 **Q: What if I want to pause updates?**
 A: Disable the Cloud Scheduler job in Firebase Console, or delete the deployed function.
