@@ -263,8 +263,22 @@ async function loadSaleData() {
 
         // Update progress
         const progress = (parseFloat(ethers.utils.formatEther(tokensSold)) / parseFloat(ethers.utils.formatEther(tokensForSale))) * 100;
-        document.getElementById('progressPercent').textContent = progress.toFixed(1) + '%';
-        document.getElementById('progressFill').style.width = progress + '%';
+
+        // Show more precision for small amounts (0.001% instead of 0.0%)
+        let progressText;
+        if (progress < 0.01 && progress > 0) {
+            // Show 3 decimals for very small progress
+            progressText = progress.toFixed(3) + '%';
+        } else if (progress < 1) {
+            // Show 2 decimals for small progress
+            progressText = progress.toFixed(2) + '%';
+        } else {
+            // Show 1 decimal for normal progress
+            progressText = progress.toFixed(1) + '%';
+        }
+
+        document.getElementById('progressPercent').textContent = progressText;
+        document.getElementById('progressFill').style.width = Math.max(progress, 0.1) + '%'; // Minimum 0.1% width so it's visible
 
         // Update sale status
         updateSaleStatus(isSaleActive, saleEndTime);
@@ -473,7 +487,10 @@ function formatNumber(num) {
     const n = parseFloat(num);
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-    return n.toFixed(0);
+    if (n >= 1) return n.toFixed(0);
+    // For very small numbers, show decimal places
+    if (n > 0) return n.toFixed(2);
+    return '0';
 }
 
 function formatTimeRemaining(seconds) {
