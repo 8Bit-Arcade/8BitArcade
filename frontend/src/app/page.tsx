@@ -240,6 +240,36 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* Navigation */}
+      <div className="pt-4 pb-2">
+        <div className="flex justify-center gap-3 flex-wrap">
+          <a
+            href="/"
+            className="px-3 py-1.5 font-arcade text-sm text-white border border-arcade-green rounded"
+          >
+            Home
+          </a>
+          <a
+            href="/tournaments"
+            className="px-3 py-1.5 font-arcade text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-arcade-green rounded transition-colors"
+          >
+            Tournaments
+          </a>
+          <a
+            href="/leaderboard"
+            className="px-3 py-1.5 font-arcade text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-arcade-green rounded transition-colors"
+          >
+            Ranks
+          </a>
+          <a
+            href="/sale"
+            className="px-3 py-1.5 font-arcade text-sm text-black bg-arcade-yellow hover:bg-arcade-yellow/90 border-2 border-arcade-yellow rounded font-bold transition-colors animate-pulse"
+          >
+            💰 TOKEN SALE 💰
+          </a>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative py-2 md:py-3 overflow-hidden">
         {/* Background Grid */}
