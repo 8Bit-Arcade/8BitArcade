@@ -20,6 +20,7 @@ export default function Header() {
     { href: '/', label: 'Games' },
     { href: '/leaderboard', label: 'Ranks' },
     { href: '/tournaments', label: 'Tourneys' },
+    { href: '/sale', label: 'Buy 8Bit' },
     ...(USE_TESTNET ? [{ href: '/faucet', label: 'Faucet' }] : []),
   ];
 
