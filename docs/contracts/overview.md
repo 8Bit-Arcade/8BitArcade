@@ -55,16 +55,21 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 - 🔐 Ethereum security
 - 🎮 Perfect for high-frequency gaming
 
-### Mainnet Contracts
+### Testnet Contracts (Arbitrum Sepolia)
+
+**Currently Deployed:**
+- EightBitToken: `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d`
+- GameRewards: `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E`
+- TournamentManager: `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7`
+- TournamentPayments: `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec`
+- TournamentBuyback: `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6`
+- TokenSale: `0x057B1130dD6E8FcBc144bb34172e45293C6839fE`
+- TreasuryGasManager: `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC`
+- TestnetFaucet: `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`
+
+### Mainnet Contracts (Arbitrum One)
 
 > 🚧 **Contracts not yet deployed.** Addresses will be announced before presale launch.
-
-**Will be deployed:**
-- EightBitToken: `0x...` (TBA)
-- GameRewards: `0x...` (TBA)
-- TokenSale: `0x...` (TBA)
-- TournamentManager: `0x...` (TBA)
-- TournamentBuyback: `0x...` (TBA)
 
 **Verification:**
 - All contracts verified on Arbiscan
