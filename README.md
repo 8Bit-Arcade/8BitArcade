@@ -153,7 +153,8 @@ All games feature:
 | **8BIT Token** | `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d` | [View](https://sepolia.arbiscan.io/address/0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d) |
 | **Game Rewards** | `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E` | [View](https://sepolia.arbiscan.io/address/0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E) |
 | **Tournament Manager** | `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7` | [View](https://sepolia.arbiscan.io/address/0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7) |
-| **Tournament Payments** | `0xb52aE08daFC310E6f858957Fa0a317fEF341dE85` | [View](https://sepolia.arbiscan.io/address/0xb52aE08daFC310E6f858957Fa0a317fEF341dE85) |
+| **Tournament Payments** | `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec` | [View](https://sepolia.arbiscan.io/address/0x0606eDf5Fb1912160b700846C48a49800ae6A1ec) |
+| **Tournament Buyback** | `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6` | [View](https://sepolia.arbiscan.io/address/0x6F3eAF6FB7218340aF69f81e143A01507566a6A6) |
 | **Token Sale** | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` | [View](https://sepolia.arbiscan.io/address/0x057B1130dD6E8FcBc144bb34172e45293C6839fE) |
 | **Treasury Gas Manager** | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` | [View](https://sepolia.arbiscan.io/address/0x39F49a46CAB85CF079Cde25EAE311A563d3952EC) |
 | **Testnet Faucet** | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` | [View](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) |

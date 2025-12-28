@@ -31,11 +31,20 @@ Smart contracts for the 8-Bit Arcade gaming platform on Arbitrum.
 ### TournamentPayments
 - **Purpose**: Handles tournament entry fees in multiple currencies
 - **Payment Methods**: USDC or ETH
+- **Address (Testnet)**: `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec`
 - **Features**:
   - Automatic ETH→USDC conversion via Uniswap V3
-  - Real-time pricing from Uniswap TWAP oracles
-  - Buyback & burn mechanism (50% of fees)
-  - Prize pool funding (50% of fees)
+  - Real-time pricing from Uniswap V3 TickMath
+  - Prize pool funding
+  - Slippage protection
+
+### TournamentBuyback
+- **Purpose**: Buyback & burn mechanism for 8BIT tokens
+- **Address (Testnet)**: `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6`
+- **Features**:
+  - Converts USDC to 8BIT via Uniswap V3
+  - Burns purchased 8BIT tokens (deflationary)
+  - Real-time pricing from Uniswap V3 TickMath
   - Slippage protection
 
 ### TokenSale
@@ -141,14 +150,15 @@ ARBISCAN_API_KEY=your_arbiscan_api_key_here
 npm run deploy:testnet
 ```
 
-This deploys all 7 contracts in the correct order:
+This deploys all 8 contracts in the correct order:
 1. ✅ EightBitToken
 2. ✅ GameRewards
 3. ✅ TournamentManager
 4. ✅ TournamentPayments
-5. ✅ TokenSale
-6. ✅ TreasuryGasManager
-7. ✅ TestnetFaucet (testnet only)
+5. ✅ TournamentBuyback
+6. ✅ TokenSale
+7. ✅ TreasuryGasManager
+8. ✅ TestnetFaucet (testnet only)
 
 **⚠️ SAVE ALL DEPLOYMENT ADDRESSES!**
 
