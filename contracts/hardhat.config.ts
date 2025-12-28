@@ -9,11 +9,14 @@ dotenv.config();
  *
  * You MUST create a .env file in the contracts/ directory with:
  * - PRIVATE_KEY: Your deployer wallet private key (KEEP THIS SECRET!)
- * - ARBISCAN_API_KEY: Your Arbiscan API key for contract verification
+ * - ETHERSCAN_API_KEY: Your Etherscan API key (works for all chains via API V2)
  *
  * Example .env file:
  * PRIVATE_KEY=0x1234...your...private...key
- * ARBISCAN_API_KEY=ABC123...your...arbiscan...api...key
+ * ETHERSCAN_API_KEY=ABC123...your...etherscan...api...key
+ *
+ * Get your API key at: https://etherscan.io/myapikey
+ * (One key works for Arbitrum, Optimism, Polygon, and 60+ chains)
  */
 
 const config: HardhatUserConfig = {
@@ -43,16 +46,24 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      arbitrumSepolia: process.env.ARBISCAN_API_KEY || "",
-      arbitrumOne: process.env.ARBISCAN_API_KEY || "",
+      arbitrumSepolia: process.env.ETHERSCAN_API_KEY || "",
+      arbitrumOne: process.env.ETHERSCAN_API_KEY || "",
     },
     customChains: [
       {
         network: "arbitrumSepolia",
         chainId: 421614,
         urls: {
-          apiURL: "https://api-sepolia.arbiscan.io/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=421614",
           browserURL: "https://sepolia.arbiscan.io",
+        },
+      },
+      {
+        network: "arbitrumOne",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+          browserURL: "https://arbiscan.io",
         },
       },
     ],
