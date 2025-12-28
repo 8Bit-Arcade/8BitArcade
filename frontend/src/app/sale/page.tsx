@@ -16,7 +16,7 @@ import {
 
 type PaymentMethod = 'eth' | 'usdc';
 
-export default function TokenSalePage() {
+export default function BuyEightBitPage() {
   const { address, isConnected } = useAccount();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('eth');
   const [amount, setAmount] = useState('');
@@ -232,7 +232,7 @@ export default function TokenSalePage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-pixel text-2xl md:text-3xl text-arcade-yellow glow-yellow mb-2">
-            8BIT TOKEN SALE
+            BUY 8BIT
           </h1>
           <p className="font-arcade text-gray-400 mb-4">
             Join the future of blockchain gaming
@@ -294,7 +294,7 @@ export default function TokenSalePage() {
         {/* Progress Bar */}
         <Card className="mb-8">
           <div className="mb-2 flex justify-between items-center">
-            <span className="font-pixel text-xs text-arcade-cyan">Sale Progress</span>
+            <span className="font-pixel text-xs text-arcade-cyan">Purchase Progress</span>
             <span className="font-pixel text-xs text-arcade-yellow">{saleProgress}%</span>
           </div>
           <div className="w-full bg-arcade-dark rounded-full h-4 overflow-hidden border border-arcade-cyan/30">
@@ -414,7 +414,7 @@ export default function TokenSalePage() {
 
           {/* Info Card */}
           <Card>
-            <h2 className="font-pixel text-arcade-green mb-4">SALE DETAILS</h2>
+            <h2 className="font-pixel text-arcade-green mb-4">8BIT DETAILS</h2>
 
             <div className="space-y-3 font-arcade text-sm">
               <div className="flex justify-between">
@@ -426,7 +426,7 @@ export default function TokenSalePage() {
                 <span className="text-white">500 Million</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">For Sale:</span>
+                <span className="text-gray-400">Available:</span>
                 <span className="text-white">200M (40%)</span>
               </div>
               <div className="flex justify-between">
