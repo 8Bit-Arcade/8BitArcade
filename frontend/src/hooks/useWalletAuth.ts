@@ -3,6 +3,7 @@ import { useAccount, useSignMessage } from 'wagmi';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import { callFunction } from '@/lib/firebase-functions';
 import { useAuthStore } from '@/stores/authStore';
+import { createSimpleSignatureMessage } from '@/lib/signatureMessages';
 
 /**
  * Sync username from localStorage to Firestore (called after Firebase auth)
@@ -82,10 +83,8 @@ export function useWalletAuth() {
     setError(null);
 
     try {
-      // Create a message to sign
-      const timestamp = Date.now();
-      const nonce = Math.random().toString(16).substring(2);
-      const message = `Sign in to 8-Bit Arcade\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+      // Create a professional signature message
+      const { message, nonce, timestamp } = createSimpleSignatureMessage('sign_in', address);
 
       // Request signature from wallet
       const signature = await signMessageAsync({ message });

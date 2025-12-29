@@ -46,6 +46,11 @@
 * [TournamentBuyback](contracts/tournament-buyback.md)
 * [Security & Audits](contracts/security.md)
 
+## Deployment
+
+* [Testnet Deployment](deployment/testnet-deployment.md)
+* [Mainnet Checklist](deployment/MAINNET_CHECKLIST.md)
+
 ## Roadmap
 
 * [Development Phases](roadmap/phases.md)
