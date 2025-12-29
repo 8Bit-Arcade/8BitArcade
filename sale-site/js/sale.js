@@ -46,6 +46,14 @@ const ERC20_ABI = [
     "function decimals() view returns (uint8)",
 ];
 
+// Token metadata for wallet integration
+const TOKEN_INFO = {
+    address: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
+    symbol: '8BIT',
+    decimals: 18,
+    image: 'https://firebasestorage.googleapis.com/v0/b/bitarcade-679b7.firebasestorage.app/o/8bit-token.jpg?alt=media&token=37f53dfb-2225-454c-96d9-f2823d73b538'
+};
+
 // Global state
 let provider = null;
 let signer = null;
@@ -548,3 +556,40 @@ function startRefreshInterval() {
         }
     }, 1000);
 }
+
+// Add 8BIT token to user's wallet (MetaMask, Coinbase Wallet, Trust Wallet, etc.)
+async function addTokenToWallet() {
+    if (typeof window.ethereum === 'undefined') {
+        showError('Please install a Web3 wallet like MetaMask');
+        return false;
+    }
+
+    try {
+        const wasAdded = await window.ethereum.request({
+            method: 'wallet_watchAsset',
+            params: {
+                type: 'ERC20',
+                options: {
+                    address: TOKEN_INFO.address,
+                    symbol: TOKEN_INFO.symbol,
+                    decimals: TOKEN_INFO.decimals,
+                    image: TOKEN_INFO.image
+                }
+            }
+        });
+
+        if (wasAdded) {
+            showStatus('✅ 8BIT token added to your wallet!', 'success');
+        } else {
+            showStatus('Token was not added', 'error');
+        }
+        return wasAdded;
+    } catch (error) {
+        console.error('Error adding token to wallet:', error);
+        showError('Failed to add token: ' + error.message);
+        return false;
+    }
+}
+
+// Expose function globally for button onclick
+window.addTokenToWallet = addTokenToWallet;
