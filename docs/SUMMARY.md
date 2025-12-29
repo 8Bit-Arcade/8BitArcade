@@ -3,6 +3,7 @@
 ## Introduction
 
 * [Welcome to 8-Bit Arcade](README.md)
+* [Whitepaper](https://8bitarcade.games/whitepaper.html)
 
 ## Getting Started
 
@@ -10,6 +11,10 @@
 * [Connecting Your Wallet](getting-started/connect-wallet.md)
 * [Setting Your Username](getting-started/username.md)
 * [Understanding Leaderboards](getting-started/leaderboards.md)
+
+## Community
+
+* [Social Links](community/social.md)
 
 ## Games
 
@@ -61,10 +66,6 @@
 * [FAQ](support/faq.md)
 * [Troubleshooting](support/troubleshooting.md)
 * [Contact Us](support/contact.md)
-
-## Community
-
-* [Social Links](community/social.md)
 
 ## Legal
 
