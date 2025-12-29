@@ -51,7 +51,7 @@ const TOKEN_INFO = {
     address: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
     symbol: '8BIT',
     decimals: 18,
-    image: 'https://8bitarcade.games/images/8bit-token.png'
+    image: 'https://firebasestorage.googleapis.com/v0/b/bitarcade-679b7.firebasestorage.app/o/8bit-token.jpg?alt=media&token=37f53dfb-2225-454c-96d9-f2823d73b538'
 };
 
 // Global state
