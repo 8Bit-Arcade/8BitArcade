@@ -241,8 +241,8 @@ async function loadSaleData() {
     try {
         // If contracts not initialized, use read-only provider
         if (!saleContract) {
-            // Use Alchemy public RPC (more reliable CORS)
-            const readProvider = new ethers.providers.JsonRpcProvider('https://arb-sepolia.g.alchemy.com/v2/demo');
+            // Use BlockPI public RPC (has proper CORS headers)
+            const readProvider = new ethers.providers.JsonRpcProvider('https://arbitrum-sepolia.blockpi.network/v1/rpc/public');
             saleContract = new ethers.Contract(CONTRACTS.TOKEN_SALE, TOKEN_SALE_ABI, readProvider);
         }
 
