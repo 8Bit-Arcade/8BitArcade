@@ -6,19 +6,16 @@ Complete breakdown of where every token goes and when you can access them.
 
 ## Distribution Overview
 
-```
-Total Supply: 500,000,000 8BIT (100%)
-
-├─ 200,000,000 (40%) - Token Sale
-├─ 200,000,000 (40%) - Rewards & Ecosystem
-│  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
-│  └─ 50,000,000 (10%) - Staking Rewards
-└─ 100,000,000 (20%) - Initial Distribution
-   ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
-   ├─ 20,000,000 (4%) - Tournament Prize Pools
-   ├─ 15,000,000 (3%) - Marketing & Partnerships
-   └─ 5,000,000 (1%) - Team (vested 2-3 years)
-```
+| Allocation | Amount | Percentage |
+|------------|--------|------------|
+| 🎯 Token Sale | 200,000,000 | 40% |
+| 🏆 Daily Rewards + Tournaments | 150,000,000 | 30% |
+| 💎 Staking Rewards | 50,000,000 | 10% |
+| 💧 DEX Liquidity | 60,000,000 | 12% |
+| 🏆 Tournament Prize Pools | 20,000,000 | 4% |
+| 📢 Marketing & Partnerships | 15,000,000 | 3% |
+| 👥 Team | 5,000,000 | 1% |
+| **TOTAL** | **500,000,000** | **100%** |
 
 ## Detailed Breakdown
 

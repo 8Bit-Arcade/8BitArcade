@@ -57,6 +57,10 @@
 * [Troubleshooting](support/troubleshooting.md)
 * [Contact Us](support/contact.md)
 
+## Community
+
+* [Social Links](community/social.md)
+
 ## Legal
 
 * [Terms of Service](legal/terms.md)
