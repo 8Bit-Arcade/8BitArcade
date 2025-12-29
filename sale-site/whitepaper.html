@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>8-Bit Arcade Whitepaper | GameFi Technical Documentation</title>
+    <meta name="title" content="8-Bit Arcade Whitepaper | GameFi Technical Documentation">
+    <meta name="description" content="Technical whitepaper for 8-Bit Arcade - a blockchain-powered play-to-earn gaming platform on Arbitrum. Tokenomics, architecture, and roadmap.">
+    <meta name="keywords" content="8BIT whitepaper, GameFi whitepaper, crypto gaming documentation, play to earn tokenomics, blockchain gaming platform, Arbitrum gaming">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://8bitarcade.games/whitepaper.html">
+    <meta property="og:title" content="8-Bit Arcade Whitepaper">
+    <meta property="og:description" content="Technical documentation for 8-Bit Arcade GameFi platform.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://8bitarcade.games/whitepaper.html">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        /* Whitepaper-specific styles */
+        .whitepaper-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(10, 14, 39, 0.95);
+            border: 2px solid var(--color-purple);
+            border-radius: 10px;
+        }
+
+        .wp-header {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 2px solid var(--color-cyan);
+            margin-bottom: 3rem;
+        }
+
+        .wp-version {
+            color: var(--color-cyan);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .wp-section {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .wp-section:last-child {
+            border-bottom: none;
+        }
+
+        .wp-section h2 {
+            color: var(--color-cyan);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-pink);
+        }
+
+        .wp-section h3 {
+            color: var(--color-green);
+            font-size: 1.1rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .wp-section p, .wp-section li {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .wp-section ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .wp-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .wp-highlight {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1));
+            border-left: 4px solid var(--color-cyan);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .wp-highlight.warning {
+            border-left-color: var(--color-yellow);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+        }
+
+        .wp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wp-table th, .wp-table td {
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .wp-table th {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--color-cyan);
+            font-weight: 600;
+        }
+
+        .wp-table td {
+            color: #e0e0e0;
+        }
+
+        .wp-table tr:nth-child(even) {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .wp-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .wp-stat-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px solid var(--color-green);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .wp-stat-value {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            color: var(--color-green);
+            text-shadow: 0 0 10px var(--color-green);
+        }
+
+        .wp-stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .wp-toc {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-purple);
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .wp-toc h3 {
+            color: var(--color-pink);
+            margin-bottom: 1rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+        }
+
+        .wp-toc ol {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .wp-toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        .wp-toc a {
+            color: var(--color-cyan);
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wp-toc a:hover {
+            color: var(--color-green);
+            text-decoration: underline;
+        }
+
+        .wp-arch-diagram {
+            background: #0a0e27;
+            border: 1px solid var(--color-cyan);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--color-green);
+            line-height: 1.4;
+        }
+
+        .wp-footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            border-top: 2px solid var(--color-purple);
+        }
+
+        .wp-badge {
+            display: inline-block;
+            background: var(--color-green);
+            color: #000;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .wp-badge.blue { background: var(--color-cyan); }
+        .wp-badge.pink { background: var(--color-pink); }
+        .wp-badge.yellow { background: var(--color-yellow); }
+
+        @media (max-width: 768px) {
+            .whitepaper-container {
+                padding: 1rem;
+            }
+            .wp-section h2 {
+                font-size: 1rem;
+            }
+            .wp-stat-value {
+                font-size: 1.2rem;
+            }
+            .wp-arch-diagram {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <a href="index.html" class="pixel-text glow-pink">8BIT ARCADE</a>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html#about">About</a>
+                    <a href="tokenomics.html">Tokenomics</a>
+                    <a href="whitepaper.html" class="active">Whitepaper</a>
+                    <a href="https://docs.8bitarcade.games" target="_blank">Docs</a>
+                    <a href="sale.html" class="btn btn-primary">Token Sale</a>
+                    <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-play">Play Now</a>
+                </div>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Whitepaper Content -->
+    <section class="section" style="padding-top: 120px;">
+        <div class="container">
+            <div class="whitepaper-container">
+
+                <!-- Header -->
+                <div class="wp-header">
+                    <h1 class="pixel-text glow-cyan" style="font-size: 1.8rem;">8-BIT ARCADE</h1>
+                    <p style="font-size: 1.3rem; color: var(--color-pink); margin-top: 1rem;">Technical Whitepaper</p>
+                    <p style="color: #aaa; margin-top: 1rem; font-family: 'Inter', sans-serif;">
+                        A Blockchain-Powered Play-to-Earn Retro Gaming Platform
+                    </p>
+                    <p class="wp-version">Version 1.0 | December 2024</p>
+                </div>
+
+                <!-- Table of Contents -->
+                <div class="wp-toc">
+                    <h3>TABLE OF CONTENTS</h3>
+                    <ol>
+                        <li><a href="#abstract">Abstract</a></li>
+                        <li><a href="#introduction">Introduction</a></li>
+                        <li><a href="#market">Market Opportunity</a></li>
+                        <li><a href="#platform">Platform Overview</a></li>
+                        <li><a href="#architecture">Technical Architecture</a></li>
+                        <li><a href="#tokenomics">Token Economics</a></li>
+                        <li><a href="#security">Security Framework</a></li>
+                        <li><a href="#roadmap">Development Roadmap</a></li>
+                        <li><a href="#team">Team & Governance</a></li>
+                        <li><a href="#conclusion">Conclusion</a></li>
+                    </ol>
+                </div>
+
+                <!-- 1. Abstract -->
+                <div class="wp-section" id="abstract">
+                    <h2>1. ABSTRACT</h2>
+                    <p>
+                        8-Bit Arcade is a decentralized gaming platform that bridges nostalgic retro gaming experiences
+                        with modern blockchain technology. Built on Arbitrum's Layer 2 infrastructure, the platform enables
+                        players to compete in classic arcade-style games while earning cryptocurrency rewards through
+                        skill-based gameplay.
+                    </p>
+                    <p>
+                        The platform addresses fundamental challenges in the GameFi sector: unsustainable tokenomics,
+                        pay-to-win mechanics, and poor gameplay experiences. By implementing a deflationary token model,
+                        fair skill-based competition, and genuinely enjoyable games, 8-Bit Arcade creates a sustainable
+                        ecosystem where players are rewarded for their time and skill investment.
+                    </p>
+                    <div class="wp-highlight">
+                        <strong>Key Innovation:</strong> Unlike traditional GameFi projects requiring significant upfront
+                        investment, 8-Bit Arcade offers a completely free-to-play entry point with daily reward
+                        opportunities, lowering barriers to Web3 gaming adoption.
+                    </div>
+                </div>
+
+                <!-- 2. Introduction -->
+                <div class="wp-section" id="introduction">
+                    <h2>2. INTRODUCTION</h2>
+
+                    <h3>2.1 The Problem</h3>
+                    <p>
+                        The blockchain gaming industry has experienced explosive growth, yet faces persistent challenges:
+                    </p>
+                    <ul>
+                        <li><strong>Inflationary Collapse:</strong> Most GameFi projects distribute tokens over 20-30 years,
+                            leading to perpetual sell pressure and inevitable token devaluation</li>
+                        <li><strong>Pay-to-Win Barriers:</strong> NFT requirements of $500-$5,000+ exclude mainstream gamers</li>
+                        <li><strong>Poor Gameplay:</strong> Focus on tokenomics over entertainment creates games nobody wants to play</li>
+                        <li><strong>Unsustainable Economics:</strong> Lack of deflationary mechanisms results in infinite supply growth</li>
+                    </ul>
+
+                    <h3>2.2 The Solution</h3>
+                    <p>
+                        8-Bit Arcade implements a fundamentally different approach:
+                    </p>
+                    <ul>
+                        <li><strong>5-Year Accelerated Distribution:</strong> Front-loaded rewards maximize player earnings now, not decades later</li>
+                        <li><strong>Zero Investment Required:</strong> Free-to-play with daily earning opportunities from day one</li>
+                        <li><strong>Genuine Entertainment:</strong> 12+ classic arcade games designed for fun first, rewards second</li>
+                        <li><strong>Deflationary Mechanics:</strong> 50% of tournament fees permanently burned, continuously reducing supply</li>
+                    </ul>
+
+                    <div class="wp-stat-grid">
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">$0</div>
+                            <div class="wp-stat-label">Investment Required</div>
+                        </div>
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">12+</div>
+                            <div class="wp-stat-label">Classic Games</div>
+                        </div>
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">50K</div>
+                            <div class="wp-stat-label">Daily 8BIT Rewards</div>
+                        </div>
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">50%</div>
+                            <div class="wp-stat-label">Fee Burn Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Market Opportunity -->
+                <div class="wp-section" id="market">
+                    <h2>3. MARKET OPPORTUNITY</h2>
+
+                    <h3>3.1 Industry Analysis</h3>
+                    <p>
+                        The blockchain gaming market represents one of the fastest-growing sectors in cryptocurrency,
+                        with the global GameFi market projected to exceed $90 billion by 2030. Despite market cycles,
+                        gaming remains one of the most resilient use cases for blockchain technology.
+                    </p>
+
+                    <h3>3.2 Target Demographics</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Segment</th>
+                            <th>Description</th>
+                            <th>Value Proposition</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Casual Gamers</strong></td>
+                            <td>Mainstream players seeking entertainment</td>
+                            <td>Free games, optional earning</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Crypto Natives</strong></td>
+                            <td>Web3 users familiar with tokens</td>
+                            <td>Easy onboarding, familiar mechanics</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Competitive Players</strong></td>
+                            <td>Skill-focused tournament participants</td>
+                            <td>Prize pools, leaderboards</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Developing Markets</strong></td>
+                            <td>Users seeking income opportunities</td>
+                            <td>Meaningful earnings potential</td>
+                        </tr>
+                    </table>
+
+                    <h3>3.3 Competitive Advantages</h3>
+                    <ul>
+                        <li><strong>No NFT Requirement:</strong> Unlike Axie Infinity or DeFi Kingdoms, no upfront purchase needed</li>
+                        <li><strong>Arbitrum Layer 2:</strong> Sub-$0.10 transaction fees vs $5-50 on Ethereum mainnet</li>
+                        <li><strong>Instant Gratification:</strong> Rewards distributed daily, not locked for months</li>
+                        <li><strong>Nostalgia Factor:</strong> Proven game mechanics with 40+ years of player engagement</li>
+                    </ul>
+                </div>
+
+                <!-- 4. Platform Overview -->
+                <div class="wp-section" id="platform">
+                    <h2>4. PLATFORM OVERVIEW</h2>
+
+                    <h3>4.1 Game Library</h3>
+                    <p>
+                        The platform launches with 12+ fully-developed arcade games, each implementing classic
+                        gameplay mechanics with modern visual and audio enhancements:
+                    </p>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Game</th>
+                            <th>Genre</th>
+                            <th>Inspiration</th>
+                        </tr>
+                        <tr><td>Space Rocks</td><td>Shooter</td><td>Asteroids</td></tr>
+                        <tr><td>Chomper</td><td>Maze</td><td>Pac-Man</td></tr>
+                        <tr><td>Bug Blaster</td><td>Shooter</td><td>Centipede</td></tr>
+                        <tr><td>Alien Assault</td><td>Shooter</td><td>Space Invaders</td></tr>
+                        <tr><td>Block Drop</td><td>Puzzle</td><td>Tetris</td></tr>
+                        <tr><td>Pixel Snake</td><td>Action</td><td>Snake</td></tr>
+                        <tr><td>Road Hopper</td><td>Action</td><td>Frogger</td></tr>
+                        <tr><td>Brick Breaker</td><td>Action</td><td>Breakout</td></tr>
+                        <tr><td>Galaxy Fighter</td><td>Shooter</td><td>Galaga</td></tr>
+                        <tr><td>Missile Command</td><td>Strategy</td><td>Missile Command</td></tr>
+                        <tr><td>Flappy Bird</td><td>Action</td><td>Flappy Bird</td></tr>
+                        <tr><td>Paddle Battle</td><td>Sports</td><td>Pong</td></tr>
+                    </table>
+
+                    <h3>4.2 Play Modes</h3>
+                    <ul>
+                        <li><strong>Free Play:</strong> Unlimited practice with no wallet required</li>
+                        <li><strong>Ranked Mode:</strong> Compete for daily leaderboard positions and 8BIT rewards</li>
+                        <li><strong>Tournaments:</strong> Pay-to-enter competitions with substantial prize pools</li>
+                    </ul>
+
+                    <h3>4.3 Reward Distribution</h3>
+                    <div class="wp-highlight">
+                        <strong>Daily Reward Pool:</strong> 50,000 8BIT tokens distributed automatically every 24 hours
+                        to top 10 players per game. No claiming required—rewards sent directly to player wallets.
+                    </div>
+
+                    <table class="wp-table">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Daily Reward</th>
+                            <th>Value @ $1M MC</th>
+                        </tr>
+                        <tr><td>1st Place</td><td>1,500 8BIT</td><td>$3.00</td></tr>
+                        <tr><td>2nd Place</td><td>1,000 8BIT</td><td>$2.00</td></tr>
+                        <tr><td>3rd Place</td><td>750 8BIT</td><td>$1.50</td></tr>
+                        <tr><td>4th-10th</td><td>250-500 8BIT</td><td>$0.50-$1.00</td></tr>
+                    </table>
+                </div>
+
+                <!-- 5. Technical Architecture -->
+                <div class="wp-section" id="architecture">
+                    <h2>5. TECHNICAL ARCHITECTURE</h2>
+
+                    <h3>5.1 Technology Stack</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Layer</th>
+                            <th>Technology</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td>Frontend</td>
+                            <td>Next.js 14, TypeScript</td>
+                            <td>Server-side rendering, type safety</td>
+                        </tr>
+                        <tr>
+                            <td>Game Engine</td>
+                            <td>Phaser 3</td>
+                            <td>WebGL-accelerated 2D gaming</td>
+                        </tr>
+                        <tr>
+                            <td>Wallet</td>
+                            <td>RainbowKit, wagmi v2</td>
+                            <td>Multi-wallet Web3 connectivity</td>
+                        </tr>
+                        <tr>
+                            <td>Backend</td>
+                            <td>Firebase Cloud Functions</td>
+                            <td>Serverless API, score validation</td>
+                        </tr>
+                        <tr>
+                            <td>Database</td>
+                            <td>Firestore, Realtime DB</td>
+                            <td>User data, live leaderboards</td>
+                        </tr>
+                        <tr>
+                            <td>Blockchain</td>
+                            <td>Arbitrum One, Solidity 0.8.20</td>
+                            <td>Token contracts, tournaments</td>
+                        </tr>
+                    </table>
+
+                    <h3>5.2 System Architecture</h3>
+                    <div class="wp-arch-diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│                        8-BIT ARCADE SYSTEM                          │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │                      CLIENT LAYER                            │   │
+│  │   [Next.js App] ←→ [Phaser Games] ←→ [RainbowKit Wallet]    │   │
+│  └──────────────────────────┬──────────────────────────────────┘   │
+│                             │                                       │
+│  ┌──────────────────────────▼──────────────────────────────────┐   │
+│  │                     SERVICE LAYER                            │   │
+│  │   [Firebase Auth] ←→ [Cloud Functions] ←→ [Arbitrum RPC]   │   │
+│  └──────────────────────────┬──────────────────────────────────┘   │
+│                             │                                       │
+│  ┌──────────────────────────▼──────────────────────────────────┐   │
+│  │                       DATA LAYER                             │   │
+│  │   [Firestore DB]    [Realtime DB]    [Smart Contracts]      │   │
+│  │   (Users/Scores)    (Leaderboards)   (Token/Tournaments)    │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+                    </div>
+
+                    <h3>5.3 Smart Contract Architecture</h3>
+                    <p>
+                        The platform operates through a suite of interconnected smart contracts deployed on Arbitrum One:
+                    </p>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Contract</th>
+                            <th>Function</th>
+                            <th>Key Features</th>
+                        </tr>
+                        <tr>
+                            <td><strong>EightBitToken</strong></td>
+                            <td>ERC-20 Token</td>
+                            <td>Fixed 500M supply, 18 decimals</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GameRewards</strong></td>
+                            <td>Reward Distribution</td>
+                            <td>Automated daily payouts, admin controls</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TournamentManager</strong></td>
+                            <td>Competition Logic</td>
+                            <td>Entry fees, prize pools, rankings</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TournamentBuyback</strong></td>
+                            <td>Deflationary Engine</td>
+                            <td>Uniswap V3 integration, token burns</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TokenSale</strong></td>
+                            <td>Presale Management</td>
+                            <td>ETH/USDC acceptance, rate calculation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TreasuryGasManager</strong></td>
+                            <td>Operational Sustainability</td>
+                            <td>Auto-refill mechanism, gas optimization</td>
+                        </tr>
+                    </table>
+
+                    <h3>5.4 Security Measures</h3>
+                    <ul>
+                        <li><strong>Anti-Cheat System:</strong> Server-side game replay validation prevents score manipulation</li>
+                        <li><strong>Rate Limiting:</strong> API throttling prevents automated abuse</li>
+                        <li><strong>Wallet Verification:</strong> Cryptographic signature validation for all transactions</li>
+                        <li><strong>Contract Security:</strong> OpenZeppelin standards, access controls, reentrancy guards</li>
+                    </ul>
+                </div>
+
+                <!-- 6. Token Economics -->
+                <div class="wp-section" id="tokenomics">
+                    <h2>6. TOKEN ECONOMICS</h2>
+
+                    <h3>6.1 Token Specifications</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr><td>Token Name</td><td>8-Bit Arcade Token</td></tr>
+                        <tr><td>Symbol</td><td>8BIT</td></tr>
+                        <tr><td>Network</td><td>Arbitrum One (Layer 2)</td></tr>
+                        <tr><td>Standard</td><td>ERC-20</td></tr>
+                        <tr><td>Total Supply</td><td>500,000,000 8BIT (Fixed)</td></tr>
+                        <tr><td>Decimals</td><td>18</td></tr>
+                        <tr><td>Presale Price</td><td>$0.0005 USD</td></tr>
+                    </table>
+
+                    <h3>6.2 Token Distribution</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Allocation</th>
+                            <th>Amount</th>
+                            <th>Percentage</th>
+                            <th>Vesting</th>
+                        </tr>
+                        <tr>
+                            <td>Token Sale</td>
+                            <td>200,000,000</td>
+                            <td>40%</td>
+                            <td>None - Immediate</td>
+                        </tr>
+                        <tr>
+                            <td>Daily Rewards + Tournaments</td>
+                            <td>150,000,000</td>
+                            <td>30%</td>
+                            <td>5-Year Distribution</td>
+                        </tr>
+                        <tr>
+                            <td>Staking Rewards</td>
+                            <td>50,000,000</td>
+                            <td>10%</td>
+                            <td>5-Year Distribution</td>
+                        </tr>
+                        <tr>
+                            <td>DEX Liquidity</td>
+                            <td>60,000,000</td>
+                            <td>12%</td>
+                            <td>Locked 3+ Years</td>
+                        </tr>
+                        <tr>
+                            <td>Tournament Prize Pools</td>
+                            <td>20,000,000</td>
+                            <td>4%</td>
+                            <td>Available Immediately</td>
+                        </tr>
+                        <tr>
+                            <td>Marketing & Partnerships</td>
+                            <td>15,000,000</td>
+                            <td>3%</td>
+                            <td>Performance-Based</td>
+                        </tr>
+                        <tr>
+                            <td>Team</td>
+                            <td>5,000,000</td>
+                            <td>1%</td>
+                            <td>Vested 2-3 Years</td>
+                        </tr>
+                        <tr style="font-weight: bold; background: rgba(0,255,136,0.1);">
+                            <td>TOTAL</td>
+                            <td>500,000,000</td>
+                            <td>100%</td>
+                            <td>-</td>
+                        </tr>
+                    </table>
+
+                    <h3>6.3 Deflationary Mechanism</h3>
+                    <div class="wp-highlight">
+                        <strong>Buyback and Burn Protocol:</strong> 50% of all tournament entry fees are used to
+                        purchase 8BIT tokens from the open market via Uniswap V3, which are then permanently
+                        burned (sent to address 0x0...dead). This creates constant buy pressure while reducing
+                        circulating supply.
+                    </div>
+
+                    <p><strong>Burn Flow:</strong></p>
+                    <ol>
+                        <li>Player enters tournament → Pays entry fee in 8BIT</li>
+                        <li>50% of fee → TournamentBuyback contract</li>
+                        <li>Contract executes Uniswap V3 swap → Acquires 8BIT</li>
+                        <li>Acquired tokens → Burned permanently</li>
+                        <li>Remaining 50% → Prize pool for winners</li>
+                    </ol>
+
+                    <h3>6.4 Emissions Schedule</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Period</th>
+                            <th>Monthly Emissions</th>
+                            <th>% of Supply</th>
+                        </tr>
+                        <tr><td>Year 1</td><td>2,500,000 8BIT</td><td>0.50%</td></tr>
+                        <tr><td>Year 2</td><td>2,500,000 8BIT</td><td>0.50%</td></tr>
+                        <tr><td>Year 3</td><td>2,500,000 8BIT</td><td>0.50%</td></tr>
+                        <tr><td>Year 4</td><td>2,500,000 8BIT</td><td>0.50%</td></tr>
+                        <tr><td>Year 5</td><td>2,500,000 8BIT</td><td>0.50%</td></tr>
+                        <tr style="font-weight: bold;"><td>Year 6+</td><td>0 8BIT</td><td>0%</td></tr>
+                    </table>
+                    <p><em>After Year 5, no new emissions from the rewards pool. Circulating supply stabilizes and deflationary pressure increases.</em></p>
+
+                    <h3>6.5 Token Utility</h3>
+                    <ul>
+                        <li><span class="wp-badge">ACTIVE</span> Tournament entry fees</li>
+                        <li><span class="wp-badge">ACTIVE</span> Prize pool distributions</li>
+                        <li><span class="wp-badge">ACTIVE</span> Daily leaderboard rewards</li>
+                        <li><span class="wp-badge blue">PLANNED</span> Staking for passive income</li>
+                        <li><span class="wp-badge blue">PLANNED</span> Governance voting rights</li>
+                        <li><span class="wp-badge blue">PLANNED</span> NFT badge minting</li>
+                    </ul>
+                </div>
+
+                <!-- 7. Security Framework -->
+                <div class="wp-section" id="security">
+                    <h2>7. SECURITY FRAMEWORK</h2>
+
+                    <h3>7.1 Smart Contract Security</h3>
+                    <ul>
+                        <li><strong>OpenZeppelin Standards:</strong> Industry-standard implementations for ERC-20, access controls, and security patterns</li>
+                        <li><strong>Reentrancy Guards:</strong> Protection against reentrancy attacks on all state-changing functions</li>
+                        <li><strong>Access Control:</strong> Role-based permissions (Owner, Admin, Operator) with minimal privilege principles</li>
+                        <li><strong>Emergency Controls:</strong> Pausable functionality for rapid response to discovered vulnerabilities</li>
+                    </ul>
+
+                    <h3>7.2 Anti-Cheat Implementation</h3>
+                    <p>
+                        The platform implements multi-layered anti-cheat protection:
+                    </p>
+                    <ul>
+                        <li><strong>Server-Side Validation:</strong> All high scores verified through game replay analysis</li>
+                        <li><strong>Statistical Anomaly Detection:</strong> ML-based detection of impossible score patterns</li>
+                        <li><strong>Rate Limiting:</strong> Maximum submission frequency prevents automated attacks</li>
+                        <li><strong>Wallet Reputation:</strong> New wallets subject to additional scrutiny</li>
+                    </ul>
+
+                    <h3>7.3 Infrastructure Security</h3>
+                    <ul>
+                        <li><strong>Firebase Security Rules:</strong> Granular access controls on all database operations</li>
+                        <li><strong>HTTPS Everywhere:</strong> All communications encrypted via TLS 1.3</li>
+                        <li><strong>API Authentication:</strong> JWT-based authentication with wallet signature verification</li>
+                        <li><strong>DDoS Protection:</strong> Cloudflare protection layer for all public endpoints</li>
+                    </ul>
+
+                    <div class="wp-highlight warning">
+                        <strong>Security Audits:</strong> Smart contracts undergo internal security review prior to
+                        mainnet deployment. Third-party audit planned post-launch pending community funding.
+                    </div>
+                </div>
+
+                <!-- 8. Roadmap -->
+                <div class="wp-section" id="roadmap">
+                    <h2>8. DEVELOPMENT ROADMAP</h2>
+
+                    <table class="wp-table">
+                        <tr>
+                            <th>Phase</th>
+                            <th>Timeline</th>
+                            <th>Milestones</th>
+                            <th>Status</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 1</strong><br>Foundation</td>
+                            <td>Q4 2024</td>
+                            <td>
+                                • 12 arcade games developed<br>
+                                • Smart contracts deployed<br>
+                                • Wallet integration complete<br>
+                                • Testnet launch
+                            </td>
+                            <td><span class="wp-badge">COMPLETE</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 2</strong><br>Token Launch</td>
+                            <td>Q1 2025</td>
+                            <td>
+                                • Public token sale<br>
+                                • Arbitrum mainnet deployment<br>
+                                • DEX liquidity provision<br>
+                                • Tournament system activation
+                            </td>
+                            <td><span class="wp-badge yellow">IN PROGRESS</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 3</strong><br>Growth</td>
+                            <td>Q2-Q3 2025</td>
+                            <td>
+                                • Mobile app (iOS/Android)<br>
+                                • Staking implementation<br>
+                                • NFT achievement badges<br>
+                                • Partnership integrations
+                            </td>
+                            <td><span class="wp-badge blue">PLANNED</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 4</strong><br>Expansion</td>
+                            <td>Q4 2025+</td>
+                            <td>
+                                • New games monthly<br>
+                                • Multiplayer tournaments<br>
+                                • Cross-chain support<br>
+                                • Community governance
+                            </td>
+                            <td><span class="wp-badge blue">PLANNED</span></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 9. Team & Governance -->
+                <div class="wp-section" id="team">
+                    <h2>9. TEAM & GOVERNANCE</h2>
+
+                    <h3>9.1 Team Allocation</h3>
+                    <p>
+                        The team allocation represents only <strong>1% of total supply</strong>—significantly below
+                        the industry standard of 15-20%. This demonstrates commitment to community-first tokenomics
+                        and aligns team incentives with long-term project success.
+                    </p>
+                    <ul>
+                        <li><strong>Vesting Period:</strong> 2-3 years linear vesting</li>
+                        <li><strong>No Immediate Access:</strong> Team cannot sell at launch</li>
+                        <li><strong>Performance Alignment:</strong> Team benefits only when project succeeds</li>
+                    </ul>
+
+                    <h3>9.2 Governance Model</h3>
+                    <p>
+                        The platform will transition to community governance through the following phases:
+                    </p>
+                    <ol>
+                        <li><strong>Launch Phase:</strong> Centralized operations for rapid iteration</li>
+                        <li><strong>Transition Phase:</strong> Community advisory board formation</li>
+                        <li><strong>Governance Phase:</strong> Token-weighted voting on game additions, parameter changes</li>
+                        <li><strong>DAO Phase:</strong> Full decentralization of treasury and development decisions</li>
+                    </ol>
+
+                    <h3>9.3 Transparency Commitments</h3>
+                    <ul>
+                        <li>All smart contracts verified and open-source</li>
+                        <li>Treasury wallet publicly viewable on-chain</li>
+                        <li>Monthly financial reports published</li>
+                        <li>Development updates via Discord/Twitter</li>
+                    </ul>
+                </div>
+
+                <!-- 10. Conclusion -->
+                <div class="wp-section" id="conclusion">
+                    <h2>10. CONCLUSION</h2>
+                    <p>
+                        8-Bit Arcade represents a new paradigm in blockchain gaming: one where players genuinely
+                        enjoy the games they play while earning meaningful rewards for their skill and dedication.
+                        By combining nostalgic gameplay with sustainable tokenomics and modern Web3 technology,
+                        the platform is positioned to capture significant market share in the growing GameFi sector.
+                    </p>
+                    <p>
+                        The key differentiators—zero investment requirement, deflationary mechanics, accelerated
+                        reward distribution, and genuinely fun games—address the fundamental failures of previous
+                        GameFi projects while creating a sustainable ecosystem for long-term growth.
+                    </p>
+                    <div class="wp-highlight">
+                        <strong>Investment Thesis:</strong> Early participants in the 8BIT token sale gain exposure
+                        to a platform designed for sustainability, with multiple value drivers including player
+                        adoption, tournament activity, and deflationary token burns.
+                    </div>
+
+                    <div class="wp-stat-grid">
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">$0.0005</div>
+                            <div class="wp-stat-label">Presale Price</div>
+                        </div>
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">500M</div>
+                            <div class="wp-stat-label">Fixed Supply</div>
+                        </div>
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">1%</div>
+                            <div class="wp-stat-label">Team Allocation</div>
+                        </div>
+                        <div class="wp-stat-box">
+                            <div class="wp-stat-value">12%</div>
+                            <div class="wp-stat-label">DEX Liquidity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="wp-footer">
+                    <p class="pixel-text" style="color: var(--color-cyan); margin-bottom: 1rem;">8-BIT ARCADE</p>
+                    <p style="color: #888; font-family: 'Inter', sans-serif; font-size: 0.9rem;">
+                        For the latest updates, join our community:
+                    </p>
+                    <div style="margin-top: 1rem;">
+                        <a href="https://discord.gg/AKrdPvHz4P" target="_blank" class="btn btn-secondary" style="margin: 0.5rem;">Discord</a>
+                        <a href="https://x.com/8_Bit_Arcade_" target="_blank" class="btn btn-secondary" style="margin: 0.5rem;">Twitter</a>
+                        <a href="https://t.me/eight_bit_arcade" target="_blank" class="btn btn-secondary" style="margin: 0.5rem;">Telegram</a>
+                    </div>
+                    <p style="color: #666; font-size: 0.8rem; margin-top: 2rem; font-family: 'Inter', sans-serif;">
+                        This whitepaper is for informational purposes only and does not constitute financial advice.
+                        Cryptocurrency investments carry significant risk. Please read our
+                        <a href="index.html#disclaimer" style="color: var(--color-cyan);">Risk Disclaimer</a>.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="pixel-text">8BIT ARCADE</h3>
+                    <p>Retro gaming meets blockchain technology</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Links</h4>
+                    <a href="https://play.8bitarcade.games" target="_blank">Play Games</a>
+                    <a href="sale.html">Token Sale</a>
+                    <a href="tokenomics.html">Tokenomics</a>
+                    <a href="whitepaper.html">Whitepaper</a>
+                    <a href="https://docs.8bitarcade.games" target="_blank">Documentation</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Community</h4>
+                    <a href="https://discord.gg/AKrdPvHz4P" target="_blank">Discord</a>
+                    <a href="https://x.com/8_Bit_Arcade_" target="_blank">X / Twitter</a>
+                    <a href="https://t.me/eight_bit_arcade" target="_blank">Telegram</a>
+                    <a href="https://github.com/8Bit-Arcade" target="_blank">GitHub</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Legal</h4>
+                    <a href="/terms.html">Terms of Service</a>
+                    <a href="/privacy.html">Privacy Policy</a>
+                    <a href="/disclaimer.html">Risk Disclaimer</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 8-Bit Arcade. All rights reserved.</p>
+                <p class="disclaimer">Cryptocurrency investments carry risk. Only invest what you can afford to lose.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
