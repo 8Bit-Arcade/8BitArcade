@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import Providers from '@/components/Providers';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -6,6 +7,8 @@ import UsernameModal from '@/components/wallet/UsernameModal';
 import DisplayPreferenceModal from '@/components/wallet/DisplayPreferenceModal';
 import ToastContainer from '@/components/ui/Toast';
 import '@/styles/globals.css';
+
+const GA_MEASUREMENT_ID = 'G-F8S6MFN276';
 
 export const metadata: Metadata = {
   title: '8-Bit Arcade | Play Retro Games, Earn Crypto',
@@ -63,6 +66,19 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-arcade-black text-white antialiased">
+        {/* Google Analytics */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <Providers>
           {/* CRT Scanline Effect */}
           <div className="crt-overlay" aria-hidden="true" />
