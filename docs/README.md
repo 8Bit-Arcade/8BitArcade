@@ -70,6 +70,7 @@ Players can compete in multiple games to maximize earning potential.
 - **Monthly Distribution:** 1,500,000 8BIT (~$48,750 at projected $10M market cap)
 - **Total Supply:** 500,000,000 8BIT (fixed max supply)
 - **Presale Price:** $0.0005 per token
+- **Token Sale:** February 25, 2025 (6-week duration)
 - **Network:** Arbitrum One (ultra-low fees ~$0.10 per transaction)
 - **Games Available:** 12+ classic arcade games
 

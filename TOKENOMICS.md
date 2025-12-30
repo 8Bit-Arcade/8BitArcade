@@ -59,6 +59,8 @@ Total Supply: 500,000,000 8BIT (100%)
 - **Hard Cap:** $100,000 USD
 - **Payment Methods:** ETH, USDC
 - **Network:** Arbitrum One (low fees!)
+- **Launch Date:** February 25, 2025
+- **Sale Duration:** 6 weeks (ends April 8, 2025)
 - **Vesting:** None - tokens available immediately after purchase
 
 ### Why Arbitrum?
