@@ -285,7 +285,7 @@ export default function BuyEightBitPage() {
                 {timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : 'ENDED'}
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                4 Week Sale
+                6 Week Sale • Starts Feb 25
               </p>
             </div>
           </Card>

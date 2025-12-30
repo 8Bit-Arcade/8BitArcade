@@ -20,10 +20,10 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 
 ## Sale Timeline
 
-### Phase 1: Presale (Current)
+### Phase 1: Presale
 
-- **Status:** Open
-- **Duration:** Until $100K raised or time limit
+- **Status:** Starts February 25, 2025
+- **Duration:** 6 weeks (ends April 8, 2025)
 - **Price:** $0.0005 (locked, no price increases)
 - **Payment:** USDC or ETH on Arbitrum
 - **Claim:** Immediate upon purchase
