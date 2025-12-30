@@ -338,11 +338,16 @@ contract TournamentManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Get active tournaments count
+     * @notice Gas-optimized: caches storage reads and timestamp
      */
     function getActiveTournamentsCount() external view returns (uint256) {
         uint256 count = 0;
-        for (uint256 i = 1; i < nextTournamentId; i++) {
-            if (tournaments[i].isActive && block.timestamp < tournaments[i].endTime) {
+        uint256 currentTime = block.timestamp; // Cache timestamp
+        uint256 maxId = nextTournamentId; // Cache storage read
+
+        for (uint256 i = 1; i < maxId; i++) {
+            Tournament storage t = tournaments[i]; // Single storage pointer
+            if (t.isActive && currentTime < t.endTime) {
                 count++;
             }
         }
