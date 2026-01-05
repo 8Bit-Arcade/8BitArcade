@@ -529,11 +529,11 @@ useEffect(() => {
           <div className="flex flex-wrap gap-4 justify-center text-sm font-arcade">
             <div className="card-arcade px-4 py-2">
               <span className="text-gray-400">Standard: </span>
-              <span className="text-arcade-green">$1 Weekly / $5 Monthly</span>
+              <span className="text-arcade-green">2,000 8BIT Weekly / 10,000 8BIT Monthly</span>
             </div>
             <div className="card-arcade px-4 py-2">
               <span className="text-gray-400">High Roller: </span>
-              <span className="text-arcade-pink">$5 Weekly / $25 Monthly</span>
+              <span className="text-arcade-pink">10,000 8BIT Weekly / 50,000 8BIT Monthly</span>
             </div>
           </div>
         </div>
@@ -604,17 +604,11 @@ useEffect(() => {
                       <p className="font-pixel text-arcade-yellow">
                         {formatNumber(Number(formatEther(tournament.prizePool)))} 8BIT
                       </p>
-                      <p className="font-arcade text-xs text-gray-400">
-                        ${(Number(formatEther(tournament.prizePool)) * 0.0005).toFixed(2)}
-                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-arcade text-xs text-gray-500">Entry Fee</p>
                       <p className="font-arcade text-arcade-cyan">
                         {formatNumber(Number(formatEther(tournament.entryFee)))} 8BIT
-                      </p>
-                      <p className="font-arcade text-xs text-gray-400">
-                        ${(Number(formatEther(tournament.entryFee)) * 0.0005).toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
