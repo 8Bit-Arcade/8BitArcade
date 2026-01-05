@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useReadContract, usePublicClient } from 'wagmi';
-import { TournamentManagerABI } from '@/lib/contracts';
-import { CONTRACTS } from '@/config/contracts';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { callFunction } from '@/lib/firebase-functions';
 import { useAuthStore } from '@/stores/authStore';
 import { shortenAddress } from '@/lib/utils';
 
@@ -20,6 +18,18 @@ interface TournamentLeaderboardProps {
   isActive: boolean;
 }
 
+interface LeaderboardResponse {
+  success: boolean;
+  leaderboard: {
+    player: string;
+    username: string;
+    score: number;
+    rank: number;
+    timestamp: number;
+  }[];
+  total: number;
+}
+
 export default function TournamentLeaderboard({
   tournamentId,
   tournamentName,
@@ -30,83 +40,50 @@ export default function TournamentLeaderboard({
   const [searchQuery, setSearchQuery] = useState('');
 
   const { users } = useAuthStore();
-  const publicClient = usePublicClient();
 
-  // Fetch participants from blockchain
-  const { data: participants, isLoading: loadingParticipants, refetch: refetchParticipants } = useReadContract({
-    address: CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-    abi: TournamentManagerABI,
-    functionName: 'getParticipants',
-    args: [BigInt(tournamentId)],
-  });
-
-  // Build leaderboard from participants
-  useEffect(() => {
-    async function buildLeaderboard() {
-      if (!participants || !Array.isArray(participants) || participants.length === 0) {
-        setLeaderboard([]);
-        setLoading(false);
-        return;
-      }
-
-      if (!publicClient) {
-        setLoading(false);
-        return;
-      }
-
+  // Fetch leaderboard from Firebase
+  const fetchLeaderboard = useCallback(async () => {
+    try {
       setLoading(true);
+      const result = await callFunction<any, LeaderboardResponse>(
+        'getTournamentLeaderboard',
+        { tournamentId: String(tournamentId), limit: 100 }
+      );
 
-      try {
-        // Fetch scores for all participants in parallel
-        const scorePromises = participants.map((participant) =>
-          publicClient.readContract({
-            address: CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
-            abi: TournamentManagerABI,
-            functionName: 'getPlayerScore',
-            args: [BigInt(tournamentId), participant as `0x${string}`],
-          })
-        );
-
-        const scores = await Promise.all(scorePromises);
-
-        // Build entries
-        const entries = participants.map((participant, index) => ({
-          player: participant,
-          username: '', // Will be resolved by getPlayerDisplayName
-          score: Number(scores[index] || BigInt(0)),
-          rank: 0, // Will be set after sorting
+      if (result.success && result.leaderboard) {
+        const entries: LeaderboardEntry[] = result.leaderboard.map((entry) => ({
+          player: entry.player,
+          username: entry.username || '',
+          score: entry.score || 0,
+          rank: entry.rank,
         }));
-
-        // Sort by score descending and assign ranks
-        const sortedEntries = entries
-          .sort((a, b) => b.score - a.score)
-          .map((entry, index) => ({
-            ...entry,
-            rank: index + 1,
-          }));
-
-        setLeaderboard(sortedEntries);
-      } catch (error) {
-        console.error('Error building tournament leaderboard:', error);
+        setLeaderboard(entries);
+      } else {
         setLeaderboard([]);
-      } finally {
-        setLoading(false);
       }
+    } catch (error) {
+      console.error('Error fetching tournament leaderboard:', error);
+      setLeaderboard([]);
+    } finally {
+      setLoading(false);
     }
+  }, [tournamentId]);
 
-    buildLeaderboard();
-  }, [participants, tournamentId, publicClient]);
+  // Initial fetch
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
 
   // Refresh every 30 seconds if tournament is active
   useEffect(() => {
     if (isActive) {
       const interval = setInterval(() => {
-        refetchParticipants();
+        fetchLeaderboard();
       }, 30000);
 
       return () => clearInterval(interval);
     }
-  }, [isActive, refetchParticipants]);
+  }, [isActive, fetchLeaderboard]);
 
   // Get display name for a player
   const getPlayerDisplayName = (entry: LeaderboardEntry): string => {
@@ -148,7 +125,7 @@ export default function TournamentLeaderboard({
     });
   }, [leaderboard, searchQuery, users]);
 
-  if (loading || loadingParticipants) {
+  if (loading) {
     return (
       <div>
         <p className="font-arcade text-gray-500 text-sm text-center py-4">Loading...</p>
