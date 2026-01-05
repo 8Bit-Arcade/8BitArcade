@@ -9,7 +9,7 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 ### What Are Tournaments?
 
 **Tournaments** are time-limited competitions with:
-- 💰 **Entry fees** (paid in USDC)
+- 💰 **Entry fees** (paid in 8BIT tokens)
 - 🏆 **Large prize pools** (paid in 8BIT)
 - ⏰ **Set duration** (hours to weeks)
 - 👥 **Limited participants** (or unlimited)
@@ -23,17 +23,17 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 
 ### Standard Tournaments
 
-**Entry Fee:** $1-$5 USDC
-**Prize Pool:** 25,000-45,000 8BIT
-**Frequency:** Weekly
-**Duration:** 3-7 days
+**Entry Fee:** 2,000-10,000 8BIT (Weekly/Monthly)
+**Prize Pool:** 50,000-100,000 8BIT
+**Frequency:** Weekly & Monthly
+**Duration:** 7-30 days
 
-| Rank | Prize | USD Value (at $1M mcap) |
-|------|-------|------------------------|
-| 1st | 12,500 8BIT | $41 |
-| 2nd | 6,250 8BIT | $20 |
-| 3rd | 3,750 8BIT | $12 |
-| 4th-10th | Split remaining | $3-$8 each |
+| Rank | Prize |
+|------|-------|
+| 1st | 25,000 8BIT |
+| 2nd | 12,500 8BIT |
+| 3rd | 7,500 8BIT |
+| 4th-10th | Split remaining |
 
 **Best For:**
 - Casual competitive players
@@ -45,30 +45,30 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 
 ### High Roller Tournaments
 
-**Entry Fee:** $10-$25 USDC
-**Prize Pool:** 80,000-500,000 8BIT
+**Entry Fee:** 10,000-50,000 8BIT (Weekly/Monthly)
+**Prize Pool:** 150,000-500,000 8BIT
 **Frequency:** Weekly + Monthly
-**Duration:** 1-4 weeks
+**Duration:** 7-30 days
 
 #### High Roller Weekly
 
-| Rank | Prize | USD Value (at $10M mcap) |
-|------|-------|-------------------------|
-| 1st | 40,000 8BIT | $1,300 |
-| 2nd | 20,000 8BIT | $650 |
-| 3rd | 10,000 8BIT | $325 |
-| 4th-10th | 10,000 total | $325 split |
+| Rank | Prize |
+|------|-------|
+| 1st | 75,000 8BIT |
+| 2nd | 37,500 8BIT |
+| 3rd | 22,500 8BIT |
+| 4th-10th | 15,000 total |
 
 #### High Roller Monthly
 
-| Rank | Prize | USD Value (at $10M mcap) |
-|------|-------|-------------------------|
-| **1st** | **200,000 8BIT** | **$6,500** 💰 |
-| **2nd** | **100,000 8BIT** | **$3,250** |
-| **3rd** | **75,000 8BIT** | **$2,437** |
-| 4th | 50,000 8BIT | $1,625 |
-| 5th | 25,000 8BIT | $813 |
-| 6th-20th | 50,000 total | $163 each |
+| Rank | Prize |
+|------|-------|
+| **1st** | **200,000 8BIT** 💰 |
+| **2nd** | **100,000 8BIT** |
+| **3rd** | **75,000 8BIT** |
+| 4th | 50,000 8BIT |
+| 5th | 25,000 8BIT |
+| 6th-20th | 50,000 total |
 
 **Best For:**
 - Serious competitive players
@@ -80,7 +80,7 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 
 ### Special Event Tournaments
 
-**Entry Fee:** Varies ($5-$50)
+**Entry Fee:** Varies (10,000-100,000 8BIT)
 **Prize Pool:** 100,000-1,000,000 8BIT
 **Frequency:** Monthly/Quarterly
 **Duration:** 1-7 days
@@ -160,28 +160,27 @@ collected       Submit scores      finalized   receive 8BIT
 
 **50/50 Split of Entry Fees:**
 
-**Example: 100 players × $10 entry = $1,000 collected**
+**Example: 100 players × 10,000 8BIT entry = 1,000,000 8BIT collected**
 
-- **50% ($500)** → Prize pool
-  - Swapped to 8BIT via Uniswap
+- **50% (500,000 8BIT)** → Prize pool
   - Distributed to winners
-  - Creates ~154,000 8BIT prize at $0.00325
+  - Based on ranking position
 
-- **50% ($500)** → Buyback & Burn
-  - Buys 8BIT on Uniswap
+- **50% (500,000 8BIT)** → Burned
   - Sent to burn address
   - Reduces supply permanently
+  - Creates deflationary pressure
 
 ### Prize Breakdown Examples
 
-#### Standard Tournament (25K Pool)
+#### Standard Tournament (50K Pool)
 
 ```
-1st:  12,500 8BIT (50%)
-2nd:   6,250 8BIT (25%)
-3rd:   3,750 8BIT (15%)
-4th:   1,250 8BIT (5%)
-5th:   1,250 8BIT (5%)
+1st:  25,000 8BIT (50%)
+2nd:  12,500 8BIT (25%)
+3rd:   7,500 8BIT (15%)
+4th:   2,500 8BIT (5%)
+5th:   2,500 8BIT (5%)
 ```
 
 #### High Roller Monthly (500K Pool)
@@ -200,8 +199,8 @@ collected       Submit scores      finalized   receive 8BIT
 Some tournaments have **guaranteed minimums:**
 
 **Example:**
-- Entry fees may fund $300 prize pool
-- But tournament guarantees $500 minimum
+- Entry fees may fund 300,000 8BIT prize pool
+- But tournament guarantees 500,000 8BIT minimum
 - Platform adds extra 8BIT to reach guarantee
 - Ensures attractive prizes even with low participation
 
@@ -211,14 +210,14 @@ Some tournaments have **guaranteed minimums:**
 
 | Day | Tournament Type | Entry Fee | Prize Pool |
 |-----|----------------|-----------|------------|
-| **Monday** | Standard (Chomper) | $3 | 25K 8BIT |
-| **Wednesday** | High Roller (Space Rocks) | $15 | 80K 8BIT |
-| **Friday** | Standard (Block Drop) | $5 | 45K 8BIT |
-| **Sunday** | High Roller (All Games) | $10 | 80K 8BIT |
+| **Monday** | Standard (Chomper) | 2K 8BIT | 50K 8BIT |
+| **Wednesday** | High Roller (Space Rocks) | 10K 8BIT | 150K 8BIT |
+| **Friday** | Standard (Block Drop) | 2K 8BIT | 50K 8BIT |
+| **Sunday** | High Roller (All Games) | 10K 8BIT | 150K 8BIT |
 
 ### Monthly Events
 
-- **1st of Month:** High Roller Monthly begins ($25 entry, 500K pool)
+- **1st of Month:** High Roller Monthly begins (50K 8BIT entry, 500K pool)
 - **15th of Month:** Mid-month Special Event (varies)
 - **Last day:** High Roller Monthly ends, payouts
 
@@ -226,50 +225,42 @@ Some tournaments have **guaranteed minimums:**
 
 ## Entry Fees & Payment
 
-### Accepted Payment Methods
+### Accepted Payment Method
 
-**Primary:** USDC (Stablecoin)
-- Most common payment method
-- No price volatility
-- Easy to acquire
-- Fast transactions
+**8BIT Tokens:**
+- Native platform token
+- Easy to acquire via DEX
+- Fast transactions on Arbitrum
+- 50% of entry fees are burned
 
-**Alternative:** ETH
-- Automatically converted to USDC
-- Market rate at time of entry
-- Small conversion fee
-- Convenient for ETH holders
+### How to Get 8BIT Tokens
 
-### How to Get USDC
+#### Option 1: Earn Through Gameplay
 
-#### Option 1: Buy on Exchange
+1. Play games daily for free
+2. Rank in top 10 to earn 8BIT
+3. Use earned tokens for tournament entry
+4. No upfront investment needed!
 
-1. Use Binance, Coinbase, Kraken, etc.
-2. Buy USDC
-3. Withdraw to Arbitrum network
-4. Arrives in your wallet
+#### Option 2: Buy on DEX
 
-#### Option 2: Swap in Wallet
+1. Have ETH on Arbitrum
+2. Visit Uniswap or swap in wallet
+3. Swap ETH for 8BIT
+4. Ready to enter tournaments
 
-1. Have ETH or other tokens
-2. Use Uniswap or built-in wallet swap
-3. Swap to USDC on Arbitrum
-4. Pay in tournament
+#### Option 3: Token Sale
 
-#### Option 3: Bridge from Ethereum
-
-1. Have USDC on Ethereum mainnet
-2. Use [bridge.arbitrum.io](https://bridge.arbitrum.io)
-3. Bridge to Arbitrum One
-4. Wait ~10 minutes
+1. Participate in the 8BIT presale
+2. Receive tokens at launch
+3. Use for tournaments or hold
 
 ### Transaction Costs
 
-**Entry Fee:** $10 tournament
+**Entry Fee:** Tournament-specific (in 8BIT)
 **Gas Fee:** ~$0.20 (Arbitrum)
-**Total Cost:** ~$10.20
 
-Very affordable compared to Ethereum mainnet ($5-$50 gas fees).
+Very affordable compared to Ethereum mainnet.
 
 ## Tournament Strategies
 
@@ -302,8 +293,8 @@ Very affordable compared to Ethereum mainnet ($5-$50 gas fees).
 **Calculate expected value:**
 
 Example:
-- $10 entry fee
-- 100 participants = $500 prize pool
+- 10,000 8BIT entry fee
+- 100 participants = 500,000 8BIT prize pool
 - You estimate 20% chance to place top 3
 - Expected value = (Prize if win × Probability) - Entry fee
 
@@ -372,7 +363,7 @@ During tournaments, view:
 │  HIGH ROLLER MONTHLY - SPACE ROCKS       │
 │  Ends in: 3d 14h 22m                     │
 │  Participants: 247                       │
-│  Prize Pool: 500,000 8BIT ($16,250)      │
+│  Prize Pool: 500,000 8BIT                │
 ├──────┬────────────────┬──────────────────┤
 │ Rank │ Player         │ Score            │
 ├──────┼────────────────┼──────────────────┤
@@ -404,9 +395,9 @@ Enable alerts for:
 Track your performance:
 
 - **Tournaments Entered:** 47
-- **Total Spent:** $235 USDC
-- **Total Won:** 182,000 8BIT ($592)
-- **Net Profit:** +$357
+- **Total Spent:** 235,000 8BIT
+- **Total Won:** 382,000 8BIT
+- **Net Profit:** +147,000 8BIT
 - **Win Rate:** 34%
 - **Average Finish:** 8.2
 - **Best Finish:** 1st (Space Rocks Weekly)
@@ -463,20 +454,20 @@ See platform-wide data:
 
 ### Featured Winners
 
-**"PixelKing" - $18,000+ in tournament winnings**
-> "Started with $50 in entry fees. Practiced daily for 2 months. Now I've won more than my day job pays. 8-Bit Arcade changed my life."
+**"PixelKing" - 18M+ 8BIT in tournament winnings**
+> "Started by earning free daily rewards. Practiced daily for 2 months. Now I've won more than my day job pays. 8-Bit Arcade changed my life."
 
 **"ArcadeMaster" - Consistent top 5 finisher**
-> "I focus on High Roller Monthlies. $25 entry, $2-6K prizes. My win rate is 60%. Best investment I've ever made."
+> "I focus on High Roller Monthlies. 50K 8BIT entry, up to 200K 8BIT prizes. My win rate is 60%. Best decision I've ever made."
 
 **"CryptoGamer" - Weekend warrior**
-> "I only play tournaments on weekends. Entered 12, won 5. Turned $120 into $1,800 in 3 months."
+> "I only play tournaments on weekends. Entered 12, won 5. Turned 120K 8BIT into 1.8M 8BIT in 3 months."
 
 ## Getting Started
 
 Ready to compete for big prizes?
 
-1. **[Get USDC on Arbitrum](../getting-started/connect-wallet.md)**
+1. **[Connect Your Wallet](../getting-started/connect-wallet.md)**
 2. **[Practice Your Skills](../games/game-library.md)**
 3. **[Browse Tournaments](https://play.8bitarcade.games/tournaments)**
 4. **Enter and Win!**
