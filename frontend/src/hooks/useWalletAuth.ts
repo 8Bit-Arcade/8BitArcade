@@ -10,18 +10,13 @@ import { createSimpleSignatureMessage } from '@/lib/signatureMessages';
  */
 async function syncUsernameToFirestore(address: string): Promise<void> {
   try {
-    // Get username from localStorage
     const users = useAuthStore.getState().users;
     const existingUsername = users[address.toLowerCase()]?.username;
 
-    if (!existingUsername) {
-      return; // No username to sync
-    }
+    if (!existingUsername) return;
 
     const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
-    if (!isFirebaseConfigured()) {
-      return;
-    }
+    if (!isFirebaseConfigured()) return;
 
     const [db, { doc, getDoc, setDoc, serverTimestamp }] = await Promise.all([
       getFirestoreInstance(),
@@ -31,21 +26,20 @@ async function syncUsernameToFirestore(address: string): Promise<void> {
     const userRef = doc(db, 'users', address.toLowerCase());
     const userDoc = await getDoc(userRef);
 
-    // Only sync if username doesn't exist in Firestore
     if (!userDoc.exists() || !userDoc.data()?.username) {
-      await setDoc(userRef, {
-        username: existingUsername,
-        address: address.toLowerCase(),
-        createdAt: serverTimestamp(),
-        lastActive: serverTimestamp(),
-      }, { merge: true });
-
+      await setDoc(
+        userRef,
+        {
+          username: existingUsername,
+          address: address.toLowerCase(),
+          createdAt: serverTimestamp(),
+          lastActive: serverTimestamp(),
+        },
+        { merge: true }
+      );
       console.log('✅ Synced username to Firestore:', existingUsername);
     } else {
-      // Just update lastActive
-      await setDoc(userRef, {
-        lastActive: serverTimestamp(),
-      }, { merge: true });
+      await setDoc(userRef, { lastActive: serverTimestamp() }, { merge: true });
     }
   } catch (err) {
     console.error('Failed to sync username to Firestore:', err);
@@ -65,44 +59,31 @@ export function useWalletAuth() {
   const hasAttemptedAuth = useRef(false);
   const userRejected = useRef(false);
 
-  /**
-   * Sign in to Firebase using the connected wallet
-   */
   const signInWithWallet = useCallback(async () => {
     if (!address || !isConnected) {
       setError('No wallet connected');
       return false;
     }
 
-    if (hasAttemptedAuth.current || userRejected.current) {
-      return false;
-    }
+    if (hasAttemptedAuth.current || userRejected.current) return false;
 
     hasAttemptedAuth.current = true;
     setIsAuthenticating(true);
     setError(null);
 
     try {
-      // Create a professional signature message
-      const { message, nonce, timestamp } = createSimpleSignatureMessage('sign_in', address);
-
-      // Request signature from wallet
+      const { message } = createSimpleSignatureMessage('sign_in', address);
       const signature = await signMessageAsync({ message });
 
-      // Verify signature and get custom token from Firebase Function
+      // Call the deployed Firebase Function
       const { customToken } = await callFunction<any, { customToken: string }>(
         'verifyWallet',
-        {
-          address,
-          message,
-          signature,
-        }
+        { address, message, signature }
       );
 
       // Sign in to Firebase with the custom token
       const { getFirebaseApp } = await import('@/lib/firebase-client');
-      await getFirebaseApp(); // Ensure Firebase is initialized
-
+      await getFirebaseApp();
       const auth = getAuth();
       await signInWithCustomToken(auth, customToken);
 
@@ -110,17 +91,16 @@ export function useWalletAuth() {
       userRejected.current = false;
       console.log('✅ Signed in to Firebase with wallet:', address);
 
-      // Sync username from localStorage to Firestore after successful auth
       await syncUsernameToFirestore(address);
-
       return true;
     } catch (err: any) {
       console.error('Failed to authenticate with wallet:', err);
 
-      // Check if user rejected the signature
       if (err.message?.includes('User rejected') || err.message?.includes('User denied')) {
         userRejected.current = true;
         setError('Signature rejected. You need to sign in to play ranked games.');
+      } else if (err.message?.includes('Message has expired')) {
+        setError('Your wallet message has expired. Please try again.');
       } else {
         setError(err.message || 'Authentication failed');
       }
@@ -132,9 +112,6 @@ export function useWalletAuth() {
     }
   }, [address, isConnected, signMessageAsync]);
 
-  /**
-   * Check if currently authenticated with Firebase
-   */
   const checkAuthStatus = useCallback(async () => {
     try {
       const { getFirebaseApp } = await import('@/lib/firebase-client');
@@ -143,42 +120,25 @@ export function useWalletAuth() {
       const auth = getAuth();
       const user = auth.currentUser;
 
-      if (user && address) {
-        // Verify the Firebase user UID matches the wallet address
-        const isMatch = user.uid.toLowerCase() === address.toLowerCase();
-        setIsFirebaseAuthenticated(isMatch);
-        return isMatch;
-      }
-
-      setIsFirebaseAuthenticated(false);
-      return false;
-    } catch (err) {
+      const isMatch = !!user && address && user.uid.toLowerCase() === address.toLowerCase();
+      setIsFirebaseAuthenticated(isMatch);
+      return isMatch;
+    } catch {
       setIsFirebaseAuthenticated(false);
       return false;
     }
   }, [address]);
 
-  /**
-   * Reset flags when wallet address changes
-   */
   useEffect(() => {
     hasAttemptedAuth.current = false;
     userRejected.current = false;
     setIsFirebaseAuthenticated(false);
   }, [address]);
 
-  /**
-   * Check auth status when wallet connects
-   */
   useEffect(() => {
-    if (isConnected && address && !isAuthenticating) {
-      checkAuthStatus();
-    }
+    if (isConnected && address && !isAuthenticating) checkAuthStatus();
   }, [isConnected, address, checkAuthStatus, isAuthenticating]);
 
-  /**
-   * Sign out when wallet disconnects
-   */
   useEffect(() => {
     if (!isConnected && isFirebaseAuthenticated) {
       (async () => {
@@ -198,10 +158,5 @@ export function useWalletAuth() {
     }
   }, [isConnected, isFirebaseAuthenticated]);
 
-  return {
-    signInWithWallet,
-    isAuthenticating,
-    isFirebaseAuthenticated,
-    error,
-  };
+  return { signInWithWallet, isAuthenticating, isFirebaseAuthenticated, error };
 }
