@@ -64,7 +64,7 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       const now = Date.now();
 
       // Message must be less than 5 minutes old
-      if (now - timestamp > 5 * 60 * 1000) {
+      if (now - timestamp > 10 * 60 * 1000) {
         console.error('Message expired:', {
           timestamp,
           now,
