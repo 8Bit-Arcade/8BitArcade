@@ -61,17 +61,17 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       }
 
       const timestamp = parseInt(timestampMatch[1], 10);
-      const now = Date.now();
 
-      // Message must be less than 5 minutes old
-      if (now - timestamp > 10 * 60 * 1000) {
-        console.error('Message expired:', {
-          timestamp,
-          now,
-          diff: now - timestamp,
-        });
-        throw new HttpsError('deadline-exceeded', 'Message has expired');
-      }
+// Convert seconds → milliseconds if needed
+const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+
+const now = Date.now();
+
+// Message must be less than 10 minutes old
+if (now - timestampMs > 10 * 60 * 1000) {
+  console.error('Message expired:', { timestamp: timestampMs, now, diff: now - timestampMs });
+  throw new HttpsError('deadline-exceeded', 'Message has expired');
+}
 
       console.log('Creating custom token for:', address.toLowerCase());
 
