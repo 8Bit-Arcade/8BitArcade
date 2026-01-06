@@ -95,7 +95,7 @@ jobs:
           (github.event_name == 'push' && steps.changes.outputs.functions != '0')
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions
+          args: deploy --only functions --force
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           PROJECT_ID: bitarcade-679b7
