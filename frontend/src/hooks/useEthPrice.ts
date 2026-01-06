@@ -29,15 +29,27 @@ export function useEthPrice(): UseEthPriceReturn {
     try {
       setError(null);
 
-      const response = await fetch('/api/eth-price');
-      const data = await response.json();
+      // Fetch directly from CoinGecko (static export doesn't support API routes)
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&precision=2',
+        {
+          headers: { 'Accept': 'application/json' },
+        }
+      );
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch ETH price');
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status}`);
       }
 
-      setEthPrice(data.price);
-      setLastUpdated(data.timestamp);
+      const data = await response.json();
+      const price = data.ethereum?.usd;
+
+      if (typeof price !== 'number' || price <= 0) {
+        throw new Error('Invalid price data from CoinGecko');
+      }
+
+      setEthPrice(price);
+      setLastUpdated(Date.now());
       setIsLoading(false);
 
     } catch (err: any) {
