@@ -120,7 +120,7 @@ export function useWalletAuth() {
       const auth = getAuth();
       const user = auth.currentUser;
 
-      const isMatch = !!user && address && user.uid.toLowerCase() === address.toLowerCase();
+      const isMatch = !!user && !!address && user.uid.toLowerCase() === address.toLowerCase();
       setIsFirebaseAuthenticated(isMatch);
       return isMatch;
     } catch {
