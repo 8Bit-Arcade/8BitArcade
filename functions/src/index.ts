@@ -16,7 +16,7 @@ export { getLeaderboard } from './leaderboard/getLeaderboard';
 export { resetDailyLeaderboards, resetWeeklyLeaderboards } from './leaderboard/resetDailyLeaderboards';
 
 // Admin functions
-export { unbanAccount, clearUserFlags, getFlaggedUsers, getUserBanInfo } from './admin/adminFunctions';
+export { unbanAccount, clearUserFlags, getFlaggedUsers, getUserBanInfo, seedTournamentEntries } from './admin/adminFunctions';
 
 // Sale Admin Functions
 export {
