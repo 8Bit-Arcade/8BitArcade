@@ -74,7 +74,7 @@ export function createSignatureMessage(params: SignatureMessageParams): string {
   const actionInfo = ACTION_DESCRIPTIONS[action];
   const isoTimestamp = new Date(timestamp).toISOString();
 
-  let message = `
+let message = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
        🎮 8-BIT ARCADE 🎮
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -92,7 +92,8 @@ Address: ${address}
 
 Nonce: ${nonce}
 
-Timestamp: ${isoTimestamp}`;
+Timestamp: ${timestamp}
+ISO-Time: ${isoTimestamp}`;
 
   // Add any extra fields
   Object.entries(extra).forEach(([key, value]) => {

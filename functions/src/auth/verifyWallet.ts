@@ -55,8 +55,14 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       // Support both ISO format (2026-01-06T17:30:00.000Z) and numeric timestamps
       let timestampMs: number;
 
-      const isoMatch = message.match(/Timestamp: (\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
-      const numericMatch = message.match(/Timestamp: (\d+)/);
+      const isoMatch = message.match(
+  /Timestamp:\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/
+);
+
+const numericMatch = message.match(
+  /Timestamp:\s*(\d{10,13})\b/
+);
+
 
       if (isoMatch) {
         timestampMs = new Date(isoMatch[1]).getTime();
@@ -68,7 +74,18 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       }
 
       const now = Date.now();
-
+      
+      // DEBUG — REMOVE AFTER FIXING
+console.log('[DEBUG] Timestamp validation', {
+  rawMessage: message,
+  parsedTimestampMs: timestampMs,
+  serverNowMs: now,
+  serverNowIso: new Date(now).toISOString(),
+  diffMs: now - timestampMs,
+  diffMinutes: (now - timestampMs) / 60000,
+});
+      //end debug
+      
       if (now - timestampMs > 10 * 60 * 1000) { // 10 minutes
         console.error('Message expired:', { timestamp: timestampMs, now, diff: now - timestampMs });
         throw new HttpsError('deadline-exceeded', 'Message has expired');
