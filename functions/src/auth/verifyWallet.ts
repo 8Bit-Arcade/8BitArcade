@@ -18,6 +18,11 @@ interface VerifyWalletResponse {
  * Implements Sign-In with Ethereum (SIWE)
  */
 export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResponse>>(
+  {
+    timeoutSeconds: 60,
+    memory: '256MiB',
+    minInstances: 0,
+  },
   async (request) => {
     const { address, message, signature } = request.data;
 
@@ -47,13 +52,21 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
       console.log('Signature verified successfully');
 
       // --- 2. Verify timestamp ---
-      const timestampMatch = message.match(/Timestamp: (\d+)/);
-      if (!timestampMatch) {
+      // Support both ISO format (2026-01-06T17:30:00.000Z) and numeric timestamps
+      let timestampMs: number;
+
+      const isoMatch = message.match(/Timestamp: (\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
+      const numericMatch = message.match(/Timestamp: (\d+)/);
+
+      if (isoMatch) {
+        timestampMs = new Date(isoMatch[1]).getTime();
+      } else if (numericMatch) {
+        const timestamp = parseInt(numericMatch[1], 10);
+        timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+      } else {
         throw new HttpsError('invalid-argument', 'Invalid message format: missing timestamp');
       }
 
-      const timestamp = parseInt(timestampMatch[1], 10);
-      const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp; // seconds → ms if needed
       const now = Date.now();
 
       if (now - timestampMs > 10 * 60 * 1000) { // 10 minutes
