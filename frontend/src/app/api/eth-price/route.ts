@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 
 /**
@@ -109,4 +111,4 @@ export async function GET() {
 /**
  * Set cache headers to allow client-side caching for 15 seconds
  */
-export const revalidate = 15; // Next.js will revalidate every 15 seconds
+//export const revalidate = 15; // Next.js will revalidate every 15 seconds
