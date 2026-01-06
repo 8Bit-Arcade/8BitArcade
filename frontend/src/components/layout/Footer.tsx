@@ -55,6 +55,17 @@ export default function Footer() {
             <span className="font-arcade text-xs text-gray-500">
               Arbitrum One
             </span>
+            <span className="font-arcade text-sm text-gray-400 hover:text-arcade-pink transition-colors" />
+              Powered by
+            <a
+              href="https://www.coingecko.com/en/api/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-arcade text-sm text-gray-400 hover:text-arcade-pink transition-colors"
+            >
+             CoinGecko API
+                </a>
+            </span>
           </div>
         </div>
 
