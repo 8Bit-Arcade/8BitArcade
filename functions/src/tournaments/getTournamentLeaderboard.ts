@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../config/firebase';
-import { TournamentEntryDocument, TournamentLeaderboardEntry } from '../types';
+import { TournamentDocument, TournamentEntryDocument, TournamentLeaderboardEntry } from '../types';
 
 interface GetTournamentLeaderboardRequest {
   tournamentId: string;
@@ -9,7 +9,8 @@ interface GetTournamentLeaderboardRequest {
 
 /**
  * Get leaderboard for a specific tournament
- * Returns sorted list of participants by best score
+ * Supports both single-game tournaments (sort by that game's score)
+ * and all-games tournaments (sort by total score across all games)
  */
 export const getTournamentLeaderboard = onCall<GetTournamentLeaderboardRequest>(
   async (request) => {
@@ -20,29 +21,66 @@ export const getTournamentLeaderboard = onCall<GetTournamentLeaderboardRequest>(
     }
 
     try {
-      // Verify tournament exists
+      // Get tournament to check if it's single-game or all-games
       const tournamentDoc = await db.collection('tournaments').doc(tournamentId).get();
 
       if (!tournamentDoc.exists) {
         throw new HttpsError('not-found', 'Tournament not found');
       }
 
-      // Get all entries sorted by best score
+      const tournament = tournamentDoc.data() as TournamentDocument;
+      const isSingleGame = tournament.gameId && tournament.gameId !== null;
+
+      // Get all entries - we'll sort in code for flexibility
       const entriesSnapshot = await db
         .collection('tournaments')
         .doc(tournamentId)
         .collection('entries')
-        .orderBy('bestScore', 'desc')
-        .limit(limit)
         .get();
+
+      // Build entries with calculated scores
+      const entries: Array<{
+        entry: TournamentEntryDocument;
+        calculatedScore: number;
+        docId: string;
+      }> = [];
+
+      for (const entryDoc of entriesSnapshot.docs) {
+        const entry = entryDoc.data() as TournamentEntryDocument;
+
+        let calculatedScore: number;
+
+        if (isSingleGame && tournament.gameId) {
+          // Single-game tournament: use score for that specific game
+          calculatedScore = entry.bestScores?.[tournament.gameId] || entry.bestScore || 0;
+        } else {
+          // All-games tournament: use total score (sum of all games)
+          if (entry.bestScores && Object.keys(entry.bestScores).length > 0) {
+            calculatedScore = Object.values(entry.bestScores).reduce((sum, score) => sum + score, 0);
+          } else {
+            // Fallback to legacy bestScore
+            calculatedScore = entry.bestScore || 0;
+          }
+        }
+
+        entries.push({
+          entry,
+          calculatedScore,
+          docId: entryDoc.id,
+        });
+      }
+
+      // Sort by calculated score (descending)
+      entries.sort((a, b) => b.calculatedScore - a.calculatedScore);
+
+      // Apply limit
+      const limitedEntries = entries.slice(0, limit);
 
       // Build leaderboard with usernames
       const leaderboard: TournamentLeaderboardEntry[] = [];
       let rank = 1;
 
-      for (const entryDoc of entriesSnapshot.docs) {
-        const entry = entryDoc.data() as TournamentEntryDocument;
-
+      for (const { entry, calculatedScore } of limitedEntries) {
         // Get username from users collection
         const userDoc = await db.collection('users').doc(entry.player).get();
         const username = userDoc.exists
@@ -52,7 +90,7 @@ export const getTournamentLeaderboard = onCall<GetTournamentLeaderboardRequest>(
         leaderboard.push({
           player: entry.player,
           username,
-          score: entry.bestScore,
+          score: calculatedScore,
           timestamp: entry.lastPlayedAt || entry.enteredAt,
           rank,
         });
@@ -64,6 +102,8 @@ export const getTournamentLeaderboard = onCall<GetTournamentLeaderboardRequest>(
         success: true,
         leaderboard,
         total: entriesSnapshot.size,
+        tournamentType: isSingleGame ? 'single-game' : 'all-games',
+        gameId: tournament.gameId || null,
       };
     } catch (error) {
       console.error('Error fetching tournament leaderboard:', error);

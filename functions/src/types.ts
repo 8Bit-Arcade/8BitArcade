@@ -110,13 +110,18 @@ export interface TournamentDocument {
   createdAt: Timestamp;
   finalizedAt: Timestamp | null;
   winnerId: string | null;
+  // NEW: gameId for single-game tournaments (null = all games)
+  gameId?: string | null;
+  totalEntries?: number;
+  updatedAt?: Timestamp;
 }
 
 export interface TournamentEntryDocument {
   tournamentId: string;
   player: string; // wallet address
   enteredAt: Timestamp;
-  bestScore: number;
+  bestScore: number; // LEGACY: single best score (kept for backward compat)
+  bestScores?: { [gameId: string]: number }; // NEW: per-game best scores
   lastPlayedAt: Timestamp | null;
   totalPlays: number;
   paid: boolean; // Whether entry fee was paid

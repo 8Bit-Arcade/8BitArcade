@@ -55,12 +55,13 @@ export const enterTournament = onCall<EnterTournamentRequest>(async (request) =>
 
     // TODO: Verify transaction on-chain (optional)
 
-    // Construct entry
+    // Construct entry (supports both legacy bestScore and new bestScores)
     const entry: TournamentEntryDocument = {
       tournamentId,
       player: playerAddress,
       enteredAt: now,
-      bestScore: 0,
+      bestScore: 0, // Legacy field for backward compatibility
+      bestScores: {}, // NEW: per-game best scores
       lastPlayedAt: null,
       totalPlays: 0,
       paid: true,
