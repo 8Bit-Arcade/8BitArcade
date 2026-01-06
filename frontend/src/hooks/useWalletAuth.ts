@@ -1,114 +1,162 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getAuth } from 'firebase-admin/auth';
-import { verifyMessage } from 'viem';
-import { collections, Timestamp } from '../config/firebase';
+import { useEffect, useCallback, useState, useRef } from 'react';
+import { useAccount, useSignMessage } from 'wagmi';
+import { getAuth, signInWithCustomToken } from 'firebase/auth';
+import { callFunction } from '@/lib/firebase-functions';
+import { useAuthStore } from '@/stores/authStore';
+import { createSimpleSignatureMessage } from '@/lib/signatureMessages';
 
-interface VerifyWalletRequest {
-  address: string;
-  message: string;
-  signature: `0x${string}`;
-}
+/**
+ * Sync username from localStorage to Firestore (called after Firebase auth)
+ */
+async function syncUsernameToFirestore(address: string): Promise<void> {
+  try {
+    const users = useAuthStore.getState().users;
+    const existingUsername = users[address.toLowerCase()]?.username;
 
-interface VerifyWalletResponse {
-  customToken: string;
+    if (!existingUsername) return;
+
+    const { getFirestoreInstance, isFirebaseConfigured } = await import('@/lib/firebase-client');
+    if (!isFirebaseConfigured()) return;
+
+    const [db, { doc, getDoc, setDoc, serverTimestamp }] = await Promise.all([
+      getFirestoreInstance(),
+      import('firebase/firestore'),
+    ]);
+
+    const userRef = doc(db, 'users', address.toLowerCase());
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists() || !userDoc.data()?.username) {
+      await setDoc(
+        userRef,
+        {
+          username: existingUsername,
+          address: address.toLowerCase(),
+          createdAt: serverTimestamp(),
+          lastActive: serverTimestamp(),
+        },
+        { merge: true }
+      );
+      console.log('✅ Synced username to Firestore:', existingUsername);
+    } else {
+      await setDoc(userRef, { lastActive: serverTimestamp() }, { merge: true });
+    }
+  } catch (err) {
+    console.error('Failed to sync username to Firestore:', err);
+  }
 }
 
 /**
- * Verify a wallet signature and create a custom Firebase auth token
- * Implements Sign-In with Ethereum (SIWE)
- * Keeps Firestore updates non-blocking to avoid Gateway Timeout
+ * Hook to handle wallet-based Firebase authentication
+ * Automatically signs in to Firebase when wallet is connected
  */
-export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResponse>>(
-  async (request) => {
-    const { address, message, signature } = request.data;
+export function useWalletAuth() {
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isFirebaseAuthenticated, setIsFirebaseAuthenticated] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const hasAttemptedAuth = useRef(false);
+  const userRejected = useRef(false);
 
-    console.log('verifyWallet called with:', {
-      address,
-      messageLength: message?.length,
-      signatureLength: signature?.length,
-    });
-
-    if (!address || !message || !signature) {
-      throw new HttpsError('invalid-argument', 'Missing required fields');
+  const signInWithWallet = useCallback(async () => {
+    if (!address || !isConnected) {
+      setError('No wallet connected');
+      return false;
     }
+
+    if (hasAttemptedAuth.current || userRejected.current) return false;
+
+    hasAttemptedAuth.current = true;
+    setIsAuthenticating(true);
+    setError(null);
 
     try {
-      // --- 1. Verify signature ---
-      const isValid = await verifyMessage({
-        address: address as `0x${string}`,
-        message,
-        signature,
-      });
+      const { message } = createSimpleSignatureMessage('sign_in', address);
+      const signature = await signMessageAsync({ message });
 
-      if (!isValid) {
-        console.error('Signature verification failed');
-        throw new HttpsError('unauthenticated', 'Invalid signature');
-      }
+      // Call the deployed Firebase Function
+      const { customToken } = await callFunction<any, { customToken: string }>(
+        'verifyWallet',
+        { address, message, signature }
+      );
 
-      console.log('Signature verified successfully');
-
-      // --- 2. Verify timestamp ---
-      const timestampMatch = message.match(/Timestamp: (\d+)/);
-      if (!timestampMatch) {
-        throw new HttpsError('invalid-argument', 'Invalid message format: missing timestamp');
-      }
-
-      const timestamp = parseInt(timestampMatch[1], 10);
-      const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp; // convert seconds → ms if needed
-      const now = Date.now();
-
-      if (now - timestampMs > 10 * 60 * 1000) { // 10 minutes
-        console.error('Message expired:', { timestamp: timestampMs, now, diff: now - timestampMs });
-        throw new HttpsError('deadline-exceeded', 'Message has expired');
-      }
-
-      // --- 3. Create Firebase custom token ---
+      // Sign in to Firebase with the custom token
+      const { getFirebaseApp } = await import('@/lib/firebase-client');
+      await getFirebaseApp();
       const auth = getAuth();
-      const customToken = await auth.createCustomToken(address.toLowerCase());
-      console.log('Custom token created successfully');
+      await signInWithCustomToken(auth, customToken);
 
-      // --- 4. Firestore updates (non-blocking) ---
+      setIsFirebaseAuthenticated(true);
+      userRejected.current = false;
+      console.log('✅ Signed in to Firebase with wallet:', address);
+
+      await syncUsernameToFirestore(address);
+      return true;
+    } catch (err: any) {
+      console.error('Failed to authenticate with wallet:', err);
+
+      if (err.message?.includes('User rejected') || err.message?.includes('User denied')) {
+        userRejected.current = true;
+        setError('Signature rejected. You need to sign in to play ranked games.');
+      } else if (err.message?.includes('Message has expired')) {
+        setError('Your wallet message has expired. Please try again.');
+      } else {
+        setError(err.message || 'Authentication failed');
+      }
+
+      setIsFirebaseAuthenticated(false);
+      return false;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [address, isConnected, signMessageAsync]);
+
+  const checkAuthStatus = useCallback(async () => {
+    try {
+      const { getFirebaseApp } = await import('@/lib/firebase-client');
+      await getFirebaseApp();
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      const isMatch = !!user && address && user.uid.toLowerCase() === address.toLowerCase();
+      setIsFirebaseAuthenticated(isMatch);
+      return isMatch;
+    } catch {
+      setIsFirebaseAuthenticated(false);
+      return false;
+    }
+  }, [address]);
+
+  useEffect(() => {
+    hasAttemptedAuth.current = false;
+    userRejected.current = false;
+    setIsFirebaseAuthenticated(false);
+  }, [address]);
+
+  useEffect(() => {
+    if (isConnected && address && !isAuthenticating) checkAuthStatus();
+  }, [isConnected, address, checkAuthStatus, isAuthenticating]);
+
+  useEffect(() => {
+    if (!isConnected && isFirebaseAuthenticated) {
       (async () => {
         try {
-          const userAddress = address.toLowerCase();
-          const userRef = collections.users.doc(userAddress);
-          const userDoc = await userRef.get();
-
-          if (!userDoc.exists) {
-            console.log('Creating new user document for:', userAddress);
-            await userRef.set({
-              address: userAddress,
-              username: null,
-              createdAt: Timestamp.now(),
-              lastActive: Timestamp.now(),
-              totalGamesPlayed: 0,
-              totalScore: 0,
-              isBanned: false,
-              banReason: null,
-              bannedAt: null,
-              displayPreference: 'address',
-              flags: { count: 0, lastFlagged: null, reasons: [] },
-            });
-          } else {
-            await userRef.update({ lastActive: Timestamp.now() });
-          }
-        } catch (fsErr) {
-          console.error('Firestore async update error:', fsErr);
+          const { getFirebaseApp } = await import('@/lib/firebase-client');
+          await getFirebaseApp();
+          const auth = getAuth();
+          await auth.signOut();
+          setIsFirebaseAuthenticated(false);
+          hasAttemptedAuth.current = false;
+          userRejected.current = false;
+          console.log('✅ Signed out from Firebase');
+        } catch (err) {
+          console.error('Failed to sign out:', err);
         }
       })();
-
-      // --- 5. Return token immediately ---
-      return { customToken };
-
-    } catch (err: any) {
-      console.error('Wallet verification error:', {
-        name: err.name,
-        message: err.message,
-        stack: err.stack,
-      });
-
-      if (err instanceof HttpsError) throw err;
-      throw new HttpsError('internal', `Failed to verify wallet signature: ${err.message}`);
     }
-  }
-);
+  }, [isConnected, isFirebaseAuthenticated]);
+
+  return { signInWithWallet, isAuthenticating, isFirebaseAuthenticated, error };
+}
