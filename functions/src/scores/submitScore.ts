@@ -156,12 +156,28 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       }
 
       const entryData = entryDoc.data();
-      const currentBest = entryData?.bestScore || 0;
-      const newBest = verifiedScore > currentBest;
 
-      // Update tournament entry
+      // Get current best for this specific game
+      const currentBestScores = entryData?.bestScores || {};
+      const currentGameBest = currentBestScores[gameId] || 0;
+      const newGameBest = verifiedScore > currentGameBest;
+
+      // Calculate total score across all games (for all-games tournaments)
+      const updatedBestScores = {
+        ...currentBestScores,
+        [gameId]: newGameBest ? verifiedScore : currentGameBest,
+      };
+      const totalScore = Object.values(updatedBestScores).reduce((sum: number, score) => sum + (score as number), 0);
+
+      // Legacy: also track single bestScore (highest across any game)
+      const legacyBest = entryData?.bestScore || 0;
+      const newLegacyBest = Math.max(legacyBest, verifiedScore);
+
+      // Update tournament entry with both formats
       await tournamentEntryRef.update({
-        bestScore: newBest ? verifiedScore : currentBest,
+        bestScore: newLegacyBest, // Legacy: highest single game score
+        bestScores: updatedBestScores, // NEW: per-game scores
+        totalScore, // NEW: sum of all game scores (for all-games tournaments)
         lastPlayedAt: now,
         totalPlays: FieldValue.increment(1),
       });
@@ -170,7 +186,7 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
         success: true,
         verified: true,
         score: verifiedScore,
-        newBest,
+        newBest: newGameBest,
         flags: analysis.flags.length > 0 ? analysis.flags : undefined,
       };
     }

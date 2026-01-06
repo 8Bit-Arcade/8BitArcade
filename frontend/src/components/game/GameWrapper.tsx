@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import * as Phaser from 'phaser';
 import Button from '@/components/ui/Button';
@@ -31,6 +31,7 @@ interface GameWrapperProps {
   showDPad?: boolean;
   showAction?: boolean;
   actionLabel?: string;
+  tournamentId?: string; // Optional: passed from tournament page
 }
 
 export default function GameWrapper({
@@ -41,9 +42,14 @@ export default function GameWrapper({
   showDPad = true,
   showAction = true,
   actionLabel = 'FIRE',
+  tournamentId: propTournamentId,
 }: GameWrapperProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isConnected, address } = useAccount();
+
+  // Get tournamentId from props or URL params
+  const tournamentId = propTournamentId || searchParams.get('tournament') || undefined;
   const gameRef = useRef<Phaser.Game | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -214,8 +220,13 @@ export default function GameWrapper({
       // Create session for ranked/tournament modes
       if (mode !== 'free') {
         try {
-          console.log('Creating session for game:', gameId, 'mode:', mode);
-          const session = await createSession(gameId, mode as 'ranked' | 'tournament');
+          console.log('Creating session for game:', gameId, 'mode:', mode, 'tournamentId:', tournamentId);
+          // Pass tournamentId for tournament mode
+          const session = await createSession(
+            gameId,
+            mode as 'ranked' | 'tournament',
+            mode === 'tournament' ? tournamentId : undefined
+          );
           console.log('Session created:', session);
           if (session) {
             sessionIdRef.current = session.sessionId;
@@ -235,7 +246,7 @@ export default function GameWrapper({
         startGame(gameId, mode);
       }
     },
-    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession]
+    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession, tournamentId]
   );
 
   // Scroll game into view when it becomes visible (mobile centering)
@@ -562,7 +573,33 @@ export default function GameWrapper({
         {showModeSelect && !isGameOver && (
           <div className="card-arcade text-center max-w-sm">
             <h2 className="font-pixel text-arcade-green text-lg mb-6">{gameName}</h2>
+            {tournamentId && (
+              <div className="mb-4 p-2 bg-arcade-yellow/10 border border-arcade-yellow/30 rounded">
+                <p className="font-arcade text-arcade-yellow text-xs">
+                  Tournament Mode - ID: {tournamentId}
+                </p>
+              </div>
+            )}
             <div className="space-y-3">
+              {/* Show Tournament button if tournamentId exists */}
+              {tournamentId && (
+                <Button
+                  variant="primary"
+                  className="w-full bg-arcade-yellow hover:bg-arcade-yellow/80"
+                  onClick={() => handleStartGame('tournament')}
+                  disabled={!isConnected}
+                >
+                  {isConnected ? '🏆 Play Tournament' : 'Connect Wallet'}
+                </Button>
+              )}
+              <Button
+                variant={tournamentId ? 'secondary' : 'primary'}
+                className="w-full"
+                onClick={() => handleStartGame('ranked')}
+                disabled={!isConnected}
+              >
+                {isConnected ? 'Ranked Play' : 'Connect Wallet'}
+              </Button>
               <Button
                 variant="secondary"
                 className="w-full"
@@ -570,17 +607,11 @@ export default function GameWrapper({
               >
                 Free Play
               </Button>
-              <Button
-                variant="primary"
-                className="w-full"
-                onClick={() => handleStartGame('ranked')}
-                disabled={!isConnected}
-              >
-                {isConnected ? 'Ranked Play' : 'Connect Wallet'}
-              </Button>
             </div>
             <p className="font-arcade text-gray-500 text-xs mt-4">
-              Ranked mode: Earn 8BIT tokens
+              {tournamentId
+                ? 'Tournament scores count toward your entry!'
+                : 'Ranked mode: Earn 8BIT tokens'}
             </p>
           </div>
         )}
