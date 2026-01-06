@@ -6,11 +6,23 @@
  * - Monthly tournaments (every 1st of the month at 00:00 UTC)
  *
  * Both Standard and High Roller tiers are created for each period.
+ *
+ * SETUP: Before these functions work, you must set secrets in Google Cloud:
+ *
+ * firebase functions:secrets:set DEPLOYER_PRIVATE_KEY
+ * firebase functions:secrets:set TOURNAMENT_MANAGER_ADDRESS
+ *
+ * Then redeploy: firebase deploy --only functions
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { defineSecret } from 'firebase-functions/params';
 import { logger } from 'firebase-functions';
 import { ethers } from 'ethers';
+
+// Define secrets (these are set via Firebase CLI)
+const deployerPrivateKey = defineSecret('DEPLOYER_PRIVATE_KEY');
+const tournamentManagerAddress = defineSecret('TOURNAMENT_MANAGER_ADDRESS');
 
 // Contract ABI (only the functions we need)
 const TOURNAMENT_MANAGER_ABI = [
@@ -42,27 +54,28 @@ export const createWeeklyTournaments = onSchedule(
     schedule: '0 0 * * 1', // Every Monday at midnight UTC
     timeZone: 'UTC',
     region: 'us-central1',
+    secrets: [deployerPrivateKey, tournamentManagerAddress], // Inject secrets
   },
   async (event) => {
     logger.info('Creating weekly tournaments...', { time: event.scheduleTime });
 
     try {
-      // Get contract address and deployer key from environment
-      const tournamentManagerAddress = process.env.TOURNAMENT_MANAGER_ADDRESS;
-      const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
+      // Get secrets
+      const managerAddress = tournamentManagerAddress.value();
+      const privateKey = deployerPrivateKey.value();
       const network = process.env.NETWORK || 'testnet';
 
-      if (!tournamentManagerAddress || !deployerPrivateKey) {
-        throw new Error('Missing environment variables: TOURNAMENT_MANAGER_ADDRESS or DEPLOYER_PRIVATE_KEY');
+      if (!managerAddress || !privateKey) {
+        throw new Error('Missing secrets: TOURNAMENT_MANAGER_ADDRESS or DEPLOYER_PRIVATE_KEY. Run: firebase functions:secrets:set <SECRET_NAME>');
       }
 
       // Connect to network
       const rpcUrl = network === 'mainnet' ? ARBITRUM_ONE_RPC : ARBITRUM_SEPOLIA_RPC;
       const provider = new ethers.JsonRpcProvider(rpcUrl);
-      const wallet = new ethers.Wallet(deployerPrivateKey, provider);
+      const wallet = new ethers.Wallet(privateKey, provider);
 
       const tournamentManager = new ethers.Contract(
-        tournamentManagerAddress,
+        managerAddress,
         TOURNAMENT_MANAGER_ABI,
         wallet
       );
@@ -112,27 +125,28 @@ export const createMonthlyTournaments = onSchedule(
     schedule: '0 0 1 * *', // 1st day of every month at midnight UTC
     timeZone: 'UTC',
     region: 'us-central1',
+    secrets: [deployerPrivateKey, tournamentManagerAddress], // Inject secrets
   },
   async (event) => {
     logger.info('Creating monthly tournaments...', { time: event.scheduleTime });
 
     try {
-      // Get contract address and deployer key from environment
-      const tournamentManagerAddress = process.env.TOURNAMENT_MANAGER_ADDRESS;
-      const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
+      // Get secrets
+      const managerAddress = tournamentManagerAddress.value();
+      const privateKey = deployerPrivateKey.value();
       const network = process.env.NETWORK || 'testnet';
 
-      if (!tournamentManagerAddress || !deployerPrivateKey) {
-        throw new Error('Missing environment variables: TOURNAMENT_MANAGER_ADDRESS or DEPLOYER_PRIVATE_KEY');
+      if (!managerAddress || !privateKey) {
+        throw new Error('Missing secrets: TOURNAMENT_MANAGER_ADDRESS or DEPLOYER_PRIVATE_KEY. Run: firebase functions:secrets:set <SECRET_NAME>');
       }
 
       // Connect to network
       const rpcUrl = network === 'mainnet' ? ARBITRUM_ONE_RPC : ARBITRUM_SEPOLIA_RPC;
       const provider = new ethers.JsonRpcProvider(rpcUrl);
-      const wallet = new ethers.Wallet(deployerPrivateKey, provider);
+      const wallet = new ethers.Wallet(privateKey, provider);
 
       const tournamentManager = new ethers.Contract(
-        tournamentManagerAddress,
+        managerAddress,
         TOURNAMENT_MANAGER_ABI,
         wallet
       );
@@ -174,14 +188,15 @@ export const createMonthlyTournaments = onSchedule(
 );
 
 /**
- * Manual tournament creation function (for testing or manual creation)
- * Can be called via Firebase Functions shell or HTTP trigger
+ * Manual tournament creation function (for testing)
+ * Can be triggered manually via Firebase console or CLI
  */
 export const createTournamentManual = onSchedule(
   {
-    schedule: 'every 24 hours', // Dummy schedule, won't actually run on schedule
+    schedule: 'every 24 hours', // Dummy schedule, trigger manually for testing
     timeZone: 'UTC',
     region: 'us-central1',
+    secrets: [deployerPrivateKey, tournamentManagerAddress],
   },
   async (event) => {
     logger.info('Manual tournament creation triggered');
