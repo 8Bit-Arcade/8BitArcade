@@ -74,7 +74,18 @@ const numericMatch = message.match(
       }
 
       const now = Date.now();
-
+      
+      // DEBUG — REMOVE AFTER FIXING
+console.log('[DEBUG] Timestamp validation', {
+  rawMessage: message,
+  parsedTimestampMs: timestampMs,
+  serverNowMs: now,
+  serverNowIso: new Date(now).toISOString(),
+  diffMs: now - timestampMs,
+  diffMinutes: (now - timestampMs) / 60000,
+});
+      //end debug
+      
       if (now - timestampMs > 10 * 60 * 1000) { // 10 minutes
         console.error('Message expired:', { timestamp: timestampMs, now, diff: now - timestampMs });
         throw new HttpsError('deadline-exceeded', 'Message has expired');
