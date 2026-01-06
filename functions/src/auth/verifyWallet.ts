@@ -15,7 +15,7 @@ interface VerifyWalletResponse {
 
 /**
  * Verify a wallet signature and create a custom Firebase auth token
- * This implements Sign-In with Ethereum (SIWE)
+ * Implements Sign-In with Ethereum (SIWE)
  */
 export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResponse>>(
   async (request) => {
@@ -32,16 +32,12 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
     }
 
     try {
-      console.log('Attempting to verify signature...');
-
-      // Verify the signature matches the message and address
+      // --- 1. Verify signature ---
       const isValid = await verifyMessage({
         address: address as `0x${string}`,
         message,
         signature,
       });
-
-      console.log('Signature verification result:', isValid);
 
       if (!isValid) {
         console.error('Signature verification failed');
@@ -50,83 +46,57 @@ export const verifyWallet = onCall<VerifyWalletRequest, Promise<VerifyWalletResp
 
       console.log('Signature verified successfully');
 
-      // Verify the message contains the nonce and hasn't expired
-      // Expected format: "Sign in to 8-Bit Arcade\n\nNonce: {random}\nTimestamp: {timestamp}"
-      const nonceMatch = message.match(/Nonce: ([a-f0-9]+)/);
+      // --- 2. Verify timestamp ---
       const timestampMatch = message.match(/Timestamp: (\d+)/);
-
-      if (!nonceMatch || !timestampMatch) {
-        console.error('Invalid message format:', message);
-        throw new HttpsError('invalid-argument', 'Invalid message format');
+      if (!timestampMatch) {
+        throw new HttpsError('invalid-argument', 'Invalid message format: missing timestamp');
       }
 
       const timestamp = parseInt(timestampMatch[1], 10);
+      const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp; // seconds → ms if needed
+      const now = Date.now();
 
-// Convert seconds → milliseconds if needed
-const timestampMs = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+      if (now - timestampMs > 10 * 60 * 1000) { // 10 minutes
+        console.error('Message expired:', { timestamp: timestampMs, now, diff: now - timestampMs });
+        throw new HttpsError('deadline-exceeded', 'Message has expired');
+      }
 
-const now = Date.now();
-
-// Message must be less than 10 minutes old
-if (now - timestampMs > 10 * 60 * 1000) {
-  console.error('Message expired:', { timestamp: timestampMs, now, diff: now - timestampMs });
-  throw new HttpsError('deadline-exceeded', 'Message has expired');
-}
-
-      console.log('Creating custom token for:', address.toLowerCase());
-
-      // Create a custom token for this wallet address
-      // The UID will be the lowercase wallet address
+      // --- 3. Create Firebase custom token ---
       const auth = getAuth();
       const customToken = await auth.createCustomToken(address.toLowerCase());
-
       console.log('Custom token created successfully');
 
-      // Create or update user document in Firestore
+      // --- 4. Firestore write (non-blocking) ---
       const userAddress = address.toLowerCase();
       const userRef = collections.users.doc(userAddress);
-      const userDoc = await userRef.get();
 
-      if (!userDoc.exists) {
-        // Create new user document
-        console.log('Creating new user document for:', userAddress);
-        await userRef.set({
-          address: userAddress,
-          username: null,
-          createdAt: Timestamp.now(),
-          lastActive: Timestamp.now(),
-          totalGamesPlayed: 0,
-          totalScore: 0,
-          isBanned: false,
-          banReason: null,
-          bannedAt: null,
-          displayPreference: 'address',
-          flags: {
-            count: 0,
-            lastFlagged: null,
-            reasons: [],
-          },
-        });
-      } else {
-        // Update last active timestamp
-        await userRef.update({
-          lastActive: Timestamp.now(),
-        });
-      }
+      userRef.get().then(async (userDoc) => {
+        if (!userDoc.exists) {
+          console.log('Creating new user document for:', userAddress);
+          await userRef.set({
+            address: userAddress,
+            username: null,
+            createdAt: Timestamp.now(),
+            lastActive: Timestamp.now(),
+            totalGamesPlayed: 0,
+            totalScore: 0,
+            isBanned: false,
+            banReason: null,
+            bannedAt: null,
+            displayPreference: 'address',
+            flags: { count: 0, lastFlagged: null, reasons: [] },
+          });
+        } else {
+          await userRef.update({ lastActive: Timestamp.now() });
+        }
+      }).catch(err => console.error('Firestore async update error:', err));
 
+      // --- 5. Return immediately ---
       return { customToken };
+
     } catch (err: any) {
-      console.error('Wallet verification error:', {
-        name: err.name,
-        message: err.message,
-        stack: err.stack,
-      });
-
-      if (err instanceof HttpsError) {
-        throw err;
-      }
-
-      // Include more details in the error message
+      console.error('Wallet verification error:', { name: err.name, message: err.message });
+      if (err instanceof HttpsError) throw err;
       throw new HttpsError('internal', `Failed to verify wallet signature: ${err.message}`);
     }
   }
