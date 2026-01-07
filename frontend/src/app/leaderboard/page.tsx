@@ -144,12 +144,6 @@ export default function LeaderboardPage() {
         {/* Navigation */}
         <div className="flex justify-center gap-3 mb-6 flex-wrap">
           <a
-            href="/leaderboard"
-            className="px-3 py-1.5 font-arcade text-sm text-white border border-arcade-green rounded"
-          >
-            Ranks
-          </a>
-          <a
             href="/sale"
             className="px-3 py-1.5 font-arcade text-sm text-black bg-arcade-yellow hover:bg-arcade-yellow/90 border-2 border-arcade-yellow rounded font-bold transition-colors animate-pulse"
           >
