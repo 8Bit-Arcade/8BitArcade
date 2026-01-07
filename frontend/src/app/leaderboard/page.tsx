@@ -144,18 +144,6 @@ export default function LeaderboardPage() {
         {/* Navigation */}
         <div className="flex justify-center gap-3 mb-6 flex-wrap">
           <a
-            href="/"
-            className="px-3 py-1.5 font-arcade text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-arcade-green rounded transition-colors"
-          >
-            Home
-          </a>
-          <a
-            href="/tournaments"
-            className="px-3 py-1.5 font-arcade text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-arcade-green rounded transition-colors"
-          >
-            Tournaments
-          </a>
-          <a
             href="/leaderboard"
             className="px-3 py-1.5 font-arcade text-sm text-white border border-arcade-green rounded"
           >
