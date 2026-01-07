@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { collections, Timestamp, FieldValue } from '../config/firebase';
+import { collections, db, Timestamp, FieldValue } from '../config/firebase';
 import { GAME_CONFIGS } from '../config/games';
-import { GameData } from '../types';
+import { GameData, TournamentDocument } from '../types';
 import { analyzeGameplay, verifyChecksum } from '../anticheat/statisticalAnalysis';
 import { flagAccount as flagAccountDetailed, isAccountBanned } from '../anticheat/flagging';
 // Replay validation disabled - too many false positives
@@ -247,6 +247,10 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       await updateGlobalLeaderboard(playerAddress, username, newTotalScore);
     }
 
+    // AUTO-UPDATE TOURNAMENT ENTRIES
+    // Any ranked game automatically counts toward active tournaments the player has entered
+    await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
+
     // Update user stats
     // First, ensure user document exists with complete schema
     const userRef = collections.users.doc(playerAddress);
@@ -398,5 +402,92 @@ async function updateGlobalLeaderboard(
       lastUpdated: now,
       entries: updateList(data.entries || []),
     });
+  }
+}
+
+/**
+ * Auto-update tournament entries for active tournaments
+ * When a player plays a ranked game, their score automatically counts toward
+ * any active tournaments they've entered (no special tournament mode needed)
+ */
+async function updateActiveTournamentEntries(
+  playerAddress: string,
+  gameId: string,
+  score: number,
+  now: FirebaseFirestore.Timestamp
+): Promise<void> {
+  try {
+    // Find all active tournaments where this player has an entry
+    const tournamentsSnapshot = await db
+      .collection('tournaments')
+      .where('status', '==', 'active')
+      .get();
+
+    if (tournamentsSnapshot.empty) {
+      return; // No active tournaments
+    }
+
+    // Check each active tournament for player's entry
+    for (const tournamentDoc of tournamentsSnapshot.docs) {
+      const tournament = tournamentDoc.data() as TournamentDocument;
+      const tournamentId = tournamentDoc.id;
+
+      // Check if this is a single-game tournament that doesn't match our game
+      if (tournament.gameId && tournament.gameId !== gameId) {
+        continue; // Skip - this tournament is for a different game
+      }
+
+      // Check if player has an entry in this tournament
+      const entryRef = db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('entries')
+        .doc(playerAddress);
+
+      const entryDoc = await entryRef.get();
+
+      if (!entryDoc.exists) {
+        continue; // Player hasn't entered this tournament
+      }
+
+      // Update the entry with the new score
+      const entryData = entryDoc.data();
+      const currentBestScores = entryData?.bestScores || {};
+      const currentGameBest = currentBestScores[gameId] || 0;
+
+      if (score <= currentGameBest) {
+        continue; // Not a new best for this game
+      }
+
+      // Calculate updated scores
+      const updatedBestScores = {
+        ...currentBestScores,
+        [gameId]: score,
+      };
+      const totalScore = Object.values(updatedBestScores).reduce(
+        (sum: number, s) => sum + (s as number),
+        0
+      );
+
+      // Legacy: also track single bestScore (highest across any game)
+      const legacyBest = entryData?.bestScore || 0;
+      const newLegacyBest = Math.max(legacyBest, score);
+
+      // Update tournament entry
+      await entryRef.update({
+        bestScore: newLegacyBest,
+        bestScores: updatedBestScores,
+        totalScore,
+        lastPlayedAt: now,
+        totalPlays: FieldValue.increment(1),
+      });
+
+      console.log(
+        `🏆 Tournament ${tournamentId} updated for ${playerAddress}: ${gameId} = ${score} (total: ${totalScore})`
+      );
+    }
+  } catch (error) {
+    // Don't fail the score submission if tournament update fails
+    console.error('Error updating tournament entries:', error);
   }
 }
