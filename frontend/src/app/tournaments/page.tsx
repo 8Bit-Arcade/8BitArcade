@@ -287,17 +287,39 @@ useEffect(() => {
   }
 }, [tournaments, address]); // Only re-run when tournaments or address changes
   
-  // Handle successful entry
+  // Handle successful entry - SYNC TO FIREBASE
   useEffect(() => {
-    if (isEnterSuccess && enterHash) {
+    if (isEnterSuccess && enterHash && selectedTournament && address) {
       console.log('✅ Tournament entry confirmed! Tx:', enterHash);
-      setEntering(false);
-      setSelectedTournament(null);
 
-      // Show success message
-      alert('Successfully entered tournament! Good luck! 🎮');
+      // Sync entry to Firebase for leaderboard tracking
+      const syncToFirebase = async () => {
+        try {
+          console.log('🔄 Syncing tournament entry to Firebase...');
+          await callFunction('enterTournament', {
+            tournamentId: String(selectedTournament),
+            player: address,
+            txHash: enterHash,
+          });
+          console.log('✅ Tournament entry synced to Firebase');
+        } catch (error: any) {
+          // Entry might already exist from a previous sync attempt, which is fine
+          if (error?.message?.includes('already-exists') || error?.message?.includes('Already entered')) {
+            console.log('ℹ️ Tournament entry already exists in Firebase');
+          } else {
+            console.error('⚠️ Failed to sync to Firebase:', error);
+          }
+        } finally {
+          setEntering(false);
+          setSelectedTournament(null);
+          // Show success message
+          alert('Successfully entered tournament! Good luck! 🎮');
+        }
+      };
+
+      syncToFirebase();
     }
-  }, [isEnterSuccess, enterHash]);
+  }, [isEnterSuccess, enterHash, selectedTournament, address]);
 
   const handleEnterTournament = (tournamentId: number, entryFee: bigint) => {
     console.log('🚀 handleEnterTournament CALLED:', {
