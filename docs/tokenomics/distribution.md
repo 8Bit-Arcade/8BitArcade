@@ -28,9 +28,9 @@ Complete breakdown of where every token goes and when you can access them.
 | **Amount** | 200,000,000 8BIT |
 | **Price** | $0.0005 per token |
 | **Max Raise** | $100,000 USD |
-| **Minimum Buy** | $100 USD (200,000 8BIT) |
 | **Vesting** | None - tokens available immediately |
 | **Network** | Arbitrum One |
+| **Status** | Coming Soon (pending mainnet) |
 
 **Where Funds Go:**
 - 75% → DEX Liquidity ($75,000)
@@ -181,10 +181,10 @@ Complete breakdown of where every token goes and when you can access them.
 - Attracts competitive players from day one
 
 **Tournament Structure:**
-- **Standard Weekly:** $1 entry, $25 prize pool
-- **Standard Monthly:** $5 entry, $50 prize pool
-- **High Roller Weekly:** $5 entry, $75 prize pool
-- **High Roller Monthly:** $25 entry, $250 prize pool
+- **Standard Weekly:** 2,000 8BIT entry, 50,000 8BIT prize pool
+- **Standard Monthly:** 10,000 8BIT entry, 100,000 8BIT prize pool
+- **High Roller Weekly:** 10,000 8BIT entry, 150,000 8BIT prize pool
+- **High Roller Monthly:** 50,000 8BIT entry, 500,000 8BIT prize pool
 
 **Note:** After these initial prizes are distributed, ongoing tournament prizes come from the GameRewards 150M emissions pool over 5 years.
 

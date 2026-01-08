@@ -70,7 +70,7 @@ Players can compete in multiple games to maximize earning potential.
 - **Monthly Distribution:** 1,500,000 8BIT (~$48,750 at projected $10M market cap)
 - **Total Supply:** 500,000,000 8BIT (fixed max supply)
 - **Presale Price:** $0.0005 per token
-- **Token Sale:** February 25, 2025 (6-week duration)
+- **Token Sale:** Coming Soon (pending mainnet deployment)
 - **Network:** Arbitrum One (ultra-low fees ~$0.10 per transaction)
 - **Games Available:** 12+ classic arcade games
 
@@ -110,11 +110,14 @@ The platform is designed to be accessible worldwide:
 
 For players seeking higher stakes competition, paid tournaments offer larger prize pools:
 
-- **Standard Tournaments:** $1-5 entry, 25K-45K 8BIT prize pools
-- **High Roller Weekly:** $10-15 entry, up to 80K 8BIT prizes (~$2,600 at projected $10M market cap)
-- **High Roller Monthly:** $25 entry, up to 500K 8BIT prizes (~$16,250 at projected $10M market cap)
+| Tournament Type | Entry Fee | Prize Pool |
+|-----------------|-----------|------------|
+| Standard Weekly | 2,000 8BIT | 50,000 8BIT |
+| Standard Monthly | 10,000 8BIT | 100,000 8BIT |
+| High Roller Weekly | 10,000 8BIT | 150,000 8BIT |
+| High Roller Monthly | 50,000 8BIT | 500,000 8BIT |
 
-Tournament winnings are in addition to daily free rewards.
+Tournament winnings are in addition to daily free rewards. All entry fees are paid in 8BIT tokens.
 
 ### 🎯 Get Started
 

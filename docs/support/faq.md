@@ -49,7 +49,7 @@ A: Depends on skill. Entry fee at risk. Prizes much larger than daily rewards. [
 A: Yes. Entry fees are non-refundable. Only enter if confident.
 
 **Q: What's the difference between Standard and High Roller?**
-A: Entry fee and prize pool. Standard: $1-5 entry. High Roller: $10-25 entry, 10x prizes.
+A: Entry fee and prize pool. Standard: 2,000-10,000 8BIT entry. High Roller: 10,000-50,000 8BIT entry with larger prizes.
 
 ---
 

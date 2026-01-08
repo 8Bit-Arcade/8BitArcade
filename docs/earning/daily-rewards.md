@@ -140,9 +140,9 @@ At $1M market cap = **$1,218/month** just from one game!
 
 | Feature | Daily Rewards | Tournaments |
 |---------|---------------|-------------|
-| **Entry Fee** | FREE | $1-$25 USDC |
+| **Entry Fee** | FREE | 2,000-50,000 8BIT |
 | **Frequency** | Every day | Weekly/Monthly |
-| **Prize Pool** | 50,000 8BIT/day | 25K-500K 8BIT |
+| **Prize Pool** | 50,000 8BIT/day | 50K-500K 8BIT |
 | **Competition** | All players | Tournament entrants only |
 | **Risk** | Zero | Entry fee at risk |
 | **Skill Ceiling** | Moderate | High |

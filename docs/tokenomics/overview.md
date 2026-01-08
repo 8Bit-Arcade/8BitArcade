@@ -16,7 +16,7 @@ Complete breakdown of the 8-Bit Arcade token economy, designed to reward players
 | **Decimals** | 18 |
 | **Presale Price** | $0.0005 USD |
 | **Presale Cap** | $100,000 USD |
-| **Token Sale Start** | February 25, 2025 |
+| **Token Sale Start** | Coming Soon (pending mainnet deployment) |
 | **Sale Duration** | 6 weeks |
 
 ### Why Arbitrum?
