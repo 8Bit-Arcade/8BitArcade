@@ -15,8 +15,8 @@ Understanding exactly how prizes are calculated, distributed, and what they're w
 - **Automatic payouts** at 00:00 UTC
 
 ### 2. Tournament Prizes
-- **Paid entry** required ($1-$50 USDC)
-- **Larger prize pools** (25K-500K 8BIT)
+- **Paid entry** required (2,000-50,000 8BIT)
+- **Larger prize pools** (50K-500K 8BIT)
 - **Top finishers** earn rewards (varies by tournament)
 - **Automatic payouts** when tournament ends
 
@@ -67,41 +67,33 @@ Game Daily Pool = (50,000 / Number of Active Games) × Game Weight
 
 ## Tournament Prize Distribution
 
-### Standard Tournament Example
+### Standard Weekly Example
 
-**Entry:** $5 × 50 players = $250 collected
+**Entry:** 2,000 8BIT × 50 players = 100,000 8BIT collected
 
 **50/50 Split:**
-- **$125 → Prize pool** (50%)
-- **$125 → Buyback & burn** (50%)
-
-**Prize Pool Conversion:**
-- $125 swapped to 8BIT on Uniswap V3
-- At $0.003 token price = ~41,666 8BIT prize pool
+- **50,000 8BIT → Prize pool** (50%)
+- **50,000 8BIT → Burned** (50%)
 
 **Prize Breakdown:**
 
 | Rank | % of Pool | Calculation | Prize |
 |------|-----------|-------------|-------|
-| 1st | 50% | 41,666 × 50% | 20,833 8BIT |
-| 2nd | 25% | 41,666 × 25% | 10,416 8BIT |
-| 3rd | 15% | 41,666 × 15% | 6,250 8BIT |
-| 4th | 5% | 41,666 × 5% | 2,083 8BIT |
-| 5th | 5% | 41,666 × 5% | 2,083 8BIT |
+| 1st | 50% | 50,000 × 50% | 25,000 8BIT |
+| 2nd | 25% | 50,000 × 25% | 12,500 8BIT |
+| 3rd | 15% | 50,000 × 15% | 7,500 8BIT |
+| 4th | 5% | 50,000 × 5% | 2,500 8BIT |
+| 5th | 5% | 50,000 × 5% | 2,500 8BIT |
 
 ### High Roller Monthly Example
 
-**Entry:** $25 × 200 players = $5,000 collected
+**Entry:** 50,000 8BIT × 100 players = 5,000,000 8BIT collected
 
 **50/50 Split:**
-- **$2,500 → Prize pool** (50%)
-- **$2,500 → Buyback & burn** (50%)
+- **2,500,000 8BIT → Prize pool** (50%)
+- **2,500,000 8BIT → Burned** (50%)
 
-**Prize Pool Conversion:**
-- $2,500 swapped to 8BIT
-- At $0.005 token price = 500,000 8BIT prize pool
-
-**Prize Breakdown:**
+**Prize Breakdown (500K 8BIT Pool):**
 
 | Rank | % of Pool | Calculation | Prize |
 |------|-----------|-------------|-------|
@@ -158,17 +150,16 @@ Example:
 **Tournament Winnings:**
 
 ```
-Prize = (Entry Fees × Participants × 50%) ÷ Token Price × Your %
+Prize = (Entry Fees × Participants × 50%) × Your %
 
-Example:
-- Entry: $25
-- Participants: 200
-- Total fees: $5,000
-- Prize pool: $2,500 (50%)
+Example (High Roller Monthly):
+- Entry: 50,000 8BIT
+- Participants: 100
+- Total fees: 5,000,000 8BIT
+- Prize pool: 2,500,000 8BIT (50%)
+- Burned: 2,500,000 8BIT (50%)
 - Your %: 40% (1st place)
-- Your USDC: $1,000
-- Token price: $0.005
-- Your 8BIT: $1,000 ÷ $0.005 = 200,000 8BIT
+- Your prize: 2,500,000 × 40% = 1,000,000 8BIT
 ```
 
 ## Payout Mechanics

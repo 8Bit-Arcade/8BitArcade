@@ -23,10 +23,10 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 
 ### Standard Tournaments
 
-**Entry Fee:** 2,000-10,000 8BIT (Weekly/Monthly)
-**Prize Pool:** 50,000-100,000 8BIT
-**Frequency:** Weekly & Monthly
-**Duration:** 7-30 days
+#### Standard Weekly
+**Entry Fee:** 2,000 8BIT
+**Prize Pool:** 50,000 8BIT
+**Duration:** 7 days
 
 | Rank | Prize |
 |------|-------|
@@ -35,22 +35,25 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 | 3rd | 7,500 8BIT |
 | 4th-10th | Split remaining |
 
+#### Standard Monthly
+**Entry Fee:** 10,000 8BIT
+**Prize Pool:** 100,000 8BIT
+**Duration:** 30 days
+
 **Best For:**
 - Casual competitive players
 - Testing tournament skills
-- Low-risk entry
+- Lower entry cost
 - Building experience
 
 ---
 
 ### High Roller Tournaments
 
-**Entry Fee:** 10,000-50,000 8BIT (Weekly/Monthly)
-**Prize Pool:** 150,000-500,000 8BIT
-**Frequency:** Weekly + Monthly
-**Duration:** 7-30 days
-
 #### High Roller Weekly
+**Entry Fee:** 10,000 8BIT
+**Prize Pool:** 150,000 8BIT
+**Duration:** 7 days
 
 | Rank | Prize |
 |------|-------|
@@ -60,6 +63,9 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 | 4th-10th | 15,000 total |
 
 #### High Roller Monthly
+**Entry Fee:** 50,000 8BIT
+**Prize Pool:** 500,000 8BIT
+**Duration:** 30 days
 
 | Rank | Prize |
 |------|-------|
@@ -116,7 +122,7 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 
 3. **Pay Entry Fee**
    - Click **"Enter Tournament"**
-   - Approve USDC spend in MetaMask
+   - Approve 8BIT token spend in MetaMask
    - Confirm transaction
    - Entry confirmed!
 
@@ -206,22 +212,24 @@ Some tournaments have **guaranteed minimums:**
 
 ## Tournament Calendar
 
-### Weekly Schedule
+### Automated Tournament Rotation
 
-| Day | Tournament Type | Entry Fee | Prize Pool |
-|-----|----------------|-----------|------------|
-| **Monday** | Standard (Chomper) | 2K 8BIT | 50K 8BIT |
-| **Wednesday** | High Roller (Space Rocks) | 10K 8BIT | 150K 8BIT |
-| **Friday** | Standard (Block Drop) | 2K 8BIT | 50K 8BIT |
-| **Sunday** | High Roller (All Games) | 10K 8BIT | 150K 8BIT |
+Tournaments are automatically scheduled with a rotating game focus:
 
-### Monthly Events
+| Tournament Type | Entry Fee | Prize Pool | Frequency |
+|-----------------|-----------|------------|-----------|
+| Standard Weekly | 2,000 8BIT | 50,000 8BIT | Weekly |
+| Standard Monthly | 10,000 8BIT | 100,000 8BIT | Monthly |
+| High Roller Weekly | 10,000 8BIT | 150,000 8BIT | Weekly |
+| High Roller Monthly | 50,000 8BIT | 500,000 8BIT | Monthly |
 
-- **1st of Month:** High Roller Monthly begins (50K 8BIT entry, 500K pool)
-- **15th of Month:** Mid-month Special Event (varies)
-- **Last day:** High Roller Monthly ends, payouts
+### Tournament Types
 
-*Calendar subject to change. Check in-app for current schedule.*
+**All-Games Tournaments:** Your combined score across all 12 games determines your ranking.
+
+**Single-Game Tournaments:** Focus on one specific game (rotates weekly/monthly).
+
+*Calendar varies. Check the [Tournaments page](https://play.8bitarcade.games/tournaments) for current schedule.*
 
 ## Entry Fees & Payment
 

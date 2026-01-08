@@ -246,8 +246,8 @@ Explanations:
 
 Checklist:
 1. Tournament still open for registration?
-2. Have enough USDC for entry fee?
-3. Approved USDC spending in MetaMask?
+2. Have enough 8BIT tokens for entry fee?
+3. Approved 8BIT token spending in MetaMask?
 4. Have ETH for gas?
 5. Already entered this tournament? (can't double-enter)
 

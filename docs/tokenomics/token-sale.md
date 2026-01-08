@@ -4,6 +4,10 @@
 
 How to participate in the 8-Bit Arcade token presale and become an early investor.
 
+> **🚀 COMING SOON TO MAINNET**
+>
+> The 8BIT Token Sale will go live once we deploy to Arbitrum Mainnet. The sale interface is currently in preview mode. Stay tuned for launch announcements!
+
 ## Sale Overview
 
 | Parameter | Details |
@@ -15,15 +19,14 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 | **Total for Sale** | 200,000,000 8BIT (40% of supply) |
 | **Hard Cap** | $100,000 USD |
 | **Payment Methods** | USDC, ETH |
-| **Minimum Purchase** | $100 USD |
 | **Maximum Purchase** | No limit (until sold out) |
 
 ## Sale Timeline
 
 ### Phase 1: Presale
 
-- **Status:** Starts February 25, 2025
-- **Duration:** 6 weeks (ends April 8, 2025)
+- **Status:** Coming Soon (pending mainnet deployment)
+- **Duration:** 6 weeks from launch
 - **Price:** $0.0005 (locked, no price increases)
 - **Payment:** USDC or ETH on Arbitrum
 - **Claim:** Immediate upon purchase
@@ -93,7 +96,7 @@ Click "Add Token" in MetaMask and paste contract address to view your balance.
 
 ## Investment Examples
 
-### $100 Investment (Minimum)
+### $100 Investment
 
 - **Tokens Received:** 200,000 8BIT
 - **At $1M Market Cap:** Worth $650
@@ -279,7 +282,7 @@ A: No, it's a public sale. First come, first served.
 A: Yes, the contract accepts ETH and auto-converts to USDC at market rate.
 
 **Q: What's the minimum/maximum investment?**
-A: Minimum $100, no maximum (until sold out).
+A: No minimum, no maximum (until sold out).
 
 **Q: Are there any bonuses for large purchases?**
 A: No, everyone pays the same price ($0.0005 per token).

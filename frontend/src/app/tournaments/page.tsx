@@ -38,6 +38,7 @@ export default function TournamentsPage() {
   const [needsApproval, setNeedsApproval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
+  const [expandedResults, setExpandedResults] = useState<number | null>(null);
 
   // DYNAMIC TOURNAMENT DISCOVERY - Check first 12 tournament slots
   const MAX_TOURNAMENTS = 12;
@@ -245,10 +246,11 @@ export default function TournamentsPage() {
     setTournaments(formattedTournaments);
     setLoading(anyLoading);
   }, [
-    // ✅ SAFE DEPENDENCIES - only tournamentQueries properties
+    // ✅ SAFE DEPENDENCIES - tournamentQueries and hasEnteredQueries properties
     ...tournamentQueries.map(q => q.data),
     ...tournamentQueries.map(q => q.isLoading),
     ...tournamentQueries.map(q => q.error),
+    ...hasEnteredQueries.map(q => q.data), // Include hasEntered data for button updates
     address, // Only re-run when address changes (wallet connect/disconnect)
   ]);
 
@@ -678,24 +680,30 @@ useEffect(() => {
                       </>
                     )}
                     {tournament.status === 'ended' && (
-                      <Button variant="ghost" size="sm">
-                        View Results
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExpandedResults(
+                          expandedResults === tournament.id ? null : tournament.id
+                        )}
+                      >
+                        {expandedResults === tournament.id ? 'Hide Results' : 'View Results'}
                       </Button>
                     )}
                   </div>
                 </div>
 
                 {/* Tournament Leaderboard */}
-                  {(tournament.status === 'active' || tournament.status === 'ended') && 
-                   tournament.totalEntries > 0 && (
-                    <div className="mt-4 pt-4 border-t border-arcade-green/20">
+                {((tournament.status === 'active') ||
+                  (tournament.status === 'ended' && expandedResults === tournament.id)) && (
+                  <div className="mt-4 pt-4 border-t border-arcade-green/20">
                     <TournamentLeaderboard
-                  tournamentId={tournament.id}
-                  tournamentName={`${tournament.tier} ${tournament.period}`}
-                  isActive={tournament.status === 'active'}
-                />
-              </div>
-              )}
+                      tournamentId={tournament.id}
+                      tournamentName={`${tournament.tier} ${tournament.period}`}
+                      isActive={tournament.status === 'active'}
+                    />
+                  </div>
+                )}
 
               </Card>
             ))
