@@ -10,6 +10,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { useAudioStore } from '@/stores/audioStore';
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useTournamentStatus } from '@/hooks/useTournamentStatus';
 import { formatNumber, isTouchDevice } from '@/lib/utils';
 import type { GameMode } from '@/types';
 
@@ -65,6 +66,7 @@ export default function GameWrapper({
   const { soundEnabled, soundVolume } = useAudioStore();
   const { createSession, submitScore: submitScoreToBackend } = useScoreSubmission();
   const { signInWithWallet, isFirebaseAuthenticated, isAuthenticating } = useWalletAuth();
+  const { tournamentsForGame, loading: tournamentsLoading } = useTournamentStatus(gameId);
 
   const [showModeSelect, setShowModeSelect] = useState(true);
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
@@ -561,7 +563,27 @@ export default function GameWrapper({
         {/* Mode Selection */}
         {showModeSelect && !isGameOver && (
           <div className="card-arcade text-center max-w-sm">
-            <h2 className="font-pixel text-arcade-green text-lg mb-6">{gameName}</h2>
+            <h2 className="font-pixel text-arcade-green text-lg mb-4">{gameName}</h2>
+
+            {/* Tournament Enrollment Indicator */}
+            {isConnected && tournamentsForGame.length > 0 && (
+              <div className="mb-4 p-3 bg-arcade-pink/10 border border-arcade-pink/40 rounded-lg">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <span className="text-arcade-pink text-sm">🏆</span>
+                  <span className="font-pixel text-arcade-pink text-xs">TOURNAMENT ACTIVE</span>
+                </div>
+                <p className="font-arcade text-gray-300 text-xs">
+                  {tournamentsForGame.length === 1
+                    ? `You're in: ${tournamentsForGame[0].name}`
+                    : `You're in ${tournamentsForGame.length} tournaments`
+                  }
+                </p>
+                <p className="font-arcade text-arcade-cyan text-xs mt-1">
+                  Ranked scores count toward your position!
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3">
               <Button
                 variant="primary"
@@ -580,7 +602,10 @@ export default function GameWrapper({
               </Button>
             </div>
             <p className="font-arcade text-gray-500 text-xs mt-4">
-              Ranked scores count toward daily rewards & tournaments!
+              {tournamentsForGame.length > 0
+                ? 'Play ranked to compete in your active tournaments!'
+                : 'Ranked scores count toward daily rewards & tournaments!'
+              }
             </p>
           </div>
         )}
