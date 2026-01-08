@@ -229,6 +229,21 @@ export default function BuyEightBitPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4">
+        {/* Mainnet Launch Banner */}
+        <div className="mb-8 p-4 bg-arcade-yellow/10 border-2 border-arcade-yellow rounded-lg text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-2xl">🚀</span>
+            <h2 className="font-pixel text-arcade-yellow text-lg">COMING SOON TO MAINNET</h2>
+            <span className="text-2xl">🚀</span>
+          </div>
+          <p className="font-arcade text-gray-300 text-sm mb-2">
+            The 8BIT Token Sale will go live once we deploy to Arbitrum Mainnet.
+          </p>
+          <p className="font-arcade text-gray-400 text-xs">
+            This is a preview of the sale interface. All purchases are currently disabled.
+          </p>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-pixel text-2xl md:text-3xl text-arcade-yellow glow-yellow mb-2">
@@ -237,18 +252,9 @@ export default function BuyEightBitPage() {
           <p className="font-arcade text-gray-400 mb-4">
             Join the future of blockchain gaming
           </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-arcade-dark border border-arcade-green/30 rounded">
-            {isSaleActive ? (
-              <>
-                <span className="w-2 h-2 bg-arcade-green rounded-full animate-pulse"></span>
-                <span className="font-pixel text-arcade-green text-sm">SALE LIVE</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
-                <span className="font-pixel text-gray-500 text-sm">SALE ENDED</span>
-              </>
-            )}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-arcade-dark border border-gray-600 rounded">
+            <span className="w-2 h-2 bg-arcade-yellow rounded-full animate-pulse"></span>
+            <span className="font-pixel text-arcade-yellow text-sm">PREVIEW MODE</span>
           </div>
         </div>
 
@@ -280,12 +286,12 @@ export default function BuyEightBitPage() {
 
           <Card>
             <div className="text-center">
-              <p className="font-arcade text-xs text-gray-500 mb-1">Time Remaining</p>
-              <p className="font-pixel text-arcade-pink text-lg">
-                {timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : 'ENDED'}
+              <p className="font-arcade text-xs text-gray-500 mb-1">Sale Status</p>
+              <p className="font-pixel text-arcade-yellow text-lg">
+                COMING SOON
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                6 Week Sale • Starts Feb 25
+                6 Week Sale • Launch TBD
               </p>
             </div>
           </Card>
@@ -370,36 +376,13 @@ export default function BuyEightBitPage() {
               </p>
             </div>
 
-            {/* Buy Button */}
-            {!isConnected ? (
-              <Button variant="secondary" size="lg" className="w-full" disabled>
-                Connect Wallet to Buy
-              </Button>
-            ) : !isSaleActive ? (
-              <Button variant="secondary" size="lg" className="w-full" disabled>
-                Sale Ended
-              </Button>
-            ) : needsApproval ? (
-              <Button
-                variant="secondary"
-                size="lg"
-                className="w-full"
-                onClick={handleApprove}
-                disabled={!!approveHash}
-              >
-                {approveHash ? 'Approving USDC...' : 'Approve USDC'}
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full"
-                onClick={handleBuy}
-                disabled={!amount || !!buyEthHash || !!buyUsdcHash}
-              >
-                {buyEthHash || buyUsdcHash ? 'Processing...' : 'Buy Tokens'}
-              </Button>
-            )}
+            {/* Buy Button - DISABLED FOR TESTNET */}
+            <Button variant="secondary" size="lg" className="w-full" disabled>
+              Coming Soon on Mainnet
+            </Button>
+            <p className="font-arcade text-xs text-gray-500 text-center mt-2">
+              Purchases will be enabled after mainnet deployment
+            </p>
 
             {/* User Purchase Info */}
             {isConnected && userPurchasedValue && Number(userPurchasedValue) > 0 && (
