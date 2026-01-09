@@ -1,7 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../config/firebase';
 import { TournamentDocument, TournamentEntryDocument } from '../types';
-import { Timestamp } from 'firebase-admin/firestore';
 
 interface GetTournamentsRequest {
   status?: 'active' | 'upcoming' | 'ended';
@@ -23,29 +22,23 @@ export const getTournaments = onCall<GetTournamentsRequest>(async (request) => {
   const { status, tier, player } = request.data;
 
   try {
-    let query = db.collection('tournaments').orderBy('startTime', 'desc');
+    let query: FirebaseFirestore.Query = db.collection('tournaments').orderBy('startTime', 'desc');
 
-    // Apply status filter
+    // Apply status filter - just use the status field directly
+    // The status field is managed by backend (initializeTournamentIfMissing, finalizeTournament)
     if (status) {
       if (status === 'active') {
-        const now = Timestamp.now();
-        query = query
-          .where('startTime', '<=', now)
-          .where('endTime', '>', now)
-          .where('status', '==', 'active') as any;
+        query = query.where('status', '==', 'active');
       } else if (status === 'upcoming') {
-        const now = Timestamp.now();
-        query = query
-          .where('startTime', '>', now)
-          .where('status', '==', 'upcoming') as any;
+        query = query.where('status', '==', 'upcoming');
       } else if (status === 'ended') {
-        query = query.where('status', 'in', ['ended', 'finalized']) as any;
+        query = query.where('status', 'in', ['ended', 'finalized']);
       }
     }
 
     // Apply tier filter
     if (tier) {
-      query = query.where('tier', '==', tier) as any;
+      query = query.where('tier', '==', tier);
     }
 
     const snapshot = await query.limit(50).get();
