@@ -5,14 +5,14 @@ import { callFunction } from '@/lib/firebase-functions';
 
 interface ActiveTournament {
   id: string;
-  name: string;
+  name?: string;
   tier: string;
   period: string;
-  gameId: string | null; // null = all games
+  gameId?: string | null; // null/undefined = all games
   startTime: { _seconds: number };
   endTime: { _seconds: number };
-  entryFee: string;
-  prizePool: string;
+  entryFee: number | string;
+  prizePool: number | string;
   status: string;
 }
 
@@ -50,14 +50,16 @@ export function useActiveTournaments(): UseActiveTournamentsResult {
         // Build set of game IDs that have active tournaments
         const gameIds = new Set<string>();
         result.tournaments.forEach((t) => {
-          if (t.gameId === null) {
-            // Tournament applies to all games - mark a special flag
+          // If gameId is null, undefined, or not set, tournament applies to ALL games
+          if (t.gameId === null || t.gameId === undefined || !t.gameId) {
             gameIds.add('__all__');
           } else {
             gameIds.add(t.gameId);
           }
         });
         setGamesWithTournaments(gameIds);
+
+        console.log('Active tournaments loaded:', result.tournaments.length, 'Games with tournaments:', Array.from(gameIds));
       } else {
         setActiveTournaments([]);
         setGamesWithTournaments(new Set());
