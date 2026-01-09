@@ -20,6 +20,7 @@ interface Game {
 interface GameGridProps {
   games: Game[];
   onSelectGame: (index: number) => void;
+  gamesWithTournaments?: Set<string>;
 }
 
 const CATEGORIES: { value: GameCategory; label: string }[] = [
@@ -30,11 +31,16 @@ const CATEGORIES: { value: GameCategory; label: string }[] = [
   { value: 'action', label: 'Action' },
 ];
 
-export default function GameGrid({ games, onSelectGame }: GameGridProps) {
+export default function GameGrid({ games, onSelectGame, gamesWithTournaments = new Set() }: GameGridProps) {
   const { isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<GameCategory>('all');
   const [hoveredGame, setHoveredGame] = useState<string | null>(null);
+
+  // Check if a game has an active tournament
+  const hasActiveTournament = (gameId: string) => {
+    return gamesWithTournaments.has('__all__') || gamesWithTournaments.has(gameId);
+  };
 
   const filteredGames = useMemo(() => {
     return games.filter((game) => {
@@ -139,6 +145,14 @@ export default function GameGrid({ games, onSelectGame }: GameGridProps) {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-arcade-dark to-arcade-black">
                         <span className="font-pixel text-3xl text-arcade-green/20">?</span>
+                      </div>
+                    )}
+
+                    {/* Tournament Badge */}
+                    {hasActiveTournament(game.id) && (
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-arcade-pink/90 rounded flex items-center gap-0.5 animate-pulse">
+                        <span className="text-white text-[10px]">🏆</span>
+                        <span className="font-pixel text-[10px] text-white">LIVE</span>
                       </div>
                     )}
 

@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import GameCarousel from '@/components/game/GameCarousel';
 import GameGrid, { GameCategory } from '@/components/game/GameGrid';
 import LeaderboardModal from '@/components/leaderboard/LeaderboardModal';
+import { useActiveTournaments } from '@/hooks/useActiveTournaments';
 import { formatNumber } from '@/lib/utils';
 import { getFirestoreInstance, isFirebaseConfigured } from '@/lib/firebase-client';
 
@@ -143,6 +144,7 @@ export default function HomePage() {
   const [gameLeaderboards, setGameLeaderboards] = useState<{ [gameId: string]: { rank: number; username: string; score: number; odedId: string }[] }>({});
   const [topPlayers, setTopPlayers] = useState<{ rank: number; username: string; score: number }[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const { gamesWithTournaments } = useActiveTournaments();
 
   // Log version info on mount
   useEffect(() => {
@@ -283,6 +285,7 @@ export default function HomePage() {
               selectedIndex={selectedGame}
               onSelectGame={setSelectedGame}
               leaderboards={gameLeaderboards}
+              gamesWithTournaments={gamesWithTournaments}
             />
 
             {/* Selected Game Actions */}
@@ -347,7 +350,7 @@ export default function HomePage() {
           <h2 className="font-pixel text-arcade-green text-sm mb-6 text-center">
             ALL GAMES
           </h2>
-          <GameGrid games={GAMES} onSelectGame={handleGridSelect} />
+          <GameGrid games={GAMES} onSelectGame={handleGridSelect} gamesWithTournaments={gamesWithTournaments} />
         </div>
       </section>
 
