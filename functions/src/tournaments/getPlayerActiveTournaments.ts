@@ -30,20 +30,22 @@ export const getPlayerActiveTournaments = onCall<GetPlayerActiveTournamentsReque
     const playerAddress = player.toLowerCase();
 
     try {
-      // Get all active tournaments
-      const tournamentsSnapshot = await db
-        .collection('tournaments')
-        .where('status', '==', 'active')
-        .get();
+      // Get all tournaments and filter in code to avoid index requirements
+      const tournamentsSnapshot = await db.collection('tournaments').get();
 
-      if (tournamentsSnapshot.empty) {
+      // Filter to active tournaments in code
+      const activeTournaments = tournamentsSnapshot.docs.filter(doc =>
+        doc.data().status === 'active'
+      );
+
+      if (activeTournaments.length === 0) {
         return { success: true, tournaments: [] };
       }
 
       const enrolledTournaments: ActiveTournament[] = [];
 
       // Check each tournament for player's entry
-      for (const tournamentDoc of tournamentsSnapshot.docs) {
+      for (const tournamentDoc of activeTournaments) {
         const tournament = tournamentDoc.data() as TournamentDocument;
         const tournamentId = tournamentDoc.id;
 
@@ -67,6 +69,8 @@ export const getPlayerActiveTournaments = onCall<GetPlayerActiveTournamentsReque
           });
         }
       }
+
+      console.log('Player', playerAddress, 'enrolled in', enrolledTournaments.length, 'tournaments');
 
       return {
         success: true,
