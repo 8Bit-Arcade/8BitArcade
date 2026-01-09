@@ -9,7 +9,7 @@ interface ActiveTournament {
   name: string;
   tier: string;
   period: string;
-  gameId: string | null; // null = all games
+  gameId?: string | null; // null/undefined = all games
   endsAt: number;
 }
 
@@ -44,8 +44,10 @@ export function useTournamentStatus(gameId?: string): TournamentStatusResult {
       >('getPlayerActiveTournaments', { player: address });
 
       if (result.success && result.tournaments) {
+        console.log('Player tournaments loaded:', result.tournaments);
         setActiveTournaments(result.tournaments);
       } else {
+        console.log('No tournaments found for player');
         setActiveTournaments([]);
       }
     } catch (error) {
@@ -62,11 +64,14 @@ export function useTournamentStatus(gameId?: string): TournamentStatusResult {
   }, [fetchTournamentStatus]);
 
   // Filter tournaments that apply to this specific game
+  // If tournament.gameId is null/undefined, it applies to ALL games
   const tournamentsForGame = gameId
     ? activeTournaments.filter(
-        (t) => t.gameId === null || t.gameId === gameId
+        (t) => !t.gameId || t.gameId === null || t.gameId === gameId
       )
     : activeTournaments;
+
+  console.log('tournamentsForGame for', gameId, ':', tournamentsForGame);
 
   return {
     isEnrolled: activeTournaments.length > 0,
