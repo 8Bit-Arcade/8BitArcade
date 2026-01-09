@@ -539,6 +539,36 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Legend */}
+      <section className="py-8 border-t border-arcade-green/20">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="font-pixel text-arcade-green text-xs text-center mb-6">
+            GAME BADGES
+          </h2>
+          <div className="flex flex-wrap justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1">
+                <span className="text-white text-xs">🏆</span>
+                <span className="font-pixel text-xs text-white">LIVE</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Active Tournament</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-yellow/90 rounded">
+                <span className="font-pixel text-xs text-black">SOON</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Coming Soon</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-green/20 border border-arcade-green/30 rounded">
+                <span className="font-pixel text-xs text-arcade-green">EASY</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Difficulty Level</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
