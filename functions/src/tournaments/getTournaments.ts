@@ -22,30 +22,40 @@ export const getTournaments = onCall<GetTournamentsRequest>(async (request) => {
   const { status, tier, player } = request.data;
 
   try {
-    let query: FirebaseFirestore.Query = db.collection('tournaments').orderBy('startTime', 'desc');
+    // Simple query - fetch all and filter in code to avoid index requirements
+    const snapshot = await db.collection('tournaments').get();
 
-    // Apply status filter - just use the status field directly
-    // The status field is managed by backend (initializeTournamentIfMissing, finalizeTournament)
+    let filteredDocs = snapshot.docs;
+
+    // Filter by status in code
     if (status) {
-      if (status === 'active') {
-        query = query.where('status', '==', 'active');
-      } else if (status === 'upcoming') {
-        query = query.where('status', '==', 'upcoming');
-      } else if (status === 'ended') {
-        query = query.where('status', 'in', ['ended', 'finalized']);
-      }
+      filteredDocs = filteredDocs.filter(doc => {
+        const data = doc.data();
+        if (status === 'active') return data.status === 'active';
+        if (status === 'upcoming') return data.status === 'upcoming';
+        if (status === 'ended') return data.status === 'ended' || data.status === 'finalized';
+        return true;
+      });
     }
 
-    // Apply tier filter
+    // Filter by tier in code
     if (tier) {
-      query = query.where('tier', '==', tier);
+      filteredDocs = filteredDocs.filter(doc => doc.data().tier === tier);
     }
 
-    const snapshot = await query.limit(50).get();
+    // Sort by startTime descending
+    filteredDocs.sort((a, b) => {
+      const aTime = a.data().startTime?.toMillis?.() || 0;
+      const bTime = b.data().startTime?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
+    // Limit to 50
+    filteredDocs = filteredDocs.slice(0, 50);
 
     const tournaments: TournamentWithUserData[] = [];
 
-    for (const doc of snapshot.docs) {
+    for (const doc of filteredDocs) {
       const tournament = { id: doc.id, ...doc.data() } as TournamentDocument;
 
       // If player address provided, check if they've entered and get their stats
