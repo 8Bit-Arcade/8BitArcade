@@ -213,11 +213,11 @@ export default function GameWrapper({
       setSelectedMode(mode);
       setShowModeSelect(false);
 
-      // Create session for ranked mode
-      if (mode === 'ranked') {
+      // Create session for ranked or tournament mode
+      if (mode === 'ranked' || mode === 'tournament') {
         try {
           console.log('Creating session for game:', gameId, 'mode:', mode);
-          const session = await createSession(gameId, 'ranked');
+          const session = await createSession(gameId, mode);
           console.log('Session created:', session);
           if (session) {
             sessionIdRef.current = session.sessionId;
@@ -542,12 +542,20 @@ export default function GameWrapper({
 
       {/* Score Display */}
       {isPlaying && (
-        <div className="flex items-center justify-between px-2 py-0.5 md:py-2 bg-arcade-dark/50">
+        <div className={`flex items-center justify-between px-2 py-0.5 md:py-2 ${
+          gameMode === 'tournament' ? 'bg-arcade-pink/20' :
+          gameMode === 'ranked' ? 'bg-arcade-cyan/20' : 'bg-arcade-dark/50'
+        }`}>
           <span className="font-pixel text-arcade-yellow text-xs md:text-sm">
             SCORE: {formatNumber(score)}
           </span>
-          <span className="font-arcade text-gray-400 text-xs uppercase hidden sm:block">
-            {gameMode} Mode
+          <span className={`font-pixel text-xs uppercase hidden sm:flex items-center gap-1 ${
+            gameMode === 'tournament' ? 'text-arcade-pink' :
+            gameMode === 'ranked' ? 'text-arcade-cyan' : 'text-gray-400'
+          }`}>
+            {gameMode === 'tournament' && '🏆'}
+            {gameMode === 'ranked' && '⭐'}
+            {gameMode.toUpperCase()}
           </span>
           <button
             onClick={togglePause}
@@ -565,34 +573,58 @@ export default function GameWrapper({
           <div className="card-arcade text-center max-w-sm">
             <h2 className="font-pixel text-arcade-green text-lg mb-4">{gameName}</h2>
 
-            {/* Tournament Enrollment Indicator */}
+            {/* Tournament Play Section - Only shows if enrolled in tournaments */}
             {isConnected && tournamentsForGame.length > 0 && (
-              <div className="mb-4 p-3 bg-arcade-pink/10 border border-arcade-pink/40 rounded-lg">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className="text-arcade-pink text-sm">🏆</span>
-                  <span className="font-pixel text-arcade-pink text-xs">TOURNAMENT ACTIVE</span>
+              <div className="mb-4 p-4 bg-arcade-pink/10 border-2 border-arcade-pink/60 rounded-lg">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-arcade-pink text-lg">🏆</span>
+                  <span className="font-pixel text-arcade-pink text-sm">TOURNAMENT MODE</span>
                 </div>
-                <p className="font-arcade text-gray-300 text-xs">
+                <p className="font-arcade text-gray-300 text-xs mb-3 text-center">
                   {tournamentsForGame.length === 1
-                    ? `You're in: ${tournamentsForGame[0].name}`
-                    : `You're in ${tournamentsForGame.length} tournaments`
+                    ? tournamentsForGame[0].name
+                    : `${tournamentsForGame.length} active tournaments`
                   }
                 </p>
-                <p className="font-arcade text-arcade-cyan text-xs mt-1">
-                  Ranked scores count toward your position!
+                <Button
+                  variant="primary"
+                  className="w-full bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink"
+                  onClick={() => handleStartGame('tournament')}
+                >
+                  🏆 Play Tournament
+                </Button>
+                <p className="font-arcade text-arcade-pink/80 text-xs mt-2 text-center">
+                  Score counts toward tournament prize pool!
                 </p>
               </div>
             )}
 
-            <div className="space-y-3">
+            {/* Ranked Play Section */}
+            <div className="mb-4 p-4 bg-arcade-cyan/10 border-2 border-arcade-cyan/60 rounded-lg">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-arcade-cyan text-lg">⭐</span>
+                <span className="font-pixel text-arcade-cyan text-sm">RANKED MODE</span>
+              </div>
+              <p className="font-arcade text-gray-300 text-xs mb-3 text-center">
+                Compete on daily leaderboards for token rewards
+              </p>
               <Button
                 variant="primary"
-                className="w-full"
+                className="w-full bg-arcade-cyan hover:bg-arcade-cyan/80 border-arcade-cyan text-black"
                 onClick={() => handleStartGame('ranked')}
                 disabled={!isConnected}
               >
-                {isConnected ? 'Ranked Play' : 'Connect Wallet'}
+                {isConnected ? '⭐ Play Ranked' : 'Connect Wallet'}
               </Button>
+              {isConnected && (
+                <p className="font-arcade text-arcade-cyan/80 text-xs mt-2 text-center">
+                  Top 100 daily players earn 8BIT tokens!
+                </p>
+              )}
+            </div>
+
+            {/* Free Play Section */}
+            <div className="p-3 bg-arcade-dark/50 border border-arcade-green/30 rounded-lg">
               <Button
                 variant="secondary"
                 className="w-full"
@@ -600,13 +632,10 @@ export default function GameWrapper({
               >
                 Free Play
               </Button>
+              <p className="font-arcade text-gray-500 text-xs mt-2 text-center">
+                Practice mode - scores not recorded
+              </p>
             </div>
-            <p className="font-arcade text-gray-500 text-xs mt-4">
-              {tournamentsForGame.length > 0
-                ? 'Play ranked to compete in your active tournaments!'
-                : 'Ranked scores count toward daily rewards & tournaments!'
-              }
-            </p>
           </div>
         )}
 

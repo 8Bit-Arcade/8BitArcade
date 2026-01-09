@@ -26,6 +26,7 @@ interface GameCarouselProps {
   selectedIndex: number;
   onSelectGame: (index: number) => void;
   leaderboards: { [gameId: string]: TopPlayer[] };
+  gamesWithTournaments?: Set<string>;
 }
 
 // Helper to get display name for a user (similar to LeaderboardTable)
@@ -57,7 +58,12 @@ export default function GameCarousel({
   selectedIndex,
   onSelectGame,
   leaderboards,
+  gamesWithTournaments = new Set(),
 }: GameCarouselProps) {
+  // Check if a game has an active tournament
+  const hasActiveTournament = (gameId: string) => {
+    return gamesWithTournaments.has('__all__') || gamesWithTournaments.has(gameId);
+  };
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -193,6 +199,14 @@ export default function GameCarousel({
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-arcade-dark to-arcade-black">
                       <span className={`font-pixel text-arcade-green/20 ${isCenter ? 'text-6xl' : 'text-3xl'}`}>?</span>
+                    </div>
+                  )}
+
+                  {/* Tournament Badge - Shows when game has active tournament */}
+                  {hasActiveTournament(game.id) && (
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1 animate-pulse">
+                      <span className="text-white text-xs">🏆</span>
+                      <span className="font-pixel text-xs text-white">LIVE</span>
                     </div>
                   )}
 
