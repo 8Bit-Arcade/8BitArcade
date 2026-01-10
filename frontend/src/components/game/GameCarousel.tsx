@@ -77,9 +77,14 @@ export default function GameCarousel({
 
   // Get player's tournaments for a specific game
   const getPlayerTournamentsForGame = (gameId: string) => {
-    return playerTournaments.filter(
+    const filtered = playerTournaments.filter(
       (t) => !t.gameId || t.gameId === null || t.gameId === gameId
     );
+    if (playerTournaments.length > 0) {
+      console.log('🎮 Carousel - playerTournaments:', playerTournaments);
+      console.log('🎮 Carousel - filtered for', gameId, ':', filtered);
+    }
+    return filtered;
   };
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
