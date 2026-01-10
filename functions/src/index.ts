@@ -45,5 +45,14 @@ export { initializeTournamentIfMissing } from './tournaments/initializeTournamen
 export { getPlayerActiveTournaments } from './tournaments/getPlayerActiveTournaments';
 export { getTournamentParticipants } from './tournaments/getTournamentParticipants';
 
+// Airdrop functions
+export {
+    triggerAirdropSnapshot,
+    getAirdropStatus,
+    getAirdropLeaderboard,
+    markAirdropClaimed,
+    setAirdropContract
+} from './airdrop/calculateAirdrop';
+
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
