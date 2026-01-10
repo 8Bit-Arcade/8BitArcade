@@ -17,10 +17,25 @@ interface LeaderboardData {
 
 type Period = 'daily' | 'weekly' | 'allTime';
 
-export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
+export function useLeaderboard(gameId?: string, period: Period = 'allTime', userAddress?: string) {
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper to find user's rank and score from entries
+  const findUserRank = (entries: LeaderboardEntry[], address?: string) => {
+    if (!address) return { userRank: undefined, userScore: undefined };
+    const userIndex = entries.findIndex(
+      (e) => e.odedId.toLowerCase() === address.toLowerCase()
+    );
+    if (userIndex >= 0) {
+      return {
+        userRank: userIndex + 1,
+        userScore: entries[userIndex].score,
+      };
+    }
+    return { userRank: undefined, userScore: undefined };
+  };
 
   // Fetch leaderboard data directly from Firestore (no Cloud Functions needed)
   const fetchLeaderboard = useCallback(async () => {
@@ -75,9 +90,12 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
         }
       }
 
+      const { userRank, userScore } = findUserRank(entries, userAddress);
       setData({
         entries,
         lastUpdated,
+        userRank,
+        userScore,
       });
     } catch (err: any) {
       console.error('Failed to fetch leaderboard:', err);
@@ -85,7 +103,7 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
     } finally {
       setIsLoading(false);
     }
-  }, [gameId, period]);
+  }, [gameId, period, userAddress]);
 
   // Initial fetch
   useEffect(() => {
@@ -123,10 +141,13 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
                 timestamp: entry.timestamp?.toMillis?.() || Date.now(),
               }));
 
+              const { userRank, userScore } = findUserRank(entries, userAddress);
               setData((prev) => ({
                 ...prev,
                 entries,
                 lastUpdated: docData.lastUpdated?.toMillis?.() || Date.now(),
+                userRank,
+                userScore,
               }));
             }
           },
@@ -142,7 +163,7 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime') {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [gameId, period]);
+  }, [gameId, period, userAddress]);
 
   return {
     data,
