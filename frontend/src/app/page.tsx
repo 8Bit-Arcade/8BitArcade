@@ -9,6 +9,7 @@ import GameCarousel from '@/components/game/GameCarousel';
 import GameGrid, { GameCategory } from '@/components/game/GameGrid';
 import LeaderboardModal from '@/components/leaderboard/LeaderboardModal';
 import { useActiveTournaments } from '@/hooks/useActiveTournaments';
+import { useTournamentStatus } from '@/hooks/useTournamentStatus';
 import { formatNumber } from '@/lib/utils';
 import { getFirestoreInstance, isFirebaseConfigured } from '@/lib/firebase-client';
 
@@ -145,6 +146,7 @@ export default function HomePage() {
   const [topPlayers, setTopPlayers] = useState<{ rank: number; username: string; score: number }[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const { gamesWithTournaments } = useActiveTournaments();
+  const { activeTournaments: playerTournaments } = useTournamentStatus();
 
   // Log version info on mount
   useEffect(() => {
@@ -286,6 +288,7 @@ export default function HomePage() {
               onSelectGame={setSelectedGame}
               leaderboards={gameLeaderboards}
               gamesWithTournaments={gamesWithTournaments}
+              playerTournaments={playerTournaments}
             />
 
             {/* Selected Game Actions */}
@@ -350,7 +353,7 @@ export default function HomePage() {
           <h2 className="font-pixel text-arcade-green text-sm mb-6 text-center">
             ALL GAMES
           </h2>
-          <GameGrid games={GAMES} onSelectGame={handleGridSelect} gamesWithTournaments={gamesWithTournaments} />
+          <GameGrid games={GAMES} onSelectGame={handleGridSelect} gamesWithTournaments={gamesWithTournaments} playerTournaments={playerTournaments} />
         </div>
       </section>
 
@@ -546,13 +549,27 @@ export default function HomePage() {
           <h2 className="font-pixel text-arcade-green text-xs text-center mb-6">
             GAME BADGES
           </h2>
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             <div className="flex items-center gap-2">
-              <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1">
+              <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1 animate-pulse">
                 <span className="text-white text-xs">🏆</span>
-                <span className="font-pixel text-xs text-white">LIVE</span>
+                <span className="font-pixel text-xs text-white">WEEKLY</span>
               </div>
-              <span className="font-arcade text-gray-400 text-sm">Active Tournament</span>
+              <span className="font-arcade text-gray-400 text-sm">Your Weekly Tournament</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-purple/90 rounded flex items-center gap-1 animate-pulse">
+                <span className="text-white text-xs">🏆</span>
+                <span className="font-pixel text-xs text-white">MONTHLY</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Your Monthly Tournament</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-pink/50 rounded flex items-center gap-1">
+                <span className="text-white text-xs">🏆</span>
+                <span className="font-pixel text-xs text-white/70">LIVE</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Tournament Available</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="px-2 py-1 bg-arcade-yellow/90 rounded">
