@@ -44,10 +44,11 @@ export function useTournamentStatus(gameId?: string): TournamentStatusResult {
       >('getPlayerActiveTournaments', { player: address });
 
       if (result.success && result.tournaments) {
-        console.log('Player tournaments loaded:', result.tournaments);
+        console.log('🎯 Player tournaments loaded:', result.tournaments);
+        console.log('🎯 Tournament periods:', result.tournaments.map((t: any) => ({ id: t.id, period: t.period, tier: t.tier })));
         setActiveTournaments(result.tournaments);
       } else {
-        console.log('No tournaments found for player');
+        console.log('❌ No tournaments found for player (result:', result, ')');
         setActiveTournaments([]);
       }
     } catch (error) {
