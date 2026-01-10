@@ -44,10 +44,11 @@ export default function LeaderboardPage() {
     }
   }, [gameParam]);
 
-  // Fetch leaderboard data
+  // Fetch leaderboard data (pass user address to get their rank)
   const { data, isLoading, error } = useLeaderboard(
     selectedGame === 'all' ? undefined : selectedGame,
-    selectedPeriod
+    selectedPeriod,
+    address
   );
 
   // Fetch tournaments from blockchain
