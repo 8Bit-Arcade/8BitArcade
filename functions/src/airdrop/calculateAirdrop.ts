@@ -25,7 +25,7 @@ import { keccak256, encodePacked } from 'viem';
  */
 
 // Constants
-const TOTAL_AIRDROP_TOKENS = 15_000_000; // 15 million tokens
+const TOTAL_AIRDROP_TOKENS = 10_000_000; // 10 million tokens
 const TOKENS_DECIMALS = 18;
 
 // Point caps to prevent gaming
@@ -38,10 +38,10 @@ const MIN_TOURNAMENT_ENTRIES = 1;
 
 // Tier allocations (percentages)
 const TIER_ALLOCATIONS = {
-  legendary: { percent: 0.01, tokens: 3_000_000 },  // Top 1%
-  epic: { percent: 0.05, tokens: 4_000_000 },       // Top 5% (excluding legendary)
-  rare: { percent: 0.20, tokens: 5_000_000 },       // Top 20% (excluding epic)
-  common: { percent: 1.00, tokens: 3_000_000 },     // Everyone else
+  legendary: { percent: 0.01, tokens: 2_000_000 },  // Top 1%
+  epic: { percent: 0.05, tokens: 2_500_000 },       // Top 5% (excluding legendary)
+  rare: { percent: 0.20, tokens: 3_500_000 },       // Top 20% (excluding epic)
+  common: { percent: 1.00, tokens: 2_000_000 },     // Everyone else
 };
 
 interface PlayerScore {
@@ -620,55 +620,65 @@ export const triggerAirdropSnapshot = onCall(async (request) => {
  * Get airdrop status for a wallet
  */
 export const getAirdropStatus = onCall(async (request) => {
-  const { wallet, snapshotId } = request.data as { wallet?: string; snapshotId?: string };
+  try {
+    const { wallet, snapshotId } = (request.data || {}) as { wallet?: string; snapshotId?: string };
 
-  const targetWallet = (wallet || request.auth?.uid)?.toLowerCase();
+    const targetWallet = (wallet || request.auth?.uid)?.toLowerCase();
 
-  if (!targetWallet) {
-    throw new HttpsError('invalid-argument', 'Wallet address required');
-  }
+    if (!targetWallet) {
+      return {
+        eligible: false,
+        message: 'Wallet address required. Please connect your wallet.',
+        status: 'no_wallet',
+      };
+    }
 
-  console.log(`🔍 Checking airdrop status for ${targetWallet}`);
+    console.log(`🔍 Checking airdrop status for ${targetWallet}`);
 
-  // Get the latest active airdrop or specified snapshot
-  let airdropDoc;
+    // Get the latest active airdrop or specified snapshot
+    let airdropDoc: FirebaseFirestore.DocumentSnapshot | null = null;
 
-  if (snapshotId) {
-    airdropDoc = await db.collection('airdrops').doc(snapshotId).get();
-  } else {
-    // Get most recent active airdrop
-    const airdropsSnapshot = await db.collection('airdrops')
-      .where('status', '==', 'active')
-      .orderBy('createdAt', 'desc')
-      .limit(1)
-      .get();
+    if (snapshotId) {
+      airdropDoc = await db.collection('airdrops').doc(snapshotId).get();
+    } else {
+      // Fetch all airdrops and filter in code (avoids Firestore index requirements)
+      const allAirdrops = await db.collection('airdrops').get();
 
-    if (airdropsSnapshot.empty) {
-      // Try pending airdrops for testing
-      const pendingSnapshot = await db.collection('airdrops')
-        .orderBy('createdAt', 'desc')
-        .limit(1)
-        .get();
-
-      if (pendingSnapshot.empty) {
+      if (allAirdrops.empty) {
+        console.log('📭 No airdrops found in database');
         return {
           eligible: false,
-          message: 'No active airdrop found',
+          message: 'No airdrop has been created yet. Check back soon!',
+          status: 'no_airdrop',
         };
       }
 
-      airdropDoc = pendingSnapshot.docs[0];
-    } else {
-      airdropDoc = airdropsSnapshot.docs[0];
-    }
-  }
+      // Sort by createdAt descending and find active or most recent
+      const sortedAirdrops = allAirdrops.docs
+        .map(doc => ({ doc, data: doc.data() }))
+        .sort((a, b) => {
+          const aTime = a.data.createdAt?.toMillis?.() || 0;
+          const bTime = b.data.createdAt?.toMillis?.() || 0;
+          return bTime - aTime;
+        });
 
-  if (!airdropDoc.exists) {
-    return {
-      eligible: false,
-      message: 'Airdrop not found',
-    };
-  }
+      // First try to find active airdrop
+      const activeAirdrop = sortedAirdrops.find(a => a.data.status === 'active');
+      if (activeAirdrop) {
+        airdropDoc = activeAirdrop.doc;
+      } else {
+        // Fall back to most recent (for testing)
+        airdropDoc = sortedAirdrops[0]?.doc || null;
+      }
+    }
+
+    if (!airdropDoc || !airdropDoc.exists) {
+      return {
+        eligible: false,
+        message: 'No airdrop has been created yet. Check back soon!',
+        status: 'no_airdrop',
+      };
+    }
 
   const airdropData = airdropDoc.data()!;
   const airdropId = airdropDoc.id;
@@ -749,6 +759,16 @@ export const getAirdropStatus = onCall(async (request) => {
     },
     status: airdropData.status,
   };
+  } catch (error) {
+    console.error('❌ getAirdropStatus error:', error);
+    // Return a graceful error instead of throwing
+    return {
+      eligible: false,
+      message: 'Unable to check airdrop status. Please try again later.',
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 });
 
 /**

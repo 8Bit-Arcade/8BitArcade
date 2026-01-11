@@ -29,12 +29,19 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 │   ├── Fixed price: $0.0005
 │   └── Automatic distribution
 │
-└── TournamentManager.sol
-    ├── Creates and manages tournaments
-    ├── Collects 8BIT entry fees
-    ├── Burns 50% of fees (deflationary)
-    ├── Distributes prizes from 50% pool
-    └── Enforces tournament rules
+├── TournamentManager.sol
+│   ├── Creates and manages tournaments
+│   ├── Collects 8BIT entry fees
+│   ├── Burns 50% of fees (deflationary)
+│   ├── Distributes prizes from 50% pool
+│   └── Enforces tournament rules
+│
+└── VestedAirdrop.sol
+    ├── Merkle tree-based airdrop claims
+    ├── 10M tokens for testnet participants
+    ├── 3-month vesting (33.33% per month)
+    ├── 90-day claim window
+    └── Treasury recovery of unclaimed tokens
 ```
 
 ## Network Details
@@ -61,11 +68,12 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 - EightBitToken: `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d`
 - GameRewards: `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E`
 - TournamentManager: `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7`
-- TournamentPayments: `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec`
+- TournamentPayments: `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec` (deprecated)
 - TournamentBuyback: `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6`
 - TokenSale: `0x057B1130dD6E8FcBc144bb34172e45293C6839fE`
 - TreasuryGasManager: `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC`
 - TestnetFaucet: `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`
+- VestedAirdrop: TBD (pending deployment)
 
 ### Mainnet Contracts (Arbitrum One)
 
@@ -94,14 +102,13 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 
 **Tournament Entry:**
 ```
-1. Player approves USDC spend
+1. Player approves 8BIT spend
 2. Enters tournament (TournamentManager)
-3. Pays entry fee
+3. Pays 8BIT entry fee
 4. TournamentManager splits fee:
    - 50% to prize pool
-   - 50% to TournamentBuyback
-5. TournamentBuyback swaps USDC for 8BIT
-6. Burns 8BIT permanently
+   - 50% burned (deflationary)
+5. Winner receives prize pool
 ```
 
 ### For Token Holders

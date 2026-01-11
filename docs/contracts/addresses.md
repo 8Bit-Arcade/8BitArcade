@@ -1,6 +1,6 @@
 # Smart Contract Addresses
 
-> **Last Updated:** December 28, 2024
+> **Last Updated:** January 10, 2026
 > **Network:** Arbitrum Sepolia Testnet (Pre-Launch)
 
 ## Overview
@@ -15,12 +15,13 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 |----------|---------|---------|
 | **8BIT Token** | [`0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d`](https://sepolia.arbiscan.io/address/0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d) | ERC-20 governance & reward token |
 | **Game Rewards** | [`0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E`](https://sepolia.arbiscan.io/address/0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E) | Distributes daily rewards to top players |
-| **Tournament Manager** | [`0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7`](https://sepolia.arbiscan.io/address/0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7) | Manages tournament entries & prizes (8BIT fees) |
-| **Tournament Payments** | [`0x0606eDf5Fb1912160b700846C48a49800ae6A1ec`](https://sepolia.arbiscan.io/address/0x0606eDf5Fb1912160b700846C48a49800ae6A1ec) | USDC payment processing for tournaments |
+| **Tournament Manager** | [`0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7`](https://sepolia.arbiscan.io/address/0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7) | Manages tournament entries & prizes (8BIT entry fees) |
+| **Tournament Payments** | [`0x0606eDf5Fb1912160b700846C48a49800ae6A1ec`](https://sepolia.arbiscan.io/address/0x0606eDf5Fb1912160b700846C48a49800ae6A1ec) | Legacy USDC processing (deprecated) |
 | **Tournament Buyback** | [`0x6F3eAF6FB7218340aF69f81e143A01507566a6A6`](https://sepolia.arbiscan.io/address/0x6F3eAF6FB7218340aF69f81e143A01507566a6A6) | Buyback & burn mechanism for 8BIT |
 | **Token Sale** | [`0x057B1130dD6E8FcBc144bb34172e45293C6839fE`](https://sepolia.arbiscan.io/address/0x057B1130dD6E8FcBc144bb34172e45293C6839fE) | Public token sale ($100K raise) |
 | **Treasury Gas Manager** | [`0x39F49a46CAB85CF079Cde25EAE311A563d3952EC`](https://sepolia.arbiscan.io/address/0x39F49a46CAB85CF079Cde25EAE311A563d3952EC) | Automates gas wallet refills |
 | **Testnet Faucet** | [`0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) | Free test tokens (testnet only) |
+| **Vested Airdrop** | TBD (pending deployment) | Testnet airdrop with 3-month vesting |
 
 ### External Tokens
 
@@ -56,10 +57,10 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 - 8BIT Token
 - Game Rewards
 - Tournament Manager
-- Tournament Payments
 - Tournament Buyback
 - Token Sale (if needed for future raises)
 - Treasury Gas Manager
+- Vested Airdrop (for mainnet airdrop if applicable)
 
 ### Network Information
 
@@ -132,6 +133,6 @@ Token Decimals: 18
 
 ---
 
-**Last Updated:** December 28, 2024
-**Document Version:** 1.1
+**Last Updated:** January 10, 2026
+**Document Version:** 1.2
 **Testnet Status:** Active
