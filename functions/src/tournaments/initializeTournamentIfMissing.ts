@@ -6,7 +6,7 @@ const db = getFirestore();
 
 export const initializeTournamentIfMissing = onCall({ cors: true }, async (request) => {
   const { tournamentId, tier, period, startTime, endTime, entryFee, prizePool } = request.data;
-  
+
   if (!tournamentId) {
     throw new HttpsError('invalid-argument', 'Missing tournamentId');
   }
@@ -15,9 +15,25 @@ export const initializeTournamentIfMissing = onCall({ cors: true }, async (reque
     // Check if tournament already exists
     const tournamentRef = db.collection('tournaments').doc(tournamentId.toString());
     const doc = await tournamentRef.get();
-    
+
     if (doc.exists) {
-      logger.info(`Tournament ${tournamentId} already exists`);
+      // Tournament exists - ensure status is 'active' if tournament is currently running
+      const currentData = doc.data();
+      const now = Math.floor(Date.now() / 1000);
+      const tournamentEndTime = currentData?.endTime || endTime;
+      const tournamentStartTime = currentData?.startTime || startTime;
+
+      // If tournament is currently active (started and not ended), ensure status is 'active'
+      if (now >= tournamentStartTime && now < tournamentEndTime && currentData?.status !== 'active') {
+        logger.info(`Tournament ${tournamentId} exists with status '${currentData?.status}', updating to 'active'`);
+        await tournamentRef.update({
+          status: 'active',
+          updatedAt: new Date().toISOString(),
+        });
+        return { success: true, message: 'Tournament status updated to active' };
+      }
+
+      logger.info(`Tournament ${tournamentId} already exists with status '${currentData?.status}'`);
       return { success: true, message: 'Tournament already initialized' };
     }
 

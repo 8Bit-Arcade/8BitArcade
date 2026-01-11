@@ -424,8 +424,11 @@ async function updateActiveTournamentEntries(
       .get();
 
     if (tournamentsSnapshot.empty) {
+      console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
       return; // No active tournaments
     }
+
+    console.log(`📋 Found ${tournamentsSnapshot.size} active tournaments to check for ${playerAddress}`);
 
     // Check each active tournament for player's entry
     for (const tournamentDoc of tournamentsSnapshot.docs) {
@@ -447,6 +450,7 @@ async function updateActiveTournamentEntries(
       const entryDoc = await entryRef.get();
 
       if (!entryDoc.exists) {
+        console.log(`⏭️ Player ${playerAddress} has no entry in tournament ${tournamentId}`);
         continue; // Player hasn't entered this tournament
       }
 
@@ -456,6 +460,7 @@ async function updateActiveTournamentEntries(
       const currentGameBest = currentBestScores[gameId] || 0;
 
       if (score <= currentGameBest) {
+        console.log(`⏭️ Score ${score} not better than current best ${currentGameBest} for ${gameId} in tournament ${tournamentId}`);
         continue; // Not a new best for this game
       }
 
@@ -488,6 +493,6 @@ async function updateActiveTournamentEntries(
     }
   } catch (error) {
     // Don't fail the score submission if tournament update fails
-    console.error('Error updating tournament entries:', error);
+    console.error('❌ Error updating tournament entries:', error);
   }
 }
