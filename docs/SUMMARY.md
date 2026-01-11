@@ -28,6 +28,7 @@
 * [Tournaments](earning/tournaments.md)
 * [Prize Distribution](earning/prize-distribution.md)
 * [Claiming Your Rewards](earning/claiming.md)
+* [Testnet Airdrop](earning/airdrop.md)
 
 ## Tokenomics
 
@@ -49,6 +50,7 @@
 * [TokenSale](contracts/token-sale.md)
 * [TournamentManager](contracts/tournament-manager.md)
 * [TournamentBuyback](contracts/tournament-buyback.md)
+* [VestedAirdrop](contracts/vested-airdrop.md)
 * [Security & Audits](contracts/security.md)
 
 ## Deployment
