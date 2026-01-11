@@ -4,12 +4,9 @@
 
 8-Bit Arcade rewards early testnet participants with a **10 million 8BIT token airdrop**. If you've been playing games and competing in tournaments on testnet, you may be eligible for free tokens!
 
-## Eligibility Requirements
+## Eligibility
 
-To qualify for the airdrop, you must meet **at least one** of the following criteria:
-
-- **5+ games played** on testnet
-- **1+ tournament entry** on testnet
+The airdrop is based on your **overall testnet activity** - play games and rack up scores to earn your share of the token pool. The more you play and the higher you score, the larger your allocation!
 
 ## How Points Are Calculated
 
