@@ -122,6 +122,7 @@ export interface TournamentEntryDocument {
   enteredAt: Timestamp;
   bestScore: number; // LEGACY: single best score (kept for backward compat)
   bestScores?: { [gameId: string]: number }; // NEW: per-game best scores
+  totalScore?: number; // Sum of all game scores (for all-games tournaments)
   lastPlayedAt: Timestamp | null;
   totalPlays: number;
   paid: boolean; // Whether entry fee was paid
