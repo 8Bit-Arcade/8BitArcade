@@ -118,12 +118,12 @@ Top 10 players in each game earn daily rewards:
 ### Tournament Structure
 
 #### Standard Tier
-- **Weekly Entry:** $1 USDC → Prize Pool: **25,000 8BIT**
-- **Monthly Entry:** $5 USDC → Prize Pool: **80,000 8BIT**
+- **Weekly Entry:** 2,000 8BIT → Prize Pool: **25,000 8BIT**
+- **Monthly Entry:** 10,000 8BIT → Prize Pool: **80,000 8BIT**
 
-#### High Roller Tier ⭐
-- **Weekly Entry:** $5 USDC → Prize Pool: **80,000 8BIT**
-- **Monthly Entry:** $25 USDC → Prize Pool: **500,000 8BIT** 🚀
+#### High Roller Tier
+- **Weekly Entry:** 10,000 8BIT → Prize Pool: **80,000 8BIT**
+- **Monthly Entry:** 50,000 8BIT → Prize Pool: **500,000 8BIT**
 
 ### Prize Distribution (Top 3)
 1. **1st Place:** 50% of pool
@@ -137,15 +137,15 @@ Top 10 players in each game earn daily rewards:
 ### Token Burn (50% of Tournament Fees)
 
 **How it works:**
-- Tournament entry fees collected in USDC
+- Tournament entry fees collected in 8BIT tokens
 - 50% permanently burned (removed from supply)
 - 50% funds prize pools
 - Creates deflationary pressure as adoption grows
 
 **Example:**
-- High Roller Monthly: $25 entry
-- $12.50 → Burned (buy back 8BIT and burn)
-- $12.50 → Prize pool funding
+- High Roller Monthly: 50,000 8BIT entry
+- 25,000 8BIT → Burned permanently
+- 25,000 8BIT → Prize pool funding
 
 **Long-term effect:** As more players compete, more tokens are permanently removed from circulation, reducing supply and potentially increasing value for holders.
 
@@ -446,5 +446,5 @@ This document is for informational purposes only and does not constitute financi
 
 ---
 
-*Last Updated: December 2025*
+*Last Updated: January 2026*
 *Version: 1.0*

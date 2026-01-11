@@ -158,6 +158,7 @@ All games feature:
 | **Token Sale** | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` | [View](https://sepolia.arbiscan.io/address/0x057B1130dD6E8FcBc144bb34172e45293C6839fE) |
 | **Treasury Gas Manager** | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` | [View](https://sepolia.arbiscan.io/address/0x39F49a46CAB85CF079Cde25EAE311A563d3952EC) |
 | **Testnet Faucet** | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` | [View](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) |
+| **Vested Airdrop** | TBD (pending deployment) | Testnet airdrop |
 | **USDC (Testnet)** | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` | [View](https://sepolia.arbiscan.io/address/0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d) |
 
 **Network:** Arbitrum Sepolia
