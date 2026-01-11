@@ -534,7 +534,26 @@ export default function GameWrapper({
         >
           ← BACK
         </button>
-        <h1 className="font-pixel text-arcade-green text-xs md:text-sm">{gameName}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-pixel text-arcade-green text-xs md:text-sm">{gameName}</h1>
+          {/* Tournament Badges - Show independently for WEEKLY and MONTHLY */}
+          {isConnected && tournamentsForGame.length > 0 && (
+            <div className="flex gap-1">
+              {tournamentsForGame.some(t => t.period.toLowerCase() === 'weekly') && (
+                <div className="px-1.5 py-0.5 bg-arcade-pink/90 rounded flex items-center gap-0.5 animate-pulse">
+                  <span className="text-white text-[10px]">🏆</span>
+                  <span className="font-pixel text-[10px] text-white">WEEKLY</span>
+                </div>
+              )}
+              {tournamentsForGame.some(t => t.period.toLowerCase() === 'monthly') && (
+                <div className="px-1.5 py-0.5 bg-arcade-purple/90 rounded flex items-center gap-0.5 animate-pulse">
+                  <span className="text-white text-[10px]">🏆</span>
+                  <span className="font-pixel text-[10px] text-white">MONTHLY</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="font-pixel text-arcade-cyan text-xs">
           HI: {formatNumber(highScore)}
         </div>
@@ -574,30 +593,52 @@ export default function GameWrapper({
             <h2 className="font-pixel text-arcade-green text-lg mb-4">{gameName}</h2>
 
             {/* Tournament Play Section - Only shows if enrolled in tournaments */}
-            {isConnected && tournamentsForGame.length > 0 && (
-              <div className="mb-4 p-4 bg-arcade-pink/10 border-2 border-arcade-pink/60 rounded-lg">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-arcade-pink text-lg">🏆</span>
-                  <span className="font-pixel text-arcade-pink text-sm">TOURNAMENT MODE</span>
+            {isConnected && tournamentsForGame.length > 0 && (() => {
+              const hasWeekly = tournamentsForGame.some(t => t.period.toLowerCase() === 'weekly');
+              const hasMonthly = tournamentsForGame.some(t => t.period.toLowerCase() === 'monthly');
+
+              return (
+                <div className="mb-4 p-4 bg-arcade-pink/10 border-2 border-arcade-pink/60 rounded-lg">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-arcade-pink text-lg">🏆</span>
+                    <span className="font-pixel text-arcade-pink text-sm">TOURNAMENT MODE</span>
+                  </div>
+                  {/* Show individual tournament badges */}
+                  <div className="flex justify-center gap-2 mb-3">
+                    {hasWeekly && (
+                      <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1 animate-pulse">
+                        <span className="text-white text-xs">🏆</span>
+                        <span className="font-pixel text-xs text-white">WEEKLY</span>
+                      </div>
+                    )}
+                    {hasMonthly && (
+                      <div className="px-2 py-1 bg-arcade-purple/90 rounded flex items-center gap-1 animate-pulse">
+                        <span className="text-white text-xs">🏆</span>
+                        <span className="font-pixel text-xs text-white">MONTHLY</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="font-arcade text-gray-300 text-xs mb-3 text-center">
+                    {hasWeekly && hasMonthly
+                      ? 'You are entered in both Weekly & Monthly tournaments!'
+                      : hasWeekly
+                        ? 'You are entered in the Weekly tournament!'
+                        : 'You are entered in the Monthly tournament!'
+                    }
+                  </p>
+                  <Button
+                    variant="primary"
+                    className="w-full bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink"
+                    onClick={() => handleStartGame('tournament')}
+                  >
+                    🏆 Play Tournament
+                  </Button>
+                  <p className="font-arcade text-arcade-pink/80 text-xs mt-2 text-center">
+                    Score counts toward {hasWeekly && hasMonthly ? 'both' : 'your'} tournament{hasWeekly && hasMonthly ? 's' : ''}!
+                  </p>
                 </div>
-                <p className="font-arcade text-gray-300 text-xs mb-3 text-center">
-                  {tournamentsForGame.length === 1
-                    ? tournamentsForGame[0].name
-                    : `${tournamentsForGame.length} active tournaments`
-                  }
-                </p>
-                <Button
-                  variant="primary"
-                  className="w-full bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink"
-                  onClick={() => handleStartGame('tournament')}
-                >
-                  🏆 Play Tournament
-                </Button>
-                <p className="font-arcade text-arcade-pink/80 text-xs mt-2 text-center">
-                  Score counts toward tournament prize pool!
-                </p>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Ranked Play Section */}
             <div className="mb-4 p-4 bg-arcade-cyan/10 border-2 border-arcade-cyan/60 rounded-lg">
