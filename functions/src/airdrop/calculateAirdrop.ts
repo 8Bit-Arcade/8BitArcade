@@ -620,20 +620,24 @@ export const triggerAirdropSnapshot = onCall(async (request) => {
  * Get airdrop status for a wallet
  */
 export const getAirdropStatus = onCall(async (request) => {
-  const { wallet, snapshotId } = request.data as { wallet?: string; snapshotId?: string };
-
-  const targetWallet = (wallet || request.auth?.uid)?.toLowerCase();
-
-  if (!targetWallet) {
-    throw new HttpsError('invalid-argument', 'Wallet address required');
-  }
-
-  console.log(`🔍 Checking airdrop status for ${targetWallet}`);
-
-  // Get the latest active airdrop or specified snapshot
-  let airdropDoc: FirebaseFirestore.DocumentSnapshot | null = null;
-
   try {
+    const { wallet, snapshotId } = (request.data || {}) as { wallet?: string; snapshotId?: string };
+
+    const targetWallet = (wallet || request.auth?.uid)?.toLowerCase();
+
+    if (!targetWallet) {
+      return {
+        eligible: false,
+        message: 'Wallet address required. Please connect your wallet.',
+        status: 'no_wallet',
+      };
+    }
+
+    console.log(`🔍 Checking airdrop status for ${targetWallet}`);
+
+    // Get the latest active airdrop or specified snapshot
+    let airdropDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+
     if (snapshotId) {
       airdropDoc = await db.collection('airdrops').doc(snapshotId).get();
     } else {
@@ -653,8 +657,8 @@ export const getAirdropStatus = onCall(async (request) => {
       const sortedAirdrops = allAirdrops.docs
         .map(doc => ({ doc, data: doc.data() }))
         .sort((a, b) => {
-          const aTime = a.data.createdAt?.toMillis() || 0;
-          const bTime = b.data.createdAt?.toMillis() || 0;
+          const aTime = a.data.createdAt?.toMillis?.() || 0;
+          const bTime = b.data.createdAt?.toMillis?.() || 0;
           return bTime - aTime;
         });
 
@@ -675,14 +679,6 @@ export const getAirdropStatus = onCall(async (request) => {
         status: 'no_airdrop',
       };
     }
-  } catch (error) {
-    console.error('❌ Error fetching airdrop:', error);
-    return {
-      eligible: false,
-      message: 'No airdrop has been created yet. Check back soon!',
-      status: 'no_airdrop',
-    };
-  }
 
   const airdropData = airdropDoc.data()!;
   const airdropId = airdropDoc.id;
@@ -763,6 +759,16 @@ export const getAirdropStatus = onCall(async (request) => {
     },
     status: airdropData.status,
   };
+  } catch (error) {
+    console.error('❌ getAirdropStatus error:', error);
+    // Return a graceful error instead of throwing
+    return {
+      eligible: false,
+      message: 'Unable to check airdrop status. Please try again later.',
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 });
 
 /**
