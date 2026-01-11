@@ -24,13 +24,22 @@ export default function Footer() {
             >
               About
             </Link>
-            <Link
+            <a
               href="https://docs.8bitarcade.games/"
               target="_blank"
+              rel="noopener noreferrer"
               className="font-arcade text-sm text-gray-400 hover:text-arcade-green transition-colors"
             >
               Docs
-            </Link>
+            </a>
+            <a
+              href="https://docs.8bitarcade.games/support/contact"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-arcade text-sm text-gray-400 hover:text-arcade-green transition-colors"
+            >
+              FAQ
+            </a>
             <a
               href="https://x.com/8_Bit_Arcade_"
               target="_blank"
