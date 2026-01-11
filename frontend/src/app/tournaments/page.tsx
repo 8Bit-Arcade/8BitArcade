@@ -254,13 +254,14 @@ export default function TournamentsPage() {
     address, // Only re-run when address changes (wallet connect/disconnect)
   ]);
 
-  // 👇 ADD THIS NEW useEffect HERE - Tournament Data Sync Solution
+  // 👇 Tournament Data Sync Solution - sync tournaments AND player entries
 useEffect(() => {
-  if (tournaments.length > 0 && address) { // Only run if tournaments exist AND wallet connected
-    const syncTournaments = async () => {
-      for (const t of tournaments) { // Use for...of instead of forEach for sequential calls
+  if (tournaments.length > 0 && address) {
+    const syncTournamentsAndEntries = async () => {
+      for (const t of tournaments) {
         if (t.isActive && t.status !== 'ended') {
           try {
+            // 1. Sync tournament doc
             console.log(`🔄 Syncing tournament ${t.id} with Firebase...`);
             await callFunction('initializeTournamentIfMissing', {
               tournamentId: t.id,
@@ -272,8 +273,26 @@ useEffect(() => {
               prizePool: formatEther(t.prizePool),
             });
             console.log(`✅ Tournament ${t.id} synced`);
+
+            // 2. If player has entered on-chain, sync their entry to Firebase
+            if (t.hasEntered) {
+              console.log(`🔄 Syncing player entry for tournament ${t.id}...`);
+              try {
+                await callFunction('syncTournamentEntry', {
+                  tournamentId: String(t.id),
+                  player: address,
+                });
+                console.log(`✅ Player entry synced for tournament ${t.id}`);
+              } catch (entryError: any) {
+                if (entryError?.message?.includes('already')) {
+                  console.log(`ℹ️ Player entry already exists for tournament ${t.id}`);
+                } else {
+                  console.log(`⚠️ Entry sync error for tournament ${t.id}:`, entryError);
+                }
+              }
+            }
           } catch (e) {
-            console.log(`⚠️ Tournament ${t.id} already initialized or error:`, e);
+            console.log(`⚠️ Tournament ${t.id} sync error:`, e);
           }
         }
       }
@@ -283,11 +302,11 @@ useEffect(() => {
     const now = Date.now();
     const lastSync = (window as any).lastTournamentSync || 0;
     if (now - lastSync > 30000) {
-      syncTournaments();
+      syncTournamentsAndEntries();
       (window as any).lastTournamentSync = now;
     }
   }
-}, [tournaments, address]); // Only re-run when tournaments or address changes
+}, [tournaments, address]);
   
   // Handle successful entry - SYNC TO FIREBASE
   useEffect(() => {

@@ -42,6 +42,7 @@ export { enterTournament } from './tournaments/enterTournament';
 export { createTournament } from './tournaments/createTournament';
 export { finalizeTournament } from './tournaments/finalizeTournament';
 export { initializeTournamentIfMissing } from './tournaments/initializeTournamentIfMissing';
+export { syncTournamentEntry } from './tournaments/syncTournamentEntry';
 export { getPlayerActiveTournaments } from './tournaments/getPlayerActiveTournaments';
 export { getTournamentParticipants } from './tournaments/getTournamentParticipants';
 
