@@ -11,6 +11,7 @@ import '@/styles/globals.css';
 const GA_MEASUREMENT_ID = 'G-F8S6MFN276';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://8bitarcade.games'),
   title: '8-Bit Arcade | Play Retro Games, Earn Crypto',
   description:
     'Play classic arcade games, compete on leaderboards, and earn 8BIT tokens. Powered by Arbitrum.',
@@ -29,11 +30,22 @@ export const metadata: Metadata = {
     description: 'Play retro games, earn crypto rewards',
     type: 'website',
     locale: 'en_US',
+    url: 'https://8bitarcade.games',
+    siteName: '8-Bit Arcade',
+    images: [
+      {
+        url: '/images/8bit-logo.png',
+        width: 1536,
+        height: 1024,
+        alt: '8-Bit Arcade - Play Retro Games, Earn Crypto',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '8-Bit Arcade',
     description: 'Play retro games, earn crypto rewards',
+    images: ['/images/8bit-logo.png'],
   },
   manifest: '/manifest.json',
   icons: {
