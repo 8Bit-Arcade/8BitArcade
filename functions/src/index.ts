@@ -55,5 +55,8 @@ export {
     setAirdropContract
 } from './airdrop/calculateAirdrop';
 
+// Zealy integration
+export { zealyVerifyQuest } from './zealy/verifyQuest';
+
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
