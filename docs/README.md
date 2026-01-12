@@ -6,6 +6,40 @@
 
 A blockchain-powered retro gaming platform where players compete in skill-based tournaments and earn cryptocurrency rewards. Built on Arbitrum for ultra-low gas fees and fast transactions.
 
+---
+
+## 🪂 TESTNET AIRDROP - 10 Million 8BIT Tokens!
+
+### All Players Are Eligible!
+
+If you're playing on testnet, you're already earning your airdrop allocation. No special requirements - just play games and rack up scores!
+
+| Your Activity | Your Reward |
+|---------------|-------------|
+| **More Games Played** | More tokens |
+| **Higher Scores** | Bigger allocation |
+| **Tournament Entries** | Bonus points |
+
+### Reward Tiers
+
+| Tier | Who Qualifies | Token Pool |
+|------|---------------|------------|
+| **Legendary** | Top 1% of players | 2,000,000 8BIT |
+| **Epic** | Top 5% of players | 2,500,000 8BIT |
+| **Rare** | Top 20% of players | 3,500,000 8BIT |
+| **Common** | All other players | 2,000,000 8BIT |
+
+### Vesting Schedule
+
+Your airdrop tokens vest over 3 months:
+- **33%** available immediately upon claim
+- **33%** unlocks after 30 days
+- **34%** unlocks after 60 days
+
+**[Learn More About the Airdrop →](earning/airdrop.md)**
+
+---
+
 ### 💰 Play-to-Earn Gaming Done Right
 
 8-Bit Arcade is a **free-to-play Web3 gaming platform** that rewards skilled players with daily crypto distributions. No NFT purchases or upfront investment required to start earning.
@@ -122,9 +156,10 @@ Tournament winnings are in addition to daily free rewards. All entry fees are pa
 ### 🎯 Get Started
 
 1. **[🎮 Play Now](https://play.8bitarcade.games)** - Connect wallet and start competing
-2. **[💰 Token Sale](tokenomics/token-sale.md)** - Join the presale at $0.0005
-3. **[📖 How to Play](getting-started/how-to-play.md)** - Learn the games and strategy
-4. **[💎 Tokenomics](tokenomics/overview.md)** - Explore the reward economics
+2. **[🪂 Testnet Airdrop](earning/airdrop.md)** - Play now to earn your share of 10M tokens!
+3. **[💰 Token Sale](tokenomics/token-sale.md)** - Join the presale at $0.0005
+4. **[📖 How to Play](getting-started/how-to-play.md)** - Learn the games and strategy
+5. **[💎 Tokenomics](tokenomics/overview.md)** - Explore the reward economics
 
 ### 🌐 Join the Community
 

@@ -21,6 +21,31 @@ A: No. Our games are designed for desktop/laptop play with keyboard controls. Mo
 
 ---
 
+### Testnet Airdrop
+
+**Q: How do I qualify for the airdrop?**
+A: Just play games on testnet! All players are eligible. Your allocation is based on your overall gameplay activity and scores - the more you play and the higher you score, the more tokens you'll receive.
+
+**Q: What's the total airdrop pool?**
+A: 10 million 8BIT tokens are allocated for testnet participants.
+
+**Q: Do I need to play 5 games or enter tournaments to qualify?**
+A: No! Those are Zealy quest requirements, not airdrop requirements. For the airdrop, ALL players are automatically eligible based on their gameplay.
+
+**Q: How are airdrop amounts calculated?**
+A: Based on your total activity: games played (1 point each, max 500), tournament entries (25 points each), top 10 tournament finishes (100 points each), and high score rankings. Early adopters get a 2x multiplier.
+
+**Q: What are the airdrop tiers?**
+A: Legendary (top 1%) = 2M tokens, Epic (top 5%) = 2.5M tokens, Rare (top 20%) = 3.5M tokens, Common (everyone else) = 2M tokens. Your share depends on your points within your tier.
+
+**Q: When can I claim my airdrop?**
+A: After the testnet snapshot is taken before mainnet launch. You'll have 90 days to claim.
+
+**Q: Is the airdrop vested?**
+A: Yes. 33% available immediately, 33% after 30 days, 34% after 60 days. [Full details](../earning/airdrop.md)
+
+---
+
 ### Earning Rewards
 
 **Q: How much can I realistically earn?**
