@@ -26,6 +26,10 @@
     ],
     "rewrites": [
       {
+        "source": "/api/zealy/**",
+        "function": "zealyVerifyQuest"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
