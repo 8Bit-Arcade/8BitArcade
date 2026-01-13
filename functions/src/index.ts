@@ -46,6 +46,7 @@ export { syncTournamentEntry } from './tournaments/syncTournamentEntry';
 export { getPlayerActiveTournaments } from './tournaments/getPlayerActiveTournaments';
 export { getTournamentParticipants } from './tournaments/getTournamentParticipants';
 export { updateTournamentStatuses, updateTournamentStatusesManual } from './tournaments/updateTournamentStatus';
+export { syncOnChainTournaments } from './tournaments/syncOnChainTournaments';
 
 // Airdrop functions
 export {
