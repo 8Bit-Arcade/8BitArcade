@@ -45,6 +45,7 @@ export { initializeTournamentIfMissing } from './tournaments/initializeTournamen
 export { syncTournamentEntry } from './tournaments/syncTournamentEntry';
 export { getPlayerActiveTournaments } from './tournaments/getPlayerActiveTournaments';
 export { getTournamentParticipants } from './tournaments/getTournamentParticipants';
+export { updateTournamentStatuses, updateTournamentStatusesManual } from './tournaments/updateTournamentStatus';
 
 // Airdrop functions
 export {
