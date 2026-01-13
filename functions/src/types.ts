@@ -114,6 +114,8 @@ export interface TournamentDocument {
   gameId?: string | null;
   totalEntries?: number;
   updatedAt?: Timestamp;
+  // Blockchain transaction hash when created on-chain
+  txHash?: string;
 }
 
 export interface TournamentEntryDocument {
