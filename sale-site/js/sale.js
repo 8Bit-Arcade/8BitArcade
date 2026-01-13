@@ -62,14 +62,14 @@ let saleContract = null;
 let tokenContract = null;
 let usdcContract = null;
 let paymentMethod = 'eth';
-let currentEthPrice = 5000; // Fallback default
+let currentEthPrice = 3300; // Fallback default (approximate ETH price)
 
 // Token pricing
 const TOKEN_PRICE_USD = 0.0005; // $0.0005 per 8BIT token
 
 // Price cache settings
 const PRICE_CACHE_KEY = '8bit_eth_price';
-const PRICE_CACHE_DURATION = 15 * 1000; // 15 seconds
+const PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (reduced API calls)
 
 // Initialize - wait for ethers.js to be loaded
 document.addEventListener('DOMContentLoaded', async () => {
@@ -90,53 +90,93 @@ async function fetchEthPrice() {
         // Check cache first
         const cached = localStorage.getItem(PRICE_CACHE_KEY);
         if (cached) {
-            const { price, timestamp } = JSON.parse(cached);
-            const age = Date.now() - timestamp;
+            try {
+                const { price, timestamp } = JSON.parse(cached);
+                const age = Date.now() - timestamp;
 
-            // Use cached price if less than 5 minutes old
-            if (age < PRICE_CACHE_DURATION) {
-                currentEthPrice = price;
-                console.log('Using cached ETH price:', price);
-                return price;
+                // Use cached price if still valid
+                if (age < PRICE_CACHE_DURATION && price > 0) {
+                    currentEthPrice = price;
+                    console.log('Using cached ETH price:', price);
+                    return price;
+                }
+            } catch (e) {
+                // Invalid cache, clear it
+                localStorage.removeItem(PRICE_CACHE_KEY);
             }
         }
 
-        // Fetch fresh price from CoinGecko (free API, no key needed)
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+        // Try multiple price sources with fallbacks
+        let price = null;
 
-        if (!response.ok) {
-            throw new Error('CoinGecko API error');
+        // Try CoinGecko first
+        try {
+            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data?.ethereum?.usd > 0) {
+                    price = data.ethereum.usd;
+                    console.log('Fetched ETH price from CoinGecko:', price);
+                }
+            }
+        } catch (e) {
+            console.log('CoinGecko failed, trying fallback...');
         }
 
-        const data = await response.json();
-        const price = data.ethereum.usd;
+        // Fallback to CryptoCompare
+        if (!price) {
+            try {
+                const response = await fetch('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD', {
+                    signal: AbortSignal.timeout(5000)
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data?.USD > 0) {
+                        price = data.USD;
+                        console.log('Fetched ETH price from CryptoCompare:', price);
+                    }
+                }
+            } catch (e) {
+                console.log('CryptoCompare also failed');
+            }
+        }
 
-        // Cache the price
-        localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
-            price: price,
-            timestamp: Date.now()
-        }));
-
-        currentEthPrice = price;
-        console.log('Fetched fresh ETH price from CoinGecko:', price);
-        return price;
-
-    } catch (error) {
-        console.error('Error fetching ETH price:', error);
-
-        // Try to use cached price even if expired
-        const cached = localStorage.getItem(PRICE_CACHE_KEY);
-        if (cached) {
-            const { price } = JSON.parse(cached);
+        // If we got a valid price, cache and use it
+        if (price && price > 0) {
+            localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+                price: price,
+                timestamp: Date.now()
+            }));
             currentEthPrice = price;
-            console.log('Using expired cached ETH price:', price);
             return price;
         }
 
-        // Final fallback
-        console.log('Using fallback ETH price: $5000');
-        currentEthPrice = 5000;
-        return 5000;
+        // Try to use any cached price (even expired)
+        if (cached) {
+            try {
+                const { price: cachedPrice } = JSON.parse(cached);
+                if (cachedPrice > 0) {
+                    currentEthPrice = cachedPrice;
+                    console.log('Using expired cached ETH price:', cachedPrice);
+                    return cachedPrice;
+                }
+            } catch (e) { }
+        }
+
+        // Final fallback - use default
+        console.log('Using fallback ETH price: $3300');
+        currentEthPrice = 3300;
+        return 3300;
+
+    } catch (error) {
+        console.error('Error in fetchEthPrice:', error);
+        // Ensure we always have a valid price
+        if (!currentEthPrice || currentEthPrice <= 0) {
+            currentEthPrice = 3300;
+        }
+        return currentEthPrice;
     }
 }
 
@@ -537,14 +577,14 @@ async function trackPurchase(receipt, amount, paymentMethod) {
 }
 
 function startRefreshInterval() {
-    // Refresh ETH price every 15 seconds and update display
+    // Refresh ETH price every 5 minutes (matches cache duration)
     setInterval(async () => {
         await fetchEthPrice();
-        await loadSaleData(); // Reload to update price display with new ETH price
+        await loadSaleData();
     }, PRICE_CACHE_DURATION);
 
-    // Refresh sale data every 30 seconds
-    setInterval(loadSaleData, 30000);
+    // Refresh sale data every 60 seconds (reduced frequency)
+    setInterval(loadSaleData, 60000);
 
     // Update countdown every second
     setInterval(() => {
