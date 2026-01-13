@@ -5,19 +5,11 @@
  * based on real-time ETH prices from CoinGecko API.
  *
  * Features:
- * - Runs every 3 minutes via Cloud Scheduler for high accuracy
- * - Only updates when ETH price changes >0.5% (~$17.50 at $3500 ETH)
- * - Logs all updates to Firestore for tracking
+ * - Runs every 3 minutes via Cloud Scheduler
+ * - Only updates when ETH price changes >0.5%
+ * - Logs all updates to Firestore
  * - Uses secure wallet from environment variables
- * - Minimal cost: ~$0.10/month in gas (Arbitrum L2)
- *
- * Setup Requirements:
- * 1. Create a dedicated "price updater" wallet
- * 2. Transfer ~0.01 ETH for gas to that wallet
- * 3. Set environment variable: PRICE_UPDATER_PRIVATE_KEY
- *    Run: firebase functions:secrets:set PRICE_UPDATER_PRIVATE_KEY
- * 4. Make the wallet an authorized price updater on the contract
- *    (or use owner wallet if contract has no separate updater role)
+ * - Manual trigger available via Firebase Console
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -26,233 +18,207 @@ import { defineSecret } from 'firebase-functions/params';
 import { ethers } from 'ethers';
 import { db } from '../config/firebase';
 
-// Define the secret for the private key
+// Secret for price updater wallet
 const PRICE_UPDATER_PRIVATE_KEY = defineSecret('PRICE_UPDATER_PRIVATE_KEY');
 
 // Constants
 const TOKEN_PRICE_USD = 0.0005; // $0.0005 per 8BIT token
-const PRICE_CHANGE_THRESHOLD = 0.5; // Update if price changed >0.5% (~$17.50 at $3500 ETH)
-const COINGECKO_API = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd';
-
-// Contract configuration (Arbitrum Sepolia Testnet)
+const PRICE_CHANGE_THRESHOLD = 0.5; // % change threshold
+const COINGECKO_API =
+  'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd';
 const SALE_CONTRACT_ADDRESS = '0x057B1130dD6E8FcBc144bb34172e45293C6839fE';
 const RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc';
-
 const SALE_CONTRACT_ABI = [
   'function tokensPerEth() view returns (uint256)',
   'function tokensPerUsdc() view returns (uint256)',
   'function updatePrices(uint256 _tokensPerEth, uint256 _tokensPerUsdc) external',
 ];
 
+// Price update interface for logging
 interface PriceUpdate {
   timestamp: number;
   ethPrice: number;
   oldTokensPerEth: string;
   newTokensPerEth: string;
   txHash?: string;
-  error?: string;
   skipped?: boolean;
   reason?: string;
+  error?: string;
 }
 
 /**
- * Fetch current ETH price from CoinGecko
+ * Fetch ETH price with fallback (Firestore cache + hardcoded)
  */
 async function fetchEthPrice(): Promise<number> {
   try {
-    const response = await fetch(COINGECKO_API);
+    const res = await fetch(COINGECKO_API);
+    if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
+    const data = await res.json();
+    const price = data.ethereum?.usd;
+    if (!price || typeof price !== 'number') throw new Error('Invalid price data');
 
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
-    }
+    logger.info('Fetched ETH price', { price });
 
-    const data = await response.json();
-    const price = data.ethereum.usd;
+    // Save latest ETH price in Firestore for fallback
+    await db.doc('system/prices').set({ ethUsd: price, updatedAt: Date.now() }, { merge: true });
 
-    if (!price || typeof price !== 'number') {
-      throw new Error('Invalid price data from CoinGecko');
-    }
-
-    logger.info('Fetched ETH price from CoinGecko', { price });
     return price;
-  } catch (error) {
-    logger.error('Failed to fetch ETH price', { error });
-    throw error;
+  } catch (err) {
+    logger.error('Failed to fetch ETH price, using fallback', err);
+
+    // Try Firestore cache
+    try {
+      const snap = await db.doc('system/prices').get();
+      const cached = snap.data()?.ethUsd;
+      if (cached) {
+        logger.info('Using cached ETH price', { cached });
+        return cached;
+      }
+    } catch (cacheErr) {
+      logger.warn('Failed to read cached ETH price', cacheErr);
+    }
+
+    // Last-resort fallback
+    const fallback = 3500;
+    logger.warn('Using hardcoded fallback ETH price', { fallback });
+    return fallback;
   }
 }
 
 /**
- * Calculate tokens per ETH based on USD price
+ * Convert USD price to tokensPerEth (bigint)
  */
 function calculateTokensPerEth(ethPriceUsd: number): bigint {
   const tokensPerEth = ethPriceUsd / TOKEN_PRICE_USD;
-  // Convert to wei (18 decimals)
   return ethers.parseEther(tokensPerEth.toString());
 }
 
 /**
- * Check if price changed enough to warrant an update
+ * Determine if price update is needed
  */
 function shouldUpdatePrice(oldTokens: bigint, newTokens: bigint): boolean {
   const oldNum = Number(ethers.formatEther(oldTokens));
   const newNum = Number(ethers.formatEther(newTokens));
-
   const percentChange = Math.abs((newNum - oldNum) / oldNum) * 100;
-
-  logger.info('Price change analysis', {
-    oldTokens: oldNum,
-    newTokens: newNum,
-    percentChange: percentChange.toFixed(2),
-    threshold: PRICE_CHANGE_THRESHOLD,
-  });
-
+  logger.info('Price change analysis', { oldNum, newNum, percentChange, threshold: PRICE_CHANGE_THRESHOLD });
   return percentChange >= PRICE_CHANGE_THRESHOLD;
 }
 
 /**
  * Log price update to Firestore
  */
-async function logPriceUpdate(update: PriceUpdate): Promise<void> {
+async function logPriceUpdate(update: PriceUpdate) {
   try {
     await db.collection('sale_price_updates').add(update);
-    logger.info('Price update logged to Firestore');
-  } catch (error) {
-    logger.error('Failed to log price update', { error });
+  } catch (err) {
+    logger.error('Failed to log price update', err);
   }
 }
 
 /**
- * Scheduled function to auto-update token sale prices
- * Runs every 3 minutes for high accuracy pricing
- * Only executes contract update when price changes >0.5%
+ * Scheduled price updater (every 3 minutes)
  */
-export const updateTokenSalePrices = onSchedule({
-  schedule: 'every 3 minutes',
-  timeZone: 'UTC',
-  secrets: [PRICE_UPDATER_PRIVATE_KEY],
-  memory: '256MiB',
-  timeoutSeconds: 60,
-  region: 'us-central1',
-}, async (event) => {
-  logger.info('Starting automated price update check');
+export const updateTokenSalePrices = onSchedule(
+  {
+    schedule: 'every 3 minutes',
+    timeZone: 'UTC',
+    secrets: [PRICE_UPDATER_PRIVATE_KEY],
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1',
+  },
+  async () => {
+    logger.info('Starting automated price update');
 
-  try {
-    // Fetch current ETH price
-    const ethPrice = await fetchEthPrice();
+    try {
+      // 1. Fetch ETH price
+      const ethPrice = await fetchEthPrice();
 
-    // Setup provider and contract
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
-    const contract = new ethers.Contract(
-      SALE_CONTRACT_ADDRESS,
-      SALE_CONTRACT_ABI,
-      provider
-    );
+      // 2. Setup provider & contract
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const contract = new ethers.Contract(SALE_CONTRACT_ADDRESS, SALE_CONTRACT_ABI, provider);
 
-    // Get current contract prices
-    const [currentTokensPerEth, currentTokensPerUsdc] = await Promise.all([
-      contract.tokensPerEth(),
-      contract.tokensPerUsdc(),
-    ]);
+      const [currentTokensPerEth, currentTokensPerUsdc] = await Promise.all([
+        contract.tokensPerEth(),
+        contract.tokensPerUsdc(),
+      ]);
 
-    // Calculate new price
-    const newTokensPerEth = calculateTokensPerEth(ethPrice);
+      const newTokensPerEth = calculateTokensPerEth(ethPrice);
 
-    logger.info('Price comparison', {
-      ethPrice,
-      currentTokensPerEth: ethers.formatEther(currentTokensPerEth),
-      newTokensPerEth: ethers.formatEther(newTokensPerEth),
-    });
+      // 3. Check if update is needed
+      if (!shouldUpdatePrice(currentTokensPerEth, newTokensPerEth)) {
+        logger.info('Price change below threshold, skipping update');
 
-    // Check if update is needed
-    if (!shouldUpdatePrice(currentTokensPerEth, newTokensPerEth)) {
-      logger.info('Price change below threshold, skipping update');
+        await logPriceUpdate({
+          timestamp: Date.now(),
+          ethPrice,
+          oldTokensPerEth: ethers.formatEther(currentTokensPerEth),
+          newTokensPerEth: ethers.formatEther(newTokensPerEth),
+          skipped: true,
+          reason: `Change below ${PRICE_CHANGE_THRESHOLD}%`,
+        });
+        return; // never throw
+      }
 
+      // 4. Connect wallet & update contract
+      const wallet = new ethers.Wallet(PRICE_UPDATER_PRIVATE_KEY.value(), provider);
+      const contractWithSigner = contract.connect(wallet) as ethers.Contract;
+
+      logger.info('Submitting price update', {
+        wallet: wallet.address,
+        ethPrice,
+        newTokensPerEth: ethers.formatEther(newTokensPerEth),
+        currentTokensPerUsdc: ethers.formatEther(currentTokensPerUsdc),
+      });
+
+      const tx = await (contractWithSigner as any).updatePrices(newTokensPerEth, currentTokensPerUsdc);
+      const receipt = await tx.wait();
+
+      logger.info('Price update confirmed', {
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+      });
+
+      // 5. Log successful update
       await logPriceUpdate({
         timestamp: Date.now(),
         ethPrice,
         oldTokensPerEth: ethers.formatEther(currentTokensPerEth),
         newTokensPerEth: ethers.formatEther(newTokensPerEth),
-        skipped: true,
-        reason: `Price change below ${PRICE_CHANGE_THRESHOLD}% threshold`,
+        txHash: receipt.hash,
       });
 
-      return;
-    }
+      logger.info('Automated price update completed successfully');
+    } catch (err: any) {
+      logger.error('Automated price update failed (but will continue next run)', { error: err.message });
 
-    // Create wallet from private key
-    const privateKey = PRICE_UPDATER_PRIVATE_KEY.value();
-    const wallet = new ethers.Wallet(privateKey, provider);
-    const contractWithSigner = contract.connect(wallet) as ethers.Contract;
-
-    logger.info('Updating contract prices', {
-      from: wallet.address,
-      newTokensPerEth: ethers.formatEther(newTokensPerEth),
-      tokensPerUsdc: ethers.formatEther(currentTokensPerUsdc),
-    });
-
-    // Execute update transaction
-    const tx = await (contractWithSigner as any).updatePrices(
-      newTokensPerEth,
-      currentTokensPerUsdc // Keep USDC price the same (it's stable)
-    );
-
-    logger.info('Transaction submitted', { txHash: tx.hash });
-
-    // Wait for confirmation
-    const receipt = await tx.wait();
-
-    logger.info('Price update confirmed', {
-      txHash: receipt.hash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
-    });
-
-    // Log successful update
-    await logPriceUpdate({
-      timestamp: Date.now(),
-      ethPrice,
-      oldTokensPerEth: ethers.formatEther(currentTokensPerEth),
-      newTokensPerEth: ethers.formatEther(newTokensPerEth),
-      txHash: receipt.hash,
-    });
-
-    logger.info('Automated price update completed successfully');
-
-  } catch (error: any) {
-    logger.error('Automated price update failed', {
-      error: error.message,
-      stack: error.stack,
-    });
-
-    // Log failed update
-    try {
+      // Log failed update
       await logPriceUpdate({
         timestamp: Date.now(),
         ethPrice: 0,
         oldTokensPerEth: '0',
         newTokensPerEth: '0',
-        error: error.message,
+        error: err.message,
       });
-    } catch (logError) {
-      logger.error('Failed to log error', { logError });
-    }
 
-    throw error;
+      return; // never throw
+    }
   }
-});
+);
 
 /**
- * Manual trigger function for testing
- * Can be called via Firebase Console
+ * Manual trigger (for Firebase console/testing)
  */
-export const manualPriceUpdate = onSchedule({
-  schedule: 'every 24 hours', // Dummy schedule, trigger manually via Firebase Console
-  secrets: [PRICE_UPDATER_PRIVATE_KEY],
-  memory: '256MiB',
-  timeoutSeconds: 60,
-  region: 'us-central1',
-}, async (event) => {
-  logger.info('Manual price update triggered');
-  // Note: This just exists for manual triggering via Firebase Console
-  // The actual logic runs in updateTokenSalePrices
-});
+export const manualPriceUpdate = onSchedule(
+  {
+    schedule: 'every 24 hours', // Dummy schedule
+    secrets: [PRICE_UPDATER_PRIVATE_KEY],
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    region: 'us-central1',
+  },
+  async () => {
+    logger.info('Manual price update triggered (actual logic runs in updateTokenSalePrices)');
+  }
+);
