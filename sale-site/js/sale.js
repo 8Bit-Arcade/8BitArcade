@@ -87,73 +87,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchEthPrice() {
     try {
-        // Check cache first
+        // Check local cache first (for quick page loads)
         const cached = localStorage.getItem(PRICE_CACHE_KEY);
         if (cached) {
             try {
                 const { price, timestamp } = JSON.parse(cached);
                 const age = Date.now() - timestamp;
 
-                // Use cached price if still valid
-                if (age < PRICE_CACHE_DURATION && price > 0) {
+                // Use cached price if still valid (1 minute local cache)
+                if (age < 60000 && price > 0) {
                     currentEthPrice = price;
-                    console.log('Using cached ETH price:', price);
+                    console.log('Using locally cached ETH price:', price);
                     return price;
                 }
             } catch (e) {
-                // Invalid cache, clear it
                 localStorage.removeItem(PRICE_CACHE_KEY);
             }
         }
 
-        // Try multiple price sources with fallbacks
-        let price = null;
-
-        // Try CoinGecko first
-        try {
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
-                signal: AbortSignal.timeout(5000) // 5 second timeout
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data?.ethereum?.usd > 0) {
-                    price = data.ethereum.usd;
-                    console.log('Fetched ETH price from CoinGecko:', price);
-                }
-            }
-        } catch (e) {
-            console.log('CoinGecko failed, trying fallback...');
-        }
-
-        // Fallback to CryptoCompare
-        if (!price) {
+        // Fetch from Firebase function (handles server-side caching and API fallbacks)
+        if (typeof firebase !== 'undefined' && firebase.functions) {
             try {
-                const response = await fetch('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD', {
-                    signal: AbortSignal.timeout(5000)
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data?.USD > 0) {
-                        price = data.USD;
-                        console.log('Fetched ETH price from CryptoCompare:', price);
-                    }
+                const getEthPriceFn = firebase.functions().httpsCallable('getEthPrice');
+                const result = await getEthPriceFn();
+                const { price, source } = result.data;
+
+                if (price && price > 0) {
+                    // Cache locally for quick subsequent access
+                    localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+                        price: price,
+                        timestamp: Date.now()
+                    }));
+                    currentEthPrice = price;
+                    console.log(`ETH price from Firebase (${source}): $${price}`);
+                    return price;
                 }
             } catch (e) {
-                console.log('CryptoCompare also failed');
+                console.warn('Firebase getEthPrice failed:', e);
             }
         }
 
-        // If we got a valid price, cache and use it
-        if (price && price > 0) {
-            localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
-                price: price,
-                timestamp: Date.now()
-            }));
-            currentEthPrice = price;
-            return price;
-        }
-
-        // Try to use any cached price (even expired)
+        // Fallback: use any cached price (even expired)
         if (cached) {
             try {
                 const { price: cachedPrice } = JSON.parse(cached);
@@ -172,7 +146,6 @@ async function fetchEthPrice() {
 
     } catch (error) {
         console.error('Error in fetchEthPrice:', error);
-        // Ensure we always have a valid price
         if (!currentEthPrice || currentEthPrice <= 0) {
             currentEthPrice = 3300;
         }
