@@ -34,6 +34,9 @@ export {
     manualPriceUpdate
 } from './sale/autoPriceUpdater';
 
+// ETH Price (off-chain)
+export { getEthPrice } from './sale/getEthPrice';
+
 // Tournament functions
 export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual } from './tournaments/scheduleTournaments';
 export { getTournaments } from './tournaments/getTournaments';
