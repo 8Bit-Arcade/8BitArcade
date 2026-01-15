@@ -72,8 +72,11 @@ function setupEventListeners() {
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
 
-    // Config
-    document.getElementById('btnUpdateConfig').addEventListener('click', updateSaleConfig);
+    // Config - btnUpdateConfig may not exist on all pages
+    const btnUpdateConfig = document.getElementById('btnUpdateConfig');
+    if (btnUpdateConfig) {
+        btnUpdateConfig.addEventListener('click', updateSaleConfig);
+    }
     document.getElementById('btnExtendSale').addEventListener('click', extendSale);
 
     // Contract controls
