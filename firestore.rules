@@ -71,6 +71,12 @@ service cloud.firestore {
       allow write: if false; // Updated via Cloud Functions only
     }
 
+    // System collection - read public (prices, settings), write via Functions
+    match /system/{docId} {
+      allow read: if true;
+      allow write: if false; // Updated via Cloud Functions only
+    }
+
     // Rewards collection - read own only
     match /rewards/{odedId} {
       allow read: if isOwner(odedId);
