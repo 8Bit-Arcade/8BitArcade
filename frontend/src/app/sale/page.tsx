@@ -6,6 +6,8 @@ import { formatEther, parseEther, parseUnits } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { formatNumber } from '@/lib/utils';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import {
   TOKEN_SALE_ADDRESS,
   TOKEN_SALE_ABI,
@@ -21,6 +23,26 @@ export default function BuyEightBitPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('eth');
   const [amount, setAmount] = useState('');
   const [needsApproval, setNeedsApproval] = useState(false);
+
+  //move updates off chain
+  const [tokensPerEthValue, setTokensPerEthValue] = useState<number>(0);
+  const [tokensPerUsdcValue, setTokensPerUsdcValue] = useState<number>(0);
+
+  useEffect(() => {
+    async function fetchPrices() {
+      const snap = await getDoc(doc(db, 'system/prices'));
+      if (snap.exists()) {
+        const data = snap.data();
+        setTokensPerEthValue(data.tokensPerEth ?? 0);
+        setTokensPerUsdcValue(data.tokensPerUsdc ?? 0);
+      }
+    }
+
+    fetchPrices();
+    // Optional: auto-refresh every 10s for instant ETH/USDC price updates
+    const interval = setInterval(fetchPrices, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Read sale data
   const { data: tokensForSale } = useReadContract({
@@ -53,17 +75,19 @@ export default function BuyEightBitPage() {
     functionName: 'saleEndTime',
   });
 
-  const { data: tokensPerEth } = useReadContract({
-    address: TOKEN_SALE_ADDRESS as `0x${string}`,
-    abi: TOKEN_SALE_ABI,
-    functionName: 'tokensPerEth',
-  });
+  const calculateTokens = () => {
+  if (!amount || isNaN(parseFloat(amount))) return 0;
 
-  const { data: tokensPerUsdc } = useReadContract({
-    address: TOKEN_SALE_ADDRESS as `0x${string}`,
-    abi: TOKEN_SALE_ABI,
-    functionName: 'tokensPerUsdc',
-  });
+  if (paymentMethod === 'eth') {
+    return Number(amount) * tokensPerEthValue;
+  }
+
+  if (paymentMethod === 'usdc') {
+    return Number(amount) * tokensPerUsdcValue;
+  }
+
+  return 0;
+};
 
   const { data: isSaleActive } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
@@ -123,8 +147,6 @@ export default function BuyEightBitPage() {
   const ethRaisedValue = ethRaised as bigint | undefined;
   const usdcRaisedValue = usdcRaised as bigint | undefined;
   const saleEndTimeValue = saleEndTime as bigint | undefined;
-  const tokensPerEthValue = tokensPerEth as bigint | undefined;
-  const tokensPerUsdcValue = tokensPerUsdc as bigint | undefined;
   const usdcBalanceValue = usdcBalance as bigint | undefined;
   const userPurchasedValue = userPurchased as bigint | undefined;
 
