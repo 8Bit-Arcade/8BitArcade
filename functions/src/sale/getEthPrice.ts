@@ -16,6 +16,9 @@ const CACHE_DURATION_MS = 5 * 60 * 1000;
 // Fallback price if all APIs fail
 const FALLBACK_ETH_PRICE = 3300;
 
+// CoinGecko API key for higher rate limits
+const COINGECKO_API_KEY = 'CG-dcMc86FaS6AMxW5VVecbAx6w';
+
 interface PriceCache {
   price: number;
   timestamp: Timestamp;
@@ -23,7 +26,7 @@ interface PriceCache {
 }
 
 /**
- * Fetch ETH price from CoinGecko
+ * Fetch ETH price from CoinGecko (with API key for better rate limits)
  */
 async function fetchFromCoinGecko(): Promise<number | null> {
   try {
@@ -32,7 +35,12 @@ async function fetchFromCoinGecko(): Promise<number | null> {
 
     const response = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
-      { signal: controller.signal }
+      {
+        signal: controller.signal,
+        headers: {
+          'x-cg-demo-api-key': COINGECKO_API_KEY,
+        },
+      }
     );
 
     clearTimeout(timeout);
