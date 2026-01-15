@@ -150,25 +150,6 @@ export default function BuyEightBitPage() {
   const usdcBalanceValue = usdcBalance as bigint | undefined;
   const userPurchasedValue = userPurchased as bigint | undefined;
 
-  // Calculate tokens based on input
-  const calculateTokens = () => {
-    if (!amount || isNaN(parseFloat(amount))) return 0;
-
-    if (paymentMethod === 'eth' && tokensPerEthValue) {
-      const ethAmount = parseEther(amount);
-      const tokens = (ethAmount * tokensPerEthValue) / parseEther('1');
-      return Number(formatEther(tokens));
-    }
-
-    if (paymentMethod === 'usdc' && tokensPerUsdcValue) {
-      const usdcAmount = parseUnits(amount, 6); // USDC has 6 decimals
-      const tokens = (usdcAmount * tokensPerUsdcValue) / BigInt(10 ** 6);
-      return Number(formatEther(tokens));
-    }
-
-    return 0;
-  };
-
   // Check if USDC approval is needed
   useEffect(() => {
     if (paymentMethod === 'usdc' && amount && usdcAllowance !== undefined) {
