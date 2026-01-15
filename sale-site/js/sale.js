@@ -168,7 +168,7 @@ function setupEventListeners() {
     document.getElementById('buyButton').addEventListener('click', handleBuy);
 }
 
-function setPaymentMethod(method) {
+async function setPaymentMethod(method) {
     paymentMethod = method;
 
     // Update UI
@@ -182,6 +182,8 @@ function setPaymentMethod(method) {
         document.getElementById('usdcToggle').classList.add('active');
     }
 
+    // Refresh price display immediately when switching payment methods
+    await loadSaleData();
     updateTokensReceive();
     updateBalance();
 }

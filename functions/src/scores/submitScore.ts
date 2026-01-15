@@ -417,18 +417,51 @@ async function updateActiveTournamentEntries(
   now: FirebaseFirestore.Timestamp
 ): Promise<void> {
   try {
-    // Find all active tournaments where this player has an entry
+    // Find tournaments that are currently running (by time, not just status)
+    // This handles cases where the hourly status update hasn't run yet
     const tournamentsSnapshot = await db
       .collection('tournaments')
-      .where('status', '==', 'active')
+      .where('startTime', '<=', now)
+      .where('endTime', '>', now)
       .get();
 
     if (tournamentsSnapshot.empty) {
-      console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
-      return; // No active tournaments
+      // Also check for status='active' as a fallback (in case time fields are missing)
+      const activeByStatus = await db
+        .collection('tournaments')
+        .where('status', '==', 'active')
+        .get();
+
+      if (activeByStatus.empty) {
+        console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
+        return;
+      }
+
+      // Use the status-based results
+      console.log(`📋 Found ${activeByStatus.size} active tournaments (by status) for ${playerAddress}`);
+      await processEntries(activeByStatus, playerAddress, gameId, score, now);
+      return;
     }
 
-    console.log(`📋 Found ${tournamentsSnapshot.size} active tournaments to check for ${playerAddress}`);
+    console.log(`📋 Found ${tournamentsSnapshot.size} running tournaments (by time) for ${playerAddress}`);
+    await processEntries(tournamentsSnapshot, playerAddress, gameId, score, now);
+  } catch (error) {
+    // Don't fail the score submission if tournament update fails
+    console.error('❌ Error updating tournament entries:', error);
+  }
+}
+
+/**
+ * Process tournament entries and update scores
+ */
+async function processEntries(
+  tournamentsSnapshot: FirebaseFirestore.QuerySnapshot,
+  playerAddress: string,
+  gameId: string,
+  score: number,
+  now: FirebaseFirestore.Timestamp
+): Promise<void> {
+  try {
 
     // Check each active tournament for player's entry
     for (const tournamentDoc of tournamentsSnapshot.docs) {
