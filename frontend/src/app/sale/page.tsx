@@ -370,10 +370,11 @@ export default function BuyEightBitPage() {
             <div className="mb-6 p-3 bg-arcade-dark/50 rounded border border-arcade-yellow/30">
               <p className="font-arcade text-xs text-gray-400 mb-1">Current Price</p>
               <p className="font-pixel text-arcade-yellow">
-            {paymentMethod === 'eth'
-                ? `1 ETH = ${formatNumber(tokensPerEthValue ?? 0)} 8BIT`
-                : `1 USDC = ${formatNumber(tokensPerUsdcValue ?? 0)} 8BIT`}
-            </p>
+  {paymentMethod === 'eth'
+    ? `1 ETH = ${formatNumber(tokensPerEthValue ?? 0)} 8BIT`
+    : `1 USDC = ${formatNumber(tokensPerUsdcValue ?? 0)} 8BIT`}
+</p>
+
               <p className="font-arcade text-xs text-gray-400 mt-1">
                 ($0.0005 per token)
               </p>
