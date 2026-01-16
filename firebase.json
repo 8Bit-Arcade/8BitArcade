@@ -26,8 +26,11 @@
     ],
     "rewrites": [
       {
-        "source": "/api/zealy",
-        "function": "zealyVerifyQuest"
+        "source": "/api/zealy/**",
+        "function": {
+          "functionId": "zealyVerifyQuest",
+          "region": "us-central1"
+        }
       },
       {
         "source": "**",
