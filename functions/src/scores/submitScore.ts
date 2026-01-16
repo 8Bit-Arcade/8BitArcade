@@ -417,34 +417,38 @@ async function updateActiveTournamentEntries(
   now: FirebaseFirestore.Timestamp
 ): Promise<void> {
   try {
-    // Find tournaments that are currently running (by time, not just status)
-    // This handles cases where the hourly status update hasn't run yet
-    const tournamentsSnapshot = await db
+    // Primary method: Query by status='active'
+    // This is more reliable since time-based queries can fail if timestamps
+    // are stored in different formats (number vs Timestamp)
+    const activeByStatus = await db
       .collection('tournaments')
-      .where('startTime', '<=', now)
-      .where('endTime', '>', now)
+      .where('status', '==', 'active')
       .get();
 
-    if (tournamentsSnapshot.empty) {
-      // Also check for status='active' as a fallback (in case time fields are missing)
-      const activeByStatus = await db
-        .collection('tournaments')
-        .where('status', '==', 'active')
-        .get();
-
-      if (activeByStatus.empty) {
-        console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
-        return;
-      }
-
-      // Use the status-based results
+    if (!activeByStatus.empty) {
       console.log(`📋 Found ${activeByStatus.size} active tournaments (by status) for ${playerAddress}`);
       await processEntries(activeByStatus, playerAddress, gameId, score, now);
       return;
     }
 
-    console.log(`📋 Found ${tournamentsSnapshot.size} running tournaments (by time) for ${playerAddress}`);
-    await processEntries(tournamentsSnapshot, playerAddress, gameId, score, now);
+    // Fallback: Try time-based query (works if timestamps are proper Firestore Timestamps)
+    try {
+      const tournamentsSnapshot = await db
+        .collection('tournaments')
+        .where('startTime', '<=', now)
+        .where('endTime', '>', now)
+        .get();
+
+      if (!tournamentsSnapshot.empty) {
+        console.log(`📋 Found ${tournamentsSnapshot.size} running tournaments (by time) for ${playerAddress}`);
+        await processEntries(tournamentsSnapshot, playerAddress, gameId, score, now);
+        return;
+      }
+    } catch (timeQueryError) {
+      console.log(`⚠️ Time-based tournament query failed (likely timestamp format issue):`, timeQueryError);
+    }
+
+    console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
   } catch (error) {
     // Don't fail the score submission if tournament update fails
     console.error('❌ Error updating tournament entries:', error);

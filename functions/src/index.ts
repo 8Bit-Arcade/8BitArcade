@@ -50,6 +50,7 @@ export { getPlayerActiveTournaments } from './tournaments/getPlayerActiveTournam
 export { getTournamentParticipants } from './tournaments/getTournamentParticipants';
 export { updateTournamentStatuses, updateTournamentStatusesManual } from './tournaments/updateTournamentStatus';
 export { syncOnChainTournaments } from './tournaments/syncOnChainTournaments';
+export { fixTournamentData } from './tournaments/fixTournamentData';
 
 // Airdrop functions
 export {
