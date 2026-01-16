@@ -17,6 +17,7 @@
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 import { logger } from 'firebase-functions';
 import { ethers } from 'ethers';
@@ -308,19 +309,127 @@ export const createMonthlyTournaments = onSchedule(
 );
 
 /**
- * Manual tournament creation function (for testing)
- * Can be triggered manually via Firebase console or CLI
+ * Manual tournament creation callable function
+ * Can be triggered via Firebase console, CLI, or frontend admin panel
+ *
+ * Usage: Call with { period: 'weekly' | 'monthly' }
+ * This will create BOTH Standard and High Roller tournaments for that period
  */
-export const createTournamentManual = onSchedule(
+export const createTournamentManual = onCall(
   {
-    schedule: 'every 24 hours', // Dummy schedule, trigger manually for testing
-    timeZone: 'UTC',
-    region: 'us-central1',
     secrets: [deployerPrivateKey, tournamentManagerAddress],
   },
-  async (event) => {
-    logger.info('Manual tournament creation triggered');
-    // This is a placeholder for manual testing
-    // You can invoke this function manually for testing purposes
+  async (request) => {
+    const { period } = request.data as { period?: 'weekly' | 'monthly' };
+
+    if (!period || !['weekly', 'monthly'].includes(period)) {
+      throw new HttpsError('invalid-argument', 'Period must be "weekly" or "monthly"');
+    }
+
+    logger.info(`Manual ${period} tournament creation triggered`);
+
+    try {
+      // Get secrets
+      const managerAddress = tournamentManagerAddress.value();
+      const privateKey = deployerPrivateKey.value();
+      const network = process.env.NETWORK || 'testnet';
+
+      if (!managerAddress || !privateKey) {
+        throw new HttpsError(
+          'failed-precondition',
+          'Missing secrets: TOURNAMENT_MANAGER_ADDRESS or DEPLOYER_PRIVATE_KEY. Run: firebase functions:secrets:set <SECRET_NAME>'
+        );
+      }
+
+      // Connect to network
+      const rpcUrl = network === 'mainnet' ? ARBITRUM_ONE_RPC : ARBITRUM_SEPOLIA_RPC;
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const tournamentManager = new ethers.Contract(
+        managerAddress,
+        TOURNAMENT_MANAGER_ABI,
+        wallet
+      );
+
+      // Calculate tournament period
+      const now = Math.floor(Date.now() / 1000);
+      const startTime = now + 3600; // Start in 1 hour
+      const durationDays = period === 'weekly' ? 7 : 30;
+      const endTime = startTime + (durationDays * 24 * 60 * 60);
+
+      const results: { standard?: { id: string; txHash: string }; highRoller?: { id: string; txHash: string } } = {};
+
+      // Create Standard Tournament
+      const nextId1 = await tournamentManager.nextTournamentId();
+      logger.info(`Creating Standard ${period} tournament (ID: ${nextId1})...`);
+
+      const tx1 = await tournamentManager.createTournament(
+        Tier.STANDARD,
+        period === 'weekly' ? Period.WEEKLY : Period.MONTHLY,
+        startTime,
+        endTime
+      );
+      const receipt1 = await tx1.wait();
+      logger.info(`Standard ${period} tournament created on-chain`, { txHash: receipt1?.hash });
+
+      // Create Firebase document for Standard
+      const standardConfig = TOURNAMENT_CONFIG[period].standard;
+      await createFirebaseTournament(
+        nextId1.toString(),
+        'standard',
+        period,
+        startTime,
+        endTime,
+        standardConfig.entryFee,
+        standardConfig.prizePool,
+        receipt1?.hash || ''
+      );
+      results.standard = { id: nextId1.toString(), txHash: receipt1?.hash || '' };
+
+      // Create High Roller Tournament
+      const nextId2 = await tournamentManager.nextTournamentId();
+      logger.info(`Creating High Roller ${period} tournament (ID: ${nextId2})...`);
+
+      const tx2 = await tournamentManager.createTournament(
+        Tier.HIGH_ROLLER,
+        period === 'weekly' ? Period.WEEKLY : Period.MONTHLY,
+        startTime,
+        endTime
+      );
+      const receipt2 = await tx2.wait();
+      logger.info(`High Roller ${period} tournament created on-chain`, { txHash: receipt2?.hash });
+
+      // Create Firebase document for High Roller
+      const highRollerConfig = TOURNAMENT_CONFIG[period].highRoller;
+      await createFirebaseTournament(
+        nextId2.toString(),
+        'highRoller',
+        period,
+        startTime,
+        endTime,
+        highRollerConfig.entryFee,
+        highRollerConfig.prizePool,
+        receipt2?.hash || ''
+      );
+      results.highRoller = { id: nextId2.toString(), txHash: receipt2?.hash || '' };
+
+      logger.info(`${period} tournaments created successfully!`, results);
+
+      return {
+        success: true,
+        period,
+        startTime: new Date(startTime * 1000).toISOString(),
+        endTime: new Date(endTime * 1000).toISOString(),
+        tournaments: results,
+      };
+
+    } catch (error) {
+      logger.error(`Error creating ${period} tournaments:`, error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError('internal', `Failed to create ${period} tournaments: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 );
