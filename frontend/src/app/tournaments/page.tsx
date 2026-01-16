@@ -10,7 +10,6 @@ import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
 import { parseUnits } from 'ethers';
-import { httpsCallable } from 'firebase/functions';
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -270,7 +269,6 @@ useEffect(() => {
       }
 
       // 3️⃣ Call Firebase function to create missing tournaments
-      const createTournament = httpsCallable(functions, 'createTournamentManual');
 
       if (!hasWeekly) {
         console.log('⚡ No weekly tournament found. Creating...');
