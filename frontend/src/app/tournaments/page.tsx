@@ -10,6 +10,8 @@ import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
 import { parseUnits } from 'ethers';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase-functions'; // adjust if your client exports differently
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -254,6 +256,42 @@ export default function TournamentsPage() {
     address, // Only re-run when address changes (wallet connect/disconnect)
   ]);
 
+useEffect(() => {
+  // Only run on page load
+  async function createMissingTournaments() {
+    try {
+      // 1️⃣ Check if weekly or monthly exists
+      const hasWeekly = tournaments.some(t => t.period === 'Weekly' && t.status !== 'ended');
+      const hasMonthly = tournaments.some(t => t.period === 'Monthly' && t.status !== 'ended');
+
+      // 2️⃣ Skip if already exists
+      if (hasWeekly && hasMonthly) {
+        console.log('✅ All tournaments already exist. No need to create.');
+        return;
+      }
+
+      // 3️⃣ Call Firebase function to create missing tournaments
+      const createTournament = httpsCallable(functions, 'createTournamentManual');
+
+      if (!hasWeekly) {
+        console.log('⚡ No weekly tournament found. Creating...');
+        const result = await createTournament({ period: 'weekly' });
+        console.log('✅ Weekly tournament created:', result.data);
+      }
+
+      if (!hasMonthly) {
+        console.log('⚡ No monthly tournament found. Creating...');
+        const result = await createTournament({ period: 'monthly' });
+        console.log('✅ Monthly tournament created:', result.data);
+      }
+    } catch (err) {
+      console.error('❌ Failed to auto-create tournaments:', err);
+    }
+  }
+
+  createMissingTournaments();
+}, [tournaments]);
+  
   // 👇 Tournament Data Sync Solution - sync tournaments AND player entries
 useEffect(() => {
   if (tournaments.length > 0 && address) {
