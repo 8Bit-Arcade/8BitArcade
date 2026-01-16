@@ -11,7 +11,6 @@ import { callFunction } from '@/lib/firebase-functions';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
 import { parseUnits } from 'ethers';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase-functions'; // adjust if your client exports differently
 
 type Tier = 'Standard' | 'High Roller';
 type Period = 'Weekly' | 'Monthly';
@@ -46,7 +45,7 @@ export default function TournamentsPage() {
   const MAX_TOURNAMENTS = 12;
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
-  // Create dynamic tournament queries
+  //  dynamic tournament queries
   const tournamentQueries = tournamentIds.map(id =>
     useReadContract({
       address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
@@ -275,13 +274,13 @@ useEffect(() => {
 
       if (!hasWeekly) {
         console.log('⚡ No weekly tournament found. Creating...');
-        const result = await createTournament({ period: 'weekly' });
+        const result = await callFunction('createTournamentManual', { period: 'weekly' });
         console.log('✅ Weekly tournament created:', result.data);
       }
 
       if (!hasMonthly) {
         console.log('⚡ No monthly tournament found. Creating...');
-        const result = await createTournament({ period: 'monthly' });
+        const result = await callFunction('createTournamentManual', { period: 'monthly' });
         console.log('✅ Monthly tournament created:', result.data);
       }
     } catch (err) {
