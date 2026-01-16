@@ -1,8 +1,8 @@
 // frontend/src/config/firebase.ts
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-// Firebase config with hardcoded fallbacks for static export builds
+// Your Firebase config — use environment variables with fallbacks
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBqFKw6v6RB0P1HHup9jO10Cziqfnuiig4",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "bitarcade-679b7.firebaseapp.com",
@@ -12,8 +12,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:163469341654:web:f5e231834fa4426a396a77",
 };
 
-// Initialize Firebase app (reuse existing if already initialized)
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase app (check if already initialized to prevent duplicate-app error)
+let app: FirebaseApp;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
 
 // Export Firestore instance
-export const db = getFirestore(app);
+export const db: Firestore = getFirestore(app);
+export { app };

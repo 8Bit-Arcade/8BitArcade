@@ -14,6 +14,34 @@ import { logger } from 'firebase-functions';
 import { db } from '../config/firebase';
 import { Timestamp } from 'firebase-admin/firestore';
 
+function toMillis(value: any): number | null {
+  if (!value) return null;
+
+  // Firestore Timestamp
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  // JS Date
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  // ISO string
+  if (typeof value === "string") {
+    const t = new Date(value).getTime();
+    return isNaN(t) ? null : t;
+  }
+
+  // Epoch number
+  if (typeof value === "number") {
+    return value;
+  }
+
+  return null;
+}
+
+
 /**
  * Update Tournament Statuses
  * Runs every hour to transition tournament statuses based on time
@@ -40,9 +68,10 @@ export const updateTournamentStatuses = onSchedule(
 
       for (const doc of upcomingSnapshot.docs) {
         const tournament = doc.data();
-        const startTime = tournament.startTime as Timestamp;
+        const startMillis = toMillis(tournament.startTime);
 
-        if (startTime && startTime.toMillis() <= now.toMillis()) {
+        if (startMillis !== null && startMillis <= now.toMillis()) {
+
           await doc.ref.update({
             status: 'active',
             updatedAt: now,
@@ -60,9 +89,10 @@ export const updateTournamentStatuses = onSchedule(
 
       for (const doc of activeSnapshot.docs) {
         const tournament = doc.data();
-        const endTime = tournament.endTime as Timestamp;
+        const endMillis = toMillis(tournament.endTime);
 
-        if (endTime && endTime.toMillis() <= now.toMillis()) {
+        if (endMillis !== null && endMillis <= now.toMillis()) {
+
           await doc.ref.update({
             status: 'ended',
             updatedAt: now,
@@ -104,18 +134,19 @@ export const updateTournamentStatusesManual = onSchedule(
 
       for (const doc of allTournaments.docs) {
         const tournament = doc.data();
-        const startTime = tournament.startTime as Timestamp;
-        const endTime = tournament.endTime as Timestamp;
+        const startMillis = toMillis(tournament.startTime);
+        const endMillis = toMillis(tournament.endTime);
+
         const currentStatus = tournament.status;
 
         let newStatus = currentStatus;
 
         // Determine correct status based on time
-        if (endTime && endTime.toMillis() <= now.toMillis()) {
+        if (endMillis !== null && endMillis <= now.toMillis()) {
           newStatus = 'ended';
-        } else if (startTime && startTime.toMillis() <= now.toMillis()) {
+        } else if (startMillis !== null && startMillis <= now.toMillis()) {
           newStatus = 'active';
-        } else if (startTime && startTime.toMillis() > now.toMillis()) {
+        } else if (startMillis !== null && startMillis > now.toMillis()) {
           newStatus = 'upcoming';
         }
 
