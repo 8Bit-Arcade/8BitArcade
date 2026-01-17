@@ -28,14 +28,8 @@ export {
     getSaleConfig
 } from './sale/saleAdminFunctions';
 
-// Automated Price Updater
-export {
-    updateTokenSalePrices,
-    manualPriceUpdate
-} from './sale/autoPriceUpdater';
-
-// Off-chain ETH Price
-export { getEthPrice } from './sale/getEthPrice';
+// ETH Price (off-chain) - writes to system/prices for sale page
+export { getEthPrice, scheduledPriceUpdate } from './sale/getEthPrice';
 
 // Tournament functions
 export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual } from './tournaments/scheduleTournaments';
