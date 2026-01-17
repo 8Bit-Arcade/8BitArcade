@@ -219,8 +219,9 @@ export default function GameWrapper({
           // For tournament mode, find an active tournament to associate with
           let tournamentId: string | undefined;
           if (mode === 'tournament' && tournamentsForGame.length > 0) {
-            // Find first active tournament for this game
-            const activeTournament = tournamentsForGame.find(t => t.status === 'active');
+            // Find first tournament that hasn't ended yet (time-based check)
+            const now = Date.now();
+            const activeTournament = tournamentsForGame.find(t => t.endsAt > now);
             if (activeTournament) {
               tournamentId = activeTournament.id;
               console.log('Found active tournament:', tournamentId);
