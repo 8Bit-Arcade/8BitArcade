@@ -434,3 +434,185 @@ export const createTournamentManual = onCall(
     }
   }
 );
+
+/**
+ * Ensure Active Tournaments Exist
+ *
+ * Runs every hour to check if there are active tournaments.
+ * If no active/upcoming tournaments exist for a period, creates them.
+ *
+ * This is more robust than relying on exact scheduled times:
+ * - Handles missed schedules
+ * - Handles deployment issues
+ * - Self-healing if tournaments are missing
+ */
+export const ensureActiveTournaments = onSchedule(
+  {
+    schedule: 'every 1 hours', // Run every hour
+    timeZone: 'UTC',
+    region: 'us-central1',
+    secrets: [deployerPrivateKey, tournamentManagerAddress],
+    memory: '512MiB',
+    timeoutSeconds: 120,
+  },
+  async () => {
+    logger.info('Checking for missing tournaments...');
+
+    try {
+      // Get secrets
+      const managerAddress = tournamentManagerAddress.value();
+      const privateKey = deployerPrivateKey.value();
+      const network = process.env.NETWORK || 'testnet';
+
+      if (!managerAddress || !privateKey) {
+        logger.error('Missing secrets - cannot create tournaments automatically');
+        return;
+      }
+
+      const now = Date.now();
+
+      // Check for active/upcoming weekly tournaments
+      const weeklySnapshot = await db
+        .collection('tournaments')
+        .where('period', '==', 'weekly')
+        .where('status', 'in', ['active', 'upcoming'])
+        .get();
+
+      const hasActiveWeekly = !weeklySnapshot.empty;
+      logger.info(`Active weekly tournaments: ${weeklySnapshot.size}`);
+
+      // Check for active/upcoming monthly tournaments
+      const monthlySnapshot = await db
+        .collection('tournaments')
+        .where('period', '==', 'monthly')
+        .where('status', 'in', ['active', 'upcoming'])
+        .get();
+
+      const hasActiveMonthly = !monthlySnapshot.empty;
+      logger.info(`Active monthly tournaments: ${monthlySnapshot.size}`);
+
+      // If both exist, nothing to do
+      if (hasActiveWeekly && hasActiveMonthly) {
+        logger.info('All tournaments exist - no action needed');
+        return;
+      }
+
+      // Connect to blockchain
+      const rpcUrl = network === 'mainnet' ? ARBITRUM_ONE_RPC : ARBITRUM_SEPOLIA_RPC;
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const wallet = new ethers.Wallet(privateKey, provider);
+
+      const tournamentManager = new ethers.Contract(
+        managerAddress,
+        TOURNAMENT_MANAGER_ABI,
+        wallet
+      );
+
+      // Create missing weekly tournaments
+      if (!hasActiveWeekly) {
+        logger.info('Creating missing weekly tournaments...');
+        const nowUnix = Math.floor(now / 1000);
+        const startTime = nowUnix + 3600; // Start in 1 hour
+        const endTime = startTime + (7 * 24 * 60 * 60); // 7 days
+
+        // Standard Weekly
+        const nextId1 = await tournamentManager.nextTournamentId();
+        const tx1 = await tournamentManager.createTournament(
+          Tier.STANDARD,
+          Period.WEEKLY,
+          startTime,
+          endTime
+        );
+        const receipt1 = await tx1.wait();
+        await createFirebaseTournament(
+          nextId1.toString(),
+          'standard',
+          'weekly',
+          startTime,
+          endTime,
+          TOURNAMENT_CONFIG.weekly.standard.entryFee,
+          TOURNAMENT_CONFIG.weekly.standard.prizePool,
+          receipt1?.hash || ''
+        );
+        logger.info(`Created Standard Weekly tournament ${nextId1}`);
+
+        // High Roller Weekly
+        const nextId2 = await tournamentManager.nextTournamentId();
+        const tx2 = await tournamentManager.createTournament(
+          Tier.HIGH_ROLLER,
+          Period.WEEKLY,
+          startTime,
+          endTime
+        );
+        const receipt2 = await tx2.wait();
+        await createFirebaseTournament(
+          nextId2.toString(),
+          'highRoller',
+          'weekly',
+          startTime,
+          endTime,
+          TOURNAMENT_CONFIG.weekly.highRoller.entryFee,
+          TOURNAMENT_CONFIG.weekly.highRoller.prizePool,
+          receipt2?.hash || ''
+        );
+        logger.info(`Created High Roller Weekly tournament ${nextId2}`);
+      }
+
+      // Create missing monthly tournaments
+      if (!hasActiveMonthly) {
+        logger.info('Creating missing monthly tournaments...');
+        const nowUnix = Math.floor(now / 1000);
+        const startTime = nowUnix + 3600; // Start in 1 hour
+        const endTime = startTime + (30 * 24 * 60 * 60); // 30 days
+
+        // Standard Monthly
+        const nextId3 = await tournamentManager.nextTournamentId();
+        const tx3 = await tournamentManager.createTournament(
+          Tier.STANDARD,
+          Period.MONTHLY,
+          startTime,
+          endTime
+        );
+        const receipt3 = await tx3.wait();
+        await createFirebaseTournament(
+          nextId3.toString(),
+          'standard',
+          'monthly',
+          startTime,
+          endTime,
+          TOURNAMENT_CONFIG.monthly.standard.entryFee,
+          TOURNAMENT_CONFIG.monthly.standard.prizePool,
+          receipt3?.hash || ''
+        );
+        logger.info(`Created Standard Monthly tournament ${nextId3}`);
+
+        // High Roller Monthly
+        const nextId4 = await tournamentManager.nextTournamentId();
+        const tx4 = await tournamentManager.createTournament(
+          Tier.HIGH_ROLLER,
+          Period.MONTHLY,
+          startTime,
+          endTime
+        );
+        const receipt4 = await tx4.wait();
+        await createFirebaseTournament(
+          nextId4.toString(),
+          'highRoller',
+          'monthly',
+          startTime,
+          endTime,
+          TOURNAMENT_CONFIG.monthly.highRoller.entryFee,
+          TOURNAMENT_CONFIG.monthly.highRoller.prizePool,
+          receipt4?.hash || ''
+        );
+        logger.info(`Created High Roller Monthly tournament ${nextId4}`);
+      }
+
+      logger.info('Tournament check complete');
+
+    } catch (error) {
+      logger.error('Error in ensureActiveTournaments:', error);
+      // Don't throw - scheduled functions shouldn't crash the whole system
+    }
+  }
+);

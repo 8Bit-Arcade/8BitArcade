@@ -32,7 +32,7 @@ export {
 export { getEthPrice, scheduledPriceUpdate } from './sale/getEthPrice';
 
 // Tournament functions
-export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual } from './tournaments/scheduleTournaments';
+export { createWeeklyTournaments, createMonthlyTournaments, createTournamentManual, ensureActiveTournaments } from './tournaments/scheduleTournaments';
 export { getTournaments } from './tournaments/getTournaments';
 export { getTournamentLeaderboard } from './tournaments/getTournamentLeaderboard';
 export { enterTournament } from './tournaments/enterTournament';
