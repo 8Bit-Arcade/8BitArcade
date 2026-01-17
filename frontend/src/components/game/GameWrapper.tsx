@@ -216,8 +216,21 @@ export default function GameWrapper({
       // Create session for ranked or tournament mode
       if (mode === 'ranked' || mode === 'tournament') {
         try {
-          console.log('Creating session for game:', gameId, 'mode:', mode);
-          const session = await createSession(gameId, mode);
+          // For tournament mode, find an active tournament to associate with
+          let tournamentId: string | undefined;
+          if (mode === 'tournament' && tournamentsForGame.length > 0) {
+            // Find first active tournament for this game
+            const activeTournament = tournamentsForGame.find(t => t.status === 'active');
+            if (activeTournament) {
+              tournamentId = activeTournament.id;
+              console.log('Found active tournament:', tournamentId);
+            } else {
+              console.warn('No active tournament found for game:', gameId);
+            }
+          }
+
+          console.log('Creating session for game:', gameId, 'mode:', mode, 'tournamentId:', tournamentId);
+          const session = await createSession(gameId, mode, tournamentId);
           console.log('Session created:', session);
           if (session) {
             sessionIdRef.current = session.sessionId;
@@ -237,7 +250,7 @@ export default function GameWrapper({
         startGame(gameId, mode);
       }
     },
-    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession]
+    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession, tournamentsForGame]
   );
 
   // Scroll game into view when it becomes visible (mobile centering)
