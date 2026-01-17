@@ -11,7 +11,6 @@ import { useAudioStore } from '@/stores/audioStore';
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useTournamentStatus } from '@/hooks/useTournamentStatus';
-import { useActiveTournaments } from '@/hooks/useActiveTournaments';
 import { formatNumber, isTouchDevice } from '@/lib/utils';
 import type { GameMode } from '@/types';
 
