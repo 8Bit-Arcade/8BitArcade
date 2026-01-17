@@ -137,56 +137,17 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       verified: true,
     });
 
-    // Handle tournament scores separately
+    // Handle tournament scores - auto-update ALL active tournaments the player has entered
+    // This allows a single game to count toward multiple tournaments (weekly + monthly)
     if (sessionData.mode === 'tournament') {
-      if (!sessionData.tournamentId) {
-        throw new HttpsError('invalid-argument', 'Tournament ID missing for tournament session');
-      }
-
-      // Update tournament entry
-      const tournamentEntryRef = collections.tournaments
-        .doc(sessionData.tournamentId)
-        .collection('entries')
-        .doc(playerAddress);
-
-      const entryDoc = await tournamentEntryRef.get();
-
-      if (!entryDoc.exists) {
-        throw new HttpsError('not-found', 'Tournament entry not found. Must enter tournament first.');
-      }
-
-      const entryData = entryDoc.data();
-
-      // Get current best for this specific game
-      const currentBestScores = entryData?.bestScores || {};
-      const currentGameBest = currentBestScores[gameId] || 0;
-      const newGameBest = verifiedScore > currentGameBest;
-
-      // Calculate total score across all games (for all-games tournaments)
-      const updatedBestScores = {
-        ...currentBestScores,
-        [gameId]: newGameBest ? verifiedScore : currentGameBest,
-      };
-      const totalScore = Object.values(updatedBestScores).reduce((sum: number, score) => sum + (score as number), 0);
-
-      // Legacy: also track single bestScore (highest across any game)
-      const legacyBest = entryData?.bestScore || 0;
-      const newLegacyBest = Math.max(legacyBest, verifiedScore);
-
-      // Update tournament entry with both formats
-      await tournamentEntryRef.update({
-        bestScore: newLegacyBest, // Legacy: highest single game score
-        bestScores: updatedBestScores, // NEW: per-game scores
-        totalScore, // NEW: sum of all game scores (for all-games tournaments)
-        lastPlayedAt: now,
-        totalPlays: FieldValue.increment(1),
-      });
+      // Auto-update all applicable tournament entries
+      await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
 
       return {
         success: true,
         verified: true,
         score: verifiedScore,
-        newBest: newGameBest,
+        newBest: true, // Tournament scores are always considered "new" for display
         flags: analysis.flags.length > 0 ? analysis.flags : undefined,
       };
     }
