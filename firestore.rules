@@ -57,6 +57,24 @@ service cloud.firestore {
     match /tournaments/{tournamentId} {
       allow read: if true;
       allow write: if false; // Admin only via Functions
+
+      // Tournament entries subcollection - read public, write via Functions
+      match /entries/{odedId} {
+        allow read: if true;
+        allow write: if false; // Updated via Cloud Functions only
+      }
+    }
+
+    // Config collection - read public (ETH prices, etc), write via Functions
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if false; // Updated via Cloud Functions only
+    }
+
+    // System collection - read public (prices, settings), write via Functions
+    match /system/{docId} {
+      allow read: if true;
+      allow write: if false; // Updated via Cloud Functions only
     }
 
     // Rewards collection - read own only

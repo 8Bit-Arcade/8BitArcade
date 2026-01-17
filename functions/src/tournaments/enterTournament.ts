@@ -10,6 +10,25 @@ interface EnterTournamentRequest {
 }
 
 /**
+ * Helper to convert time field to milliseconds
+ * Handles both Firebase Timestamps and Unix timestamp numbers
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  if (typeof value === 'string') {
+    const t = new Date(value).getTime();
+    return isNaN(t) ? null : t;
+  }
+  return null;
+}
+
+/**
  * Enter a tournament after paying entry fee
  * Verifies transaction and creates tournament entry
  */
@@ -39,9 +58,11 @@ export const enterTournament = onCall<EnterTournamentRequest>(async (request) =>
     }
 
     const now = Timestamp.now();
+    const nowMillis = now.toMillis();
 
-    // Make sure tournament has not ended
-    if (tournament.status === 'active' && tournament.endTime.toMillis() < now.toMillis()) {
+    // Make sure tournament has not ended (handle both Timestamp and number formats)
+    const endTimeMillis = toMillis(tournament.endTime);
+    if (tournament.status === 'active' && endTimeMillis && endTimeMillis < nowMillis) {
       throw new HttpsError('failed-precondition', 'Tournament has ended');
     }
 

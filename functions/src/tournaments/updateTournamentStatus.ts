@@ -15,6 +15,38 @@ import { db } from '../config/firebase';
 import { Timestamp } from 'firebase-admin/firestore';
 
 /**
+ * Helper to convert time field to milliseconds
+ * Handles Firebase Timestamps, Unix timestamps (seconds or ms), Dates, and ISO strings
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+
+  // Firestore Timestamp with toMillis method
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+
+  // JS Date
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  // ISO string
+  if (typeof value === 'string') {
+    const t = new Date(value).getTime();
+    return isNaN(t) ? null : t;
+  }
+
+  // Unix timestamp (number) - detect if seconds or milliseconds
+  if (typeof value === 'number') {
+    // If less than year 2001 in milliseconds, assume it's seconds
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+
+  return null;
+}
+
+/**
  * Update Tournament Statuses
  * Runs every hour to transition tournament statuses based on time
  */
@@ -28,8 +60,10 @@ export const updateTournamentStatuses = onSchedule(
     logger.info('Running tournament status update...');
 
     const now = Timestamp.now();
+    const nowMillis = now.toMillis();
     let upcomingToActive = 0;
     let activeToEnded = 0;
+    let timestampsFixed = 0;
 
     try {
       // 1. Transition 'upcoming' to 'active' where startTime has passed
@@ -40,13 +74,26 @@ export const updateTournamentStatuses = onSchedule(
 
       for (const doc of upcomingSnapshot.docs) {
         const tournament = doc.data();
-        const startTime = tournament.startTime as Timestamp;
+        const startTimeMillis = toMillis(tournament.startTime);
+        const endTimeMillis = toMillis(tournament.endTime);
 
-        if (startTime && startTime.toMillis() <= now.toMillis()) {
-          await doc.ref.update({
+        if (startTimeMillis && startTimeMillis <= nowMillis) {
+          // Also fix timestamp format if needed
+          const updates: Record<string, any> = {
             status: 'active',
             updatedAt: now,
-          });
+          };
+
+          // Convert number timestamps to proper Timestamps
+          if (typeof tournament.startTime === 'number') {
+            updates.startTime = Timestamp.fromMillis(startTimeMillis);
+            timestampsFixed++;
+          }
+          if (typeof tournament.endTime === 'number' && endTimeMillis) {
+            updates.endTime = Timestamp.fromMillis(endTimeMillis);
+          }
+
+          await doc.ref.update(updates);
           upcomingToActive++;
           logger.info(`Tournament ${doc.id} transitioned from 'upcoming' to 'active'`);
         }
@@ -60,20 +107,33 @@ export const updateTournamentStatuses = onSchedule(
 
       for (const doc of activeSnapshot.docs) {
         const tournament = doc.data();
-        const endTime = tournament.endTime as Timestamp;
+        const endTimeMillis = toMillis(tournament.endTime);
+        const startTimeMillis = toMillis(tournament.startTime);
 
-        if (endTime && endTime.toMillis() <= now.toMillis()) {
-          await doc.ref.update({
+        if (endTimeMillis && endTimeMillis <= nowMillis) {
+          // Also fix timestamp format if needed
+          const updates: Record<string, any> = {
             status: 'ended',
             updatedAt: now,
-          });
+          };
+
+          // Convert number timestamps to proper Timestamps
+          if (typeof tournament.startTime === 'number' && startTimeMillis) {
+            updates.startTime = Timestamp.fromMillis(startTimeMillis);
+            timestampsFixed++;
+          }
+          if (typeof tournament.endTime === 'number') {
+            updates.endTime = Timestamp.fromMillis(endTimeMillis);
+          }
+
+          await doc.ref.update(updates);
           activeToEnded++;
           logger.info(`Tournament ${doc.id} transitioned from 'active' to 'ended'`);
         }
       }
 
       logger.info(
-        `Tournament status update complete: ${upcomingToActive} activated, ${activeToEnded} ended`
+        `Tournament status update complete: ${upcomingToActive} activated, ${activeToEnded} ended, ${timestampsFixed} timestamps fixed`
       );
 
     } catch (error) {
@@ -97,6 +157,7 @@ export const updateTournamentStatusesManual = onSchedule(
     logger.info('Manual tournament status update triggered');
 
     const now = Timestamp.now();
+    const nowMillis = now.toMillis();
 
     try {
       // Get all tournaments and check their status
@@ -104,28 +165,40 @@ export const updateTournamentStatusesManual = onSchedule(
 
       for (const doc of allTournaments.docs) {
         const tournament = doc.data();
-        const startTime = tournament.startTime as Timestamp;
-        const endTime = tournament.endTime as Timestamp;
+        const startTimeMillis = toMillis(tournament.startTime);
+        const endTimeMillis = toMillis(tournament.endTime);
         const currentStatus = tournament.status;
 
         let newStatus = currentStatus;
 
         // Determine correct status based on time
-        if (endTime && endTime.toMillis() <= now.toMillis()) {
+        if (endTimeMillis && endTimeMillis <= nowMillis) {
           newStatus = 'ended';
-        } else if (startTime && startTime.toMillis() <= now.toMillis()) {
+        } else if (startTimeMillis && startTimeMillis <= nowMillis) {
           newStatus = 'active';
-        } else if (startTime && startTime.toMillis() > now.toMillis()) {
+        } else if (startTimeMillis && startTimeMillis > nowMillis) {
           newStatus = 'upcoming';
         }
 
-        // Update if status changed
-        if (newStatus !== currentStatus) {
-          await doc.ref.update({
+        // Update if status changed OR timestamps need fixing
+        const needsTimestampFix = typeof tournament.startTime === 'number' || typeof tournament.endTime === 'number';
+
+        if (newStatus !== currentStatus || needsTimestampFix) {
+          const updates: Record<string, any> = {
             status: newStatus,
             updatedAt: now,
-          });
-          logger.info(`Tournament ${doc.id}: ${currentStatus} -> ${newStatus}`);
+          };
+
+          // Fix timestamp format
+          if (typeof tournament.startTime === 'number' && startTimeMillis) {
+            updates.startTime = Timestamp.fromMillis(startTimeMillis);
+          }
+          if (typeof tournament.endTime === 'number' && endTimeMillis) {
+            updates.endTime = Timestamp.fromMillis(endTimeMillis);
+          }
+
+          await doc.ref.update(updates);
+          logger.info(`Tournament ${doc.id}: ${currentStatus} -> ${newStatus}${needsTimestampFix ? ' (timestamps fixed)' : ''}`);
         }
       }
 
