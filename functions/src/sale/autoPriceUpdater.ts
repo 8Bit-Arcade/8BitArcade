@@ -59,8 +59,17 @@ async function fetchEthPrice(): Promise<number> {
 
     logger.info('Fetched ETH price', { price });
 
-    // Save latest ETH price in Firestore for fallback
-    await db.doc('system/prices').set({ ethUsd: price, updatedAt: Date.now() }, { merge: true });
+    // Calculate tokens per ETH/USDC for frontend
+    const tokensPerEth = price / TOKEN_PRICE_USD;
+    const tokensPerUsdc = 1 / TOKEN_PRICE_USD; // 1 USDC = $1 = 2000 tokens
+
+    // Save latest ETH price AND calculated token rates in Firestore
+    await db.doc('system/prices').set({
+      ethUsd: price,
+      tokensPerEth,
+      tokensPerUsdc,
+      updatedAt: Date.now()
+    }, { merge: true });
 
     return price;
   } catch (err) {

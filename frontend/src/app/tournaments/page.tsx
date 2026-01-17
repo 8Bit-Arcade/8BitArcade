@@ -254,8 +254,12 @@ export default function TournamentsPage() {
     address, // Only re-run when address changes (wallet connect/disconnect)
   ]);
 
+const [hasAttemptedCreate, setHasAttemptedCreate] = useState(false);
+
 useEffect(() => {
-  // Only run on page load
+  // Only attempt once per page load, and only after tournaments have loaded
+  if (loading || hasAttemptedCreate || tournaments.length === 0) return;
+
   async function createMissingTournaments() {
     try {
       // 1️⃣ Check if weekly or monthly exists
@@ -265,11 +269,13 @@ useEffect(() => {
       // 2️⃣ Skip if already exists
       if (hasWeekly && hasMonthly) {
         console.log('✅ All tournaments already exist. No need to create.');
+        setHasAttemptedCreate(true);
         return;
       }
 
-      // 3️⃣ Call Firebase function to create missing tournaments
+      setHasAttemptedCreate(true); // Mark as attempted BEFORE calling
 
+      // 3️⃣ Call Firebase function to create missing tournaments
       if (!hasWeekly) {
         console.log('⚡ No weekly tournament found. Creating...');
         const result = await callFunction('createTournamentManual', { period: 'weekly' });
@@ -283,11 +289,12 @@ useEffect(() => {
       }
     } catch (err) {
       console.error('❌ Failed to auto-create tournaments:', err);
+      setHasAttemptedCreate(true); // Don't retry on error
     }
   }
 
   createMissingTournaments();
-}, [tournaments]);
+}, [loading, tournaments, hasAttemptedCreate]);
   
   // 👇 Tournament Data Sync Solution - sync tournaments AND player entries
 useEffect(() => {

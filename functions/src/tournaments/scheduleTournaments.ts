@@ -317,6 +317,7 @@ export const createMonthlyTournaments = onSchedule(
  */
 export const createTournamentManual = onCall(
   {
+    cors: true,
     secrets: [deployerPrivateKey, tournamentManagerAddress],
   },
   async (request) => {

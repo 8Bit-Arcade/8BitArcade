@@ -1,231 +1,128 @@
 /**
- * Get ETH Price - Off-chain price fetching
+ * Off-Chain ETH Price Endpoint
  *
- * Fetches ETH price from multiple sources with caching to avoid rate limits
- * and provide reliable price data to the frontend.
+ * Returns current ETH price from Firestore cache (updated every 3 min)
+ * or fetches fresh from CoinGecko if cache is stale.
+ *
+ * This allows the frontend to calculate token amounts WITHOUT on-chain calls.
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-import { logger } from 'firebase-functions';
+import { logger } from 'firebase-functions/v2';
 import { db } from '../config/firebase';
-import { Timestamp } from 'firebase-admin/firestore';
 
-// Cache duration: 5 minutes
-const CACHE_DURATION_MS = 5 * 60 * 1000;
+const COINGECKO_API = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd';
+const TOKEN_PRICE_USD = 0.0005; // $0.0005 per 8BIT token
+const CACHE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
-// Fallback price if all APIs fail
-const FALLBACK_ETH_PRICE = 3300;
-
-// CoinGecko API key for higher rate limits
-const COINGECKO_API_KEY = 'CG-dcMc86FaS6AMxW5VVecbAx6w';
-
-interface PriceCache {
-  price: number;
-  timestamp: Timestamp;
-  source: string;
+interface EthPriceResponse {
+  ethPriceUsd: number;
+  tokensPerEth: number;
+  tokenPriceUsd: number;
+  updatedAt: number;
+  source: 'cache' | 'fresh' | 'fallback';
 }
 
 /**
- * Fetch ETH price from CoinGecko (with API key for better rate limits)
- */
-async function fetchFromCoinGecko(): Promise<number | null> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
-      {
-        signal: controller.signal,
-        headers: {
-          'x-cg-demo-api-key': COINGECKO_API_KEY,
-        },
-      }
-    );
-
-    clearTimeout(timeout);
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data?.ethereum?.usd > 0) {
-        return data.ethereum.usd;
-      }
-    }
-  } catch (error) {
-    logger.warn('CoinGecko fetch failed:', error);
-  }
-  return null;
-}
-
-/**
- * Fetch ETH price from CryptoCompare
- */
-async function fetchFromCryptoCompare(): Promise<number | null> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(
-      'https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD',
-      { signal: controller.signal }
-    );
-
-    clearTimeout(timeout);
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data?.USD > 0) {
-        return data.USD;
-      }
-    }
-  } catch (error) {
-    logger.warn('CryptoCompare fetch failed:', error);
-  }
-  return null;
-}
-
-/**
- * Fetch ETH price from Binance
- */
-async function fetchFromBinance(): Promise<number | null> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
-    const response = await fetch(
-      'https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT',
-      { signal: controller.signal }
-    );
-
-    clearTimeout(timeout);
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data?.price) {
-        return parseFloat(data.price);
-      }
-    }
-  } catch (error) {
-    logger.warn('Binance fetch failed:', error);
-  }
-  return null;
-}
-
-/**
- * Get cached price from Firestore
- */
-async function getCachedPrice(): Promise<PriceCache | null> {
-  try {
-    const doc = await db.collection('config').doc('ethPrice').get();
-    if (doc.exists) {
-      return doc.data() as PriceCache;
-    }
-  } catch (error) {
-    logger.warn('Failed to get cached price:', error);
-  }
-  return null;
-}
-
-/**
- * Save price to Firestore cache
- */
-async function savePriceToCache(price: number, source: string): Promise<void> {
-  try {
-    await db.collection('config').doc('ethPrice').set({
-      price,
-      timestamp: Timestamp.now(),
-      source,
-    });
-  } catch (error) {
-    logger.warn('Failed to save price to cache:', error);
-  }
-}
-
-/**
- * Get ETH Price - Callable function
- *
- * Returns the current ETH price in USD with caching
+ * Get current ETH price (off-chain)
+ * Returns ETH price and calculated tokensPerEth for frontend use
  */
 export const getEthPrice = onCall(
-  {
-    cors: true,
-  },
-  async () => {
-    logger.info('getEthPrice called');
+  { cors: true },
+  async (): Promise<EthPriceResponse> => {
+    try {
+      // 1. Try Firestore cache first
+      const priceDoc = await db.doc('system/prices').get();
+      const cached = priceDoc.data();
 
-    // Check cache first
-    const cached = await getCachedPrice();
-    if (cached) {
-      const age = Date.now() - cached.timestamp.toMillis();
-      if (age < CACHE_DURATION_MS && cached.price > 0) {
-        logger.info(`Using cached ETH price: $${cached.price} (${cached.source})`);
-        return {
-          price: cached.price,
-          source: cached.source,
-          cached: true,
-          timestamp: cached.timestamp.toMillis(),
-        };
+      if (cached?.ethUsd && cached?.updatedAt) {
+        const age = Date.now() - cached.updatedAt;
+
+        // If cache is fresh enough, use it
+        if (age < CACHE_MAX_AGE_MS) {
+          const tokensPerEth = cached.ethUsd / TOKEN_PRICE_USD;
+          logger.info('Returning cached ETH price', {
+            ethUsd: cached.ethUsd,
+            age: Math.round(age / 1000) + 's'
+          });
+
+          return {
+            ethPriceUsd: cached.ethUsd,
+            tokensPerEth,
+            tokenPriceUsd: TOKEN_PRICE_USD,
+            updatedAt: cached.updatedAt,
+            source: 'cache',
+          };
+        }
       }
-    }
 
-    // Try fetching from APIs in order of preference
-    let price: number | null = null;
-    let source = '';
+      // 2. Cache stale or missing - fetch fresh
+      logger.info('Fetching fresh ETH price from CoinGecko');
+      const res = await fetch(COINGECKO_API);
 
-    // Try CoinGecko first
-    price = await fetchFromCoinGecko();
-    if (price) {
-      source = 'coingecko';
-      logger.info(`Fetched ETH price from CoinGecko: $${price}`);
-    }
-
-    // Fallback to CryptoCompare
-    if (!price) {
-      price = await fetchFromCryptoCompare();
-      if (price) {
-        source = 'cryptocompare';
-        logger.info(`Fetched ETH price from CryptoCompare: $${price}`);
+      if (!res.ok) {
+        throw new Error(`CoinGecko HTTP ${res.status}`);
       }
-    }
 
-    // Fallback to Binance
-    if (!price) {
-      price = await fetchFromBinance();
-      if (price) {
-        source = 'binance';
-        logger.info(`Fetched ETH price from Binance: $${price}`);
+      const data = await res.json();
+      const ethPrice = data.ethereum?.usd;
+
+      if (!ethPrice || typeof ethPrice !== 'number') {
+        throw new Error('Invalid price data from CoinGecko');
       }
-    }
 
-    // If we got a valid price, cache it
-    if (price && price > 0) {
-      await savePriceToCache(price, source);
+      // 3. Update cache
+      const now = Date.now();
+      await db.doc('system/prices').set({
+        ethUsd: ethPrice,
+        updatedAt: now
+      }, { merge: true });
+
+      const tokensPerEth = ethPrice / TOKEN_PRICE_USD;
+
+      logger.info('Returning fresh ETH price', { ethPrice, tokensPerEth });
+
       return {
-        price,
-        source,
-        cached: false,
-        timestamp: Date.now(),
+        ethPriceUsd: ethPrice,
+        tokensPerEth,
+        tokenPriceUsd: TOKEN_PRICE_USD,
+        updatedAt: now,
+        source: 'fresh',
+      };
+
+    } catch (error) {
+      logger.error('Failed to get ETH price, using fallback', error);
+
+      // 4. Fallback: try cache even if stale
+      try {
+        const priceDoc = await db.doc('system/prices').get();
+        const cached = priceDoc.data();
+
+        if (cached?.ethUsd) {
+          const tokensPerEth = cached.ethUsd / TOKEN_PRICE_USD;
+          return {
+            ethPriceUsd: cached.ethUsd,
+            tokensPerEth,
+            tokenPriceUsd: TOKEN_PRICE_USD,
+            updatedAt: cached.updatedAt || Date.now(),
+            source: 'cache',
+          };
+        }
+      } catch {
+        // Ignore cache error
+      }
+
+      // 5. Last resort hardcoded fallback
+      const fallbackEth = 3500;
+      const tokensPerEth = fallbackEth / TOKEN_PRICE_USD;
+
+      return {
+        ethPriceUsd: fallbackEth,
+        tokensPerEth,
+        tokenPriceUsd: TOKEN_PRICE_USD,
+        updatedAt: Date.now(),
+        source: 'fallback',
       };
     }
-
-    // Use cached price even if expired
-    if (cached && cached.price > 0) {
-      logger.warn(`Using expired cached ETH price: $${cached.price}`);
-      return {
-        price: cached.price,
-        source: cached.source + ' (expired)',
-        cached: true,
-        timestamp: cached.timestamp.toMillis(),
-      };
-    }
-
-    // Final fallback
-    logger.warn(`Using fallback ETH price: $${FALLBACK_ETH_PRICE}`);
-    return {
-      price: FALLBACK_ETH_PRICE,
-      source: 'fallback',
-      cached: false,
-      timestamp: Date.now(),
-    };
   }
 );
