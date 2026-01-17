@@ -116,6 +116,9 @@ export interface TournamentDocument {
   updatedAt?: Timestamp;
   // Blockchain transaction hash when created on-chain
   txHash?: string;
+  // Flag for Firebase-only tournaments (no on-chain record)
+  // These are fallback tournaments when on-chain creation fails
+  isOffChain?: boolean;
 }
 
 export interface TournamentEntryDocument {

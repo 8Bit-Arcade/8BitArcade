@@ -378,38 +378,56 @@ async function updateActiveTournamentEntries(
   now: FirebaseFirestore.Timestamp
 ): Promise<void> {
   try {
-    // Primary method: Query by status='active'
-    // This is more reliable since time-based queries can fail if timestamps
-    // are stored in different formats (number vs Timestamp)
+    const tournamentIds = new Set<string>();
+    const tournamentsToProcess: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+
+    // Query 1: Get tournaments with status='active'
     const activeByStatus = await db
       .collection('tournaments')
       .where('status', '==', 'active')
       .get();
 
-    if (!activeByStatus.empty) {
-      console.log(`📋 Found ${activeByStatus.size} active tournaments (by status) for ${playerAddress}`);
-      await processEntries(activeByStatus, playerAddress, gameId, score, now);
-      return;
+    for (const doc of activeByStatus.docs) {
+      if (!tournamentIds.has(doc.id)) {
+        tournamentIds.add(doc.id);
+        tournamentsToProcess.push(doc);
+      }
     }
 
-    // Fallback: Try time-based query (works if timestamps are proper Firestore Timestamps)
+    // Query 2: Get tournaments with status='upcoming' that should be active by time
+    // This catches tournaments where the status update hasn't run yet
     try {
-      const tournamentsSnapshot = await db
+      const upcomingSnapshot = await db
         .collection('tournaments')
-        .where('startTime', '<=', now)
-        .where('endTime', '>', now)
+        .where('status', '==', 'upcoming')
         .get();
 
-      if (!tournamentsSnapshot.empty) {
-        console.log(`📋 Found ${tournamentsSnapshot.size} running tournaments (by time) for ${playerAddress}`);
-        await processEntries(tournamentsSnapshot, playerAddress, gameId, score, now);
-        return;
+      const nowMillis = now.toMillis();
+      for (const doc of upcomingSnapshot.docs) {
+        if (tournamentIds.has(doc.id)) continue;
+
+        const data = doc.data();
+        // Check if the tournament should be active by time
+        const startTimeMillis = toMillisHelper(data.startTime);
+        const endTimeMillis = toMillisHelper(data.endTime);
+
+        if (startTimeMillis && endTimeMillis &&
+            startTimeMillis <= nowMillis && nowMillis < endTimeMillis) {
+          tournamentIds.add(doc.id);
+          tournamentsToProcess.push(doc);
+          console.log(`📋 Tournament ${doc.id} is status='upcoming' but time-active, including in score sync`);
+        }
       }
-    } catch (timeQueryError) {
-      console.log(`⚠️ Time-based tournament query failed (likely timestamp format issue):`, timeQueryError);
+    } catch (upcomingError) {
+      console.log(`⚠️ Error checking upcoming tournaments:`, upcomingError);
     }
 
-    console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
+    if (tournamentsToProcess.length > 0) {
+      console.log(`📋 Found ${tournamentsToProcess.length} tournaments for score sync (player: ${playerAddress})`);
+      await processEntriesFromDocs(tournamentsToProcess, playerAddress, gameId, score, now);
+    } else {
+      console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
+    }
   } catch (error) {
     // Don't fail the score submission if tournament update fails
     console.error('❌ Error updating tournament entries:', error);
@@ -417,19 +435,32 @@ async function updateActiveTournamentEntries(
 }
 
 /**
- * Process tournament entries and update scores
+ * Helper to convert timestamp to milliseconds
  */
-async function processEntries(
-  tournamentsSnapshot: FirebaseFirestore.QuerySnapshot,
+function toMillisHelper(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  return null;
+}
+
+/**
+ * Process tournament entries and update scores from document array
+ */
+async function processEntriesFromDocs(
+  tournamentDocs: FirebaseFirestore.QueryDocumentSnapshot[],
   playerAddress: string,
   gameId: string,
   score: number,
   now: FirebaseFirestore.Timestamp
 ): Promise<void> {
   try {
-
-    // Check each active tournament for player's entry
-    for (const tournamentDoc of tournamentsSnapshot.docs) {
+    // Check each tournament for player's entry
+    for (const tournamentDoc of tournamentDocs) {
       const tournament = tournamentDoc.data() as TournamentDocument;
       const tournamentId = tournamentDoc.id;
 
