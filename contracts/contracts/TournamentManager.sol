@@ -98,19 +98,6 @@ contract TournamentManager is Ownable, ReentrancyGuard {
 
     event TournamentManagerSet(address indexed newManager);
 
-    // Custom errors
-    error UnauthorizedTournamentCreator(address caller);
-
-    /**
-     * @dev Modifier to allow owner OR tournament manager
-     */
-    modifier onlyOwnerOrManager() {
-        if (msg.sender != owner() && msg.sender != tournamentManager) {
-            revert UnauthorizedTournamentCreator(msg.sender);
-        }
-        _;
-    }
-
     /**
      * @dev Constructor
      * @param _tokenAddress Address of the 8BIT token contract
@@ -132,7 +119,6 @@ contract TournamentManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Create a new tournament
-     * @notice Can be called by owner OR tournament manager for automated creation
      * @param tier Tournament tier (STANDARD or HIGH_ROLLER)
      * @param period Tournament period (WEEKLY or MONTHLY)
      * @param startTime Tournament start timestamp
@@ -143,7 +129,7 @@ contract TournamentManager is Ownable, ReentrancyGuard {
         Period period,
         uint256 startTime,
         uint256 endTime
-    ) external onlyOwnerOrManager returns (uint256) {
+    ) external onlyOwner returns (uint256) {
         require(startTime >= block.timestamp, "Start time must be in future");
         require(endTime > startTime, "End time must be after start");
 
