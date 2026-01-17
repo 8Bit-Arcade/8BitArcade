@@ -32,7 +32,7 @@ interface Tournament {
 
 export default function TournamentsPage() {
   const { address, isConnected } = useAccount();
-  const [filter, setFilter] = useState<Tier | 'all'>('all');
+  const [filter, setFilter] = useState<Tier | 'all' | 'ended'>('all');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournament, setSelectedTournament] = useState<number | null>(null);
   const [needsApproval, setNeedsApproval] = useState(false);
@@ -522,8 +522,18 @@ useEffect(() => {
     }
   }, [isApproveSuccess, selectedTournament, needsApproval, tournaments, tokenBalance]);
 
-  const filteredTournaments =
-    filter === 'all' ? tournaments : tournaments.filter(t => t.tier === filter);
+  const filteredTournaments = (() => {
+    if (filter === 'ended') {
+      // Show only ended tournaments
+      return tournaments.filter(t => t.status === 'ended');
+    } else if (filter === 'all') {
+      // Show all non-ended tournaments
+      return tournaments.filter(t => t.status !== 'ended');
+    } else {
+      // Filter by tier, excluding ended
+      return tournaments.filter(t => t.tier === filter && t.status !== 'ended');
+    }
+  })();
 
   const getStatusBadge = (status: TournamentStatus) => {
     switch (status) {
@@ -606,15 +616,15 @@ useEffect(() => {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 mb-6 justify-center">
-          {(['all', 'Standard', 'High Roller'] as const).map((tierFilter) => (
+        <div className="flex gap-2 mb-6 justify-center flex-wrap">
+          {(['all', 'Standard', 'High Roller', 'ended'] as const).map((tierFilter) => (
             <Button
               key={tierFilter}
               variant={filter === tierFilter ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => setFilter(tierFilter)}
             >
-              {tierFilter === 'all' ? 'All Tiers' : tierFilter}
+              {tierFilter === 'all' ? 'All Tiers' : tierFilter === 'ended' ? 'Ended' : tierFilter}
             </Button>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { collections, Timestamp } from '../config/firebase';
+import { collections, Timestamp, FieldValue } from '../config/firebase';
 import { GAME_CONFIGS } from '../config/games';
 import * as crypto from 'crypto';
 
@@ -37,13 +37,44 @@ export const createSession = onCall<CreateSessionRequest, Promise<CreateSessionR
 
     // If tournament mode, verify tournament exists and is active
     if (mode === 'tournament' && tournamentId) {
-      const tournament = await collections.tournaments.doc(tournamentId).get();
+      const tournamentRef = collections.tournaments.doc(tournamentId);
+      const tournament = await tournamentRef.get();
       if (!tournament.exists) {
         throw new HttpsError('not-found', 'Tournament not found');
       }
       const data = tournament.data();
       if (data?.status !== 'active') {
         throw new HttpsError('failed-precondition', 'Tournament is not active');
+      }
+
+      // Auto-enroll player in tournament if they don't have an entry yet
+      // This allows scores to be tracked without requiring separate entry flow
+      const entryRef = tournamentRef.collection('entries').doc(playerAddress);
+      const entryDoc = await entryRef.get();
+
+      if (!entryDoc.exists) {
+        const now = Timestamp.now();
+        console.log(`Auto-enrolling player ${playerAddress} in tournament ${tournamentId}`);
+
+        // Create entry for the player
+        await entryRef.set({
+          tournamentId,
+          player: playerAddress,
+          enteredAt: now,
+          bestScore: 0,
+          bestScores: {},
+          lastPlayedAt: null,
+          totalPlays: 0,
+          paid: false, // Auto-enrolled, not paid (for testnet)
+          txHash: null,
+        });
+
+        // Update tournament participants
+        await tournamentRef.update({
+          participants: FieldValue.arrayUnion(playerAddress),
+          totalEntries: FieldValue.increment(1),
+          updatedAt: now,
+        });
       }
     }
 
