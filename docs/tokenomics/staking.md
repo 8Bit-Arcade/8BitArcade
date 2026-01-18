@@ -9,11 +9,12 @@ Staking allows you to lock your 8BIT tokens and earn passive rewards over time. 
 | Detail | Information |
 |--------|-------------|
 | **Launch Timeline** | Phase 3 (Months 7-12) |
-| **Staking Pool** | 50,000,000 8BIT (10% of supply) |
+| **Staking Pool** | 25,000,000 8BIT (5% of supply) |
 | **Distribution Period** | 5 years |
-| **Estimated APY** | 15-30% (to be determined) |
-| **Lock Periods** | Flexible (likely tiered) |
-| **Rewards** | Paid in 8BIT |
+| **Estimated APY** | 10-60% (based on tier & TVL) |
+| **Lock Periods** | 7 days, 1 month, 3 months, 6 months |
+| **Early Withdrawal Penalty** | 25% of staked amount |
+| **Rewards** | Paid in 8BIT (minted) |
 
 ## Why Staking?
 
@@ -35,32 +36,41 @@ Staking allows you to lock your 8BIT tokens and earn passive rewards over time. 
 
 > ⚠️ **Note:** Details below are preliminary and subject to change based on community feedback and market conditions.
 
-### Tiered Lock Periods
+### Tiered Lock Periods (Weighted Shares)
 
-Different lock periods offering different rewards:
+Longer locks earn a larger share of the reward pool:
 
-| Lock Period | Estimated APY | Early Withdrawal Penalty |
-|-------------|---------------|-------------------------|
-| **Flexible** | 15% | None (withdraw anytime) |
-| **30 Days** | 20% | 10% penalty |
-| **90 Days** | 25% | 15% penalty |
-| **180 Days** | 30% | 20% penalty |
+| Lock Period | Weight | Effective APY Boost | Early Withdrawal |
+|-------------|--------|---------------------|------------------|
+| **7 Days** | 1.0x | Base rate | 25% penalty |
+| **1 Month** | 1.5x | +50% vs base | 25% penalty |
+| **3 Months** | 2.0x | +100% vs base | 25% penalty |
+| **6 Months** | 3.0x | +200% vs base | 25% penalty |
 
-**Example:**
-- Stake 100,000 8BIT for 180 days at 30% APY
-- Earn ~15,000 8BIT in 6 months
-- Total after 6 months: 115,000 8BIT
+**How Weighted Shares Work:**
+- Stake 10,000 8BIT for 6 months → counts as 30,000 "weighted tokens"
+- Your reward share = your weighted tokens ÷ total weighted tokens
+- Fixed monthly pool ensures sustainable emissions
+
+**Example APYs at 25M TVL:**
+
+| Lock Period | Weight | Estimated APY |
+|-------------|--------|---------------|
+| 7 Days | 1.0x | ~20% |
+| 1 Month | 1.5x | ~30% |
+| 3 Months | 2.0x | ~40% |
+| 6 Months | 3.0x | ~60% |
 
 ### Reward Distribution
 
 **Monthly Emissions from Staking Pool:**
-- ~520,000 8BIT per month (much lower than game rewards)
-- Distributed proportionally to all stakers
-- Automatically compounded or claimable
+- ~417,000 8BIT per month
+- Distributed proportionally by weighted stake
+- Claim anytime (rewards accumulate)
 
 **Calculation:**
 ```
-Your Rewards = (Your Staked Amount / Total Staked) × Monthly Pool × APY Multiplier
+Your Rewards = (Your Weighted Stake / Total Weighted Stake) × Monthly Pool
 ```
 
 ## Additional Staking Benefits (Planned)
@@ -99,31 +109,31 @@ Beyond passive rewards, stakers may receive:
 
 ## Staking Pool Sustainability
 
-### 50M Token Pool = 5 Year Distribution
+### 25M Token Pool = 5 Year Distribution
 
 **Monthly Distribution:**
-- 833,333 8BIT per month
+- ~417,000 8BIT per month
 - 60 months (5 years) to deplete
-- Low inflation impact (0.167% monthly)
+- Conservative inflation (0.083% monthly)
 
 **Why This Works:**
-- Game rewards end after Year 5
-- Staking continues as only emission source
-- Provides long-term sustainability
+- Conservative emissions = healthier APYs
+- No insane early APYs that attract farm-and-dump
+- Weighted tiers reward commitment
 - Deflationary burns offset emissions
 
-### APY Adjustments
+### APY by TVL
 
-APY may dynamically adjust based on:
-- **Total amount staked** (more staked = lower APY)
-- **Market conditions**
-- **Platform growth**
-- **Community governance votes**
+APY naturally adjusts based on total staked:
 
-**Example:**
-- If 50M 8BIT staked (10% of supply): 30% APY
-- If 100M 8BIT staked (20% of supply): 15% APY
-- If 200M 8BIT staked (40% of supply): 7.5% APY
+| Total Staked | 7 Days | 1 Month | 3 Months | 6 Months |
+|--------------|--------|---------|----------|----------|
+| **10M** | ~50% | ~75% | ~100% | ~150% |
+| **25M** | ~20% | ~30% | ~40% | ~60% |
+| **50M** | ~10% | ~15% | ~20% | ~30% |
+| **100M** | ~5% | ~7.5% | ~10% | ~15% |
+
+*Higher TVL = lower APY (fixed pool split among more stakers)*
 
 ## How Staking Will Work (Planned)
 
