@@ -38,7 +38,7 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
     // ═══════════════════════════════════════════════════════════════════
 
     /// @notice Total staking pool for 5-year distribution
-    uint256 public constant TOTAL_STAKING_POOL = 50_000_000 * 10**18;
+    uint256 public constant TOTAL_STAKING_POOL = 25_000_000 * 10**18; // 25M 8BIT (5% of max supply)
 
     /// @notice Distribution period (5 years)
     uint256 public constant DISTRIBUTION_PERIOD = 5 * 365 days;
