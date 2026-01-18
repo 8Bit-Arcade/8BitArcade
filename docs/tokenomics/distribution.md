@@ -10,10 +10,10 @@ Complete breakdown of where every token goes and when you can access them.
 |------------|--------|------------|
 | 🎯 Token Sale | 200,000,000 | 40% |
 | 🏆 Daily Rewards + Tournaments | 150,000,000 | 30% |
-| 💎 Staking Rewards | 50,000,000 | 10% |
+| 💎 Staking Rewards | 25,000,000 | 5% |
 | 💧 DEX Liquidity | 60,000,000 | 12% |
-| 🏆 Tournament Prize Pools | 20,000,000 | 4% |
-| 📢 Marketing & Partnerships | 15,000,000 | 3% |
+| 🏆 Tournament Prize Pools | 35,000,000 | 7% |
+| 📢 Marketing & Partnerships | 25,000,000 | 5% |
 | 👥 Team | 5,000,000 | 1% |
 | **TOTAL** | **500,000,000** | **100%** |
 
@@ -77,28 +77,29 @@ Complete breakdown of where every token goes and when you can access them.
 
 ---
 
-### 💎 Staking Pool - 50,000,000 (10%)
+### 💎 Staking Pool - 25,000,000 (5%)
 
-**Purpose:** Long-term holder incentives and passive income
+**Purpose:** Long-term holder incentives with tiered lock periods
 
 | Detail | Information |
 |--------|-------------|
-| **Amount** | 50,000,000 8BIT |
+| **Amount** | 25,000,000 8BIT |
 | **Distribution Period** | 5 years |
 | **Launch Timeline** | Phase 3 (Months 7-12) |
 | **Lock/Vest** | Smart contract controlled |
 
-**Staking Benefits (Planned):**
-- Earn passive 8BIT rewards
-- Access exclusive tournaments
-- Boosted daily rewards
-- Governance voting power
-- NFT badge eligibility
+**Tiered Lock Periods:**
+| Lock Period | Weight | Effective APY Boost |
+|-------------|--------|---------------------|
+| 7 Days | 1.0x | Base rate |
+| 1 Month | 1.5x | +50% |
+| 3 Months | 2.0x | +100% |
+| 6 Months | 3.0x | +200% |
 
-**Conservative Emissions:**
-- Much slower than rewards pool
-- Rewards long-term believers
-- Adds utility beyond gaming
+**Key Features:**
+- Weighted shares reward longer commitments
+- 25% early withdrawal penalty
+- Conservative emissions = healthier tokenomics
 - Reduces sell pressure
 
 ---
@@ -135,14 +136,14 @@ Complete breakdown of where every token goes and when you can access them.
 
 ---
 
-### 📢 Marketing & Partnerships - 15,000,000 (3%)
+### 📢 Marketing & Partnerships - 25,000,000 (5%)
 
 **Purpose:** Growth, listings, influencers, partnerships
 
 | Detail | Information |
 |--------|-------------|
-| **Amount** | 15,000,000 8BIT |
-| **Value at Presale** | $7,500 USD |
+| **Amount** | 25,000,000 8BIT |
+| **Value at Presale** | $12,500 USD |
 | **Usage** | Performance-based |
 | **Accountability** | Public wallet tracking |
 
@@ -154,30 +155,30 @@ Complete breakdown of where every token goes and when you can access them.
 - Social media campaigns
 - Partnership integrations
 
-**Why Only 3%:**
-- Small allocation = investor friendly
-- $15K cash from presale for marketing too
+**Why 5%:**
+- Increased budget for aggressive growth
+- More runway for exchange listings
 - Performance-based spending only
 - No dumping on holders
 - Tokens used strategically, not sold
 
 ---
 
-### 🏆 Tournament Prize Pools - 20,000,000 (4%)
+### 🏆 Tournament Prize Pools - 35,000,000 (7%)
 
-**Purpose:** Initial tournament prize pool funding
+**Purpose:** Massive tournament prize pools for bigger competitions
 
 | Detail | Information |
 |--------|-------------|
-| **Amount** | 20,000,000 8BIT |
-| **Value at Presale** | $10,000 USD |
+| **Amount** | 35,000,000 8BIT |
+| **Value at Presale** | $17,500 USD |
 | **Usage** | Tournament prizes |
 | **Lock/Vest** | Available immediately for tournaments |
 
 **Purpose:**
-- Funds initial tournament prize pools
+- Funds massive tournament prize pools
 - Ensures tournaments can run immediately at launch
-- Provides runway while GameRewards emissions ramp up
+- 75% larger prize pools than originally planned!
 - Attracts competitive players from day one
 
 **Tournament Structure:**
@@ -261,7 +262,7 @@ Complete breakdown of where every token goes and when you can access them.
 
 | Project | Token Sale | Rewards | Liquidity | Tournaments | Team | Marketing |
 |---------|-----------|---------|-----------|-------------|------|-----------|
-| **8-Bit Arcade** | **40%** | **40%** | **12%** | **4%** | **1%** | **3%** |
+| **8-Bit Arcade** | **40%** | **35%** | **12%** | **7%** | **1%** | **5%** |
 | Typical GameFi | 30% | 30% | 10% | 0% | 15% | 15% |
 | Axie Infinity | 29% | 29% | 8% | 0% | 21% | 13% |
 | DeFi Kingdoms | 25% | 40% | 5% | 0% | 20% | 10% |
@@ -269,8 +270,8 @@ Complete breakdown of where every token goes and when you can access them.
 **8-Bit Arcade Advantages:**
 - ✅ Strong liquidity allocation (12% vs typical 5-10%)
 - ✅ Ultra-low team allocation (1% vs typical 15-20%)
-- ✅ Lowest marketing allocation (3% vs typical 10-15%)
-- ✅ Dedicated tournament prize pool (4% upfront funding)
+- ✅ Massive tournament prize pool (7% = bigger prizes!)
+- ✅ Conservative staking (5% = healthier APYs)
 - ✅ Front-loaded rewards (5 years vs 20-30 years)
 - ✅ More tokens to players and investors
 
