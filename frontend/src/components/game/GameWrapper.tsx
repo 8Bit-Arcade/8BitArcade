@@ -11,6 +11,7 @@ import { useAudioStore } from '@/stores/audioStore';
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useTournamentStatus } from '@/hooks/useTournamentStatus';
+import { useActiveTournaments } from '@/hooks/useActiveTournaments';
 import { formatNumber, isTouchDevice } from '@/lib/utils';
 import type { GameMode } from '@/types';
 
@@ -67,6 +68,7 @@ export default function GameWrapper({
   const { createSession, submitScore: submitScoreToBackend } = useScoreSubmission();
   const { signInWithWallet, isFirebaseAuthenticated, isAuthenticating } = useWalletAuth();
   const { tournamentsForGame, loading: tournamentsLoading } = useTournamentStatus(gameId);
+  const { activeTournaments } = useActiveTournaments();
 
   const [showModeSelect, setShowModeSelect] = useState(true);
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
@@ -218,14 +220,34 @@ export default function GameWrapper({
         try {
           // For tournament mode, find an active tournament to associate with
           let tournamentId: string | undefined;
-          if (mode === 'tournament' && tournamentsForGame.length > 0) {
-            // Find first tournament that hasn't ended yet (time-based check)
+          if (mode === 'tournament') {
             const now = Date.now();
-            const activeTournament = tournamentsForGame.find(t => t.endsAt > now);
-            if (activeTournament) {
-              tournamentId = activeTournament.id;
-              console.log('Found active tournament:', tournamentId);
-            } else {
+
+            // First, check tournaments player has already joined
+            if (tournamentsForGame.length > 0) {
+              const joinedTournament = tournamentsForGame.find(t => t.endsAt > now);
+              if (joinedTournament) {
+                tournamentId = joinedTournament.id;
+                console.log('Found joined tournament:', tournamentId);
+              }
+            }
+
+            // If not joined any, find ANY active tournament for this game (will auto-enroll)
+            if (!tournamentId && activeTournaments.length > 0) {
+              const availableTournament = activeTournaments.find(t => {
+                // Check if tournament applies to this game (null gameId = all games)
+                const appliesToGame = !t.gameId || t.gameId === null || t.gameId === gameId;
+                // Check if tournament is still active
+                const endTime = t.endTime?._seconds ? t.endTime._seconds * 1000 : 0;
+                return appliesToGame && endTime > now;
+              });
+              if (availableTournament) {
+                tournamentId = availableTournament.id;
+                console.log('Found available tournament (will auto-enroll):', tournamentId);
+              }
+            }
+
+            if (!tournamentId) {
               console.warn('No active tournament found for game:', gameId);
             }
           }
@@ -251,7 +273,7 @@ export default function GameWrapper({
         startGame(gameId, mode);
       }
     },
-    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession, tournamentsForGame]
+    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession, tournamentsForGame, activeTournaments]
   );
 
   // Scroll game into view when it becomes visible (mobile centering)
