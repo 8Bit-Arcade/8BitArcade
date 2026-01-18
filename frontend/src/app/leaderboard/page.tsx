@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
         {viewMode === 'games' && (
           <>
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center">
               {/* Period Filter */}
               <LeaderboardTabs
                 activePeriod={selectedPeriod}
