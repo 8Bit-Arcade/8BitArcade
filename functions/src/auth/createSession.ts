@@ -9,6 +9,20 @@ interface CreateSessionRequest {
   tournamentId?: string;
 }
 
+/**
+ * Helper to convert time field to milliseconds
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  return null;
+}
+
 interface CreateSessionResponse {
   sessionId: string;
   seed: number;
@@ -35,7 +49,7 @@ export const createSession = onCall<CreateSessionRequest, Promise<CreateSessionR
       throw new HttpsError('invalid-argument', 'Invalid game mode');
     }
 
-    // If tournament mode, verify tournament exists and is active
+    // If tournament mode, verify tournament exists and is active (by time OR status)
     if (mode === 'tournament' && tournamentId) {
       const tournamentRef = collections.tournaments.doc(tournamentId);
       const tournament = await tournamentRef.get();
@@ -43,7 +57,17 @@ export const createSession = onCall<CreateSessionRequest, Promise<CreateSessionR
         throw new HttpsError('not-found', 'Tournament not found');
       }
       const data = tournament.data();
-      if (data?.status !== 'active') {
+
+      // Check if tournament is active - either by status OR by time
+      const now = Timestamp.now();
+      const nowMillis = now.toMillis();
+      const startTimeMillis = toMillis(data?.startTime);
+      const endTimeMillis = toMillis(data?.endTime);
+      const isTimeActive = startTimeMillis && endTimeMillis &&
+        startTimeMillis <= nowMillis && nowMillis < endTimeMillis;
+      const isStatusActive = data?.status === 'active';
+
+      if (!isStatusActive && !isTimeActive) {
         throw new HttpsError('failed-precondition', 'Tournament is not active');
       }
 

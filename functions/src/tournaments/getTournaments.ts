@@ -1,6 +1,20 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { db } from '../config/firebase';
+import { db, Timestamp } from '../config/firebase';
 import { TournamentDocument, TournamentEntryDocument } from '../types';
+
+/**
+ * Helper to convert time field to milliseconds
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  return null;
+}
 
 interface GetTournamentsRequest {
   status?: 'active' | 'upcoming' | 'ended';
@@ -26,14 +40,48 @@ export const getTournaments = onCall<GetTournamentsRequest>(async (request) => {
     const snapshot = await db.collection('tournaments').get();
 
     let filteredDocs = snapshot.docs;
+    const now = Timestamp.now();
+    const nowMillis = now.toMillis();
 
-    // Filter by status in code
+    // Filter by status in code - using time-based checks for accuracy
     if (status) {
       filteredDocs = filteredDocs.filter(doc => {
         const data = doc.data();
-        if (status === 'active') return data.status === 'active';
-        if (status === 'upcoming') return data.status === 'upcoming';
-        if (status === 'ended') return data.status === 'ended' || data.status === 'finalized';
+
+        if (status === 'active') {
+          // Active by status OR by time
+          if (data.status === 'active') return true;
+          // Check time-based activity for 'upcoming' tournaments
+          if (data.status === 'upcoming') {
+            const startTimeMillis = toMillis(data.startTime);
+            const endTimeMillis = toMillis(data.endTime);
+            if (startTimeMillis && endTimeMillis &&
+                startTimeMillis <= nowMillis && nowMillis < endTimeMillis) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        if (status === 'upcoming') {
+          // Only truly upcoming (hasn't started yet)
+          const startTimeMillis = toMillis(data.startTime);
+          if (startTimeMillis && startTimeMillis > nowMillis) {
+            return true;
+          }
+          return false;
+        }
+
+        if (status === 'ended') {
+          // Ended by status OR by time
+          if (data.status === 'ended' || data.status === 'finalized') return true;
+          const endTimeMillis = toMillis(data.endTime);
+          if (endTimeMillis && endTimeMillis <= nowMillis) {
+            return true;
+          }
+          return false;
+        }
+
         return true;
       });
     }
