@@ -18,7 +18,7 @@ export default function LeaderboardTabs({
   ];
 
   return (
-    <div className="flex gap-2 mb-4">
+    <div className="flex gap-2 mb-4 justify-center">
       {tabs.map((tab) => (
         <button
           key={tab.id}
