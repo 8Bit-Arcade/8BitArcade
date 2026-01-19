@@ -13,9 +13,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @dev Allows users to stake 8BIT tokens with different lock periods for different reward weights
  *
  * Key Parameters:
- * - Total Staking Pool: 50,000,000 8BIT (10% of max supply)
+ * - Total Staking Pool: 25,000,000 8BIT (5% of max supply)
  * - Distribution Period: 5 years (60 months)
- * - Monthly Distribution: ~833,333 8BIT (distributed proportionally by weighted shares)
+ * - Monthly Distribution: ~416,666 8BIT (distributed proportionally by weighted shares)
  *
  * Lock Tiers:
  * - 7 days:   1.0x weight multiplier
@@ -43,7 +43,7 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
     /// @notice Distribution period (5 years)
     uint256 public constant DISTRIBUTION_PERIOD = 5 * 365 days;
 
-    /// @notice Reward rate per second (50M / 5 years in seconds)
+    /// @notice Reward rate per second (25M / 5 years in seconds)
     uint256 public constant REWARD_RATE_PER_SECOND = TOTAL_STAKING_POOL / DISTRIBUTION_PERIOD;
 
     /// @notice Early withdrawal penalty (25% of staked amount)
@@ -54,6 +54,12 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Precision for reward calculations
     uint256 public constant PRECISION = 1e18;
+
+    /// @notice Minimum stake amount (1 8BIT) to prevent dust attacks
+    uint256 public constant MIN_STAKE_AMOUNT = 1 * 10**18;
+
+    /// @notice Maximum number of stakes per user to prevent gas issues
+    uint256 public constant MAX_STAKES_PER_USER = 50;
 
     // Lock tier durations
     uint256 public constant LOCK_7_DAYS = 7 days;
@@ -237,8 +243,9 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
         updateReward(msg.sender, userStakeCount[msg.sender])
     {
         require(stakingStartTime > 0, "Staking not started");
-        require(amount > 0, "Cannot stake 0");
+        require(amount >= MIN_STAKE_AMOUNT, "Below minimum stake");
         require(block.timestamp < stakingStartTime + DISTRIBUTION_PERIOD, "Staking ended");
+        require(userStakeCount[msg.sender] < MAX_STAKES_PER_USER, "Too many stakes");
 
         uint256 stakeId = userStakeCount[msg.sender];
         uint256 lockDuration = getLockDuration(tier);
