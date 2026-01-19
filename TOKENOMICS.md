@@ -24,13 +24,13 @@
 Total Supply: 500,000,000 8BIT (100%)
 
 ├─ 200,000,000 (40%) - Token Sale
-├─ 200,000,000 (40%) - Rewards & Ecosystem
+├─ 175,000,000 (35%) - Rewards & Ecosystem
 │  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
-│  └─ 50,000,000 (10%) - Staking Rewards
-└─ 100,000,000 (20%) - Initial Distribution
+│  └─ 25,000,000 (5%) - Staking Rewards
+└─ 125,000,000 (25%) - Initial Distribution
    ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
-   ├─ 20,000,000 (4%) - Tournament Prize Pools
-   ├─ 15,000,000 (3%) - Marketing & Partnerships
+   ├─ 35,000,000 (7%) - Tournament Prize Pools
+   ├─ 25,000,000 (5%) - Marketing & Partnerships
    └─ 5,000,000 (1%) - Team (vested 2-3 years)
 ```
 
@@ -40,10 +40,10 @@ Total Supply: 500,000,000 8BIT (100%)
 |------------|--------|---|---------|
 | **Token Sale** | 200,000,000 | 40% | Public presale at $0.0005 |
 | **Rewards Pool** | 150,000,000 | 30% | Player rewards, tournaments (distributed over 5 years) |
-| **Staking Pool** | 50,000,000 | 10% | Long-term holder incentives |
+| **Staking Pool** | 25,000,000 | 5% | Long-term holder incentives (tiered lock periods) |
 | **DEX Liquidity** | 60,000,000 | 12% | Uniswap V3 locked liquidity (locked 3+ years) |
-| **Tournament Prizes** | 20,000,000 | 4% | Tournament prize pools |
-| **Marketing** | 15,000,000 | 3% | Partnerships, listings, growth |
+| **Tournament Prizes** | 35,000,000 | 7% | Tournament prize pools (bigger prizes!) |
+| **Marketing** | 25,000,000 | 5% | Partnerships, listings, growth |
 | **Team** | 5,000,000 | 1% | Team allocation (vested 2-3 years) |
 
 **Presale Cap:** $100,000 USD (if all 200M tokens sold)
@@ -214,26 +214,37 @@ Top 10 players in each game earn daily rewards:
 
 | Parameter | Value |
 |-----------|-------|
-| **Total Staking Pool** | 50,000,000 8BIT |
-| **% of Max Supply** | 10% |
-| **Distribution Rate** | 1.67% per month (833,333 tokens) |
+| **Total Staking Pool** | 25,000,000 8BIT |
+| **% of Max Supply** | 5% |
+| **Distribution Rate** | ~417,000 tokens/month |
 | **Pool Runway** | 60 months (5 years) |
+
+### Tiered Lock Periods
+
+Higher lock = higher share of rewards (weighted system):
+
+| Lock Period | Weight | Effective APY Boost |
+|-------------|--------|---------------------|
+| **7 Days** | 1.0x | Base rate |
+| **1 Month** | 1.5x | +50% vs base |
+| **3 Months** | 2.0x | +100% vs base |
+| **6 Months** | 3.0x | +200% vs base |
 
 ### Projected APY Scenarios
 
-*APY varies based on total tokens staked*
+*APY varies based on total tokens staked and lock tier*
 
-| Total Staked | Monthly Rewards | Annual Rewards | APY |
-|--------------|-----------------|----------------|-----|
-| **10M (2% supply)** | 833,333 | 10,000,000 | 100% |
-| **25M (5% supply)** | 833,333 | 10,000,000 | 40% |
-| **50M (10% supply)** | 833,333 | 10,000,000 | 20% |
+| Total Staked | 7 Days | 1 Month | 3 Months | 6 Months |
+|--------------|--------|---------|----------|----------|
+| **10M** | ~50% | ~75% | ~100% | ~150% |
+| **25M** | ~20% | ~30% | ~40% | ~60% |
+| **50M** | ~10% | ~15% | ~20% | ~30% |
 
 **Key Benefits:**
+- Tiered rewards incentivize longer locks
 - Reduces circulating supply and sell pressure
-- Rewards long-term holders
-- 5 year sustainability (matches rewards schedule)
-- Flexible APY based on participation
+- More conservative emissions = healthier tokenomics
+- 25% early withdrawal penalty discourages farming
 
 **Note:** Staking launches in Phase 3 (Months 7-12)
 
