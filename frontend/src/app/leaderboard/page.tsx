@@ -13,7 +13,7 @@ import { formatNumber } from '@/lib/utils';
 import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI } from '@/config/contracts';
 
 type Period = 'daily' | 'weekly' | 'allTime';
-type ViewMode = 'games' | 'tournaments';
+type ViewMode = 'games' | 'tournaments' | 'ended';
 type TournamentStatus = 'upcoming' | 'active' | 'ended';
 
 interface TournamentInfo {
@@ -158,7 +158,7 @@ export default function LeaderboardPage() {
             RANKINGS
           </h1>
           <p className="font-arcade text-gray-400">
-            {viewMode === 'games' ? 'Top players ranked by score' : 'Tournament leaderboards'}
+            {viewMode === 'games' ? 'Top players ranked by score' : viewMode === 'tournaments' ? 'Active tournament leaderboards' : 'Completed tournament results'}
           </p>
         </div>
 
@@ -177,6 +177,13 @@ export default function LeaderboardPage() {
             onClick={() => setViewMode('tournaments')}
           >
             Tournaments
+          </Button>
+          <Button
+            variant={viewMode === 'ended' ? 'primary' : 'ghost'}
+            size="md"
+            onClick={() => setViewMode('ended')}
+          >
+            Ended
           </Button>
         </div>
 
@@ -270,14 +277,14 @@ export default function LeaderboardPage() {
           </>
         )}
 
-        {/* Tournament Leaderboard View */}
+        {/* Tournament Leaderboard View - Active tournaments only */}
         {viewMode === 'tournaments' && (
           <>
             {loadingTournaments ? (
               <div className="card-arcade text-center py-8">
                 <p className="font-arcade text-gray-400">Loading tournaments...</p>
               </div>
-            ) : tournaments.length === 0 ? (
+            ) : tournaments.filter(t => t.status === 'active').length === 0 ? (
               <div className="card-arcade text-center py-8">
                 <p className="font-pixel text-gray-400 mb-2">No active tournaments</p>
                 <p className="font-arcade text-gray-500 text-sm">
@@ -286,7 +293,7 @@ export default function LeaderboardPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {tournaments.map((tournament) => (
+                {tournaments.filter(t => t.status === 'active').map((tournament) => (
                   <div key={tournament.id} className="card-arcade">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-arcade-green/20">
                       <div>
@@ -297,24 +304,57 @@ export default function LeaderboardPage() {
                           {tournament.tier} • {tournament.period}
                         </p>
                       </div>
-                      {tournament.status === 'active' ? (
-                        <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
-                          LIVE
-                        </span>
-                      ) : tournament.status === 'ended' ? (
-                        <span className="px-2 py-1 bg-gray-500/20 text-gray-500 font-pixel text-xs rounded">
-                          ENDED
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-arcade-cyan/20 text-arcade-cyan font-pixel text-xs rounded">
-                          SOON
-                        </span>
-                      )}
+                      <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
+                        LIVE
+                      </span>
                     </div>
                     <TournamentLeaderboard
                       tournamentId={tournament.id}
                       tournamentName={tournament.name}
-                      isActive={tournament.status === 'active'}
+                      isActive={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Ended Tournaments View */}
+        {viewMode === 'ended' && (
+          <>
+            {loadingTournaments ? (
+              <div className="card-arcade text-center py-8">
+                <p className="font-arcade text-gray-400">Loading tournaments...</p>
+              </div>
+            ) : tournaments.filter(t => t.status === 'ended').length === 0 ? (
+              <div className="card-arcade text-center py-8">
+                <p className="font-pixel text-gray-400 mb-2">No ended tournaments</p>
+                <p className="font-arcade text-gray-500 text-sm">
+                  Completed tournaments will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {tournaments.filter(t => t.status === 'ended').map((tournament) => (
+                  <div key={tournament.id} className="card-arcade">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-arcade-green/20">
+                      <div>
+                        <h3 className="font-pixel text-arcade-cyan text-sm">
+                          {tournament.name}
+                        </h3>
+                        <p className="font-arcade text-gray-400 text-xs">
+                          {tournament.tier} • {tournament.period}
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 bg-gray-500/20 text-gray-400 font-pixel text-xs rounded">
+                        ENDED
+                      </span>
+                    </div>
+                    <TournamentLeaderboard
+                      tournamentId={tournament.id}
+                      tournamentName={tournament.name}
+                      isActive={false}
                     />
                   </div>
                 ))}
