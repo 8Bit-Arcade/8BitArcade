@@ -621,7 +621,7 @@
     </nav>
 
     <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu" id="mobileMenu" style="display: none;">
         <a href="index.html#about">About</a>
         <a href="index.html#airdrop" style="color: #ff00ff;">Airdrop</a>
         <a href="tokenomics.html">Tokenomics</a>
@@ -950,15 +950,31 @@
     </footer>
 
     <script>
-        // Mobile menu toggle
+        // Mobile menu toggle - use both click and touchend for mobile compatibility
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
 
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('active');
-            });
+        function toggleMobileMenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (mobileMenu) {
+                const isOpen = mobileMenu.style.display === 'flex';
+                mobileMenu.style.display = isOpen ? 'none' : 'flex';
+            }
         }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            mobileMenuBtn.addEventListener('touchend', toggleMobileMenu);
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (mobileMenu && mobileMenu.style.display === 'flex' &&
+                !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                mobileMenu.style.display = 'none';
+            }
+        });
 
         // Tier selection
         const tierBtns = document.querySelectorAll('.tier-btn');
