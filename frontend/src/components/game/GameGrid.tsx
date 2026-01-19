@@ -232,30 +232,44 @@ export default function GameGrid({ games, onSelectGame, gamesWithTournaments = n
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-4 bg-arcade-dark border border-arcade-green rounded-lg shadow-xl z-50 hidden md:block">
                     <h4 className="font-pixel text-arcade-green text-sm mb-2">{game.name}</h4>
                     <p className="font-arcade text-gray-400 text-xs mb-3">{game.description}</p>
-                    <div className="flex gap-2">
-                      {game.playable ? (
-                        <>
-                          <Link href={`/games/${game.id}`} className="flex-1">
-                            <Button variant="secondary" size="sm" className="w-full text-[10px]">
-                              Free Play
-                            </Button>
-                          </Link>
-                          {isConnected ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        {game.playable ? (
+                          <>
                             <Link href={`/games/${game.id}`} className="flex-1">
-                              <Button variant="primary" size="sm" className="w-full text-[10px]">
-                                Ranked
+                              <Button variant="secondary" size="sm" className="w-full text-[10px]">
+                                Free Play
                               </Button>
                             </Link>
-                          ) : (
-                            <Button variant="primary" size="sm" className="flex-1 text-[10px]" disabled>
-                              Connect
-                            </Button>
-                          )}
-                        </>
-                      ) : (
-                        <Button variant="secondary" size="sm" className="w-full text-[10px]" disabled>
-                          Coming Soon
-                        </Button>
+                            {isConnected ? (
+                              <Link href={`/games/${game.id}`} className="flex-1">
+                                <Button variant="primary" size="sm" className="w-full text-[10px]">
+                                  Ranked
+                                </Button>
+                              </Link>
+                            ) : (
+                              <Button variant="primary" size="sm" className="flex-1 text-[10px]" disabled>
+                                Connect
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <Button variant="secondary" size="sm" className="w-full text-[10px]" disabled>
+                            Coming Soon
+                          </Button>
+                        )}
+                      </div>
+                      {/* Play Tournament button - only shows if user has enrolled in a tournament for this game */}
+                      {isConnected && game.playable && getPlayerTournamentsForGame(game.id).length > 0 && (
+                        <Link href={`/games/${game.id}?mode=tournament`} className="w-full">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="w-full text-[10px] bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink animate-pulse"
+                          >
+                            🏆 Play Tournament
+                          </Button>
+                        </Link>
                       )}
                     </div>
                     {/* Arrow pointing down */}
