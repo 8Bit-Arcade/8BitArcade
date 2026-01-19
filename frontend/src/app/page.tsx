@@ -312,9 +312,23 @@ export default function HomePage() {
                         <Button variant="secondary" size="md" className="min-w-[140px]">Free Play</Button>
                       </Link>
                       {isConnected ? (
-                        <Link href={`/games/${FEATURED_GAMES[selectedGame].id}`}>
-                          <Button variant="primary" size="md" className="min-w-[140px]">Play Ranked</Button>
-                        </Link>
+                        <>
+                          <Link href={`/games/${FEATURED_GAMES[selectedGame].id}`}>
+                            <Button variant="primary" size="md" className="min-w-[140px]">Play Ranked</Button>
+                          </Link>
+                          {/* Play Tournament button - only shows if user has enrolled in a tournament for this game */}
+                          {playerTournaments.filter(t => !t.gameId || t.gameId === null || t.gameId === FEATURED_GAMES[selectedGame].id).length > 0 && (
+                            <Link href={`/games/${FEATURED_GAMES[selectedGame].id}?mode=tournament`}>
+                              <Button
+                                variant="primary"
+                                size="md"
+                                className="min-w-[140px] bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink animate-pulse"
+                              >
+                                🏆 Play Tournament
+                              </Button>
+                            </Link>
+                          )}
+                        </>
                       ) : (
                         <Button variant="primary" size="md" disabled className="whitespace-nowrap">
                           Connect to Play Ranked
