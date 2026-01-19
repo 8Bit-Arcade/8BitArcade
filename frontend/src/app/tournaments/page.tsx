@@ -39,6 +39,15 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [entering, setEntering] = useState(false);
   const [expandedResults, setExpandedResults] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+  // Live countdown timer - updates every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // DYNAMIC TOURNAMENT DISCOVERY - Check first 12 tournament slots
   const MAX_TOURNAMENTS = 12;
@@ -242,8 +251,52 @@ export default function TournamentsPage() {
       });
     });
 
-    console.log('🏁 [FINAL] Dynamic tournaments found:', formattedTournaments.length);
-    setTournaments(formattedTournaments);
+    console.log('🏁 [FINAL] Dynamic tournaments found (before dedupe):', formattedTournaments.length);
+
+    // DEDUPLICATION: Keep only one active/upcoming tournament per tier+period combination
+    // Keep ALL ended tournaments for the "Ended" tab
+    const endedTournaments: Tournament[] = [];
+    const activeTournaments: Tournament[] = [];
+
+    // Separate ended from active/upcoming
+    for (const t of formattedTournaments) {
+      if (t.status === 'ended') {
+        endedTournaments.push(t);
+      } else {
+        activeTournaments.push(t);
+      }
+    }
+
+    // Dedupe only active/upcoming tournaments by tier+period
+    const deduped = new Map<string, Tournament>();
+    for (const t of activeTournaments) {
+      const key = `${t.tier}-${t.period}`;
+      const existing = deduped.get(key);
+
+      if (!existing) {
+        deduped.set(key, t);
+      } else {
+        // Priority order: active (0) > upcoming (1)
+        const statusPriority = (status: TournamentStatus) =>
+          status === 'active' ? 0 : 1;
+
+        const existingPriority = statusPriority(existing.status);
+        const newPriority = statusPriority(t.status);
+
+        // If new tournament has higher priority, or same priority but more recent start
+        if (newPriority < existingPriority ||
+            (newPriority === existingPriority && t.startTime > existing.startTime)) {
+          deduped.set(key, t);
+        }
+      }
+    }
+
+    // Combine deduped active/upcoming with all ended tournaments
+    const dedupedTournaments = [...Array.from(deduped.values()), ...endedTournaments];
+    console.log('🏁 [FINAL] Tournaments after deduplication:', dedupedTournaments.length,
+      `(${deduped.size} active/upcoming, ${endedTournaments.length} ended)`);
+
+    setTournaments(dedupedTournaments);
     setLoading(anyLoading);
   }, [
     // ✅ SAFE DEPENDENCIES - tournamentQueries and hasEnteredQueries properties
@@ -581,6 +634,27 @@ useEffect(() => {
       : 'text-gray-400';
   };
 
+  // Live countdown calculation using currentTime state
+  const getCountdown = (targetTime: Date) => {
+    const diff = targetTime.getTime() - currentTime;
+    if (diff <= 0) return 'Ended';
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
 
   return (
     <div className="min-h-screen py-8">
@@ -700,7 +774,7 @@ useEffect(() => {
                       <>
                         <p className="font-arcade text-xs text-gray-500">Ends in</p>
                         <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                          {formatTimeRemaining(tournament.endTime)}
+                          {getCountdown(tournament.endTime)}
                         </p>
                         {isConnected ? (
                           <Button
@@ -743,7 +817,7 @@ useEffect(() => {
                       <>
                         <p className="font-arcade text-xs text-gray-500">Starts in</p>
                         <p className={`font-pixel text-sm ${getStatusColor(tournament.status)}`}>
-                          {formatTimeRemaining(tournament.startTime)}
+                          {getCountdown(tournament.startTime)}
                         </p>
                         <Button variant="ghost" size="sm">
                           View Details
