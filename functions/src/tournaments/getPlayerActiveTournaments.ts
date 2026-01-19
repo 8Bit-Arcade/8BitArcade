@@ -1,9 +1,23 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { db } from '../config/firebase';
+import { db, Timestamp } from '../config/firebase';
 import { TournamentDocument } from '../types';
 
 interface GetPlayerActiveTournamentsRequest {
   player: string;
+}
+
+/**
+ * Helper to convert time field to milliseconds
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  return null;
 }
 
 interface ActiveTournament {
@@ -33,10 +47,28 @@ export const getPlayerActiveTournaments = onCall<GetPlayerActiveTournamentsReque
       // Get all tournaments and filter in code to avoid index requirements
       const tournamentsSnapshot = await db.collection('tournaments').get();
 
-      // Filter to active tournaments in code
-      const activeTournaments = tournamentsSnapshot.docs.filter(doc =>
-        doc.data().status === 'active'
-      );
+      const now = Timestamp.now();
+      const nowMillis = now.toMillis();
+
+      // Filter to active tournaments - by status OR by time
+      // This handles the case where status update job hasn't run yet
+      const activeTournaments = tournamentsSnapshot.docs.filter(doc => {
+        const data = doc.data();
+        // Check by status
+        if (data.status === 'active') return true;
+
+        // Check by time (for 'upcoming' tournaments that are actually active)
+        if (data.status === 'upcoming') {
+          const startTimeMillis = toMillis(data.startTime);
+          const endTimeMillis = toMillis(data.endTime);
+          if (startTimeMillis && endTimeMillis &&
+              startTimeMillis <= nowMillis && nowMillis < endTimeMillis) {
+            return true;
+          }
+        }
+
+        return false;
+      });
 
       if (activeTournaments.length === 0) {
         return { success: true, tournaments: [] };

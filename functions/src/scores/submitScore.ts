@@ -140,6 +140,9 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
     // Handle tournament scores - auto-update ALL active tournaments the player has entered
     // This allows a single game to count toward multiple tournaments (weekly + monthly)
     if (sessionData.mode === 'tournament') {
+      console.log(`🎮 TOURNAMENT MODE - Session tournamentId: ${sessionData.tournamentId}`);
+      console.log(`🎮 Player: ${playerAddress}, Game: ${gameId}, Score: ${verifiedScore}`);
+
       // Auto-update all applicable tournament entries
       await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
 
