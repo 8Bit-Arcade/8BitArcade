@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F8S6MFN276"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-F8S6MFN276');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>8BIT Staking | Earn Rewards with Tiered Lock Periods</title>
+    <meta name="title" content="8BIT Staking | Stake & Earn with Multiplied Rewards">
+    <meta name="description" content="Stake your 8BIT tokens and earn up to 3x weighted rewards! Choose from 7 days to 6 months lock periods. 25M token pool distributed over 5 years.">
+    <meta name="keywords" content="8BIT staking, crypto staking, GameFi staking, tiered staking, DeFi rewards, play to earn staking">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://8bitarcade.games/staking.html">
+    <meta property="og:title" content="8BIT Staking | Tiered Rewards System">
+    <meta property="og:description" content="Stake 8BIT tokens with up to 3x reward multiplier. Choose your lock period: 7 days, 1 month, 3 months, or 6 months.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://8bitarcade.games/staking.html">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        /* Staking-specific styles */
+        .staking-hero {
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.2) 0%, rgba(10, 14, 39, 1) 100%);
+            padding: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .staking-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        .arcade-cabinet {
+            background: linear-gradient(145deg, #1a1f3d, #0a0e27);
+            border: 4px solid var(--color-cyan);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            box-shadow:
+                0 0 40px rgba(0, 212, 255, 0.3),
+                inset 0 0 60px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .arcade-cabinet::before {
+            content: '8BIT STAKING';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--color-pink), var(--color-purple));
+            padding: 8px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .screen {
+            background: #000;
+            border: 3px solid #333;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            animation: scanlines 0.1s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 4px; }
+        }
+
+        .tier-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .tier-btn {
+            background: linear-gradient(145deg, #1a1f3d, #0a0e27);
+            border: 3px solid var(--color-purple);
+            border-radius: 10px;
+            padding: 1.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tier-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .tier-btn:hover::before {
+            left: 100%;
+        }
+
+        .tier-btn:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-cyan);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .tier-btn.selected {
+            border-color: var(--color-green);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+
+        .tier-btn.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            color: var(--color-green);
+            font-size: 1rem;
+        }
+
+        .tier-duration {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+            color: var(--color-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-multiplier {
+            font-family: 'VT323', monospace;
+            font-size: 2.5rem;
+            color: var(--color-green);
+            text-shadow: 0 0 20px var(--color-green);
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 10px var(--color-green); }
+            50% { text-shadow: 0 0 30px var(--color-green), 0 0 50px var(--color-green); }
+        }
+
+        .tier-label {
+            font-family: 'VT323', monospace;
+            font-size: 1rem;
+            color: #888;
+            margin-top: 0.5rem;
+        }
+
+        .stake-input-section {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--color-purple);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .stake-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .stake-input input {
+            flex: 1;
+            background: #0a0e27;
+            border: 2px solid var(--color-cyan);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            color: var(--color-green);
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .stake-input input:focus {
+            border-color: var(--color-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .stake-input input::placeholder {
+            color: #666;
+        }
+
+        .max-btn {
+            background: linear-gradient(135deg, var(--color-purple), var(--color-pink));
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .max-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .stake-btn {
+            width: 100%;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--color-green), #00aa66);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stake-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        .stake-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .stats-row:last-child {
+            border-bottom: none;
+        }
+
+        .stats-label {
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: #888;
+        }
+
+        .stats-value {
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            color: var(--color-cyan);
+        }
+
+        .stats-value.highlight {
+            color: var(--color-green);
+            text-shadow: 0 0 10px var(--color-green);
+        }
+
+        .info-panel {
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid var(--color-purple);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .info-panel h3 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--color-pink);
+            margin-bottom: 1rem;
+        }
+
+        .pool-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .pool-stat-box {
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.2), rgba(0, 212, 255, 0.1));
+            border: 2px solid var(--color-cyan);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .pool-stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .pool-stat-number {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            color: var(--color-green);
+            text-shadow: 0 0 15px var(--color-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .pool-stat-label {
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+            color: var(--color-cyan);
+            text-transform: uppercase;
+        }
+
+        .apy-table {
+            width: 100%;
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid var(--color-green);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .apy-table th {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 212, 255, 0.2));
+            padding: 1rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            color: var(--color-green);
+            text-align: center;
+        }
+
+        .apy-table td {
+            padding: 1rem;
+            border-top: 1px solid rgba(0, 255, 136, 0.2);
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .apy-table tr:hover {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .how-it-works {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .step-card {
+            background: linear-gradient(145deg, rgba(10, 14, 39, 0.9), rgba(26, 31, 61, 0.9));
+            border: 2px solid var(--color-purple);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-cyan);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--color-pink), var(--color-purple));
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .step-icon {
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+
+        .step-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            color: var(--color-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-desc {
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+
+        .warning-banner {
+            background: linear-gradient(90deg, rgba(255, 255, 0, 0.1), rgba(255, 102, 0, 0.1));
+            border: 2px solid var(--color-yellow);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .warning-icon {
+            font-size: 2rem;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .pixel-art-deco {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 8rem;
+            pointer-events: none;
+        }
+
+        .pixel-art-deco.top-left {
+            top: 20%;
+            left: 5%;
+        }
+
+        .pixel-art-deco.bottom-right {
+            bottom: 20%;
+            right: 5%;
+        }
+
+        .connect-wallet-section {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .connect-wallet-btn {
+            background: linear-gradient(135deg, var(--color-pink), var(--color-purple));
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.8), 0 0 60px rgba(139, 92, 246, 0.5); }
+        }
+
+        .connect-wallet-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .tier-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tier-duration {
+                font-size: 0.7rem;
+            }
+
+            .tier-multiplier {
+                font-size: 1.8rem;
+            }
+
+            .arcade-cabinet {
+                padding: 1rem;
+                margin: 0 0.5rem;
+            }
+
+            .screen {
+                padding: 1rem;
+            }
+
+            .pool-stat-number {
+                font-size: 1.2rem;
+            }
+
+            .stake-input {
+                flex-direction: column;
+            }
+
+            .stake-input input {
+                width: 100%;
+            }
+
+            .how-it-works {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <a href="index.html" class="pixel-text glow-pink">8BIT ARCADE</a>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html#about">About</a>
+                    <a href="index.html#airdrop" style="color: #ff00ff; font-weight: bold;">Airdrop</a>
+                    <a href="tokenomics.html">Tokenomics</a>
+                    <a href="staking.html" class="active">Staking</a>
+                    <a href="sale.html" class="btn btn-primary">Token Sale</a>
+                    <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-play">Play Now</a>
+                </div>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html#about">About</a>
+        <a href="index.html#airdrop" style="color: #ff00ff;">Airdrop</a>
+        <a href="tokenomics.html">Tokenomics</a>
+        <a href="staking.html">Staking</a>
+        <a href="sale.html">Token Sale</a>
+        <a href="https://play.8bitarcade.games" target="_blank">Play Now</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="staking-hero">
+        <div class="pixel-art-deco top-left">&#127918;</div>
+        <div class="pixel-art-deco bottom-right">&#128176;</div>
+
+        <div class="container" style="position: relative; z-index: 1;">
+            <h1 class="pixel-text glow-green" style="text-align: center; font-size: 2rem; margin-bottom: 0.5rem;">
+                STAKE YOUR 8BIT
+            </h1>
+            <p style="text-align: center; font-size: 1.3rem; color: var(--color-cyan); margin-bottom: 2rem;">
+                Lock longer, earn more! Up to 3x reward multiplier.
+            </p>
+
+            <!-- Pool Stats -->
+            <div class="pool-stats">
+                <div class="pool-stat-box">
+                    <div class="pool-stat-number" id="totalStaked">-</div>
+                    <div class="pool-stat-label">Total Staked</div>
+                </div>
+                <div class="pool-stat-box">
+                    <div class="pool-stat-number" id="poolRemaining">25M</div>
+                    <div class="pool-stat-label">Reward Pool</div>
+                </div>
+                <div class="pool-stat-box">
+                    <div class="pool-stat-number" id="avgApy">-</div>
+                    <div class="pool-stat-label">Est. AVG APY</div>
+                </div>
+                <div class="pool-stat-box">
+                    <div class="pool-stat-number">5 YRS</div>
+                    <div class="pool-stat-label">Distribution Period</div>
+                </div>
+            </div>
+
+            <!-- Arcade Cabinet Staking UI -->
+            <div class="arcade-cabinet">
+                <div class="screen">
+                    <h2 class="pixel-text" style="color: var(--color-pink); font-size: 0.9rem; text-align: center; margin-bottom: 1.5rem;">
+                        SELECT LOCK PERIOD
+                    </h2>
+
+                    <div class="tier-selector">
+                        <div class="tier-btn" data-tier="0" data-duration="7">
+                            <div class="tier-duration">7 DAYS</div>
+                            <div class="tier-multiplier">1.0x</div>
+                            <div class="tier-label">Base Rate</div>
+                        </div>
+                        <div class="tier-btn" data-tier="1" data-duration="30">
+                            <div class="tier-duration">1 MONTH</div>
+                            <div class="tier-multiplier">1.5x</div>
+                            <div class="tier-label">Committed</div>
+                        </div>
+                        <div class="tier-btn selected" data-tier="2" data-duration="90">
+                            <div class="tier-duration">3 MONTHS</div>
+                            <div class="tier-multiplier">2.0x</div>
+                            <div class="tier-label">Dedicated</div>
+                        </div>
+                        <div class="tier-btn" data-tier="3" data-duration="180">
+                            <div class="tier-duration">6 MONTHS</div>
+                            <div class="tier-multiplier">3.0x</div>
+                            <div class="tier-label">Diamond Hands</div>
+                        </div>
+                    </div>
+
+                    <div class="stake-input-section">
+                        <label style="font-family: 'VT323', monospace; font-size: 1.2rem; color: var(--color-cyan); display: block; margin-bottom: 0.5rem;">
+                            AMOUNT TO STAKE
+                        </label>
+                        <div class="stake-input">
+                            <input type="number" id="stakeAmount" placeholder="Enter 8BIT amount" min="1">
+                            <button class="max-btn" id="maxBtn">MAX</button>
+                        </div>
+                        <div style="margin-top: 0.5rem; font-family: 'VT323', monospace; color: #666;">
+                            Balance: <span id="userBalance">-</span> 8BIT
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0, 255, 136, 0.1); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <div class="stats-row">
+                            <span class="stats-label">Lock Duration</span>
+                            <span class="stats-value" id="selectedDuration">90 days</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">Weight Multiplier</span>
+                            <span class="stats-value highlight" id="selectedMultiplier">2.0x</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">Est. APY</span>
+                            <span class="stats-value highlight" id="estimatedApy">-</span>
+                        </div>
+                        <div class="stats-row">
+                            <span class="stats-label">Unlock Date</span>
+                            <span class="stats-value" id="unlockDate">-</span>
+                        </div>
+                    </div>
+
+                    <div id="connectSection" class="connect-wallet-section">
+                        <p style="font-family: 'VT323', monospace; font-size: 1.3rem; color: #888; margin-bottom: 1rem;">
+                            Connect your wallet to start staking
+                        </p>
+                        <button class="connect-wallet-btn" id="connectWallet">
+                            CONNECT WALLET
+                        </button>
+                    </div>
+
+                    <button class="stake-btn" id="stakeBtn" style="display: none;">
+                        &#128640; STAKE NOW
+                    </button>
+                </div>
+
+                <div class="warning-banner">
+                    <span class="warning-icon">&#9888;&#65039;</span>
+                    <div>
+                        <strong style="color: var(--color-yellow);">Early Withdrawal Penalty:</strong>
+                        <span style="font-family: 'VT323', monospace; font-size: 1.2rem; color: #ccc;">
+                            Withdrawing before unlock incurs a 25% penalty. Plan your stake wisely!
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- APY Table Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-cyan">REWARD MULTIPLIERS</h2>
+
+            <table class="apy-table">
+                <thead>
+                    <tr>
+                        <th>LOCK PERIOD</th>
+                        <th>WEIGHT</th>
+                        <th>EST. APY*</th>
+                        <th>EARLY UNLOCK</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color: var(--color-cyan);">7 Days</td>
+                        <td style="color: var(--color-green);">1.0x</td>
+                        <td>~10-15%</td>
+                        <td style="color: var(--color-red);">-25%</td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--color-cyan);">1 Month</td>
+                        <td style="color: var(--color-green);">1.5x</td>
+                        <td>~15-22%</td>
+                        <td style="color: var(--color-red);">-25%</td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--color-cyan);">3 Months</td>
+                        <td style="color: var(--color-green);">2.0x</td>
+                        <td>~20-30%</td>
+                        <td style="color: var(--color-red);">-25%</td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--color-cyan);">6 Months</td>
+                        <td style="color: var(--color-green);">3.0x</td>
+                        <td>~30-45%</td>
+                        <td style="color: var(--color-red);">-25%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="text-align: center; color: #666; font-family: 'VT323', monospace; font-size: 1rem;">
+                * APY varies based on total staked amount. Higher TVL = lower APY. These are estimates based on projected participation.
+            </p>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section" style="background: rgba(139, 92, 246, 0.05);">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-pink">HOW STAKING WORKS</h2>
+
+            <div class="how-it-works">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">&#128176;</div>
+                    <div class="step-title">CHOOSE TIER</div>
+                    <div class="step-desc">Select your lock period from 7 days to 6 months. Longer locks = higher multiplier!</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">&#128274;</div>
+                    <div class="step-title">STAKE TOKENS</div>
+                    <div class="step-desc">Lock your 8BIT tokens. They'll earn rewards proportional to your weighted share.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">&#128200;</div>
+                    <div class="step-title">EARN REWARDS</div>
+                    <div class="step-desc">Rewards accrue every second. Claim anytime or let them compound.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">&#127881;</div>
+                    <div class="step-title">WITHDRAW</div>
+                    <div class="step-desc">After unlock, withdraw penalty-free. Or exit early with 25% penalty.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Panel -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title pixel-text glow-green">STAKING ECONOMICS</h2>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div class="info-panel">
+                    <h3>&#128142; WEIGHTED SHARES</h3>
+                    <p style="font-family: 'VT323', monospace; font-size: 1.2rem; color: #ccc; line-height: 1.6;">
+                        Your share of rewards is based on your <strong style="color: var(--color-green);">weighted stake</strong>, not just raw amount.
+                        <br><br>
+                        Example: 1,000 8BIT at 3x = 3,000 weighted shares
+                        <br>
+                        vs. 1,000 8BIT at 1x = 1,000 weighted shares
+                        <br><br>
+                        The 3x staker earns 3x more rewards per token!
+                    </p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>&#128293; 25M REWARD POOL</h3>
+                    <p style="font-family: 'VT323', monospace; font-size: 1.2rem; color: #ccc; line-height: 1.6;">
+                        The entire 25,000,000 8BIT staking pool is distributed over 5 years.
+                        <br><br>
+                        <strong style="color: var(--color-cyan);">Monthly Distribution:</strong> ~416,666 8BIT
+                        <br>
+                        <strong style="color: var(--color-cyan);">Annual Distribution:</strong> ~5,000,000 8BIT
+                        <br><br>
+                        Rewards are distributed every second to all stakers proportionally!
+                    </p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>&#9888;&#65039; EARLY WITHDRAWAL</h3>
+                    <p style="font-family: 'VT323', monospace; font-size: 1.2rem; color: #ccc; line-height: 1.6;">
+                        Need your tokens before unlock? You can withdraw anytime, but:
+                        <br><br>
+                        <strong style="color: var(--color-red);">25% Penalty</strong> on your staked amount
+                        <br><br>
+                        Penalties go to the treasury to support ecosystem growth. Plan wisely!
+                    </p>
+                </div>
+
+                <div class="info-panel">
+                    <h3>&#128736;&#65039; MULTIPLE STAKES</h3>
+                    <p style="font-family: 'VT323', monospace; font-size: 1.2rem; color: #ccc; line-height: 1.6;">
+                        You can create up to <strong style="color: var(--color-cyan);">50 separate stakes</strong> with different tiers.
+                        <br><br>
+                        This lets you ladder your positions:
+                        <br>
+                        &#8226; Short-term liquidity needs (7d tier)
+                        <br>
+                        &#8226; Medium-term gains (1-3 month tiers)
+                        <br>
+                        &#8226; Maximum rewards (6 month tier)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section" style="background: linear-gradient(180deg, var(--color-darker) 0%, rgba(139, 92, 246, 0.2) 100%); padding: 4rem 0;">
+        <div class="container" style="text-align: center;">
+            <h2 class="pixel-text glow-yellow" style="font-size: 1.5rem; margin-bottom: 1rem;">
+                READY TO STAKE?
+            </h2>
+            <p style="font-family: 'VT323', monospace; font-size: 1.5rem; color: var(--color-cyan); margin-bottom: 2rem;">
+                Start earning rewards now. The earlier you stake, the more you earn!
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="#" onclick="document.querySelector('.arcade-cabinet').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-primary" style="font-size: 1rem; padding: 1rem 2rem;">
+                    &#128640; START STAKING
+                </a>
+                <a href="tokenomics.html" class="btn btn-secondary" style="font-size: 1rem; padding: 1rem 2rem;">
+                    &#128218; VIEW TOKENOMICS
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>8-BIT ARCADE</h4>
+                    <p>Play Classic Games. Earn Real Rewards.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Links</h4>
+                    <a href="index.html">Home</a>
+                    <a href="tokenomics.html">Tokenomics</a>
+                    <a href="staking.html">Staking</a>
+                    <a href="sale.html">Token Sale</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="disclaimer.html">Disclaimer</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <a href="https://x.com/8BitArcadeGames" target="_blank">Twitter/X</a>
+                    <a href="https://discord.gg/8bitarcade" target="_blank">Discord</a>
+                    <a href="https://t.me/EightBitArcade" target="_blank">Telegram</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024-2025 8-Bit Arcade. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('active');
+            });
+        }
+
+        // Tier selection
+        const tierBtns = document.querySelectorAll('.tier-btn');
+        const selectedDuration = document.getElementById('selectedDuration');
+        const selectedMultiplier = document.getElementById('selectedMultiplier');
+        const unlockDate = document.getElementById('unlockDate');
+
+        const tierData = {
+            0: { duration: '7 days', multiplier: '1.0x', days: 7 },
+            1: { duration: '30 days', multiplier: '1.5x', days: 30 },
+            2: { duration: '90 days', multiplier: '2.0x', days: 90 },
+            3: { duration: '180 days', multiplier: '3.0x', days: 180 }
+        };
+
+        let selectedTier = 2; // Default to 3 months
+
+        tierBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tierBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedTier = parseInt(btn.dataset.tier);
+
+                const tier = tierData[selectedTier];
+                selectedDuration.textContent = tier.duration;
+                selectedMultiplier.textContent = tier.multiplier;
+
+                const unlock = new Date();
+                unlock.setDate(unlock.getDate() + tier.days);
+                unlockDate.textContent = unlock.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            });
+        });
+
+        // Initialize unlock date
+        const initialUnlock = new Date();
+        initialUnlock.setDate(initialUnlock.getDate() + 90);
+        unlockDate.textContent = initialUnlock.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+
+        // Max button (placeholder)
+        const maxBtn = document.getElementById('maxBtn');
+        const stakeAmount = document.getElementById('stakeAmount');
+
+        maxBtn.addEventListener('click', () => {
+            // In real implementation, this would set to user's balance
+            stakeAmount.value = '1000';
+        });
+
+        // Connect wallet button (placeholder)
+        const connectWallet = document.getElementById('connectWallet');
+        const connectSection = document.getElementById('connectSection');
+        const stakeBtn = document.getElementById('stakeBtn');
+
+        connectWallet.addEventListener('click', () => {
+            // In real implementation, this would trigger wallet connection
+            alert('Wallet connection will be available when the dApp launches. Stay tuned!');
+        });
+
+        // Add some visual polish - random glitch effect on title
+        const title = document.querySelector('.staking-hero h1');
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                title.style.textShadow = '2px 0 var(--color-pink), -2px 0 var(--color-cyan)';
+                setTimeout(() => {
+                    title.style.textShadow = '';
+                }, 100);
+            }
+        }, 500);
+    </script>
+</body>
+</html>
