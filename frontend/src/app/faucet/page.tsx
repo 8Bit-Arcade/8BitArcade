@@ -19,7 +19,7 @@ export default function FaucetPage() {
 
   // Hardcode faucet constants (from contract)
   const claimAmount = BigInt("10000000000000000000000"); // 10,000 8BIT
-  const minBalance = BigInt("5000000000000000000000");  // 5,000 8BIT
+  const minBalance = BigInt("0");  // No minimum - anyone can claim once per 24h
 
   const { data: userInfo, refetch: refetchUserInfo, error: userInfoError } = useReadContract({
     address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
@@ -138,8 +138,7 @@ export default function FaucetPage() {
     );
   }
 
-  // Check if user balance is below minimum threshold
-  const belowMinBalance = Number(userBalance) < Number(minBalance);
+  // No minimum balance threshold - anyone can claim once per 24 hours
 
   return (
     <div className="min-h-screen py-8">
@@ -181,7 +180,7 @@ export default function FaucetPage() {
               <div className="mb-6 space-y-3">
                 <div className="flex justify-between items-center font-arcade text-sm">
                   <span className="text-gray-400">Your Balance:</span>
-                  <span className={belowMinBalance ? 'text-arcade-red' : 'text-arcade-green'}>
+                  <span className="text-arcade-green">
                     {formatNumber(Number(formatEther(userBalance)))} 8BIT
                   </span>
                 </div>
@@ -207,15 +206,6 @@ export default function FaucetPage() {
               <Button variant="secondary" size="lg" className="w-full" disabled>
                 Connect Wallet to Claim
               </Button>
-            ) : !belowMinBalance ? (
-              <div>
-                <Button variant="secondary" size="lg" className="w-full" disabled>
-                  Balance Above Minimum
-                </Button>
-                <p className="font-arcade text-xs text-center text-gray-500 mt-2">
-                  Your balance must be below {formatNumber(Number(formatEther(minBalance)))} 8BIT to claim
-                </p>
-              </div>
             ) : !canClaim ? (
               <div>
                 <Button variant="secondary" size="lg" className="w-full" disabled>
@@ -259,10 +249,6 @@ export default function FaucetPage() {
               <div className="flex justify-between">
                 <span className="text-gray-400">Cooldown:</span>
                 <span className="text-white">24 hours</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Min. Balance:</span>
-                <span className="text-white">5,000 8BIT</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Network:</span>
@@ -331,18 +317,14 @@ export default function FaucetPage() {
             </li>
             <li className="flex gap-2">
               <span className="text-arcade-green">2.</span>
-              <span>Make sure your balance is below 5,000 8BIT</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-arcade-green">3.</span>
               <span>Click "Claim Tokens" to receive 10,000 8BIT</span>
             </li>
             <li className="flex gap-2">
-              <span className="text-arcade-green">4.</span>
+              <span className="text-arcade-green">3.</span>
               <span>Wait 24 hours before claiming again</span>
             </li>
             <li className="flex gap-2">
-              <span className="text-arcade-green">5.</span>
+              <span className="text-arcade-green">4.</span>
               <span>Use tokens to test games, tournaments, and features!</span>
             </li>
           </ol>

@@ -26,7 +26,7 @@ contract TestnetFaucet is Ownable, ReentrancyGuard {
     // Faucet parameters
     uint256 public constant CLAIM_AMOUNT = 10_000 * 10**18; // 10,000 8BIT
     uint256 public constant COOLDOWN_PERIOD = 24 hours;
-    uint256 public constant MIN_BALANCE_THRESHOLD = 5_000 * 10**18; // 5,000 8BIT
+    uint256 public constant MIN_BALANCE_THRESHOLD = 0; // No minimum - anyone can claim once per 24h
 
     // User claim tracking
     mapping(address => uint256) public lastClaimTime;
@@ -74,12 +74,7 @@ contract TestnetFaucet is Ownable, ReentrancyGuard {
         require(!isPaused, "Faucet is paused");
         require(canClaim(msg.sender), "Cannot claim yet");
 
-        // Check user's current balance
-        uint256 userBalance = eightBitToken.balanceOf(msg.sender);
-        require(
-            userBalance < MIN_BALANCE_THRESHOLD,
-            "Balance must be below 5,000 8BIT to claim"
-        );
+        // No balance threshold check - anyone can claim once per 24 hours
 
         // Check faucet has enough tokens
         uint256 faucetBalance = eightBitToken.balanceOf(address(this));
