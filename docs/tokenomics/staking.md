@@ -2,7 +2,7 @@
 
 ## Earn Passive Income by Holding 8BIT
 
-Staking allows you to lock your 8BIT tokens and earn passive rewards over time. This feature is planned for Phase 3 (Months 7-12 post-launch).
+Staking allows you to lock your 8BIT tokens and earn passive rewards over time. This feature is planned for Phase 4 (In progress...).
 
 ## Staking Overview
 
@@ -235,17 +235,18 @@ Your staking dashboard will show:
 ### Phase 2: Growth (Now)
 
 * ❌ Staking not available
-* Building staking smart contracts
 * Community feedback on mechanics
+* Building staking smart contracts
 
 ### Phase 3: Staking Launch (Mainnet Launch)
 
-* ✅ Staking contract deployed
+* ✅ Staking contract deployed (mainnet)
 * ✅ Start earning passive rewards
 * ✅ Boosted game rewards active
 
 ### Phase 4: Governance (June 2026 +)
 
+* ✅ Voting mechanisms enabled
 * ✅ Voting mechanisms enabled
 * ✅ Community-driven decisions
 * ✅ DAO formation begins
