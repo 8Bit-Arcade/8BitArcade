@@ -25,7 +25,8 @@ const TOKEN_ADDRESSES: Record<string, string> = {
   arbitrumOne: "0x0000000000000000000000000000000000000000",     // TODO: Add mainnet address
 };
 
-const STAKING_POOL_AMOUNT = ethers.parseEther("25000000"); // 25M 8BIT
+// Fund with available balance (can add more later)
+const STAKING_POOL_AMOUNT = ethers.parseEther("9900000"); // ~10M 8BIT initial funding
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -53,29 +54,27 @@ async function main() {
   const deployerTokenBalance = await token.balanceOf(deployer.address);
   console.log("Deployer 8BIT Balance:", ethers.formatEther(deployerTokenBalance), "8BIT");
 
-  if (deployerTokenBalance < STAKING_POOL_AMOUNT) {
-    throw new Error(
-      `Insufficient 8BIT balance. Need ${ethers.formatEther(STAKING_POOL_AMOUNT)} 8BIT, ` +
-      `have ${ethers.formatEther(deployerTokenBalance)} 8BIT`
-    );
-  }
-  console.log("✅ Sufficient balance for staking pool");
+  const fundingAmount = deployerTokenBalance < STAKING_POOL_AMOUNT
+    ? deployerTokenBalance - ethers.parseEther("100000") // Leave 100k for other uses
+    : STAKING_POOL_AMOUNT;
+  console.log("💰 Will fund staking pool with:", ethers.formatEther(fundingAmount), "8BIT");
   console.log();
 
-  // Deploy TieredStaking
+  // Deploy TieredStaking (treasury receives early withdrawal penalties)
   console.log("📝 Deploying TieredStaking...");
+  console.log("   Treasury (for penalties):", deployer.address);
   const TieredStaking = await ethers.getContractFactory("TieredStaking");
-  const staking = await TieredStaking.deploy(tokenAddress);
+  const staking = await TieredStaking.deploy(tokenAddress, deployer.address);
   await staking.waitForDeployment();
   const stakingAddress = await staking.getAddress();
   console.log("✅ TieredStaking deployed to:", stakingAddress);
   console.log();
 
-  // Fund the staking contract with 25M tokens
-  console.log("💰 Funding TieredStaking with 25M 8BIT...");
-  const fundTx = await token.transfer(stakingAddress, STAKING_POOL_AMOUNT);
+  // Fund the staking contract
+  console.log("💰 Funding TieredStaking...");
+  const fundTx = await token.transfer(stakingAddress, fundingAmount);
   await fundTx.wait();
-  console.log("✅ TieredStaking funded with", ethers.formatEther(STAKING_POOL_AMOUNT), "8BIT");
+  console.log("✅ TieredStaking funded with", ethers.formatEther(fundingAmount), "8BIT");
   console.log();
 
   // Verify the funding
@@ -91,7 +90,7 @@ async function main() {
   console.log();
   console.log("NEXT STEPS:");
   console.log("1. Verify the contract on Arbiscan:");
-  console.log(`   npx hardhat verify --network ${networkName} ${stakingAddress} ${tokenAddress}`);
+  console.log(`   npx hardhat verify --network ${networkName} ${stakingAddress} ${tokenAddress} ${deployer.address}`);
   console.log();
   console.log("2. Update frontend/src/config/contracts.ts:");
   console.log(`   TIERED_STAKING: '${stakingAddress}',`);
