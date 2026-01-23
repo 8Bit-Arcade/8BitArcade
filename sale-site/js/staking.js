@@ -31,28 +31,47 @@ const TOKEN_ABI = [
 ];
 
 const STAKING_ABI = [
+    // Core staking functions
     'function stake(uint256 amount, uint8 lockTier) external',
-    'function withdraw(uint256 stakeIndex) external',
-    'function claimRewards(uint256 stakeIndex) external',
+    'function withdraw(uint256 stakeId) external',
+    'function claimReward(uint256 stakeId) external',
     'function claimAllRewards() external',
-    'function calculatePendingRewards(address user, uint256 stakeIndex) view returns (uint256)',
-    'function getUserStakes(address user) view returns (tuple(uint256 amount, uint256 weightedAmount, uint256 startTime, uint256 unlockTime, uint256 lastClaimTime, uint8 lockTier, bool active)[])',
-    'function getTotalUserStaked(address user) view returns (uint256)',
-    'function getTotalUserWeightedStake(address user) view returns (uint256)',
-    'function getUserActiveStakeCount(address user) view returns (uint256)',
-    'function totalStaked() view returns (uint256)',
+    'function emergencyWithdraw(uint256 stakeId) external',
+
+    // View functions - user data
+    'function getUserStakes(address account) view returns (uint256[] amounts, uint256[] unlockTimes, uint256[] rewards, uint8[] tiers)',
+    'function userTotalStaked(address) view returns (uint256)',
+    'function userStakeCount(address) view returns (uint256)',
+    'function earned(address account, uint256 stakeId) view returns (uint256)',
+    'function totalEarned(address account) view returns (uint256)',
+
+    // View functions - pool stats
+    'function getStakingStats() view returns (uint256 totalRawStake, uint256 totalWeightedStake, uint256 totalRewardsDistributed, uint256 remainingRewards, uint256 stakingStartTime, uint256 timeRemaining)',
+    'function totalRawStake() view returns (uint256)',
     'function totalWeightedStake() view returns (uint256)',
     'function totalRewardsDistributed() view returns (uint256)',
-    'function rewardsRemaining() view returns (uint256)',
-    'function stakingEndTime() view returns (uint256)',
-    'function getRewardRate() view returns (uint256)',
-    'function paused() view returns (bool)',
-    'function MIN_STAKE() view returns (uint256)',
+    'function stakingStartTime() view returns (uint256)',
+    'function rewardPerWeightedToken() view returns (uint256)',
+
+    // Constants
+    'function TOTAL_STAKING_POOL() view returns (uint256)',
+    'function DISTRIBUTION_PERIOD() view returns (uint256)',
+    'function MIN_STAKE_AMOUNT() view returns (uint256)',
     'function MAX_STAKES_PER_USER() view returns (uint256)',
     'function EARLY_WITHDRAWAL_PENALTY_BPS() view returns (uint256)',
-    'event Staked(address indexed user, uint256 amount, uint256 weightedAmount, uint8 lockTier, uint256 unlockTime)',
-    'event Withdrawn(address indexed user, uint256 stakeIndex, uint256 amount, uint256 penalty)',
-    'event RewardsClaimed(address indexed user, uint256 stakeIndex, uint256 amount)'
+
+    // Tier info
+    'function getLockDuration(uint8 tier) view returns (uint256)',
+    'function getWeightMultiplier(uint8 tier) view returns (uint256)',
+    'function getEstimatedAPY(uint8 tier) view returns (uint256)',
+
+    // Pausable
+    'function paused() view returns (bool)',
+
+    // Events
+    'event Staked(address indexed user, uint256 indexed stakeId, uint256 amount, uint256 weightedAmount, uint8 tier)',
+    'event Withdrawn(address indexed user, uint256 indexed stakeId, uint256 amount, uint256 penalty)',
+    'event RewardClaimed(address indexed user, uint256 indexed stakeId, uint256 reward)'
 ];
 
 // Lock tier configurations
@@ -252,26 +271,30 @@ async function loadPoolStats() {
         const readProvider = new ethers.providers.JsonRpcProvider(DIRECT_RPC);
         const readStaking = new ethers.Contract(CONTRACT_ADDRESSES.STAKING, STAKING_ABI, readProvider);
 
-        const [totalStaked, rewardsRemaining, totalDistributed, stakingEndTime, rewardRate, paused] = await Promise.all([
-            readStaking.totalStaked(),
-            readStaking.rewardsRemaining(),
-            readStaking.totalRewardsDistributed(),
-            readStaking.stakingEndTime(),
-            readStaking.getRewardRate(),
+        // Use getStakingStats() which returns all stats in one call
+        const [stats, isPaused] = await Promise.all([
+            readStaking.getStakingStats(),
             readStaking.paused()
         ]);
+
+        // Destructure stats: (totalRawStake, totalWeightedStake, totalRewardsDistributed, remainingRewards, stakingStartTime, timeRemaining)
+        const totalStaked = stats[0];
+        const totalWeightedStake = stats[1];
+        const totalDistributed = stats[2];
+        const rewardsRemaining = stats[3];
+        const stakingStartTime = stats[4];
+        const timeRemaining = stats[5];
 
         // Update stats display
         document.getElementById('totalStaked').textContent = formatNumber(ethers.utils.formatEther(totalStaked));
         document.getElementById('rewardsRemaining').textContent = formatNumber(ethers.utils.formatEther(rewardsRemaining));
         document.getElementById('totalDistributed').textContent = formatNumber(ethers.utils.formatEther(totalDistributed));
 
-        // Calculate time remaining
-        const now = Math.floor(Date.now() / 1000);
-        const remaining = stakingEndTime.toNumber() - now;
-        if (remaining > 0) {
-            const years = Math.floor(remaining / (365 * 24 * 60 * 60));
-            const months = Math.floor((remaining % (365 * 24 * 60 * 60)) / (30 * 24 * 60 * 60));
+        // Display time remaining
+        const remainingSeconds = timeRemaining.toNumber();
+        if (remainingSeconds > 0) {
+            const years = Math.floor(remainingSeconds / (365 * 24 * 60 * 60));
+            const months = Math.floor((remainingSeconds % (365 * 24 * 60 * 60)) / (30 * 24 * 60 * 60));
             document.getElementById('timeRemaining').textContent = `${years}y ${months}m`;
         } else {
             document.getElementById('timeRemaining').textContent = 'Ended';
@@ -280,29 +303,25 @@ async function loadPoolStats() {
         // Update staking status
         const statusEl = document.getElementById('stakingStatus');
         const statusTextEl = document.getElementById('stakingStatusText');
-        if (paused) {
+        if (isPaused) {
             statusEl.classList.add('status-paused');
             statusTextEl.textContent = 'PAUSED';
+        } else if (stakingStartTime.toNumber() === 0) {
+            statusEl.classList.add('status-paused');
+            statusTextEl.textContent = 'NOT STARTED';
         } else {
             statusEl.classList.add('status-live');
             statusTextEl.textContent = 'LIVE';
         }
 
-        // Calculate and display APYs for each tier
-        // APY = (rewardRate * secondsPerYear * weight) / (totalWeightedStake * 10000) * 100
-        const totalWeightedStake = await readStaking.totalWeightedStake();
-        if (!totalWeightedStake.isZero()) {
-            const secondsPerYear = 365 * 24 * 60 * 60;
-            for (let i = 0; i < 4; i++) {
-                const weight = LOCK_TIERS[i].weight;
-                // APY = (rewardRate * secondsPerYear * weight) / totalWeightedStake / 10000 * 100
-                const apyBN = rewardRate.mul(secondsPerYear).mul(weight).mul(100).div(totalWeightedStake).div(10000);
-                const apy = apyBN.toNumber();
-                document.getElementById(`apy${i}`).textContent = `~${apy}% APY`;
-            }
-        } else {
-            // No stakes yet, show estimated APY based on initial rewards
-            for (let i = 0; i < 4; i++) {
+        // Get APY estimates for each tier from contract
+        for (let i = 0; i < 4; i++) {
+            try {
+                const apyBps = await readStaking.getEstimatedAPY(i);
+                const apyPercent = apyBps.toNumber() / 100; // Convert basis points to percent
+                document.getElementById(`apy${i}`).textContent = `~${apyPercent.toFixed(0)}% APY`;
+            } catch (e) {
+                // Fallback if no stakes yet
                 document.getElementById(`apy${i}`).textContent = 'Est. APY';
             }
         }
@@ -317,10 +336,14 @@ async function loadUserStakes() {
     if (!stakingContract || !userAddress) return;
 
     try {
-        const stakes = await stakingContract.read.getUserStakes(userAddress);
-        const activeStakes = stakes.filter(s => s.active);
+        // getUserStakes returns 4 arrays: (amounts[], unlockTimes[], rewards[], tiers[])
+        const result = await stakingContract.read.getUserStakes(userAddress);
+        const amounts = result[0];
+        const unlockTimes = result[1];
+        const rewards = result[2];
+        const tiers = result[3];
 
-        if (activeStakes.length === 0) {
+        if (amounts.length === 0) {
             userStakesSection.style.display = 'none';
             return;
         }
@@ -334,23 +357,23 @@ async function loadUserStakes() {
         // Clear and populate stakes list
         stakesListEl.innerHTML = '';
 
-        for (let i = 0; i < stakes.length; i++) {
-            const stake = stakes[i];
-            if (!stake.active) continue;
+        for (let i = 0; i < amounts.length; i++) {
+            const amount = amounts[i];
+            const unlockTime = unlockTimes[i];
+            const reward = rewards[i];
+            const tier = tiers[i];
 
-            totalStaked = totalStaked.add(stake.amount);
-
-            const pendingRewards = await stakingContract.read.calculatePendingRewards(userAddress, i);
-            totalRewards = totalRewards.add(pendingRewards);
+            totalStaked = totalStaked.add(amount);
+            totalRewards = totalRewards.add(reward);
 
             const now = Math.floor(Date.now() / 1000);
-            const isUnlocked = now >= stake.unlockTime.toNumber();
+            const isUnlocked = now >= unlockTime.toNumber();
 
             const stakeEl = document.createElement('div');
             stakeEl.className = `stake-item ${isUnlocked ? 'unlocked' : 'locked'}`;
             stakeEl.innerHTML = `
                 <div class="stake-header">
-                    <div class="stake-amount pixel-text">${formatNumber(ethers.utils.formatEther(stake.amount))} 8BIT</div>
+                    <div class="stake-amount pixel-text">${formatNumber(ethers.utils.formatEther(amount))} 8BIT</div>
                     <div class="stake-status ${isUnlocked ? 'unlocked' : 'locked'} pixel-text">
                         ${isUnlocked ? 'UNLOCKED' : 'LOCKED'}
                     </div>
@@ -358,20 +381,20 @@ async function loadUserStakes() {
                 <div class="stake-details">
                     <div class="stake-detail">
                         <div class="stake-detail-label">Lock Tier</div>
-                        <div class="stake-detail-value pixel-text">${LOCK_TIERS[stake.lockTier].name}</div>
+                        <div class="stake-detail-value pixel-text">${LOCK_TIERS[tier].name}</div>
                     </div>
                     <div class="stake-detail">
                         <div class="stake-detail-label">Multiplier</div>
-                        <div class="stake-detail-value pixel-text">${LOCK_TIERS[stake.lockTier].multiplier}</div>
+                        <div class="stake-detail-value pixel-text">${LOCK_TIERS[tier].multiplier}</div>
                     </div>
                     <div class="stake-detail">
                         <div class="stake-detail-label">Pending Rewards</div>
-                        <div class="stake-detail-value pixel-text glow-green">${formatNumber(ethers.utils.formatEther(pendingRewards))} 8BIT</div>
+                        <div class="stake-detail-value pixel-text glow-green">${formatNumber(ethers.utils.formatEther(reward))} 8BIT</div>
                     </div>
                 </div>
                 <div class="stake-detail" style="margin-bottom: 1rem;">
                     <div class="stake-detail-label">Unlock Date</div>
-                    <div class="stake-detail-value">${new Date(stake.unlockTime.toNumber() * 1000).toLocaleDateString()} ${new Date(stake.unlockTime.toNumber() * 1000).toLocaleTimeString()}</div>
+                    <div class="stake-detail-value">${new Date(unlockTime.toNumber() * 1000).toLocaleDateString()} ${new Date(unlockTime.toNumber() * 1000).toLocaleTimeString()}</div>
                 </div>
                 ${!isUnlocked ? `
                 <div class="warning-box">
@@ -379,7 +402,7 @@ async function loadUserStakes() {
                 </div>
                 ` : ''}
                 <div class="stake-actions" style="margin-top: 1rem;">
-                    <button class="btn btn-secondary" onclick="claimRewards(${i})">Claim Rewards</button>
+                    <button class="btn btn-secondary" onclick="claimReward(${i})">Claim Rewards</button>
                     <button class="btn ${isUnlocked ? 'btn-primary' : 'btn-warning'}" onclick="withdrawStake(${i}, ${!isUnlocked})">
                         ${isUnlocked ? 'Withdraw' : 'Withdraw (25% Penalty)'}
                     </button>
@@ -476,12 +499,12 @@ async function stakeTokens() {
 }
 
 // Claim rewards for a single stake
-async function claimRewards(stakeIndex) {
+async function claimReward(stakeIndex) {
     if (!stakingContract || !userAddress) return;
 
     try {
         showTxStatus('Claiming rewards...', 'pending');
-        const tx = await stakingContract.claimRewards(stakeIndex);
+        const tx = await stakingContract.claimReward(stakeIndex);
         await tx.wait();
         showTxStatus('Rewards claimed successfully!', 'success');
 
