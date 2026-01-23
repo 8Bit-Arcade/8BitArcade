@@ -27,11 +27,11 @@
     <meta property="og:image" content="https://8bitarcade.games/images/8bit-logo.png">
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="8bit Arcade">
+    <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://8bitarcade.games/">
     <meta property="twitter:title" content="8-Bit Arcade | Play to Earn Retro Crypto Games">
     <meta property="twitter:description" content="Play classic arcade games and earn cryptocurrency. Free Web3 gaming with daily rewards, tournaments & real prizes.">
-    <meta property="twitter:image" content="https://8bitarcade.games/images/8bit-logo.png?v=2">
+    <meta property="twitter:image" content="https://8bitarcade.games/images/8bit-logo.png">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://8bitarcade.games/">
@@ -79,7 +79,9 @@
                     <a href="#about">About</a>
                     <a href="#airdrop" style="color: #ff00ff; font-weight: bold;">Airdrop</a>
                     <a href="tokenomics.html">Tokenomics</a>
-                    <a href="staking.html">Staking</a>
+                    <a href="staking.html" style="color: #00ff88; font-weight: bold;">Staking</a>
+                    <a href="#roadmap">Roadmap</a>
+                    <button id="connectWalletBtn" class="btn btn-secondary" onclick="connectWallet()">Connect Wallet</button>
                     <a href="sale.html" class="btn btn-primary">Token Sale</a>
                     <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-play">Play Now</a>
                 </div>
@@ -534,5 +536,78 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script>
+        // Simple wallet connection for main page
+        const ARBITRUM_SEPOLIA = {
+            chainId: '0x66eee',
+            chainName: 'Arbitrum Sepolia',
+            rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+            blockExplorerUrls: ['https://sepolia.arbiscan.io'],
+            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+        };
+
+        async function connectWallet() {
+            const btn = document.getElementById('connectWalletBtn');
+
+            if (!window.ethereum) {
+                alert('Please install MetaMask or another Web3 wallet to connect.');
+                return;
+            }
+
+            try {
+                btn.textContent = 'Connecting...';
+
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                // Switch to Arbitrum Sepolia
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: ARBITRUM_SEPOLIA.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [ARBITRUM_SEPOLIA]
+                        });
+                    }
+                }
+
+                // Update button with address
+                const addr = accounts[0];
+                btn.textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
+                btn.classList.add('connected');
+
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', (accs) => {
+                    if (accs.length === 0) {
+                        btn.textContent = 'Connect Wallet';
+                        btn.classList.remove('connected');
+                    } else {
+                        btn.textContent = accs[0].slice(0, 6) + '...' + accs[0].slice(-4);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                btn.textContent = 'Connect Wallet';
+                alert('Failed to connect wallet: ' + error.message);
+            }
+        }
+
+        // Check if already connected on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    const btn = document.getElementById('connectWalletBtn');
+                    btn.textContent = accounts[0].slice(0, 6) + '...' + accounts[0].slice(-4);
+                    btn.classList.add('connected');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
