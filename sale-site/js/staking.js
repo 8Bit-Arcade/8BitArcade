@@ -248,8 +248,8 @@ async function loadTokenBalance() {
 // Load pool stats
 async function loadPoolStats() {
     try {
-        // Create a read-only provider if not connected
-        const readProvider = provider || new ethers.providers.JsonRpcProvider(NETWORK_CONFIG.rpcUrls[0]);
+        // Always use direct RPC for reads (bypasses MetaMask's potentially bad RPC)
+        const readProvider = new ethers.providers.JsonRpcProvider(DIRECT_RPC);
         const readStaking = new ethers.Contract(CONTRACT_ADDRESSES.STAKING, STAKING_ABI, readProvider);
 
         const [totalStaked, rewardsRemaining, totalDistributed, stakingEndTime, rewardRate, paused] = await Promise.all([
