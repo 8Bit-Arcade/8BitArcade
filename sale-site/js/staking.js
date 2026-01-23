@@ -126,7 +126,7 @@ async function connectWallet() {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         userAddress = accounts[0];
 
-        // Check and switch network
+        // Check and switch network (also updates RPC to working endpoint)
         await switchToArbitrumSepolia();
 
         // Setup ethers
@@ -163,6 +163,7 @@ async function connectWallet() {
 // Switch to Arbitrum Sepolia
 async function switchToArbitrumSepolia() {
     try {
+        // First try to switch
         await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: NETWORK_CONFIG.chainId }]
@@ -177,6 +178,23 @@ async function switchToArbitrumSepolia() {
         } else {
             throw switchError;
         }
+    }
+
+    // Force update RPC to working public endpoint (fixes expired Alchemy keys)
+    try {
+        await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+                chainId: NETWORK_CONFIG.chainId,
+                chainName: 'Arbitrum Sepolia',
+                rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+                blockExplorerUrls: ['https://sepolia.arbiscan.io'],
+                nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+            }]
+        });
+    } catch (e) {
+        // Ignore - some wallets don't support updating existing networks
+        console.log('Could not update network RPC:', e.message);
     }
 }
 
