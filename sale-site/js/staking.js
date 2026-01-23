@@ -1,5 +1,6 @@
 // 8BIT Staking - Contract Interactions
 // Network: Arbitrum Sepolia (Testnet)
+// Version: 2.0.0 - Updated ABI for TieredStaking contract
 
 const NETWORK_CONFIG = {
     chainId: '0x66eee', // 421614 in hex
@@ -463,8 +464,16 @@ async function stakeTokens() {
         stakeButton.disabled = true;
         stakeButton.textContent = 'Processing...';
 
+        // Check balance first
+        const balance = await tokenContract.read.balanceOf(userAddress);
+        if (balance.lt(amountWei)) {
+            showTxStatus('Insufficient 8BIT balance. You have ' + ethers.utils.formatEther(balance) + ' 8BIT', 'error');
+            return;
+        }
+
         // Check allowance using direct RPC (bypasses MetaMask's bad RPC)
         const allowance = await tokenContract.read.allowance(userAddress, CONTRACT_ADDRESSES.STAKING);
+        console.log('Current allowance:', ethers.utils.formatEther(allowance));
 
         if (allowance.lt(amountWei)) {
             showTxStatus('Approving tokens...', 'pending');
@@ -473,9 +482,23 @@ async function stakeTokens() {
             showTxStatus('Tokens approved! Now staking...', 'pending');
         }
 
+        // Simulate stake first to get actual revert reason
+        showTxStatus('Preparing stake transaction...', 'pending');
+        console.log('Staking:', amount, '8BIT with tier:', selectedTier);
+
+        try {
+            await stakingContract.callStatic.stake(amountWei, selectedTier);
+        } catch (simError) {
+            console.error('Stake simulation failed:', simError);
+            const reason = simError.reason || simError.error?.message || simError.message;
+            showTxStatus('Stake would fail: ' + reason, 'error');
+            return;
+        }
+
         // Stake
-        showTxStatus('Staking tokens...', 'pending');
+        showTxStatus('Staking tokens... Confirm in wallet', 'pending');
         const stakeTx = await stakingContract.stake(amountWei, selectedTier);
+        showTxStatus('Transaction sent, waiting for confirmation...', 'pending');
         await stakeTx.wait();
 
         showTxStatus('Successfully staked ' + amount + ' 8BIT!', 'success');
@@ -491,7 +514,15 @@ async function stakeTokens() {
 
     } catch (error) {
         console.error('Staking error:', error);
-        showTxStatus('Staking failed: ' + (error.reason || error.message), 'error');
+        // Extract more useful error message
+        let errorMsg = error.reason || error.message;
+        if (error.error && error.error.message) {
+            errorMsg = error.error.message;
+        }
+        if (error.data && error.data.message) {
+            errorMsg = error.data.message;
+        }
+        showTxStatus('Staking failed: ' + errorMsg, 'error');
     } finally {
         stakeButton.disabled = false;
         stakeButton.textContent = 'Stake 8BIT';
