@@ -13,6 +13,9 @@ const NETWORK_CONFIG = {
     }
 };
 
+// Direct RPC provider for read operations (bypasses MetaMask's potentially bad RPC)
+const DIRECT_RPC = 'https://sepolia-rollup.arbitrum.io/rpc';
+
 const CONTRACT_ADDRESSES = {
     TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
     STAKING: '0xC193451f59De0df09EC8359D091F8890A80F20c4'
@@ -129,13 +132,23 @@ async function connectWallet() {
         // Check and switch network (also updates RPC to working endpoint)
         await switchToArbitrumSepolia();
 
-        // Setup ethers
+        // Setup ethers - use direct RPC for reads to bypass MetaMask's potentially bad RPC
+        const directProvider = new ethers.providers.JsonRpcProvider(DIRECT_RPC);
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
 
-        // Setup contracts
+        // Setup contracts - use direct provider for reads, signer for writes
+        // Read contracts (for allowance, balance checks)
+        const tokenRead = new ethers.Contract(CONTRACT_ADDRESSES.TOKEN, TOKEN_ABI, directProvider);
+        const stakingRead = new ethers.Contract(CONTRACT_ADDRESSES.STAKING, STAKING_ABI, directProvider);
+
+        // Write contracts (for approve, stake, withdraw - needs signer)
         tokenContract = new ethers.Contract(CONTRACT_ADDRESSES.TOKEN, TOKEN_ABI, signer);
         stakingContract = new ethers.Contract(CONTRACT_ADDRESSES.STAKING, STAKING_ABI, signer);
+
+        // Store read contracts for use in read operations
+        tokenContract.read = tokenRead;
+        stakingContract.read = stakingRead;
 
         // Update UI
         connectWalletBtn.textContent = formatAddress(userAddress);
@@ -223,7 +236,7 @@ async function loadTokenBalance() {
     if (!tokenContract || !userAddress) return;
 
     try {
-        const balance = await tokenContract.balanceOf(userAddress);
+        const balance = await tokenContract.read.balanceOf(userAddress);
         const formatted = ethers.utils.formatEther(balance);
         tokenBalanceEl.textContent = `Balance: ${formatNumber(formatted)} 8BIT`;
     } catch (error) {
@@ -304,7 +317,7 @@ async function loadUserStakes() {
     if (!stakingContract || !userAddress) return;
 
     try {
-        const stakes = await stakingContract.getUserStakes(userAddress);
+        const stakes = await stakingContract.read.getUserStakes(userAddress);
         const activeStakes = stakes.filter(s => s.active);
 
         if (activeStakes.length === 0) {
@@ -327,7 +340,7 @@ async function loadUserStakes() {
 
             totalStaked = totalStaked.add(stake.amount);
 
-            const pendingRewards = await stakingContract.calculatePendingRewards(userAddress, i);
+            const pendingRewards = await stakingContract.read.calculatePendingRewards(userAddress, i);
             totalRewards = totalRewards.add(pendingRewards);
 
             const now = Math.floor(Date.now() / 1000);
@@ -400,7 +413,7 @@ async function setMaxStake() {
     if (!tokenContract || !userAddress) return;
 
     try {
-        const balance = await tokenContract.balanceOf(userAddress);
+        const balance = await tokenContract.read.balanceOf(userAddress);
         stakeAmountInput.value = ethers.utils.formatEther(balance);
         updateStakePreview();
     } catch (error) {
@@ -427,8 +440,8 @@ async function stakeTokens() {
         stakeButton.disabled = true;
         stakeButton.textContent = 'Processing...';
 
-        // Check allowance
-        const allowance = await tokenContract.allowance(userAddress, CONTRACT_ADDRESSES.STAKING);
+        // Check allowance using direct RPC (bypasses MetaMask's bad RPC)
+        const allowance = await tokenContract.read.allowance(userAddress, CONTRACT_ADDRESSES.STAKING);
 
         if (allowance.lt(amountWei)) {
             showTxStatus('Approving tokens...', 'pending');
