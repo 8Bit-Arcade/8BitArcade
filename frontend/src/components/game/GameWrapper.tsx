@@ -276,11 +276,13 @@ export default function GameWrapper({
     [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession, tournamentsForGame, activeTournaments]
   );
 
-  // Scroll game into view when it becomes visible (mobile centering)
+  // Scroll game into view and focus when it becomes visible
   useEffect(() => {
     if (!showModeSelect && containerRef.current) {
       setTimeout(() => {
         containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Focus the game container to capture keyboard input immediately
+        containerRef.current?.focus();
       }, 100);
     }
   }, [showModeSelect]);
@@ -432,6 +434,17 @@ export default function GameWrapper({
       });
     }
   }, [gameMode]);
+
+  // Prevent page scrolling for game keys (always active when component mounted)
+  useEffect(() => {
+    const preventScroll = (e: KeyboardEvent) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', preventScroll);
+    return () => window.removeEventListener('keydown', preventScroll);
+  }, []);
 
   // Keyboard controls
   useEffect(() => {
@@ -720,7 +733,8 @@ export default function GameWrapper({
         {!showModeSelect && !isGameOver && (
           <div
             ref={containerRef}
-            className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto"
+            tabIndex={0}
+            className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto outline-none"
             style={{
               // 72vh to prevent overflow and auto-center on mobile
               height: '72vh',

@@ -1,4 +1,4 @@
-# Table of Contents
+# Table of contents
 
 ## Introduction
 
@@ -45,11 +45,11 @@
 
 * [Contract Overview](contracts/overview.md)
 * [Contract Addresses](contracts/addresses.md)
-* [EightBitToken (8BIT)](contracts/eight-bit-token.md)
-* [GameRewards](contracts/game-rewards.md)
-* [TokenSale](contracts/token-sale.md)
-* [TournamentManager](contracts/tournament-manager.md)
-* [TournamentBuyback](contracts/tournament-buyback.md)
+* [EightBitToken (8BIT)](smart-contracts/eightbittoken-8bit.md)
+* [GameRewards](smart-contracts/gamerewards.md)
+* [TokenSale](smart-contracts/tokensale.md)
+* [TournamentManager](smart-contracts/tournamentmanager.md)
+* [TournamentBuyback](smart-contracts/tournamentbuyback.md)
 * [VestedAirdrop](contracts/vested-airdrop.md)
 * [Security & Audits](contracts/security.md)
 
@@ -60,8 +60,8 @@
 
 ## Roadmap
 
-* [Development Phases](roadmap/phases.md)
-* [Upcoming Features](roadmap/upcoming.md)
+* [Development Phases](roadmap/development-phases.md)
+* [Upcoming Features](roadmap/upcoming-features.md)
 
 ## Support
 

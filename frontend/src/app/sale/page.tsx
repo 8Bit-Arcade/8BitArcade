@@ -232,21 +232,6 @@ export default function BuyEightBitPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Mainnet Launch Banner */}
-        <div className="mb-8 p-4 bg-arcade-yellow/10 border-2 border-arcade-yellow rounded-lg text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-2xl">🚀</span>
-            <h2 className="font-pixel text-arcade-yellow text-lg">COMING SOON TO MAINNET</h2>
-            <span className="text-2xl">🚀</span>
-          </div>
-          <p className="font-arcade text-gray-300 text-sm mb-2">
-            The 8BIT Token Sale will go live once we deploy to Arbitrum Mainnet.
-          </p>
-          <p className="font-arcade text-gray-400 text-xs">
-            This is a preview of the sale interface. All purchases are currently disabled.
-          </p>
-        </div>
-
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-pixel text-2xl md:text-3xl text-arcade-yellow glow-yellow mb-2">
@@ -255,10 +240,6 @@ export default function BuyEightBitPage() {
           <p className="font-arcade text-gray-400 mb-4">
             Join the future of blockchain gaming
           </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-arcade-dark border border-gray-600 rounded">
-            <span className="w-2 h-2 bg-arcade-yellow rounded-full animate-pulse"></span>
-            <span className="font-pixel text-arcade-yellow text-sm">PREVIEW MODE</span>
-          </div>
         </div>
 
         {/* Sale Stats */}
@@ -290,11 +271,11 @@ export default function BuyEightBitPage() {
           <Card>
             <div className="text-center">
               <p className="font-arcade text-xs text-gray-500 mb-1">Sale Status</p>
-              <p className="font-pixel text-arcade-yellow text-lg">
-                COMING SOON
+              <p className={`font-pixel text-lg ${isSaleActive ? 'text-arcade-green' : 'text-arcade-red'}`}>
+                {isSaleActive ? 'LIVE' : 'ENDED'}
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                6 Week Sale • Launch TBD
+                {timeRemaining > 0 ? `Ends in ${formatTimeRemaining(timeRemaining)}` : 'Sale has ended'}
               </p>
             </div>
           </Card>
@@ -380,13 +361,26 @@ export default function BuyEightBitPage() {
               </p>
             </div>
 
-            {/* Buy Button - DISABLED FOR TESTNET */}
-            <Button variant="secondary" size="lg" className="w-full" disabled>
-              Coming Soon on Mainnet
-            </Button>
-            <p className="font-arcade text-xs text-gray-500 text-center mt-2">
-              Purchases will be enabled after mainnet deployment
-            </p>
+            {/* Buy Button */}
+            {!isConnected ? (
+              <p className="font-arcade text-center text-gray-400 py-4">
+                Connect your wallet to buy tokens
+              </p>
+            ) : needsApproval ? (
+              <Button variant="secondary" size="lg" className="w-full" onClick={handleApprove}>
+                Approve USDC
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handleBuy}
+                disabled={!amount || !isSaleActive}
+              >
+                {isSaleActive ? `Buy ${formatNumber(calculateTokens())} 8BIT` : 'Sale Not Active'}
+              </Button>
+            )}
 
             {/* User Purchase Info */}
             {isConnected && userPurchasedValue && Number(userPurchasedValue) > 0 && (

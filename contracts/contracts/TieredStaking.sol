@@ -171,9 +171,9 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
         lastUpdateTime = lastApplicableTime();
 
         if (account != address(0) && userStakes[account][stakeId].exists) {
-            Stake storage stake = userStakes[account][stakeId];
-            stake.pendingRewards = earned(account, stakeId);
-            stake.rewardPerTokenPaid = rewardPerWeightedTokenStored;
+            Stake storage userStake = userStakes[account][stakeId];
+            userStake.pendingRewards = earned(account, stakeId);
+            userStake.rewardPerTokenPaid = rewardPerWeightedTokenStored;
         }
         _;
     }
@@ -284,29 +284,29 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
         nonReentrant
         updateReward(msg.sender, stakeId)
     {
-        Stake storage stake = userStakes[msg.sender][stakeId];
-        require(stake.exists, "Stake not found");
-        require(stake.amount > 0, "Nothing to withdraw");
+        Stake storage userStake = userStakes[msg.sender][stakeId];
+        require(userStake.exists, "Stake not found");
+        require(userStake.amount > 0, "Nothing to withdraw");
 
-        uint256 amount = stake.amount;
-        uint256 weightedAmount = stake.weightedAmount;
+        uint256 amount = userStake.amount;
+        uint256 weightedAmount = userStake.weightedAmount;
         uint256 penalty = 0;
 
         // Calculate penalty if withdrawing early
-        if (block.timestamp < stake.unlockTime) {
+        if (block.timestamp < userStake.unlockTime) {
             penalty = (amount * EARLY_WITHDRAWAL_PENALTY_BPS) / BPS_DENOMINATOR;
         }
 
         uint256 amountAfterPenalty = amount - penalty;
 
         // Claim any pending rewards first
-        uint256 reward = stake.pendingRewards;
-        stake.pendingRewards = 0;
+        uint256 reward = userStake.pendingRewards;
+        userStake.pendingRewards = 0;
 
         // Update state BEFORE external calls
-        stake.amount = 0;
-        stake.weightedAmount = 0;
-        stake.exists = false;
+        userStake.amount = 0;
+        userStake.weightedAmount = 0;
+        userStake.exists = false;
 
         userTotalStaked[msg.sender] -= amount;
         totalWeightedStake -= weightedAmount;
@@ -344,14 +344,14 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
         nonReentrant
         updateReward(msg.sender, stakeId)
     {
-        Stake storage stake = userStakes[msg.sender][stakeId];
-        require(stake.exists, "Stake not found");
+        Stake storage userStake = userStakes[msg.sender][stakeId];
+        require(userStake.exists, "Stake not found");
 
-        uint256 reward = stake.pendingRewards;
+        uint256 reward = userStake.pendingRewards;
         require(reward > 0, "No rewards to claim");
 
         // Update state BEFORE external call
-        stake.pendingRewards = 0;
+        userStake.pendingRewards = 0;
 
         // External call AFTER state change
         _mintReward(msg.sender, reward);
@@ -371,13 +371,13 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
         lastUpdateTime = lastApplicableTime();
 
         for (uint256 i = 0; i < count; i++) {
-            Stake storage stake = userStakes[msg.sender][i];
-            if (stake.exists && stake.amount > 0) {
-                uint256 reward = _calculateEarned(stake);
+            Stake storage userStake = userStakes[msg.sender][i];
+            if (userStake.exists && userStake.amount > 0) {
+                uint256 reward = _calculateEarned(userStake);
                 if (reward > 0) {
                     totalReward += reward;
-                    stake.pendingRewards = 0;
-                    stake.rewardPerTokenPaid = rewardPerWeightedTokenStored;
+                    userStake.pendingRewards = 0;
+                    userStake.rewardPerTokenPaid = rewardPerWeightedTokenStored;
                     emit RewardsClaimed(msg.sender, i, reward);
                 }
             }
@@ -392,18 +392,18 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
      * @param stakeId The stake ID to emergency withdraw
      */
     function emergencyWithdraw(uint256 stakeId) external nonReentrant {
-        Stake storage stake = userStakes[msg.sender][stakeId];
-        require(stake.exists, "Stake not found");
-        require(stake.amount > 0, "Nothing to withdraw");
+        Stake storage userStake = userStakes[msg.sender][stakeId];
+        require(userStake.exists, "Stake not found");
+        require(userStake.amount > 0, "Nothing to withdraw");
 
-        uint256 amount = stake.amount;
-        uint256 weightedAmount = stake.weightedAmount;
+        uint256 amount = userStake.amount;
+        uint256 weightedAmount = userStake.weightedAmount;
 
         // Update state BEFORE external call
-        stake.amount = 0;
-        stake.weightedAmount = 0;
-        stake.pendingRewards = 0;
-        stake.exists = false;
+        userStake.amount = 0;
+        userStake.weightedAmount = 0;
+        userStake.pendingRewards = 0;
+        userStake.exists = false;
 
         userTotalStaked[msg.sender] -= amount;
         totalWeightedStake -= weightedAmount;
@@ -453,9 +453,9 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
      * @param stakeId Stake ID
      */
     function earned(address account, uint256 stakeId) public view returns (uint256) {
-        Stake storage stake = userStakes[account][stakeId];
-        if (!stake.exists) return 0;
-        return _calculateEarned(stake);
+        Stake storage userStake = userStakes[account][stakeId];
+        if (!userStake.exists) return 0;
+        return _calculateEarned(userStake);
     }
 
     /**
@@ -507,15 +507,15 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
         LockTier tier,
         bool isUnlocked
     ) {
-        Stake storage stake = userStakes[account][stakeId];
+        Stake storage userStake = userStakes[account][stakeId];
         return (
-            stake.amount,
-            stake.weightedAmount,
+            userStake.amount,
+            userStake.weightedAmount,
             earned(account, stakeId),
-            stake.stakedAt,
-            stake.unlockTime,
-            stake.tier,
-            block.timestamp >= stake.unlockTime
+            userStake.stakedAt,
+            userStake.unlockTime,
+            userStake.tier,
+            block.timestamp >= userStake.unlockTime
         );
     }
 
@@ -545,12 +545,12 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
 
         uint256 index = 0;
         for (uint256 i = 0; i < count && index < activeCount; i++) {
-            Stake storage stake = userStakes[account][i];
-            if (stake.exists && stake.amount > 0) {
-                amounts[index] = stake.amount;
-                unlockTimes[index] = stake.unlockTime;
+            Stake storage userStake = userStakes[account][i];
+            if (userStake.exists && userStake.amount > 0) {
+                amounts[index] = userStake.amount;
+                unlockTimes[index] = userStake.unlockTime;
                 rewards[index] = earned(account, i);
-                tiers[index] = stake.tier;
+                tiers[index] = userStake.tier;
                 index++;
             }
         }
@@ -613,10 +613,10 @@ contract TieredStaking is Ownable, ReentrancyGuard, Pausable {
     /**
      * @notice Internal function to calculate earned rewards
      */
-    function _calculateEarned(Stake storage stake) internal view returns (uint256) {
+    function _calculateEarned(Stake storage userStake) internal view returns (uint256) {
         uint256 currentRewardPerToken = rewardPerWeightedToken();
-        uint256 rewardDelta = currentRewardPerToken - stake.rewardPerTokenPaid;
-        return stake.pendingRewards + ((stake.weightedAmount * rewardDelta) / PRECISION);
+        uint256 rewardDelta = currentRewardPerToken - userStake.rewardPerTokenPaid;
+        return userStake.pendingRewards + ((userStake.weightedAmount * rewardDelta) / PRECISION);
     }
 
     /**
