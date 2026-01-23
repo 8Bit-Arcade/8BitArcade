@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F8S6MFN276"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-F8S6MFN276');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>8BIT Staking | Earn Rewards | 8-Bit Arcade</title>
+    <meta name="title" content="8BIT Staking | Earn Passive Crypto Rewards">
+    <meta name="description" content="Stake your 8BIT tokens and earn rewards. Choose from 4 lock periods with up to 3x reward multipliers. 25M 8BIT staking pool distributed over 5 years.">
+    <meta name="keywords" content="8BIT staking, crypto staking, GameFi staking, P2E staking, stake to earn, passive crypto income, Arbitrum staking, Web3 staking">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://8bitarcade.games/staking.html">
+    <meta property="og:title" content="8BIT Staking | Earn Passive Crypto Rewards">
+    <meta property="og:description" content="Stake your 8BIT tokens and earn rewards with up to 3x multipliers.">
+    <meta property="og:image" content="https://8bitarcade.games/images/8bit-logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://8bitarcade.games/staking.html">
+    <meta property="twitter:title" content="8BIT Staking | Earn Passive Crypto Rewards">
+    <meta property="twitter:description" content="Stake your 8BIT tokens and earn rewards with up to 3x multipliers.">
+    <meta property="twitter:image" content="https://8bitarcade.games/images/8bit-logo.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://8bitarcade.games/staking.html">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Staking-specific styles */
+        .tier-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .tier-option {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .tier-option:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        .tier-option.selected {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .tier-name {
+            font-size: 0.7rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-multiplier {
+            font-size: 1.2rem;
+            color: #00ff88;
+            margin-bottom: 0.25rem;
+        }
+
+        .tier-apy {
+            font-size: 0.6rem;
+            color: #888;
+        }
+
+        .stakes-list {
+            margin-top: 2rem;
+        }
+
+        .stake-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stake-item.unlocked {
+            border-color: #00ff88;
+        }
+
+        .stake-item.locked {
+            border-color: #ff6600;
+        }
+
+        .stake-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stake-amount {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .stake-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.6rem;
+        }
+
+        .stake-status.unlocked {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .stake-status.locked {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff6600;
+        }
+
+        .stake-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stake-detail {
+            text-align: center;
+        }
+
+        .stake-detail-label {
+            font-size: 0.6rem;
+            color: #888;
+            margin-bottom: 0.25rem;
+        }
+
+        .stake-detail-value {
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        .stake-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .stake-actions button {
+            flex: 1;
+        }
+
+        .warning-box {
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid #ff6600;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #ff6600;
+        }
+
+        .pool-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .pool-stat {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .pool-stat-value {
+            font-size: 1.1rem;
+            color: #00ff88;
+            margin-bottom: 0.25rem;
+        }
+
+        .pool-stat-label {
+            font-size: 0.6rem;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .tier-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stake-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <a href="index.html" class="pixel-text glow-pink">8BIT ARCADE</a>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html#about">About</a>
+                    <a href="index.html#airdrop" style="color: #ff00ff; font-weight: bold;">Airdrop</a>
+                    <a href="tokenomics.html">Tokenomics</a>
+                    <a href="staking.html" style="color: #00ff88; font-weight: bold;">Staking</a>
+                    <button id="connectWalletBtn" class="btn btn-primary">Connect Wallet</button>
+                    <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-play">Play Now</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Staking Hero -->
+    <section class="sale-hero">
+        <div class="container">
+            <div class="sale-status">
+                <div class="status-indicator" id="stakingStatus">
+                    <span class="status-dot"></span>
+                    <span class="pixel-text" id="stakingStatusText">Loading...</span>
+                </div>
+            </div>
+            <h1 class="pixel-text glow-yellow">8BIT STAKING</h1>
+            <p class="sale-subtitle">Lock your tokens, earn rewards - up to 3x multiplier</p>
+        </div>
+    </section>
+
+    <!-- Pool Stats -->
+    <section class="sale-stats-section">
+        <div class="container">
+            <div class="pool-stats">
+                <div class="pool-stat">
+                    <div class="pool-stat-value pixel-text" id="totalStaked">0</div>
+                    <div class="pool-stat-label">Total Staked</div>
+                </div>
+                <div class="pool-stat">
+                    <div class="pool-stat-value pixel-text" id="rewardsRemaining">25M</div>
+                    <div class="pool-stat-label">Rewards Remaining</div>
+                </div>
+                <div class="pool-stat">
+                    <div class="pool-stat-value pixel-text" id="totalDistributed">0</div>
+                    <div class="pool-stat-label">Distributed</div>
+                </div>
+                <div class="pool-stat">
+                    <div class="pool-stat-value pixel-text" id="timeRemaining">5 years</div>
+                    <div class="pool-stat-label">Distribution Period</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Staking Section -->
+    <section class="purchase-section">
+        <div class="container">
+            <div class="purchase-grid">
+                <!-- Staking Card -->
+                <div class="purchase-card">
+                    <h2 class="pixel-text glow-cyan">STAKE 8BIT</h2>
+
+                    <!-- Tier Selection -->
+                    <div class="tier-selector">
+                        <div class="tier-option" data-tier="0" id="tier0">
+                            <div class="tier-name pixel-text">7 DAYS</div>
+                            <div class="tier-multiplier pixel-text">1x</div>
+                            <div class="tier-apy" id="apy0">-- APY</div>
+                        </div>
+                        <div class="tier-option" data-tier="1" id="tier1">
+                            <div class="tier-name pixel-text">1 MONTH</div>
+                            <div class="tier-multiplier pixel-text">1.5x</div>
+                            <div class="tier-apy" id="apy1">-- APY</div>
+                        </div>
+                        <div class="tier-option selected" data-tier="2" id="tier2">
+                            <div class="tier-name pixel-text">3 MONTHS</div>
+                            <div class="tier-multiplier pixel-text">2x</div>
+                            <div class="tier-apy" id="apy2">-- APY</div>
+                        </div>
+                        <div class="tier-option" data-tier="3" id="tier3">
+                            <div class="tier-name pixel-text">6 MONTHS</div>
+                            <div class="tier-multiplier pixel-text">3x</div>
+                            <div class="tier-apy" id="apy3">-- APY</div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Input -->
+                    <div class="input-group">
+                        <label class="input-label">Amount to Stake</label>
+                        <input type="number" id="stakeAmount" placeholder="1000" step="1" min="1">
+                        <div class="input-footer">
+                            <span class="balance" id="tokenBalance">Balance: --</span>
+                            <button onclick="setMaxStake()" style="background: none; border: none; color: #00d4ff; cursor: pointer; font-size: 0.8rem;">MAX</button>
+                        </div>
+                    </div>
+
+                    <!-- Stake Info Preview -->
+                    <div class="price-display">
+                        <div class="price-label">Weighted Stake</div>
+                        <div class="price-value pixel-text" id="weightedStake">0 8BIT</div>
+                        <div class="price-sublabel" id="unlockDate">Unlocks: --</div>
+                    </div>
+
+                    <!-- Stake Button -->
+                    <button id="stakeButton" class="btn btn-large btn-primary" disabled>
+                        Connect Wallet to Stake
+                    </button>
+
+                    <!-- Transaction Status -->
+                    <div id="txStatus" class="tx-status" style="display: none;"></div>
+
+                    <!-- Add Token to Wallet Button -->
+                    <button onclick="addTokenToWallet()" class="btn btn-secondary" style="margin-top: 1rem; width: 100%;">
+                        + Add 8BIT to Wallet
+                    </button>
+                </div>
+
+                <!-- Info Card -->
+                <div class="info-card">
+                    <h3 class="pixel-text glow-pink">HOW STAKING WORKS</h3>
+
+                    <div class="detail-list">
+                        <div class="detail-item">
+                            <span>Total Pool</span>
+                            <span class="pixel-text">25 Million 8BIT</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Distribution</span>
+                            <span class="pixel-text">5 Years</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Min Stake</span>
+                            <span class="pixel-text">1 8BIT</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Max Stakes</span>
+                            <span class="pixel-text">50 per wallet</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Early Penalty</span>
+                            <span class="pixel-text glow-red">25%</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="alert-title pixel-text">MULTIPLIERS</div>
+                        <p>Longer locks = higher rewards! 6-month stakers earn 3x the rewards of 7-day stakers.</p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <div class="alert-title pixel-text">EARLY WITHDRAWAL</div>
+                        <p>Withdrawing before unlock incurs a 25% penalty. Penalties go to the treasury.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Stakes Section -->
+            <div id="userStakesSection" class="stakes-list" style="display: none;">
+                <h3 class="pixel-text" style="text-align: center; margin-bottom: 2rem;">YOUR STAKES</h3>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <span class="pixel-text" style="color: #888;">Total Staked: </span>
+                        <span class="pixel-text" id="userTotalStaked">0 8BIT</span>
+                    </div>
+                    <div>
+                        <span class="pixel-text" style="color: #888;">Total Rewards: </span>
+                        <span class="pixel-text glow-green" id="userTotalRewards">0 8BIT</span>
+                    </div>
+                </div>
+
+                <button id="claimAllBtn" class="btn btn-primary" style="width: 100%; margin-bottom: 2rem;" onclick="claimAllRewards()">
+                    Claim All Rewards
+                </button>
+
+                <div id="stakesList">
+                    <!-- Stakes will be populated here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="disclaimer-section">
+        <div class="container">
+            <div class="disclaimer-box">
+                <div class="pixel-text" style="margin-bottom: 1rem;">INFO</div>
+                <p>Staking rewards are distributed proportionally based on your weighted stake. Higher tier locks receive more rewards. Early withdrawal before the unlock time incurs a 25% penalty on the staked amount (not rewards). Rewards can be claimed at any time.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="pixel-text">8BIT ARCADE</h3>
+                    <p>Retro gaming meets blockchain technology</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Links</h4>
+                    <a href="https://play.8bitarcade.games" target="_blank">Play Games</a>
+                    <a href="sale.html">Token Sale</a>
+                    <a href="staking.html">Staking</a>
+                    <a href="whitepaper.html">Whitepaper</a>
+                    <a href="tokenomics.html">Tokenomics</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Community</h4>
+                    <a href="https://discord.gg/AKrdPvHz4P" target="_blank">Discord</a>
+                    <a href="https://x.com/8_Bit_Arcade_" target="_blank">X / Twitter</a>
+                    <a href="https://t.me/eight_bit_arcade" target="_blank">Telegram</a>
+                    <a href="https://github.com/8Bit-Arcade" target="_blank">GitHub</a>
+                </div>
+                <div class="footer-section">
+                    <h4 class="pixel-text">Legal</h4>
+                    <a href="/terms.html">Terms of Service</a>
+                    <a href="/privacy.html">Privacy Policy</a>
+                    <a href="/disclaimer.html">Risk Disclaimer</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 8-Bit Arcade. All rights reserved.</p>
+                <p class="disclaimer">Cryptocurrency investments carry risk. Only invest what you can afford to lose.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Load ethers.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Load staking.js after ethers is available -->
+    <script src="js/staking.js" defer></script>
+</body>
+</html>
