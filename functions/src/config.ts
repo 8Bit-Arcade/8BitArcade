@@ -1,19 +1,19 @@
 /**
  * Contract Configuration
  *
- * UPDATE THESE ADDRESSES AFTER DEPLOYMENT
+ * Contract addresses for Arbitrum Sepolia testnet
  */
 
 // Network configuration
 export const USE_TESTNET = true; // Set to false for mainnet
 
-// Contract addresses - UPDATE AFTER DEPLOYMENT
+// Contract addresses
 export const GAME_REWARDS_ADDRESS = USE_TESTNET
-  ? '0x0000000000000000000000000000000000000000' // UPDATE: Deploy GameRewards to testnet
+  ? '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E' // Arbitrum Sepolia
   : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy GameRewards to mainnet
 
 export const EIGHT_BIT_TOKEN_ADDRESS = USE_TESTNET
-  ? '0x0000000000000000000000000000000000000000' // UPDATE: Deploy 8BIT token to testnet
+  ? '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d' // Arbitrum Sepolia
   : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy 8BIT token to mainnet
 
 // RPC URLs
