@@ -1,6 +1,6 @@
 // 8BIT Staking - Contract Interactions
 // Network: Arbitrum Sepolia (Testnet)
-// Version: 2.0.0 - Updated ABI for TieredStaking contract
+// Version: 2.1.0 - Added explicit gas limit to fix MetaMask estimation issues
 
 const NETWORK_CONFIG = {
     chainId: '0x66eee', // 421614 in hex
@@ -488,6 +488,7 @@ async function stakeTokens() {
 
         try {
             await stakingContract.callStatic.stake(amountWei, selectedTier);
+            console.log('Simulation passed!');
         } catch (simError) {
             console.error('Stake simulation failed:', simError);
             const reason = simError.reason || simError.error?.message || simError.message;
@@ -495,9 +496,22 @@ async function stakeTokens() {
             return;
         }
 
-        // Stake
+        // Re-verify allowance after potential approval
+        const finalAllowance = await tokenContract.read.allowance(userAddress, CONTRACT_ADDRESSES.STAKING);
+        console.log('Final allowance before stake:', ethers.utils.formatEther(finalAllowance));
+
+        if (finalAllowance.lt(amountWei)) {
+            showTxStatus('Token approval failed or insufficient. Please try again.', 'error');
+            return;
+        }
+
+        // Stake with explicit gas limit to avoid estimation issues
         showTxStatus('Staking tokens... Confirm in wallet', 'pending');
-        const stakeTx = await stakingContract.stake(amountWei, selectedTier);
+        console.log('Sending stake transaction with explicit gas limit...');
+        const stakeTx = await stakingContract.stake(amountWei, selectedTier, {
+            gasLimit: 350000 // Explicit gas limit to bypass estimation
+        });
+        console.log('Transaction hash:', stakeTx.hash);
         showTxStatus('Transaction sent, waiting for confirmation...', 'pending');
         await stakeTx.wait();
 
