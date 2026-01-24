@@ -482,13 +482,14 @@ async function stakeTokens() {
             showTxStatus('Tokens approved! Now staking...', 'pending');
         }
 
-        // Simulate stake first to get actual revert reason
+        // Simulate stake using direct RPC (bypasses MetaMask's potentially bad RPC)
         showTxStatus('Preparing stake transaction...', 'pending');
         console.log('Staking:', amount, '8BIT with tier:', selectedTier);
 
         try {
-            await stakingContract.callStatic.stake(amountWei, selectedTier);
-            console.log('Simulation passed!');
+            // Use read contract (direct RPC) for simulation
+            await stakingContract.read.callStatic.stake(amountWei, selectedTier, { from: userAddress });
+            console.log('Simulation passed via direct RPC!');
         } catch (simError) {
             console.error('Stake simulation failed:', simError);
             const reason = simError.reason || simError.error?.message || simError.message;
