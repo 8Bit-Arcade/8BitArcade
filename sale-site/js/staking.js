@@ -477,8 +477,13 @@ async function stakeTokens() {
 
         if (allowance.lt(amountWei)) {
             showTxStatus('Approving tokens...', 'pending');
-            const approveTx = await tokenContract.approve(CONTRACT_ADDRESSES.STAKING, ethers.constants.MaxUint256);
+            console.log('Sending approve transaction with explicit gas limit...');
+            const approveTx = await tokenContract.approve(CONTRACT_ADDRESSES.STAKING, ethers.constants.MaxUint256, {
+                gasLimit: 100000 // Explicit gas limit for approve
+            });
+            console.log('Approve TX hash:', approveTx.hash);
             await approveTx.wait();
+            console.log('Approve confirmed!');
             showTxStatus('Tokens approved! Now staking...', 'pending');
         }
 

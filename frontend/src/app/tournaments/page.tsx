@@ -512,6 +512,7 @@ useEffect(() => {
         abi: EIGHT_BIT_TOKEN_ABI,
         functionName: 'approve',
         args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`, approvalAmount],
+        gas: BigInt(100000), // Explicit gas limit to bypass estimation issues
       });
 
       console.log('✅ approve() function called - waiting for wallet popup...');
@@ -534,6 +535,7 @@ useEffect(() => {
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'enterTournament',
       args: [BigInt(tournamentId)],
+      gas: BigInt(350000), // Explicit gas limit to bypass estimation issues
     });
 
     console.log('📤 enterTournament() function called - waiting for wallet popup...');
@@ -569,6 +571,7 @@ useEffect(() => {
             abi: TOURNAMENT_MANAGER_ABI,
             functionName: 'enterTournament',
             args: [BigInt(selectedTournament)],
+            gas: BigInt(350000), // Explicit gas limit to bypass estimation issues
           });
         }, 1500); // Wait for allowance to update
       }
