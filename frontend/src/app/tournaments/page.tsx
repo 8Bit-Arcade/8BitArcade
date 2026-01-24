@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { formatEther, parseEther } from 'viem';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSendTransaction } from 'wagmi';
+import { formatEther, parseEther, encodeFunctionData } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
@@ -92,17 +92,21 @@ export default function TournamentsPage() {
     args: address ? [address] : undefined,
   });
 
-  // Approve tokens
-  const { writeContract: approve, data: approveHash, error: approveError } = useWriteContract();
+  // Use raw sendTransaction to bypass wagmi's internal simulation that fails on Arbitrum Sepolia
+  const { sendTransaction: sendApproveTx, data: approveHash, error: approveError } = useSendTransaction();
   const { isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
     hash: approveHash,
   });
 
-  // Enter tournament
-  const { writeContract: enterTournament, data: enterHash, error: enterError } = useWriteContract();
+  // Enter tournament - also using raw sendTransaction
+  const { sendTransaction: sendEnterTx, data: enterHash, error: enterError } = useSendTransaction();
   const { isSuccess: isEnterSuccess } = useWaitForTransactionReceipt({
     hash: enterHash,
   });
+
+  // Legacy hooks kept for compatibility but not used
+  const { writeContract: approve } = useWriteContract();
+  const { writeContract: enterTournament } = useWriteContract();
 
   // Handle successful approval - refetch allowance
   useEffect(() => {
@@ -496,49 +500,59 @@ useEffect(() => {
     });
 
     if (currentAllowance < entryFee) {
-      console.log('🔑 Need approval - calling approve()');
+      console.log('🔑 Need approval - using RAW TRANSACTION to bypass simulation');
       setNeedsApproval(true);
 
       const approvalAmount = entryFee * BigInt(10);
-      console.log('💳 Approve call:', {
+      console.log('💳 Approve call (raw tx):', {
         tokenAddress: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN,
         spenderAddress: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
         amount: formatEther(approvalAmount),
-        amountRaw: approvalAmount.toString(),
       });
 
-      approve({
-        address: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN as `0x${string}`,
+      // Encode approve calldata manually
+      const approveData = encodeFunctionData({
         abi: EIGHT_BIT_TOKEN_ABI,
         functionName: 'approve',
         args: [TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`, approvalAmount],
-        gas: BigInt(100000), // Explicit gas limit to bypass estimation issues
       });
 
-      console.log('✅ approve() function called - waiting for wallet popup...');
+      // Send raw transaction - bypasses wagmi's simulation
+      sendApproveTx({
+        to: TESTNET_CONTRACTS.EIGHT_BIT_TOKEN as `0x${string}`,
+        data: approveData,
+        gas: BigInt(100000),
+      });
+
+      console.log('✅ Raw approve tx sent - waiting for wallet popup...');
       return;
     }
 
-    // Direct entry if already approved
-    console.log('🎮 Calling enterTournament directly (already approved)');
+    // Direct entry if already approved - using RAW TRANSACTION
+    console.log('🎮 Calling enterTournament with RAW TRANSACTION (bypasses simulation)');
     console.log('💳 enterTournament call:', {
       contractAddress: TESTNET_CONTRACTS.TOURNAMENT_MANAGER,
       tournamentId,
       balance: formatEther(currentBalance),
       allowance: formatEther(currentAllowance),
       entryFee: formatEther(entryFee),
-      abiHasFunction: TOURNAMENT_MANAGER_ABI.some((item: any) => item.name === 'enterTournament'),
     });
 
-    enterTournament({
-      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+    // Encode enterTournament calldata manually
+    const enterData = encodeFunctionData({
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'enterTournament',
       args: [BigInt(tournamentId)],
-      gas: BigInt(350000), // Explicit gas limit to bypass estimation issues
     });
 
-    console.log('📤 enterTournament() function called - waiting for wallet popup...');
+    // Send raw transaction - bypasses wagmi's simulation
+    sendEnterTx({
+      to: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+      data: enterData,
+      gas: BigInt(350000),
+    });
+
+    console.log('📤 Raw enterTournament tx sent - waiting for wallet popup...');
   };
 
   // When approval succeeds, automatically enter tournament
@@ -565,18 +579,23 @@ useEffect(() => {
         }
 
         setTimeout(() => {
-          console.log('🎮 Auto-entering tournament after approval');
-          enterTournament({
-            address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+          console.log('🎮 Auto-entering tournament after approval (raw tx)');
+          // Encode enterTournament calldata manually
+          const enterData = encodeFunctionData({
             abi: TOURNAMENT_MANAGER_ABI,
             functionName: 'enterTournament',
             args: [BigInt(selectedTournament)],
-            gas: BigInt(350000), // Explicit gas limit to bypass estimation issues
+          });
+          // Send raw transaction - bypasses wagmi's simulation
+          sendEnterTx({
+            to: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+            data: enterData,
+            gas: BigInt(350000),
           });
         }, 1500); // Wait for allowance to update
       }
     }
-  }, [isApproveSuccess, selectedTournament, needsApproval, tournaments, tokenBalance]);
+  }, [isApproveSuccess, selectedTournament, needsApproval, tournaments, tokenBalance, sendEnterTx]);
 
   const filteredTournaments = (() => {
     if (filter === 'ended') {
