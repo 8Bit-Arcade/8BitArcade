@@ -146,6 +146,9 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       // Auto-update all applicable tournament entries
       await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
 
+      // Update user stats (for Zealy verification and airdrop eligibility)
+      await updateUserGamesPlayed(playerAddress, now);
+
       return {
         success: true,
         verified: true,
@@ -157,6 +160,9 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
 
     // Only save ranked scores to regular leaderboards (skip free play)
     if (sessionData.mode === 'free') {
+      // Still update user stats for Zealy verification and airdrop eligibility
+      await updateUserGamesPlayed(playerAddress, now);
+
       return {
         success: true,
         verified: true,
@@ -526,5 +532,50 @@ async function processEntriesFromDocs(
   } catch (error) {
     // Don't fail the score submission if tournament update fails
     console.error('❌ Error updating tournament entries:', error);
+  }
+}
+
+/**
+ * Update user's totalGamesPlayed counter (for Zealy verification and airdrop eligibility)
+ * This is called for ALL game modes (ranked, tournament, free)
+ */
+async function updateUserGamesPlayed(
+  playerAddress: string,
+  now: FirebaseFirestore.Timestamp
+): Promise<void> {
+  try {
+    const userRef = collections.users.doc(playerAddress);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      // Create user document if it doesn't exist
+      console.log('Creating user document for games tracking:', playerAddress);
+      await userRef.set({
+        address: playerAddress,
+        username: null,
+        createdAt: now,
+        lastActive: now,
+        totalGamesPlayed: 1,
+        totalScore: 0,
+        isBanned: false,
+        banReason: null,
+        bannedAt: null,
+        displayPreference: 'address',
+        flags: {
+          count: 0,
+          lastFlagged: null,
+          reasons: [],
+        },
+      });
+    } else {
+      // Increment games played
+      await userRef.update({
+        totalGamesPlayed: FieldValue.increment(1),
+        lastActive: now,
+      });
+    }
+  } catch (error) {
+    // Don't fail the score submission if user update fails
+    console.error('❌ Error updating user games played:', error);
   }
 }
