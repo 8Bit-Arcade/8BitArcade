@@ -20,11 +20,12 @@ interface ZealyVerifyResponse {
  * Zealy calls this endpoint to verify if a user has completed a quest requirement.
  *
  * Usage:
- *   GET /zealyVerifyQuest?wallet=0x123...&quest=games5
+ *   GET /zealyVerifyQuest?wallet=0x123...&quest=games3
  *
  * Query Parameters:
  *   - wallet: The player's wallet address (required)
  *   - quest: The quest type to verify (required)
+ *     - "games3": Verify player has played 3+ games (main quest)
  *     - "games5": Verify player has played 5+ games
  *     - "games10": Verify player has played 10+ games
  *     - "tournament1": Verify player has entered 1+ tournament
@@ -59,7 +60,7 @@ export const zealyVerifyQuest = onRequest(
       const response: ZealyVerifyResponse = {
         success: false,
         verified: false,
-        message: 'Missing quest parameter. Valid options: games5, games10, tournament1',
+        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1',
       };
       res.status(400).json(response);
       return;
@@ -91,6 +92,25 @@ export const zealyVerifyQuest = onRequest(
 
       // Handle different quest types
       switch (quest) {
+        case 'games3': {
+          const required = 3;
+          const verified = gamesPlayed >= required;
+          const response: ZealyVerifyResponse = {
+            success: true,
+            verified,
+            message: verified
+              ? `Quest complete! Player has played ${gamesPlayed} games.`
+              : `Not yet complete. Player has ${gamesPlayed}/${required} games.`,
+            data: {
+              gamesPlayed,
+              required,
+              wallet: normalizedWallet,
+            },
+          };
+          res.json(response);
+          return;
+        }
+
         case 'games5': {
           const required = 5;
           const verified = gamesPlayed >= required;
@@ -161,7 +181,7 @@ export const zealyVerifyQuest = onRequest(
           const response: ZealyVerifyResponse = {
             success: false,
             verified: false,
-            message: `Unknown quest type: ${quest}. Valid options: games5, games10, tournament1`,
+            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1`,
           };
           res.status(400).json(response);
           return;
@@ -181,6 +201,8 @@ export const zealyVerifyQuest = onRequest(
 
 function getRequiredCount(quest: string): number {
   switch (quest) {
+    case 'games3':
+      return 3;
     case 'games5':
       return 5;
     case 'games10':
