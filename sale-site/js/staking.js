@@ -90,6 +90,7 @@ let userAddress = null;
 let tokenContract = null;
 let stakingContract = null;
 let selectedTier = 2; // Default to 3 months
+let walletProvider = null; // The actual wallet provider (bypasses aggregators)
 
 // DOM Elements
 const connectWalletBtn = document.getElementById('connectWalletBtn');
@@ -102,21 +103,57 @@ const txStatusEl = document.getElementById('txStatus');
 const userStakesSection = document.getElementById('userStakesSection');
 const stakesListEl = document.getElementById('stakesList');
 
+// Get the best available wallet provider (handles EIP-6963 aggregators)
+function getWalletProvider() {
+    // If we already have a working provider, use it
+    if (walletProvider) return walletProvider;
+
+    // Check for multiple providers (EIP-5749 / EIP-6963)
+    if (window.ethereum?.providers?.length > 0) {
+        // Prefer MetaMask if available
+        const metaMask = window.ethereum.providers.find(p => p.isMetaMask && !p.isBraveWallet);
+        if (metaMask) {
+            console.log('Using MetaMask provider from providers array');
+            walletProvider = metaMask;
+            return metaMask;
+        }
+        // Otherwise use first available
+        console.log('Using first available provider from providers array');
+        walletProvider = window.ethereum.providers[0];
+        return walletProvider;
+    }
+
+    // Check if window.ethereum itself is usable (not an aggregator)
+    if (window.ethereum && (window.ethereum.isMetaMask || window.ethereum.isCoinbaseWallet || window.ethereum.isTrust)) {
+        console.log('Using direct window.ethereum provider');
+        walletProvider = window.ethereum;
+        return walletProvider;
+    }
+
+    // Fallback to window.ethereum (may be aggregator, will handle errors)
+    return window.ethereum;
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     initTierSelection();
     initInputListeners();
 
-    // Check if already connected (use existing accounts without prompting)
-    if (window.ethereum) {
+    // Don't auto-connect - wallet aggregators like evmAsk require user interaction
+    // Just check if a provider exists and update UI accordingly
+    const wp = getWalletProvider();
+    if (wp) {
+        // Try to silently check for existing connection without triggering wallet popup
         try {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0) {
-                // Pass existing accounts to avoid re-prompting
-                await connectWallet(accounts);
+            // Use the direct provider to avoid aggregator issues
+            const accounts = await wp.request({ method: 'eth_accounts' });
+            if (accounts && accounts.length > 0) {
+                // Already connected, initialize without prompting
+                await initializeWithAccounts(accounts);
             }
         } catch (e) {
-            console.log('Could not check existing accounts:', e.message);
+            // Silently fail - user will click connect button
+            console.log('Auto-connect skipped:', e.message);
         }
     }
 
@@ -142,10 +179,59 @@ function initInputListeners() {
     stakeAmountInput.addEventListener('input', updateStakePreview);
 }
 
-// Connect wallet
-// existingAccounts: optional array of already-connected accounts (to avoid re-prompting)
-async function connectWallet(existingAccounts = null) {
-    if (!window.ethereum) {
+// Initialize wallet connection with known accounts (no prompts)
+async function initializeWithAccounts(accounts) {
+    if (!accounts || accounts.length === 0) return;
+
+    const wp = getWalletProvider();
+    if (!wp) return;
+
+    try {
+        userAddress = accounts[0];
+
+        // Check and switch network
+        await switchToArbitrumSepolia();
+
+        // Setup ethers with the specific provider
+        const directProvider = new ethers.providers.JsonRpcProvider(DIRECT_RPC);
+        provider = new ethers.providers.Web3Provider(wp);
+        signer = provider.getSigner();
+
+        // Setup contracts
+        const tokenRead = new ethers.Contract(CONTRACT_ADDRESSES.TOKEN, TOKEN_ABI, directProvider);
+        const stakingRead = new ethers.Contract(CONTRACT_ADDRESSES.STAKING, STAKING_ABI, directProvider);
+        tokenContract = new ethers.Contract(CONTRACT_ADDRESSES.TOKEN, TOKEN_ABI, signer);
+        stakingContract = new ethers.Contract(CONTRACT_ADDRESSES.STAKING, STAKING_ABI, signer);
+        tokenContract.read = tokenRead;
+        stakingContract.read = stakingRead;
+
+        // Update UI
+        connectWalletBtn.textContent = formatAddress(userAddress);
+        connectWalletBtn.classList.add('connected');
+        stakeButton.disabled = false;
+        stakeButton.textContent = 'Stake 8BIT';
+
+        // Load user data
+        await Promise.all([
+            loadTokenBalance(),
+            loadUserStakes(),
+            loadPoolStats()
+        ]);
+
+        // Listen for account changes
+        wp.on('accountsChanged', handleAccountsChanged);
+        wp.on('chainChanged', () => window.location.reload());
+
+    } catch (error) {
+        console.error('Error initializing wallet:', error);
+    }
+}
+
+// Connect wallet (user clicked button)
+async function connectWallet() {
+    const wp = getWalletProvider();
+
+    if (!wp) {
         alert('Please install MetaMask or another Web3 wallet to use this feature.');
         return;
     }
@@ -153,26 +239,26 @@ async function connectWallet(existingAccounts = null) {
     try {
         let accounts;
 
-        if (existingAccounts && existingAccounts.length > 0) {
-            // Use existing accounts (auto-connect on page load)
-            accounts = existingAccounts;
-        } else {
-            // Request accounts (user clicked connect button)
-            try {
-                accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            } catch (requestError) {
-                // Handle EIP-6963 multi-wallet errors gracefully
-                if (requestError.message && requestError.message.includes('Unexpected')) {
-                    console.warn('Wallet request failed, trying fallback:', requestError);
-                    // Try getting accounts without prompting as fallback
-                    accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                    if (!accounts || accounts.length === 0) {
-                        throw new Error('Please unlock your wallet and try again');
-                    }
+        // Request accounts - this requires user interaction
+        try {
+            accounts = await wp.request({ method: 'eth_requestAccounts' });
+        } catch (requestError) {
+            console.error('Wallet request error:', requestError);
+
+            // Handle wallet aggregator errors
+            if (requestError.message && (
+                requestError.message.includes('Unexpected') ||
+                requestError.message.includes('User rejected') ||
+                requestError.code === 4001
+            )) {
+                if (requestError.code === 4001) {
+                    showTxStatus('Connection rejected. Please approve the connection in your wallet.', 'error');
                 } else {
-                    throw requestError;
+                    showTxStatus('Wallet connection failed. Please try clicking your wallet extension first, then connect.', 'error');
                 }
+                return;
             }
+            throw requestError;
         }
 
         if (!accounts || accounts.length === 0) {
@@ -187,7 +273,7 @@ async function connectWallet(existingAccounts = null) {
 
         // Setup ethers - use direct RPC for reads to bypass MetaMask's potentially bad RPC
         const directProvider = new ethers.providers.JsonRpcProvider(DIRECT_RPC);
-        provider = new ethers.providers.Web3Provider(window.ethereum);
+        provider = new ethers.providers.Web3Provider(wp);
         signer = provider.getSigner();
 
         // Setup contracts - use direct provider for reads, signer for writes
@@ -217,8 +303,8 @@ async function connectWallet(existingAccounts = null) {
         ]);
 
         // Listen for account changes
-        window.ethereum.on('accountsChanged', handleAccountsChanged);
-        window.ethereum.on('chainChanged', () => window.location.reload());
+        wp.on('accountsChanged', handleAccountsChanged);
+        wp.on('chainChanged', () => window.location.reload());
 
     } catch (error) {
         console.error('Connection error:', error);
@@ -228,16 +314,19 @@ async function connectWallet(existingAccounts = null) {
 
 // Switch to Arbitrum Sepolia
 async function switchToArbitrumSepolia() {
+    const wp = getWalletProvider();
+    if (!wp) return;
+
     try {
         // First try to switch
-        await window.ethereum.request({
+        await wp.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: NETWORK_CONFIG.chainId }]
         });
     } catch (switchError) {
         // Chain not added, try to add it
         if (switchError.code === 4902) {
-            await window.ethereum.request({
+            await wp.request({
                 method: 'wallet_addEthereumChain',
                 params: [NETWORK_CONFIG]
             });
@@ -248,7 +337,7 @@ async function switchToArbitrumSepolia() {
 
     // Force update RPC to working public endpoint (fixes expired Alchemy keys)
     try {
-        await window.ethereum.request({
+        await wp.request({
             method: 'wallet_addEthereumChain',
             params: [{
                 chainId: NETWORK_CONFIG.chainId,
@@ -650,10 +739,11 @@ async function withdrawStake(stakeIndex, hasEarlyPenalty) {
 
 // Add 8BIT token to wallet
 async function addTokenToWallet() {
-    if (!window.ethereum) return;
+    const wp = getWalletProvider();
+    if (!wp) return;
 
     try {
-        await window.ethereum.request({
+        await wp.request({
             method: 'wallet_watchAsset',
             params: {
                 type: 'ERC20',
