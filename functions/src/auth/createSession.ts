@@ -16,6 +16,7 @@ interface CreateSessionResponse {
 }
 
 export const createSession = onCall<CreateSessionRequest, Promise<CreateSessionResponse>>(
+  { cors: true },
   async (request) => {
     // Verify authentication
     if (!request.auth) {

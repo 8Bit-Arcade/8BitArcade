@@ -24,6 +24,7 @@ interface SubmitScoreResponse {
 }
 
 export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreResponse>>(
+  { cors: true },
   async (request) => {
     // Verify authentication
     if (!request.auth) {
