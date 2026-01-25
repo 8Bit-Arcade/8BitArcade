@@ -627,7 +627,9 @@ async function loadUserStakes() {
                 </div>
                 ` : ''}
                 <div class="stake-actions" style="margin-top: 1rem;">
-                    <button class="btn btn-secondary" onclick="claimReward(${i})">Claim Rewards</button>
+                    <button class="btn btn-secondary ${isUnlocked ? '' : 'btn-disabled'}" onclick="claimReward(${i})" ${isUnlocked ? '' : 'disabled'} title="${isUnlocked ? 'Claim accumulated rewards' : 'Unlock required to claim rewards'}">
+                        ${isUnlocked ? 'Claim Rewards' : 'Claim (Locked)'}
+                    </button>
                     <button class="btn ${isUnlocked ? 'btn-primary' : 'btn-warning'}" onclick="withdrawStake(${i}, ${!isUnlocked})">
                         ${isUnlocked ? 'Withdraw' : 'Withdraw (25% Penalty)'}
                     </button>
@@ -837,6 +839,18 @@ async function claimReward(stakeIndex) {
     if (!stakingContract || !userAddress) return;
 
     try {
+        // Check if stake is unlocked first to avoid wasted gas
+        const result = await stakingContract.getUserStakes(userAddress);
+        const unlockTimes = result[1];
+        const unlockTime = unlockTimes[stakeIndex]?.toNumber() || 0;
+        const now = Math.floor(Date.now() / 1000);
+
+        if (now < unlockTime) {
+            const remaining = formatCountdown(unlockTime - now);
+            showTxStatus(`Cannot claim yet. Stake unlocks in ${remaining}`, 'error');
+            return;
+        }
+
         showTxStatus('Claiming rewards...', 'pending');
         const gasSettings = await getGasSettings();
         const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimReward', [stakeIndex], 200000);
