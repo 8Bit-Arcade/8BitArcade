@@ -17,7 +17,6 @@
  * not in code or git.
  */
 
-import * as functions from 'firebase-functions';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onRequest } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
@@ -189,7 +188,7 @@ export const distributeDailyRewards = onSchedule(
       const alreadyDistributed = await rewardsContract.isDistributed(dayId);
       if (alreadyDistributed) {
         console.log(`Rewards already distributed for day ${dayId}`);
-        return null;
+        return;
       }
 
       // Get top 10 players
@@ -197,7 +196,7 @@ export const distributeDailyRewards = onSchedule(
 
       if (top10.length === 0) {
         console.log('No players found for distribution');
-        return null;
+        return;
       }
 
       console.log(`Found ${top10.length} players for rewards`);
@@ -293,12 +292,7 @@ export const distributeDailyRewards = onSchedule(
         // Don't fail the whole function if Discord fails
       }
 
-      return {
-        success: true,
-        dayId,
-        txHash: tx.hash,
-        playersRewarded: top10.length,
-      };
+      console.log(`✅ Distribution complete: dayId=${dayId}, txHash=${tx.hash}, players=${top10.length}`);
 
     } catch (error) {
       console.error('Error distributing rewards:', error);
