@@ -610,8 +610,8 @@ async function setMaxStake() {
 async function getGasSettings() {
     const feeData = await provider.getFeeData();
     return {
-        maxFeePerGas: feeData.maxFeePerGas.mul(150).div(100), // 50% buffer
-        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas.mul(150).div(100)
+        maxFeePerGas: feeData.maxFeePerGas.mul(115).div(100), // 15% buffer (was 50%)
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas // No buffer needed for priority fee
     };
 }
 
