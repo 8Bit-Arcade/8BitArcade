@@ -401,3 +401,82 @@ export const manualDistributeRewards = onRequest(
     }
   }
 );
+
+/**
+ * TEST ONLY: Check leaderboard data without distributing
+ *
+ * Use this to debug what data exists in your leaderboard
+ * Pass ?date=today or ?date=YYYYMMDD to check specific days
+ */
+export const testCheckLeaderboard = onRequest(
+  {
+    timeoutSeconds: 60,
+    memory: '256MiB',
+  },
+  async (req, res) => {
+    try {
+      const db = admin.firestore();
+
+      // Get dayId from query param or use today
+      let dayId: number;
+      const dateParam = req.query.date as string;
+
+      if (dateParam === 'today') {
+        const today = new Date();
+        const year = today.getUTCFullYear();
+        const month = String(today.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(today.getUTCDate()).padStart(2, '0');
+        dayId = parseInt(`${year}${month}${day}`);
+      } else if (dateParam) {
+        dayId = parseInt(dateParam);
+      } else {
+        dayId = getYesterdayDayId();
+      }
+
+      console.log(`Checking leaderboard for dayId: ${dayId}`);
+
+      // Try the expected path
+      const expectedPath = `leaderboards/daily/${dayId}`;
+      const snapshot = await db
+        .collection('leaderboards')
+        .doc('daily')
+        .collection(dayId.toString())
+        .orderBy('score', 'desc')
+        .limit(10)
+        .get();
+
+      const players = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Also check what collections exist under leaderboards
+      const leaderboardsDoc = await db.collection('leaderboards').doc('daily').get();
+      const subcollections = await db.collection('leaderboards').doc('daily').listCollections();
+      const subcollectionNames = subcollections.map(c => c.id).slice(0, 10); // First 10
+
+      // Check globalLeaderboard too
+      const globalDaily = await db.collection('globalLeaderboard').doc('daily').get();
+
+      res.status(200).json({
+        success: true,
+        dayId,
+        expectedPath,
+        playersFound: players.length,
+        players,
+        debug: {
+          leaderboardsDailyExists: leaderboardsDoc.exists,
+          subcollections: subcollectionNames,
+          globalLeaderboardDaily: globalDaily.exists ? globalDaily.data() : null,
+        }
+      });
+
+    } catch (error) {
+      console.error('Test check error:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+);

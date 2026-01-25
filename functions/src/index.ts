@@ -60,7 +60,7 @@ export {
 export { zealyVerifyQuest } from './zealy/verifyQuest';
 
 // Rewards distribution
-export { distributeDailyRewards, manualDistributeRewards } from './rewards/distributeRewards';
+export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard } from './rewards/distributeRewards';
 
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
