@@ -204,6 +204,36 @@
             color: #888;
         }
 
+        /* Countdown styles */
+        .countdown-container {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .countdown-timer {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .glow-yellow {
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00, 0 0 20px #ffaa00;
+        }
+
+        .glow-green {
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+        }
+
+        .progress-bar-fill {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
         @media (max-width: 768px) {
             .tier-selector {
                 grid-template-columns: repeat(2, 1fr);
@@ -211,6 +241,10 @@
 
             .stake-details {
                 grid-template-columns: 1fr;
+            }
+
+            .countdown-timer {
+                font-size: 1rem !important;
             }
         }
     </style>
@@ -451,6 +485,6 @@
     <!-- Load ethers.js from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <!-- Load staking.js after ethers is available (v=6 to bust cache) -->
-    <script src="js/staking.js?v=13" defer></script>
+    <script src="js/staking.js?v=14" defer></script>
 </body>
 </html>

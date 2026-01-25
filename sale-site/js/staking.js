@@ -493,6 +493,37 @@ async function loadPoolStats() {
     }
 }
 
+// Countdown interval reference
+let countdownInterval = null;
+
+// Format countdown time
+function formatCountdown(seconds) {
+    if (seconds <= 0) return 'UNLOCKED!';
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m ${secs}s`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+    }
+    return `${secs}s`;
+}
+
+// Calculate progress percentage
+function calculateProgress(unlockTime, tierDuration) {
+    const now = Math.floor(Date.now() / 1000);
+    const startTime = unlockTime - tierDuration;
+    const elapsed = now - startTime;
+    const progress = Math.min(100, Math.max(0, (elapsed / tierDuration) * 100));
+    return progress;
+}
+
 // Load user stakes
 async function loadUserStakes() {
     if (!stakingContract || !userAddress) return;
@@ -531,8 +562,15 @@ async function loadUserStakes() {
             const now = Math.floor(Date.now() / 1000);
             const isUnlocked = now >= unlockTime.toNumber();
 
+            const unlockTimestamp = unlockTime.toNumber();
+            const tierDuration = LOCK_TIERS[tier].duration;
+            const progress = calculateProgress(unlockTimestamp, tierDuration);
+            const remainingSeconds = unlockTimestamp - now;
+
             const stakeEl = document.createElement('div');
             stakeEl.className = `stake-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+            stakeEl.dataset.stakeId = i;
+            stakeEl.dataset.unlockTime = unlockTimestamp;
             stakeEl.innerHTML = `
                 <div class="stake-header">
                     <div class="stake-amount pixel-text">${formatNumber(ethers.utils.formatEther(amount))} 8BIT</div>
@@ -540,6 +578,31 @@ async function loadUserStakes() {
                         ${isUnlocked ? 'UNLOCKED' : 'LOCKED'}
                     </div>
                 </div>
+
+                <!-- Countdown Timer -->
+                <div class="countdown-container" style="margin: 1rem 0; text-align: center;">
+                    <div class="countdown-label" style="font-size: 0.7rem; color: #888; margin-bottom: 0.5rem;">
+                        ${isUnlocked ? 'Ready to withdraw!' : 'Time Remaining'}
+                    </div>
+                    <div class="countdown-timer pixel-text ${isUnlocked ? 'glow-green' : 'glow-yellow'}"
+                         data-unlock="${unlockTimestamp}"
+                         style="font-size: 1.2rem; letter-spacing: 2px;">
+                        ${isUnlocked ? 'UNLOCKED!' : formatCountdown(remainingSeconds)}
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container" style="margin: 1rem 0;">
+                    <div class="progress-bar-bg" style="background: rgba(0,0,0,0.3); border-radius: 10px; height: 12px; overflow: hidden; border: 1px solid #333;">
+                        <div class="progress-bar-fill" style="height: 100%; background: linear-gradient(90deg, ${isUnlocked ? '#00ff88' : '#00d4ff'}, ${isUnlocked ? '#00ff88' : '#ff00ff'}); width: ${progress}%; transition: width 1s linear; border-radius: 10px;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.6rem; color: #666; margin-top: 0.25rem;">
+                        <span>Staked</span>
+                        <span>${progress.toFixed(1)}% complete</span>
+                        <span>Unlock</span>
+                    </div>
+                </div>
+
                 <div class="stake-details">
                     <div class="stake-detail">
                         <div class="stake-detail-label">Lock Tier</div>
@@ -556,7 +619,7 @@ async function loadUserStakes() {
                 </div>
                 <div class="stake-detail" style="margin-bottom: 1rem;">
                     <div class="stake-detail-label">Unlock Date</div>
-                    <div class="stake-detail-value">${new Date(unlockTime.toNumber() * 1000).toLocaleDateString()} ${new Date(unlockTime.toNumber() * 1000).toLocaleTimeString()}</div>
+                    <div class="stake-detail-value">${new Date(unlockTimestamp * 1000).toLocaleDateString()} ${new Date(unlockTimestamp * 1000).toLocaleTimeString()}</div>
                 </div>
                 ${!isUnlocked ? `
                 <div class="warning-box">
@@ -575,6 +638,29 @@ async function loadUserStakes() {
 
         document.getElementById('userTotalStaked').textContent = `${formatNumber(ethers.utils.formatEther(totalStaked))} 8BIT`;
         document.getElementById('userTotalRewards').textContent = `${formatNumber(ethers.utils.formatEther(totalRewards))} 8BIT`;
+
+        // Start countdown timer (clear previous if exists)
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+
+        countdownInterval = setInterval(() => {
+            const now = Math.floor(Date.now() / 1000);
+            const countdownElements = document.querySelectorAll('.countdown-timer[data-unlock]');
+
+            countdownElements.forEach(el => {
+                const unlockTime = parseInt(el.dataset.unlock);
+                const remaining = unlockTime - now;
+
+                if (remaining <= 0) {
+                    el.textContent = 'UNLOCKED!';
+                    el.classList.remove('glow-yellow');
+                    el.classList.add('glow-green');
+                } else {
+                    el.textContent = formatCountdown(remaining);
+                }
+            });
+        }, 1000);
 
     } catch (error) {
         console.error('Error loading user stakes:', error);
