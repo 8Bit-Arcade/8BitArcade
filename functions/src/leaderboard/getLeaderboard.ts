@@ -23,6 +23,7 @@ interface GetLeaderboardResponse {
 }
 
 export const getLeaderboard = onCall<GetLeaderboardRequest, Promise<GetLeaderboardResponse>>(
+  { cors: true },
   async (request) => {
     const { gameId, period, limit = 100 } = request.data;
     const playerAddress = request.auth?.uid?.toLowerCase();
