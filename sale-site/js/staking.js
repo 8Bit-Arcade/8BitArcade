@@ -103,35 +103,68 @@ const txStatusEl = document.getElementById('txStatus');
 const userStakesSection = document.getElementById('userStakesSection');
 const stakesListEl = document.getElementById('stakesList');
 
-// Get the best available wallet provider (handles EIP-6963 aggregators)
+// EIP-6963 provider storage
+const discoveredProviders = [];
+
+// Listen for EIP-6963 provider announcements (runs immediately)
+if (typeof window !== 'undefined') {
+    window.addEventListener('eip6963:announceProvider', (event) => {
+        const { info, provider } = event.detail;
+        console.log('EIP-6963 provider discovered:', info.name);
+        discoveredProviders.push({ info, provider });
+    });
+    // Request providers from installed extensions
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+}
+
+// Get the best available wallet provider (handles EIP-6963 aggregators like evmAsk)
 function getWalletProvider() {
-    // If we already have a working provider, use it
+    // If we already have a working provider cached, use it
     if (walletProvider) return walletProvider;
 
-    // Check for multiple providers (EIP-5749 / EIP-6963)
+    // BEST: Use EIP-6963 discovered providers (bypasses aggregators completely)
+    if (discoveredProviders.length > 0) {
+        // Prefer MetaMask
+        const mm = discoveredProviders.find(p => p.info.rdns === 'io.metamask' || p.info.name.toLowerCase().includes('metamask'));
+        if (mm) {
+            console.log('Using EIP-6963 MetaMask provider');
+            walletProvider = mm.provider;
+            return walletProvider;
+        }
+        // Use first discovered provider
+        console.log('Using EIP-6963 provider:', discoveredProviders[0].info.name);
+        walletProvider = discoveredProviders[0].provider;
+        return walletProvider;
+    }
+
+    // FALLBACK: Check for multiple providers array (EIP-5749)
     if (window.ethereum?.providers?.length > 0) {
-        // Prefer MetaMask if available
         const metaMask = window.ethereum.providers.find(p => p.isMetaMask && !p.isBraveWallet);
         if (metaMask) {
-            console.log('Using MetaMask provider from providers array');
+            console.log('Using MetaMask from providers array');
             walletProvider = metaMask;
             return metaMask;
         }
-        // Otherwise use first available
-        console.log('Using first available provider from providers array');
+        console.log('Using first provider from providers array');
         walletProvider = window.ethereum.providers[0];
         return walletProvider;
     }
 
-    // Check if window.ethereum itself is usable (not an aggregator)
-    if (window.ethereum && (window.ethereum.isMetaMask || window.ethereum.isCoinbaseWallet || window.ethereum.isTrust)) {
-        console.log('Using direct window.ethereum provider');
-        walletProvider = window.ethereum;
-        return walletProvider;
+    // FALLBACK: Check if window.ethereum is a direct provider (not an aggregator)
+    if (window.ethereum) {
+        // Only use if it's clearly a real wallet, not an aggregator
+        if (window.ethereum.isMetaMask || window.ethereum.isCoinbaseWallet ||
+            window.ethereum.isTrust || window.ethereum.isRabby) {
+            console.log('Using direct window.ethereum provider');
+            walletProvider = window.ethereum;
+            return walletProvider;
+        }
+        // It might be an aggregator - return null and let user click connect
+        console.log('window.ethereum detected but may be aggregator, skipping auto-connect');
+        return null;
     }
 
-    // Fallback to window.ethereum (may be aggregator, will handle errors)
-    return window.ethereum;
+    return null;
 }
 
 // Initialize on page load
@@ -139,16 +172,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTierSelection();
     initInputListeners();
 
-    // Don't auto-connect - wallet aggregators like evmAsk require user interaction
-    // Just check if a provider exists and update UI accordingly
+    // Give EIP-6963 providers time to announce themselves (50ms is usually enough)
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Try to auto-connect ONLY if we have a real provider (not aggregator)
     const wp = getWalletProvider();
     if (wp) {
-        // Try to silently check for existing connection without triggering wallet popup
         try {
-            // Use the direct provider to avoid aggregator issues
             const accounts = await wp.request({ method: 'eth_accounts' });
             if (accounts && accounts.length > 0) {
-                // Already connected, initialize without prompting
                 await initializeWithAccounts(accounts);
             }
         } catch (e) {
@@ -157,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Load public stats
+    // Load public stats regardless
     await loadPoolStats();
 });
 
@@ -229,7 +261,16 @@ async function initializeWithAccounts(accounts) {
 
 // Connect wallet (user clicked button)
 async function connectWallet() {
-    const wp = getWalletProvider();
+    // Re-request EIP-6963 providers in case they weren't ready before
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Get provider - for user-initiated connect, also try window.ethereum as last resort
+    let wp = getWalletProvider();
+    if (!wp && window.ethereum) {
+        console.log('Using window.ethereum as fallback for user-initiated connect');
+        wp = window.ethereum;
+    }
 
     if (!wp) {
         alert('Please install MetaMask or another Web3 wallet to use this feature.');
@@ -242,6 +283,8 @@ async function connectWallet() {
         // Request accounts - this requires user interaction
         try {
             accounts = await wp.request({ method: 'eth_requestAccounts' });
+            // If successful with aggregator fallback, cache it
+            if (!walletProvider) walletProvider = wp;
         } catch (requestError) {
             console.error('Wallet request error:', requestError);
 
@@ -254,7 +297,7 @@ async function connectWallet() {
                 if (requestError.code === 4001) {
                     showTxStatus('Connection rejected. Please approve the connection in your wallet.', 'error');
                 } else {
-                    showTxStatus('Wallet connection failed. Please try clicking your wallet extension first, then connect.', 'error');
+                    showTxStatus('Wallet error. Try: 1) Click your wallet extension icon first, 2) Then click Connect here.', 'error');
                 }
                 return;
             }
