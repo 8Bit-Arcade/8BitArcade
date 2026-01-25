@@ -107,11 +107,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTierSelection();
     initInputListeners();
 
-    // Check if already connected
+    // Check if already connected (use existing accounts without prompting)
     if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-            await connectWallet();
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                // Pass existing accounts to avoid re-prompting
+                await connectWallet(accounts);
+            }
+        } catch (e) {
+            console.log('Could not check existing accounts:', e.message);
         }
     }
 
@@ -138,15 +143,43 @@ function initInputListeners() {
 }
 
 // Connect wallet
-async function connectWallet() {
+// existingAccounts: optional array of already-connected accounts (to avoid re-prompting)
+async function connectWallet(existingAccounts = null) {
     if (!window.ethereum) {
         alert('Please install MetaMask or another Web3 wallet to use this feature.');
         return;
     }
 
     try {
-        // Request accounts
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        let accounts;
+
+        if (existingAccounts && existingAccounts.length > 0) {
+            // Use existing accounts (auto-connect on page load)
+            accounts = existingAccounts;
+        } else {
+            // Request accounts (user clicked connect button)
+            try {
+                accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            } catch (requestError) {
+                // Handle EIP-6963 multi-wallet errors gracefully
+                if (requestError.message && requestError.message.includes('Unexpected')) {
+                    console.warn('Wallet request failed, trying fallback:', requestError);
+                    // Try getting accounts without prompting as fallback
+                    accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (!accounts || accounts.length === 0) {
+                        throw new Error('Please unlock your wallet and try again');
+                    }
+                } else {
+                    throw requestError;
+                }
+            }
+        }
+
+        if (!accounts || accounts.length === 0) {
+            showTxStatus('No accounts found. Please unlock your wallet.', 'error');
+            return;
+        }
+
         userAddress = accounts[0];
 
         // Check and switch network (also updates RPC to working endpoint)
