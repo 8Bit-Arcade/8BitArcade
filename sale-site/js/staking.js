@@ -606,6 +606,15 @@ async function setMaxStake() {
     }
 }
 
+// Get gas settings with buffer to prevent "max fee < base fee" errors
+async function getGasSettings() {
+    const feeData = await provider.getFeeData();
+    return {
+        maxFeePerGas: feeData.maxFeePerGas.mul(150).div(100), // 50% buffer
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas.mul(150).div(100)
+    };
+}
+
 // Stake tokens
 async function stakeTokens() {
     if (!stakingContract || !userAddress) {
@@ -638,9 +647,12 @@ async function stakeTokens() {
 
         if (allowance.lt(amountWei)) {
             showTxStatus('Approving tokens...', 'pending');
-            console.log('Sending approve transaction with explicit gas limit...');
+            console.log('Sending approve transaction...');
+
+            const gasSettings = await getGasSettings();
             const approveTx = await tokenContract.approve(CONTRACT_ADDRESSES.STAKING, ethers.constants.MaxUint256, {
-                gasLimit: 100000 // Explicit gas limit for approve
+                gasLimit: 100000,
+                ...gasSettings
             });
             console.log('Approve TX hash:', approveTx.hash);
             await approveTx.wait();
@@ -672,11 +684,14 @@ async function stakeTokens() {
             return;
         }
 
-        // Stake with explicit gas limit to avoid estimation issues
+        // Stake with explicit gas settings to avoid estimation issues
         showTxStatus('Staking tokens... Confirm in wallet', 'pending');
-        console.log('Sending stake transaction with explicit gas limit...');
+        console.log('Sending stake transaction...');
+
+        const stakeGasSettings = await getGasSettings();
         const stakeTx = await stakingContract.stake(amountWei, selectedTier, {
-            gasLimit: 350000 // Explicit gas limit to bypass estimation
+            gasLimit: 350000,
+            ...stakeGasSettings
         });
         console.log('Transaction hash:', stakeTx.hash);
         showTxStatus('Transaction sent, waiting for confirmation...', 'pending');
@@ -716,7 +731,11 @@ async function claimReward(stakeIndex) {
 
     try {
         showTxStatus('Claiming rewards...', 'pending');
-        const tx = await stakingContract.claimReward(stakeIndex);
+        const gasSettings = await getGasSettings();
+        const tx = await stakingContract.claimReward(stakeIndex, {
+            gasLimit: 200000,
+            ...gasSettings
+        });
         await tx.wait();
         showTxStatus('Rewards claimed successfully!', 'success');
 
@@ -736,7 +755,11 @@ async function claimAllRewards() {
 
     try {
         showTxStatus('Claiming all rewards...', 'pending');
-        const tx = await stakingContract.claimAllRewards();
+        const gasSettings = await getGasSettings();
+        const tx = await stakingContract.claimAllRewards({
+            gasLimit: 500000,
+            ...gasSettings
+        });
         await tx.wait();
         showTxStatus('All rewards claimed successfully!', 'success');
 
@@ -761,7 +784,11 @@ async function withdrawStake(stakeIndex, hasEarlyPenalty) {
 
     try {
         showTxStatus('Withdrawing stake...', 'pending');
-        const tx = await stakingContract.withdraw(stakeIndex);
+        const gasSettings = await getGasSettings();
+        const tx = await stakingContract.withdraw(stakeIndex, {
+            gasLimit: 300000,
+            ...gasSettings
+        });
         await tx.wait();
         showTxStatus('Stake withdrawn successfully!', 'success');
 
