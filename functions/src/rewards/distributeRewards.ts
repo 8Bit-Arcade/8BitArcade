@@ -64,41 +64,31 @@ function getYesterdayDayId(): number {
 }
 
 /**
- * Fetch top 10 players from Firestore global leaderboard
- *
- * The global leaderboard aggregates scores across all games.
- * Structure: globalLeaderboard/{period} with { entries: [...] }
+ * Fetch top 10 players from Firestore leaderboard
  */
 async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
   const db = admin.firestore();
+
+  // Query the daily leaderboard for the given day
+  const snapshot = await db
+    .collection('leaderboards')
+    .doc('daily')
+    .collection(dayId.toString())
+    .orderBy('score', 'desc')
+    .limit(10)
+    .get();
+
   const players: LeaderboardEntry[] = [];
 
-  try {
-    // Get global daily leaderboard (aggregated across all games)
-    const globalDailyDoc = await db.collection('globalLeaderboard').doc('daily').get();
-
-    if (!globalDailyDoc.exists) {
-      console.log('No global daily leaderboard found');
-      return [];
-    }
-
-    const data = globalDailyDoc.data();
-    const entries = data?.entries || [];
-
-    // Get top 10 entries
-    const top10Entries = entries
-      .sort((a: any, b: any) => b.score - a.score)
-      .slice(0, 10);
-
-    // Fetch display preferences for each player
-    for (const entry of top10Entries) {
-      const address = entry.odedId || entry.address;
-      if (!address) continue;
-
-      let displayName = address;
+  // Fetch display preferences for each player
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    if (data.address) {
+      let displayName = data.address; // Default to address
 
       try {
-        const userDoc = await db.collection('users').doc(address.toLowerCase()).get();
+        // Fetch user's display preference from users collection
+        const userDoc = await db.collection('users').doc(data.address.toLowerCase()).get();
         if (userDoc.exists) {
           const userData = userDoc.data();
           const displayPreference = userData?.displayPreference || 'address';
@@ -110,24 +100,19 @@ async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
           }
         }
       } catch (error) {
-        console.warn(`Failed to fetch display preference for ${address}:`, error);
+        console.warn(`Failed to fetch display preference for ${data.address}:`, error);
       }
 
       players.push({
-        address: address,
-        score: entry.score || 0,
-        username: entry.username,
+        address: data.address,
+        score: data.score || 0,
+        username: data.username,
         displayName,
       });
     }
-
-    console.log(`Found ${players.length} players for rewards distribution`);
-    return players;
-
-  } catch (error) {
-    console.error('Error fetching leaderboard:', error);
-    return [];
   }
+
+  return players;
 }
 
 /**
