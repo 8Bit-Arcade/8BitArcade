@@ -610,9 +610,21 @@ async function setMaxStake() {
 async function getGasSettings() {
     const feeData = await provider.getFeeData();
     return {
-        maxFeePerGas: feeData.maxFeePerGas.mul(150).div(100), // 50% buffer
-        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas.mul(150).div(100)
+        maxFeePerGas: feeData.maxFeePerGas.mul(115).div(100), // 15% buffer
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas
     };
+}
+
+// Estimate gas with buffer, fallback to safe default
+async function estimateGasWithBuffer(contract, method, args, fallbackLimit) {
+    try {
+        const estimated = await contract.estimateGas[method](...args);
+        // Add 20% buffer to estimate
+        return estimated.mul(120).div(100);
+    } catch (e) {
+        console.log(`Gas estimation failed for ${method}, using fallback:`, fallbackLimit);
+        return ethers.BigNumber.from(fallbackLimit);
+    }
 }
 
 // Stake tokens
@@ -647,16 +659,20 @@ async function stakeTokens() {
 
         if (allowance.lt(amountWei)) {
             showTxStatus('Approving tokens...', 'pending');
-            console.log('Sending approve transaction...');
 
             const gasSettings = await getGasSettings();
+            const gasLimit = await estimateGasWithBuffer(
+                tokenContract, 'approve',
+                [CONTRACT_ADDRESSES.STAKING, ethers.constants.MaxUint256],
+                100000
+            );
+
             const approveTx = await tokenContract.approve(CONTRACT_ADDRESSES.STAKING, ethers.constants.MaxUint256, {
-                gasLimit: 100000,
+                gasLimit,
                 ...gasSettings
             });
-            console.log('Approve TX hash:', approveTx.hash);
+            console.log('Approve TX:', approveTx.hash, 'Gas:', gasLimit.toString());
             await approveTx.wait();
-            console.log('Approve confirmed!');
             showTxStatus('Tokens approved! Now staking...', 'pending');
         }
 
@@ -684,16 +700,21 @@ async function stakeTokens() {
             return;
         }
 
-        // Stake with explicit gas settings to avoid estimation issues
+        // Stake with dynamic gas estimation
         showTxStatus('Staking tokens... Confirm in wallet', 'pending');
-        console.log('Sending stake transaction...');
 
         const stakeGasSettings = await getGasSettings();
+        const stakeGasLimit = await estimateGasWithBuffer(
+            stakingContract, 'stake',
+            [amountWei, selectedTier],
+            350000
+        );
+
         const stakeTx = await stakingContract.stake(amountWei, selectedTier, {
-            gasLimit: 350000,
+            gasLimit: stakeGasLimit,
             ...stakeGasSettings
         });
-        console.log('Transaction hash:', stakeTx.hash);
+        console.log('Stake TX:', stakeTx.hash, 'Gas:', stakeGasLimit.toString());
         showTxStatus('Transaction sent, waiting for confirmation...', 'pending');
         await stakeTx.wait();
 
@@ -732,10 +753,9 @@ async function claimReward(stakeIndex) {
     try {
         showTxStatus('Claiming rewards...', 'pending');
         const gasSettings = await getGasSettings();
-        const tx = await stakingContract.claimReward(stakeIndex, {
-            gasLimit: 200000,
-            ...gasSettings
-        });
+        const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimReward', [stakeIndex], 200000);
+        const tx = await stakingContract.claimReward(stakeIndex, { gasLimit, ...gasSettings });
+        console.log('Claim TX:', tx.hash, 'Gas:', gasLimit.toString());
         await tx.wait();
         showTxStatus('Rewards claimed successfully!', 'success');
 
@@ -756,10 +776,9 @@ async function claimAllRewards() {
     try {
         showTxStatus('Claiming all rewards...', 'pending');
         const gasSettings = await getGasSettings();
-        const tx = await stakingContract.claimAllRewards({
-            gasLimit: 500000,
-            ...gasSettings
-        });
+        const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimAllRewards', [], 500000);
+        const tx = await stakingContract.claimAllRewards({ gasLimit, ...gasSettings });
+        console.log('ClaimAll TX:', tx.hash, 'Gas:', gasLimit.toString());
         await tx.wait();
         showTxStatus('All rewards claimed successfully!', 'success');
 
@@ -785,10 +804,9 @@ async function withdrawStake(stakeIndex, hasEarlyPenalty) {
     try {
         showTxStatus('Withdrawing stake...', 'pending');
         const gasSettings = await getGasSettings();
-        const tx = await stakingContract.withdraw(stakeIndex, {
-            gasLimit: 300000,
-            ...gasSettings
-        });
+        const gasLimit = await estimateGasWithBuffer(stakingContract, 'withdraw', [stakeIndex], 300000);
+        const tx = await stakingContract.withdraw(stakeIndex, { gasLimit, ...gasSettings });
+        console.log('Withdraw TX:', tx.hash, 'Gas:', gasLimit.toString());
         await tx.wait();
         showTxStatus('Stake withdrawn successfully!', 'success');
 
