@@ -18,12 +18,18 @@
  */
 
 import * as functions from 'firebase-functions';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onRequest } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { ethers } from 'ethers';
 
 // Import contract configuration
-// ⚠️ UPDATE: Make sure this points to your contracts config
 import { GAME_REWARDS_ADDRESS, ARBITRUM_RPC_URL, USE_TESTNET } from '../config';
+
+// Define the secret for the rewards private key
+// Set this with: firebase functions:secrets:set REWARDS_PRIVATE_KEY
+const rewardsPrivateKey = defineSecret('REWARDS_PRIVATE_KEY');
 
 // Import Discord webhook integration
 import { postWinnersToDiscord } from '../notifications/discordWebhook';
@@ -63,7 +69,7 @@ function getYesterdayDayId(): number {
 async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
   const db = admin.firestore();
 
-  // ⚠️ UPDATE: Adjust this query to match your Firestore structure
+  // Query the daily leaderboard for the given day
   const snapshot = await db
     .collection('leaderboards')
     .doc('daily')
@@ -92,11 +98,9 @@ async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
           } else if (displayPreference === 'ens' && userData?.ensName) {
             displayName = userData.ensName;
           }
-          // If 'address' or no preference, displayName stays as address
         }
       } catch (error) {
         console.warn(`Failed to fetch display preference for ${data.address}:`, error);
-        // Continue with address as displayName
       }
 
       players.push({
@@ -115,15 +119,19 @@ async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
  * Main function: Distribute daily rewards
  *
  * Triggered daily at midnight UTC via Cloud Scheduler
+ *
+ * SETUP: Set the secret with:
+ *   firebase functions:secrets:set REWARDS_PRIVATE_KEY
  */
-export const distributeDailyRewards = functions
-  .runWith({
-    timeoutSeconds: 300, // 5 minutes
-    memory: '512MB',
-  })
-  .pubsub.schedule('0 0 * * *') // Every day at midnight UTC
-  .timeZone('UTC')
-  .onRun(async (context) => {
+export const distributeDailyRewards = onSchedule(
+  {
+    schedule: '0 0 * * *', // Every day at midnight UTC
+    timeZone: 'UTC',
+    timeoutSeconds: 300,
+    memory: '512MiB',
+    secrets: [rewardsPrivateKey], // Inject the secret
+  },
+  async (event) => {
     try {
       const dayId = getYesterdayDayId(); // Distribute rewards for yesterday
       console.log(`Starting reward distribution for day: ${dayId}`);
@@ -131,10 +139,10 @@ export const distributeDailyRewards = functions
       // Setup provider and wallet
       const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
 
-      // ⚠️ SECURITY: Private key from Firebase config (not hardcoded!)
-      const privateKey = functions.config().rewards?.private_key;
+      // Get private key from secret (new Firebase secrets API)
+      const privateKey = rewardsPrivateKey.value();
       if (!privateKey) {
-        throw new Error('Rewards private key not configured. Run: firebase functions:config:set rewards.private_key="0xYourKey"');
+        throw new Error('Rewards private key not configured. Run: firebase functions:secrets:set REWARDS_PRIVATE_KEY');
       }
 
       const wallet = new ethers.Wallet(privateKey, provider);
@@ -316,33 +324,86 @@ export const distributeDailyRewards = functions
  * Example:
  * curl -X POST https://your-region-your-project.cloudfunctions.net/manualDistributeRewards
  */
-export const manualDistributeRewards = functions
-  .runWith({
+export const manualDistributeRewards = onRequest(
+  {
     timeoutSeconds: 300,
-    memory: '512MB',
-  })
-  .https.onRequest(async (req, res) => {
+    memory: '512MiB',
+    secrets: [rewardsPrivateKey],
+  },
+  async (req, res) => {
     // ⚠️ SECURITY: Add authentication here in production!
     // Only allow authorized requests
 
     try {
-      // Use yesterday's date for distribution
       const dayId = getYesterdayDayId();
+      console.log(`Manual distribution for day: ${dayId}`);
 
-      // ... same logic as scheduled function ...
-      // (Copy the try block from distributeDailyRewards)
+      // Setup provider and wallet
+      const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
+      const privateKey = rewardsPrivateKey.value();
+
+      if (!privateKey) {
+        res.status(500).json({ success: false, error: 'Private key not configured' });
+        return;
+      }
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+      console.log('Distributor wallet:', wallet.address);
+
+      // Connect to GameRewards contract
+      const rewardsContract = new ethers.Contract(
+        GAME_REWARDS_ADDRESS,
+        GAME_REWARDS_ABI,
+        wallet
+      );
+
+      // Check if already distributed
+      const alreadyDistributed = await rewardsContract.isDistributed(dayId);
+      if (alreadyDistributed) {
+        res.status(200).json({ success: true, message: `Already distributed for day ${dayId}` });
+        return;
+      }
+
+      // Get top 10 players
+      const top10 = await getTop10Players(dayId);
+      if (top10.length === 0) {
+        res.status(200).json({ success: true, message: 'No players found for distribution' });
+        return;
+      }
+
+      // Prepare and execute distribution
+      const playerAddresses = top10.map(p => p.address);
+      const playerRanks = top10.map((_, index) => index + 1);
+
+      const tx = await rewardsContract.distributeRewards(dayId, playerAddresses, playerRanks);
+      console.log('Transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+
+      // Log to Firestore
+      const db = admin.firestore();
+      await db.collection('reward_distributions').add({
+        dayId,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        txHash: tx.hash,
+        blockNumber: receipt.blockNumber,
+        players: top10.map((p, i) => ({ rank: i + 1, address: p.address, score: p.score })),
+        manual: true,
+      });
 
       res.status(200).json({
         success: true,
         message: 'Rewards distributed successfully',
         dayId,
+        txHash: tx.hash,
+        playersRewarded: top10.length,
       });
 
     } catch (error) {
-      console.error(error);
+      console.error('Manual distribution error:', error);
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
-  });
+  }
+);
