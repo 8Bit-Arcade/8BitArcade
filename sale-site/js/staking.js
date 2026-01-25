@@ -103,21 +103,30 @@ const txStatusEl = document.getElementById('txStatus');
 const userStakesSection = document.getElementById('userStakesSection');
 const stakesListEl = document.getElementById('stakesList');
 
-// EIP-6963 provider storage
+// EIP-6963 provider storage - populated lazily on user action
 const discoveredProviders = [];
+let eip6963Initialized = false;
 
-// Listen for EIP-6963 provider announcements (runs immediately)
-if (typeof window !== 'undefined') {
+// Initialize EIP-6963 discovery (only call after user interaction)
+function initEIP6963() {
+    if (eip6963Initialized) return;
+    eip6963Initialized = true;
+
     window.addEventListener('eip6963:announceProvider', (event) => {
-        const { info, provider } = event.detail;
-        console.log('EIP-6963 provider discovered:', info.name);
-        discoveredProviders.push({ info, provider });
+        if (event.detail && event.detail.info && event.detail.provider) {
+            console.log('EIP-6963 provider discovered:', event.detail.info.name);
+            // Avoid duplicates
+            if (!discoveredProviders.some(p => p.info.uuid === event.detail.info.uuid)) {
+                discoveredProviders.push(event.detail);
+            }
+        }
     });
-    // Request providers from installed extensions
+
+    // Request providers - this triggers wallet extensions to announce themselves
     window.dispatchEvent(new Event('eip6963:requestProvider'));
 }
 
-// Get the best available wallet provider (handles EIP-6963 aggregators like evmAsk)
+// Get the best available wallet provider - ONLY call after user clicks connect
 function getWalletProvider() {
     // If we already have a working provider cached, use it
     if (walletProvider) return walletProvider;
@@ -125,7 +134,10 @@ function getWalletProvider() {
     // BEST: Use EIP-6963 discovered providers (bypasses aggregators completely)
     if (discoveredProviders.length > 0) {
         // Prefer MetaMask
-        const mm = discoveredProviders.find(p => p.info.rdns === 'io.metamask' || p.info.name.toLowerCase().includes('metamask'));
+        const mm = discoveredProviders.find(p =>
+            p.info.rdns === 'io.metamask' ||
+            p.info.name.toLowerCase().includes('metamask')
+        );
         if (mm) {
             console.log('Using EIP-6963 MetaMask provider');
             walletProvider = mm.provider;
@@ -137,7 +149,7 @@ function getWalletProvider() {
         return walletProvider;
     }
 
-    // FALLBACK: Check for multiple providers array (EIP-5749)
+    // FALLBACK: Check for providers array (EIP-5749 style)
     if (window.ethereum?.providers?.length > 0) {
         const metaMask = window.ethereum.providers.find(p => p.isMetaMask && !p.isBraveWallet);
         if (metaMask) {
@@ -150,46 +162,28 @@ function getWalletProvider() {
         return walletProvider;
     }
 
-    // FALLBACK: Check if window.ethereum is a direct provider (not an aggregator)
+    // FALLBACK: Direct provider check (only if clearly a real wallet)
     if (window.ethereum) {
-        // Only use if it's clearly a real wallet, not an aggregator
         if (window.ethereum.isMetaMask || window.ethereum.isCoinbaseWallet ||
-            window.ethereum.isTrust || window.ethereum.isRabby) {
+            window.ethereum.isTrust || window.ethereum.isRabby ||
+            window.ethereum.isBraveWallet || window.ethereum.isTokenPocket) {
             console.log('Using direct window.ethereum provider');
             walletProvider = window.ethereum;
             return walletProvider;
         }
-        // It might be an aggregator - return null and let user click connect
-        console.log('window.ethereum detected but may be aggregator, skipping auto-connect');
-        return null;
     }
 
-    return null;
+    // Return window.ethereum anyway for user-initiated connect (aggregator may work with user gesture)
+    return window.ethereum || null;
 }
 
-// Initialize on page load
+// Initialize on page load - NO WALLET INTERACTION
 document.addEventListener('DOMContentLoaded', async () => {
     initTierSelection();
     initInputListeners();
 
-    // Give EIP-6963 providers time to announce themselves (50ms is usually enough)
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Try to auto-connect ONLY if we have a real provider (not aggregator)
-    const wp = getWalletProvider();
-    if (wp) {
-        try {
-            const accounts = await wp.request({ method: 'eth_accounts' });
-            if (accounts && accounts.length > 0) {
-                await initializeWithAccounts(accounts);
-            }
-        } catch (e) {
-            // Silently fail - user will click connect button
-            console.log('Auto-connect skipped:', e.message);
-        }
-    }
-
-    // Load public stats regardless
+    // DO NOT touch any wallet/ethereum stuff here
+    // Just load public stats using direct RPC
     await loadPoolStats();
 });
 
@@ -261,9 +255,11 @@ async function initializeWithAccounts(accounts) {
 
 // Connect wallet (user clicked button)
 async function connectWallet() {
-    // Re-request EIP-6963 providers in case they weren't ready before
-    window.dispatchEvent(new Event('eip6963:requestProvider'));
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Initialize EIP-6963 discovery on first connect attempt
+    initEIP6963();
+
+    // Give providers time to announce (user gesture already happened, so this is safe)
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Get provider - for user-initiated connect, also try window.ethereum as last resort
     let wp = getWalletProvider();
