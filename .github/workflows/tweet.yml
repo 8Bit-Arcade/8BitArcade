@@ -2,7 +2,7 @@ name: Post Tweets to Discord
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/10 * * * *"   # runs every 10 minutes
   workflow_dispatch:
 
 jobs:
@@ -17,6 +17,7 @@ jobs:
         run: |
           set -e
 
+          # RSS.app feed URL
           RSS_URL="https://rss.app/feeds/MIpcEv6eV8BVwpXI.xml"
           STATE_FILE=".last_tweet"
 
@@ -28,18 +29,25 @@ jobs:
           fi
 
           echo "Parsing tweet links..."
+          # Extract links inside <item> blocks and filter only tweet URLs
           LINKS=$(echo "$RSS" \
-            | grep "<link>" \
-            | sed -e 's/<[^>]*>//g' \
-            | grep twitter.com \
-            | sed 's|https://twitter.com|https://x.com|g')
+            | grep -oP '(?<=<item>).*?(?=</item>)' \
+            | grep -oP '(?<=<link>).*?(?=</link>)' \
+            | grep "/status/")
+
+          if [ -z "$LINKS" ]; then
+            echo "No new tweets found in the feed."
+            exit 0
+          fi
 
           echo "Found links:"
           echo "$LINKS"
 
+          # Load last posted tweet
           LAST_POSTED=""
           [ -f "$STATE_FILE" ] && LAST_POSTED=$(cat "$STATE_FILE")
 
+          # Loop over links (newest first) and post to Discord
           for LINK in $LINKS; do
             if [ "$LINK" = "$LAST_POSTED" ]; then
               echo "Already posted $LINK, stopping."
