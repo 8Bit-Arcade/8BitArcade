@@ -20,7 +20,7 @@ jobs:
           RSS_URL="https://rss.app/feeds/MIpcEv6eV8BVwpXI.xml"
           STATE_FILE=".last_tweet"
 
-          echo "Fetching RSS from rss.app..."
+          echo "Fetching RSS from RSS.app..."
           RSS=$(curl -fsSL "$RSS_URL" || echo "")
           if [ -z "$RSS" ]; then
             echo "⚠️ Failed to fetch RSS feed. Skipping this run."
