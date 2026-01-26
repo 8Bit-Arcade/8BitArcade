@@ -17,11 +17,11 @@ jobs:
         run: |
           set -e
 
-          RSS_URL="https://nitter.poast.org/8_Bit_Arcade_/rss"
+          RSS_URL="https://rss.app/feeds/MIpcEv6eV8BVwpXI.xml"
           STATE_FILE=".last_tweet"
 
-          echo "Fetching RSS from Poast Nitter..."
-          RSS=$(curl -fsSL -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "$RSS_URL" || echo "")
+          echo "Fetching RSS from rss.app..."
+          RSS=$(curl -fsSL "$RSS_URL" || echo "")
           if [ -z "$RSS" ]; then
             echo "⚠️ Failed to fetch RSS feed. Skipping this run."
             exit 0
