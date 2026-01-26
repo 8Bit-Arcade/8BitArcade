@@ -21,7 +21,7 @@ jobs:
           STATE_FILE=".last_tweet"
 
           echo "Fetching RSS from Poast Nitter..."
-          RSS=$(curl -fsSL "$RSS_URL" || echo "")
+          RSS=$(curl -fsSL -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "$RSS_URL" || echo "")
           if [ -z "$RSS" ]; then
             echo "⚠️ Failed to fetch RSS feed. Skipping this run."
             exit 0
