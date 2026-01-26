@@ -1,6 +1,6 @@
 # Smart Contract Addresses
 
-> **Last Updated:** January 10, 2026
+> **Last Updated:** January 26, 2026
 > **Network:** Arbitrum Sepolia Testnet (Pre-Launch)
 
 ## Overview
@@ -21,6 +21,8 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 | **Token Sale** | [`0x057B1130dD6E8FcBc144bb34172e45293C6839fE`](https://sepolia.arbiscan.io/address/0x057B1130dD6E8FcBc144bb34172e45293C6839fE) | Public token sale ($100K raise) |
 | **Treasury Gas Manager** | [`0x39F49a46CAB85CF079Cde25EAE311A563d3952EC`](https://sepolia.arbiscan.io/address/0x39F49a46CAB85CF079Cde25EAE311A563d3952EC) | Automates gas wallet refills |
 | **Testnet Faucet** | [`0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) | Free test tokens (testnet only) |
+| **Tiered Staking** | [`0xC193451f59De0df09EC8359D091F8890A80F20c4`](https://sepolia.arbiscan.io/address/0xC193451f59De0df09EC8359D091F8890A80F20c4) | Staking with lock tiers (7d-6mo) |
+| **Staking Bonus** | TBD (pending deployment) | Bonus rewards for stakers on leaderboards |
 | **Vested Airdrop** | TBD (pending deployment) | Testnet airdrop with 3-month vesting |
 
 ### External Tokens
@@ -58,6 +60,8 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 - Game Rewards
 - Tournament Manager
 - Tournament Buyback
+- Tiered Staking
+- Staking Bonus
 - Token Sale (if needed for future raises)
 - Treasury Gas Manager
 - Vested Airdrop (for mainnet airdrop if applicable)

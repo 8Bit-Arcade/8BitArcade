@@ -484,6 +484,26 @@
                         <tr><td>3rd Place</td><td>750 8BIT</td></tr>
                         <tr><td>4th-10th</td><td>250-500 8BIT</td></tr>
                     </table>
+
+                    <h3>4.4 Staking Bonus Multipliers</h3>
+                    <p>
+                        Players who stake 8BIT tokens earn bonus multipliers on their daily leaderboard rewards.
+                        This creates a powerful incentive to both play AND hold tokens.
+                    </p>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Staking Tier</th>
+                            <th>Tokens Staked</th>
+                            <th>Reward Bonus</th>
+                        </tr>
+                        <tr><td>Tier 1</td><td>100,000 8BIT</td><td>+10%</td></tr>
+                        <tr><td>Tier 2</td><td>500,000 8BIT</td><td>+25%</td></tr>
+                        <tr><td>Tier 3</td><td>1,000,000 8BIT</td><td>+50%</td></tr>
+                    </table>
+                    <div class="wp-highlight">
+                        <strong>Example:</strong> A player ranking #1 with 1M tokens staked earns 1,500 base + 750 bonus = 2,250 8BIT daily.
+                        Thresholds are adjustable by governance to maintain fairness as token value changes.
+                    </div>
                 </div>
 
                 <!-- 5. Technical Architecture -->
@@ -596,6 +616,11 @@
                             <td><strong>TieredStaking</strong></td>
                             <td>Staking Rewards</td>
                             <td>Lock periods (7d-6mo), weighted rewards, 25% early withdrawal penalty</td>
+                        </tr>
+                        <tr>
+                            <td><strong>StakingBonus</strong></td>
+                            <td>Game Reward Multipliers</td>
+                            <td>Bonus rewards for stakers who rank on leaderboards (10-50% bonus)</td>
                         </tr>
                     </table>
 

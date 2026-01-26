@@ -39,7 +39,7 @@
 * [Market Cap Scenarios](tokenomics/market-scenarios.md)
 * [Deflationary Model](tokenomics/deflationary.md)
 * [Gas Sustainability](tokenomics/gas-sustainability.md)
-* [Staking (Coming Soon)](tokenomics/staking.md)
+* [Staking](tokenomics/staking.md)
 
 ## Smart Contracts
 
@@ -50,6 +50,7 @@
 * [TokenSale](smart-contracts/tokensale.md)
 * [TournamentManager](smart-contracts/tournamentmanager.md)
 * [TournamentBuyback](smart-contracts/tournamentbuyback.md)
+* [StakingBonus](smart-contracts/stakingbonus.md)
 * [VestedAirdrop](contracts/vested-airdrop.md)
 * [Security & Audits](contracts/security.md)
 
