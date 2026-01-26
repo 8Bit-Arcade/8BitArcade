@@ -17,7 +17,7 @@ jobs:
         run: |
           set -e
 
-          RSS_URL="https://nitter.privacydev.net/8_Bit_Arcade_/rss"
+          RSS_URL="https://rsshub.app/twitter/user/8_Bit_Arcade_"
           STATE_FILE=".last_tweet"
 
           echo "Fetching RSS..."
