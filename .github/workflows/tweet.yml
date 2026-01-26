@@ -17,11 +17,15 @@ jobs:
         run: |
           set -e
 
-          RSS_URL="https://rsshub.app/twitter/user/8_Bit_Arcade_"
+          RSS_URL="https://nitter.poast.org/8_Bit_Arcade_/rss"
           STATE_FILE=".last_tweet"
 
-          echo "Fetching RSS..."
-          RSS=$(curl -fsSL "$RSS_URL")
+          echo "Fetching RSS from Poast Nitter..."
+          RSS=$(curl -fsSL "$RSS_URL" || echo "")
+          if [ -z "$RSS" ]; then
+            echo "⚠️ Failed to fetch RSS feed. Skipping this run."
+            exit 0
+          fi
 
           echo "Parsing tweet links..."
           LINKS=$(echo "$RSS" \
@@ -30,15 +34,19 @@ jobs:
             | grep twitter.com \
             | sed 's|https://twitter.com|https://x.com|g')
 
+          echo "Found links:"
+          echo "$LINKS"
+
           LAST_POSTED=""
           [ -f "$STATE_FILE" ] && LAST_POSTED=$(cat "$STATE_FILE")
 
           for LINK in $LINKS; do
             if [ "$LINK" = "$LAST_POSTED" ]; then
+              echo "Already posted $LINK, stopping."
               break
             fi
 
-            echo "Posting $LINK"
+            echo "Posting $LINK to Discord..."
             curl -s -X POST \
               -H "Content-Type: application/json" \
               -d "{\"content\":\"🐦 New post on X → $LINK\"}" \
@@ -47,4 +55,7 @@ jobs:
             sleep 2
           done
 
+          # Save the most recent link
           echo "$LINK" > "$STATE_FILE"
+
+          echo "✅ Workflow completed."
