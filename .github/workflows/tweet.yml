@@ -13,7 +13,7 @@ jobs:
 
       - name: Fetch tweets and post to Discord
         env:
-          DISCORD_WEBHOOK: https://discord.com/api/webhooks/1464443075827990600/C_vtfB6sFWF718HLcHo0b7MKj857VQ4mKVdWAPx9lSRhAuUZlsJ4aBT0y48QIqwGsOwX
+          DISCORD_WEBHOOK: https://discord.com/api/webhooks/1464731055247458376/W94mhWtn6yaGm7okQc2jntz4Y2G3AKJZQjhYLKrgW_9UPynf8hEk6awenBBB7cHcWteU
         run: |
           set -e
 
