@@ -70,20 +70,38 @@ Longer locks earn a larger share of the reward pool:
 Your Rewards = (Your Weighted Stake / Total Weighted Stake) × Monthly Pool
 ```
 
-## Additional Staking Benefits (Planned)
+## Staking Bonus Multipliers (LIVE)
 
-Beyond passive rewards, stakers may receive:
+Stakers who rank on daily leaderboards receive bonus rewards on top of their base earnings. This is handled by the **StakingBonus** smart contract.
 
 ### 🎮 Boosted Game Rewards
 
-* **+10% to daily leaderboard rewards** (flexible staking)
-* **+25% to daily leaderboard rewards** (90-day lock)
-* **+50% to daily leaderboard rewards** (180-day lock)
+| Staking Tier | Tokens Required | Reward Bonus |
+|--------------|-----------------|--------------|
+| **Tier 1**   | 100,000 8BIT    | +10%         |
+| **Tier 2**   | 500,000 8BIT    | +25%         |
+| **Tier 3**   | 1,000,000 8BIT  | +50%         |
 
 **Example:**
 
-* Normal #1 reward: 12,500 8BIT/day
-* With 180-day staking: 18,750 8BIT/day (+50%)
+* Rank #1 base reward: 2,500 8BIT
+* With 1M tokens staked (Tier 3): 2,500 + 1,250 = **3,750 8BIT**
+
+### How It Works
+
+1. Daily leaderboard rewards distributed via **GameRewards** contract
+2. **StakingBonus** contract checks each winner's staked balance
+3. Bonus tokens minted automatically based on tier
+4. No claiming needed - bonus sent directly to wallet
+
+### Adjustable Parameters
+
+Tier thresholds and bonus percentages can be adjusted by the contract owner to maintain fairness as token value changes:
+
+* `setTierThresholds(tier1, tier2, tier3)` - Adjust token requirements
+* `setTierBonuses(tier1Bps, tier2Bps, tier3Bps)` - Adjust bonus percentages
+
+**Smart Contract:** StakingBonus ([View on Arbiscan](../contracts/addresses.md))
 
 ### 🎟️ Tournament Perks
 
