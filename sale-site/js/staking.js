@@ -935,7 +935,7 @@ async function addTokenToWallet() {
                     address: CONTRACT_ADDRESSES.TOKEN,
                     symbol: '8BIT',
                     decimals: 18,
-                    image: 'https://8bitarcade.games/images/8bit-logo.png'
+                    image: 'https://8bitarcade.games/images/8bit-token.png'
                 }
             }
         });
