@@ -16,6 +16,16 @@ export const EIGHT_BIT_TOKEN_ADDRESS = USE_TESTNET
   ? '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d' // Arbitrum Sepolia
   : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy 8BIT token to mainnet
 
+export const STAKING_ADDRESS = USE_TESTNET
+  ? '0xC193451f59De0df09EC8359D091F8890A80F20c4' // Arbitrum Sepolia (TieredStaking)
+  : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy to mainnet
+
+// StakingBonus contract - for reward multipliers based on staked amount
+// Set to empty string to disable staking bonuses
+export const STAKING_BONUS_ADDRESS = USE_TESTNET
+  ? '' // UPDATE: Deploy StakingBonus and add address here
+  : ''; // UPDATE: Deploy to mainnet
+
 // RPC URLs
 export const ARBITRUM_RPC_URL = USE_TESTNET
   ? 'https://sepolia-rollup.arbitrum.io/rpc' // Arbitrum Sepolia testnet

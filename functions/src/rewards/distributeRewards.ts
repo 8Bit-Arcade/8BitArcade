@@ -24,7 +24,13 @@ import * as admin from 'firebase-admin';
 import { ethers } from 'ethers';
 
 // Import contract configuration
-import { GAME_REWARDS_ADDRESS, ARBITRUM_RPC_URL, USE_TESTNET } from '../config';
+import {
+  GAME_REWARDS_ADDRESS,
+  ARBITRUM_RPC_URL,
+  USE_TESTNET,
+  STAKING_ADDRESS,
+  STAKING_BONUS_ADDRESS
+} from '../config';
 
 // Define the secret for the rewards private key
 // Set this with: firebase functions:secrets:set REWARDS_PRIVATE_KEY
@@ -41,6 +47,17 @@ const GAME_REWARDS_ABI = [
   'function distributeRewards(uint256 dayId, address[] calldata players, uint256[] calldata ranks) external',
   'function isDistributed(uint256 dayId) view returns (bool)',
   'function getRewardForRank(uint256 rank) view returns (uint256)',
+];
+
+// TieredStaking contract ABI (to read staked amounts)
+const STAKING_ABI = [
+  'function userTotalStaked(address) view returns (uint256)',
+];
+
+// StakingBonus contract ABI (to distribute bonuses)
+const STAKING_BONUS_ABI = [
+  'function distributeBonusBatch(uint256 dayId, address[] calldata players, uint256[] calldata baseRewards, uint256[] calldata stakedAmounts) external',
+  'function isBonusDistributed(uint256 dayId, address player) view returns (bool)',
 ];
 
 interface LeaderboardEntry {
@@ -307,6 +324,64 @@ export const distributeDailyRewards = onSchedule(
         // Don't fail the whole function if Discord fails
       }
 
+      // === STAKING BONUS DISTRIBUTION ===
+      // Only runs if StakingBonus contract is configured
+      if (STAKING_BONUS_ADDRESS && STAKING_ADDRESS) {
+        try {
+          console.log('Starting staking bonus distribution...');
+
+          const stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, provider);
+          const bonusContract = new ethers.Contract(STAKING_BONUS_ADDRESS, STAKING_BONUS_ABI, wallet);
+
+          // Get staked amounts for all winners
+          const stakedAmounts = await Promise.all(
+            playerAddresses.map(async (addr) => {
+              try {
+                return await stakingContract.userTotalStaked(addr);
+              } catch {
+                return BigInt(0);
+              }
+            })
+          );
+
+          // Get base rewards for each rank
+          const baseRewards = await Promise.all(
+            playerRanks.map(async (rank) => {
+              return await rewardsContract.getRewardForRank(rank);
+            })
+          );
+
+          // Log staking info
+          console.log('Staking bonus data:', playerAddresses.map((addr, i) => ({
+            address: addr.slice(0, 10) + '...',
+            staked: ethers.formatEther(stakedAmounts[i]),
+            baseReward: ethers.formatEther(baseRewards[i]),
+          })));
+
+          // Check if any player has staked tokens (worth distributing bonuses)
+          const anyStaked = stakedAmounts.some(s => s > BigInt(0));
+
+          if (anyStaked) {
+            const bonusTx = await bonusContract.distributeBonusBatch(
+              dayId,
+              playerAddresses,
+              baseRewards,
+              stakedAmounts
+            );
+            console.log('Bonus TX sent:', bonusTx.hash);
+            await bonusTx.wait();
+            console.log('✅ Staking bonuses distributed!');
+          } else {
+            console.log('No stakers among winners, skipping bonus distribution');
+          }
+        } catch (bonusError) {
+          // Don't fail the whole distribution if bonus fails
+          console.error('Staking bonus distribution failed (non-critical):', bonusError);
+        }
+      } else {
+        console.log('StakingBonus not configured, skipping bonus distribution');
+      }
+
       console.log(`✅ Distribution complete: dayId=${dayId}, txHash=${tx.hash}, players=${top10.length}`);
 
     } catch (error) {
@@ -399,11 +474,58 @@ export const manualDistributeRewards = onRequest(
         manual: true,
       });
 
+      // === STAKING BONUS DISTRIBUTION ===
+      let bonusTxHash = null;
+      if (STAKING_BONUS_ADDRESS && STAKING_ADDRESS) {
+        try {
+          console.log('Starting staking bonus distribution...');
+
+          const stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, provider);
+          const bonusContract = new ethers.Contract(STAKING_BONUS_ADDRESS, STAKING_BONUS_ABI, wallet);
+
+          const stakedAmounts = await Promise.all(
+            playerAddresses.map(async (addr) => {
+              try {
+                return await stakingContract.userTotalStaked(addr);
+              } catch {
+                return BigInt(0);
+              }
+            })
+          );
+
+          const baseRewards = await Promise.all(
+            playerRanks.map(async (rank) => {
+              return await rewardsContract.getRewardForRank(rank);
+            })
+          );
+
+          const anyStaked = stakedAmounts.some(s => s > BigInt(0));
+
+          if (anyStaked) {
+            const bonusTx = await bonusContract.distributeBonusBatch(
+              dayId,
+              playerAddresses,
+              baseRewards,
+              stakedAmounts
+            );
+            console.log('Bonus TX sent:', bonusTx.hash);
+            await bonusTx.wait();
+            bonusTxHash = bonusTx.hash;
+            console.log('✅ Staking bonuses distributed!');
+          } else {
+            console.log('No stakers among winners, skipping bonus distribution');
+          }
+        } catch (bonusError) {
+          console.error('Staking bonus distribution failed (non-critical):', bonusError);
+        }
+      }
+
       res.status(200).json({
         success: true,
         message: 'Rewards distributed successfully',
         dayId,
         txHash: tx.hash,
+        bonusTxHash,
         playersRewarded: top10.length,
       });
 
