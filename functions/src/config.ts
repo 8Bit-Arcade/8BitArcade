@@ -23,7 +23,7 @@ export const STAKING_ADDRESS = USE_TESTNET
 // StakingBonus contract - for reward multipliers based on staked amount
 // Set to empty string to disable staking bonuses
 export const STAKING_BONUS_ADDRESS = USE_TESTNET
-  ? '' // UPDATE: Deploy StakingBonus and add address here
+  ? '0x04c02F24F930500B8b7c0808c9A8d5093BE8fD3f' // UPDATE: Deploy StakingBonus and add address here
   : ''; // UPDATE: Deploy to mainnet
 
 // RPC URLs
