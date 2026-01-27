@@ -50,7 +50,6 @@
 * [TokenSale](smart-contracts/tokensale.md)
 * [TournamentManager](smart-contracts/tournamentmanager.md)
 * [TournamentBuyback](smart-contracts/tournamentbuyback.md)
-* [StakingBonus](smart-contracts/stakingbonus.md)
 * [VestedAirdrop](contracts/vested-airdrop.md)
 * [Security & Audits](contracts/security.md)
 
