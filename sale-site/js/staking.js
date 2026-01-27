@@ -83,6 +83,16 @@ const LOCK_TIERS = [
     { name: '6 Months', duration: 180 * 24 * 60 * 60, weight: 30000, multiplier: '3x' }
 ];
 
+// Bonus tier configurations for leaderboard rewards
+const BONUS_TIERS = [
+    { name: 'Tier 1', threshold: 100000, bonus: 10, color: '#00d4ff' },
+    { name: 'Tier 2', threshold: 500000, bonus: 25, color: '#ff00ff' },
+    { name: 'Tier 3', threshold: 1000000, bonus: 50, color: '#00ff88' }
+];
+
+// Stake box colors for visual differentiation
+const STAKE_COLORS = ['#00d4ff', '#ff00ff', '#00ff88', '#ffff00', '#ff6600'];
+
 // State
 let provider = null;
 let signer = null;
@@ -568,7 +578,8 @@ async function loadUserStakes() {
             const remainingSeconds = unlockTimestamp - now;
 
             const stakeEl = document.createElement('div');
-            stakeEl.className = `stake-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+            const colorIndex = i % STAKE_COLORS.length;
+            stakeEl.className = `stake-item ${isUnlocked ? 'unlocked' : 'locked'} stake-color-${colorIndex}`;
             stakeEl.dataset.stakeId = i;
             stakeEl.dataset.unlockTime = unlockTimestamp;
             stakeEl.innerHTML = `
@@ -640,6 +651,9 @@ async function loadUserStakes() {
 
         document.getElementById('userTotalStaked').textContent = `${formatNumber(ethers.utils.formatEther(totalStaked))} 8BIT`;
         document.getElementById('userTotalRewards').textContent = `${formatNumber(ethers.utils.formatEther(totalRewards))} 8BIT`;
+
+        // Render bonus tier progress
+        renderBonusTierProgress(totalStaked);
 
         // Start countdown timer (clear previous if exists)
         if (countdownInterval) {
@@ -972,6 +986,71 @@ function formatNumber(num) {
         return (n / 1000).toFixed(2) + 'K';
     }
     return n.toFixed(2);
+}
+
+// Render bonus tier progress cards
+function renderBonusTierProgress(totalStakedWei) {
+    const bonusSection = document.getElementById('bonusTiersSection');
+    const cardsContainer = document.getElementById('bonusTierCards');
+
+    if (!bonusSection || !cardsContainer) return;
+
+    // Convert to number (in tokens, not wei)
+    const totalStaked = parseFloat(ethers.utils.formatEther(totalStakedWei));
+
+    // Always show if wallet connected
+    bonusSection.style.display = 'block';
+
+    let html = '';
+
+    BONUS_TIERS.forEach((tier, index) => {
+        const isAchieved = totalStaked >= tier.threshold;
+        const prevThreshold = index > 0 ? BONUS_TIERS[index - 1].threshold : 0;
+
+        // Calculate progress within this tier
+        let progress = 0;
+        let tokensNeeded = 0;
+        let isNextTier = false;
+
+        if (isAchieved) {
+            progress = 100;
+        } else if (totalStaked >= prevThreshold) {
+            // This is the next tier to achieve
+            isNextTier = true;
+            const rangeStart = prevThreshold;
+            const rangeEnd = tier.threshold;
+            progress = ((totalStaked - rangeStart) / (rangeEnd - rangeStart)) * 100;
+            tokensNeeded = tier.threshold - totalStaked;
+        }
+
+        const cardClass = isAchieved ? 'achieved' : (isNextTier ? 'next-tier' : '');
+        const bonusClass = isAchieved ? 'achieved' : 'pending';
+        const fillClass = isAchieved ? 'achieved' : 'in-progress';
+
+        html += `
+            <div class="bonus-tier-card ${cardClass}">
+                <div class="bonus-tier-header">
+                    <span class="bonus-tier-name pixel-text">${tier.name}</span>
+                    <span class="bonus-tier-bonus ${bonusClass} pixel-text">+${tier.bonus}%</span>
+                </div>
+                <div class="bonus-progress-bar">
+                    <div class="bonus-progress-fill ${fillClass}" style="width: ${progress}%; background-color: ${isAchieved ? '#00ff88' : tier.color};"></div>
+                </div>
+                <div class="bonus-tier-info">
+                    <span>${formatNumber(tier.threshold)} 8BIT required</span>
+                    ${isAchieved
+                        ? '<span style="color: #00ff88;">Achieved!</span>'
+                        : (isNextTier
+                            ? `<span class="needed">${formatNumber(tokensNeeded)} more needed</span>`
+                            : '<span>Locked</span>'
+                        )
+                    }
+                </div>
+            </div>
+        `;
+    });
+
+    cardsContainer.innerHTML = html;
 }
 
 // Event listeners

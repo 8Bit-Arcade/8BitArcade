@@ -1,20 +1,21 @@
-# Staking (Coming Soon)
+# Staking (LIVE)
 
 ## Earn Passive Income by Holding 8BIT
 
-Staking allows you to lock your 8BIT tokens and earn passive rewards over time. This feature is planned for Phase 4 (In progress...).
+Staking allows you to lock your 8BIT tokens and earn passive rewards over time. Staking is now **LIVE on testnet**!
 
 ## Staking Overview
 
 | Detail                       | Information                         |
 | ---------------------------- | ----------------------------------- |
-| **Launch Timeline**          | Phase 3 (Months 7-12)               |
-| **Staking Pool**             | 25,000,000 8BIT (5% of supply)      |
+| **Status**                   | LIVE on Arbitrum Sepolia            |
+| **Staking Pool**             | 50,000,000 8BIT (10% of supply)     |
 | **Distribution Period**      | 5 years                             |
 | **Estimated APY**            | 10-60% (based on tier & TVL)        |
 | **Lock Periods**             | 7 days, 1 month, 3 months, 6 months |
 | **Early Withdrawal Penalty** | 25% of staked amount                |
 | **Rewards**                  | Paid in 8BIT (minted)               |
+| **Contract**                 | [View on Arbiscan](https://sepolia.arbiscan.io/address/0xC193451f59De0df09EC8359D091F8890A80F20c4) |
 
 ## Why Staking?
 
@@ -26,9 +27,7 @@ Staking allows you to lock your 8BIT tokens and earn passive rewards over time. 
 
 ✅ **Price Stability** - Reduces circulating supply ✅ **Community Alignment** - Rewards long-term believers ✅ **Sustainable Growth** - 5 year distribution (low inflation) ✅ **Investor Confidence** - Professional tokenomics
 
-## Planned Staking Mechanics
-
-> ⚠️ **Note:** Details below are preliminary and subject to change based on community feedback and market conditions.
+## Staking Mechanics
 
 ### Tiered Lock Periods (Weighted Shares)
 
@@ -51,18 +50,18 @@ Longer locks earn a larger share of the reward pool:
 
 | Lock Period | Weight | Estimated APY |
 | ----------- | ------ | ------------- |
-| 7 Days      | 1.0x   | \~20%         |
-| 1 Month     | 1.5x   | \~30%         |
-| 3 Months    | 2.0x   | \~40%         |
-| 6 Months    | 3.0x   | \~60%         |
+| 7 Days      | 1.0x   | \~40%         |
+| 1 Month     | 1.5x   | \~60%         |
+| 3 Months    | 2.0x   | \~80%         |
+| 6 Months    | 3.0x   | \~120%        |
 
 ### Reward Distribution
 
 **Monthly Emissions from Staking Pool:**
 
-* \~417,000 8BIT per month
+* \~833,000 8BIT per month
 * Distributed proportionally by weighted stake
-* Claim anytime (rewards accumulate)
+* Claim after unlock (rewards accumulate)
 
 **Calculation:**
 
@@ -109,13 +108,6 @@ Tier thresholds and bonus percentages can be adjusted by the contract owner to m
 * **Exclusive staker-only tournaments**
 * **Bonus prize pool allocation**
 
-### 🗳️ Governance Voting
-
-* **Vote on new game additions**
-* **Vote on prize pool adjustments**
-* **Vote on platform features**
-* **Voting power = amount staked**
-
 ### 🎨 NFT Badge Access
 
 * **Exclusive NFT badges** for stakers
@@ -124,18 +116,17 @@ Tier thresholds and bonus percentages can be adjusted by the contract owner to m
 
 ## Staking Pool Sustainability
 
-### 25M Token Pool = 5 Year Distribution
+### 50M Token Pool = 5 Year Distribution
 
 **Monthly Distribution:**
 
-* \~417,000 8BIT per month
+* \~833,000 8BIT per month
 * 60 months (5 years) to deplete
-* Conservative inflation (0.083% monthly)
+* Conservative inflation (0.17% monthly)
 
 **Why This Works:**
 
-* Conservative emissions = healthier APYs
-* No insane early APYs that attract farm-and-dump
+* Generous pool = competitive APYs
 * Weighted tiers reward commitment
 * Deflationary burns offset emissions
 
@@ -145,32 +136,35 @@ APY naturally adjusts based on total staked:
 
 | Total Staked | 7 Days | 1 Month | 3 Months | 6 Months |
 | ------------ | ------ | ------- | -------- | -------- |
-| **10M**      | \~50%  | \~75%   | \~100%   | \~150%   |
-| **25M**      | \~20%  | \~30%   | \~40%    | \~60%    |
-| **50M**      | \~10%  | \~15%   | \~20%    | \~30%    |
-| **100M**     | \~5%   | \~7.5%  | \~10%    | \~15%    |
+| **10M**      | \~100% | \~150%  | \~200%   | \~300%   |
+| **25M**      | \~40%  | \~60%   | \~80%    | \~120%   |
+| **50M**      | \~20%  | \~30%   | \~40%    | \~60%    |
+| **100M**     | \~10%  | \~15%   | \~20%    | \~30%    |
 
 _Higher TVL = lower APY (fixed pool split among more stakers)_
 
-## How Staking Will Work (Planned)
+## How to Stake
 
 ### Step 1: Connect Wallet
 
-Visit [**stake.8bitarcade.games**](https://stake.8bitarcade.games) and connect your Web3 wallet.
+Visit [**8bitarcade.games/staking**](https://8bitarcade.games/staking.html) and connect your Web3 wallet.
 
 ### Step 2: Choose Lock Period
 
 Select your preferred lock period:
 
-* Flexible (withdraw anytime)
-* 30, 90, or 180 days (higher rewards)
+* 7 days (1x multiplier)
+* 1 month (1.5x multiplier)
+* 3 months (2x multiplier)
+* 6 months (3x multiplier)
 
 ### Step 3: Enter Amount
 
 Decide how many 8BIT tokens to stake:
 
-* Minimum: 10,000 8BIT (to be determined)
+* Minimum: 1 8BIT
 * Maximum: No limit
+* Up to 50 separate stakes per wallet
 
 ### Step 4: Confirm Transaction
 
@@ -178,28 +172,10 @@ Approve the staking contract and confirm transaction in MetaMask.
 
 ### Step 5: Earn Rewards
 
-* View your staked balance
-* See accumulated rewards
-* Claim rewards anytime
-* Withdraw after lock period
-
-## Staking Dashboard (Mockup)
-
-Your staking dashboard will show:
-
-```
-┌─────────────────────────────────────────┐
-│  YOUR STAKING STATS                     │
-├─────────────────────────────────────────┤
-│  Total Staked:       500,000 8BIT       │
-│  Lock Period:        180 Days           │
-│  Days Remaining:     142 Days           │
-│  Current APY:        30%                │
-│  Rewards Earned:     12,500 8BIT        │
-│  Estimated Monthly:  12,500 8BIT        │
-│  Claim Available:    Yes                │
-└─────────────────────────────────────────┘
-```
+* View your staked balance and countdown timers
+* See accumulated rewards in real-time
+* Claim rewards after unlock period
+* Withdraw with 25% penalty if early
 
 ## Risks & Considerations
 
@@ -243,73 +219,60 @@ Your staking dashboard will show:
 * Gaming utility integration
 * Governance participation
 
-## Timeline to Launch
+## Current Status
 
-### Phase 1: Launch (Done)
+### Testnet (NOW)
 
-* ❌ Staking not available
-* Focus on game platform and tournaments
+* ✅ Staking contract deployed on Arbitrum Sepolia
+* ✅ All 4 lock tiers working (7d, 1m, 3m, 6m)
+* ✅ Real-time reward accrual
+* ✅ Staking bonus multipliers for leaderboard rewards
+* ✅ Live countdown timers and progress bars
 
-### Phase 2: Growth (Now)
+### Mainnet (Coming Soon)
 
-* ❌ Staking not available
-* Community feedback on mechanics
-* Building staking smart contracts
-
-### Phase 3: Staking Launch (Mainnet Launch)
-
-* ✅ Staking contract deployed (mainnet)
-* ✅ Start earning passive rewards
-* ✅ Boosted game rewards active
-
-### Phase 4: Governance (June 2026 +)
-
-* ✅ Voting mechanisms enabled
-* ✅ Voting mechanisms enabled
-* ✅ Community-driven decisions
-* ✅ DAO formation begins
+* Deploy staking contract to Arbitrum One
+* Enable 50M token staking pool
+* Full production launch
 
 ## Stay Updated
 
-Want to know when staking launches?
-
 * [**Join Discord**](../community/social.md) for announcements
 * [**Follow Twitter**](../community/social.md) for updates
-* [**Read Roadmap**](../roadmap/phases.md) for timeline
-* [**Check Dashboard**](https://8bitarcade.games) for status
+* [**Start Staking**](https://8bitarcade.games/staking.html) now on testnet!
 
 ## Frequently Asked Questions
 
-**Q: When exactly will staking launch?** A: We hope to launch staking within 1 month of mainnet launch. Date will be announced in advance.
+**Q: Is staking live?** A: Yes! Staking is live on Arbitrum Sepolia testnet. Mainnet launch coming soon.
 
-**Q: Can I stake presale tokens?** A: Yes! Any 8BIT tokens can be staked once the feature launches.
+**Q: Can I stake presale tokens?** A: Yes! Any 8BIT tokens can be staked.
 
-**Q: Will there be a minimum staking amount?** A: Likely 10,000-50,000 8BIT minimum to prevent spam. TBD.
+**Q: Is there a minimum staking amount?** A: The minimum is just 1 8BIT token.
 
-**Q: Can I stake and still play games?** A: Yes! Staking doesn't prevent playing. You may even get boosted rewards.
+**Q: Can I stake and still play games?** A: Yes! Staking doesn't prevent playing. Stakers get bonus rewards on daily leaderboards.
 
-**Q: What if I need to withdraw early?** A: Flexible staking has no penalty. Locked staking has 10-20% penalty on rewards.
+**Q: What if I need to withdraw early?** A: Early withdrawal incurs a 25% penalty on the staked amount.
 
-**Q: How are APY rates determined?** A: Based on total amount staked and staking pool emissions schedule.
+**Q: How are APY rates determined?** A: Based on total amount staked and your lock tier multiplier.
 
 **Q: Will staking be available on mobile?** A: Yes, via WalletConnect and mobile-friendly web interface.
 
-## Security & Audits
+## Security
 
-Before staking launch:
-
-✅ **Smart contract audit** by reputable firm ✅ **Open source code** on GitHub ✅ **Community testing** on testnet ✅ **Multi-sig controls** on staking pool
+✅ **Open source code** on GitHub
+✅ **Community testing** on testnet
+✅ **Verified contract** on Arbiscan
 
 ## Conclusion
 
 Staking adds a **passive income layer** to 8-Bit Arcade, rewarding long-term holders while reducing sell pressure and increasing token utility.
 
-**While you wait for staking:**
+**Start staking today:**
 
-* Play games and earn daily rewards
-* Enter tournaments for big prizes
-* Accumulate 8BIT to stake later
-* Participate in community discussions
+* Visit [8bitarcade.games/staking](https://8bitarcade.games/staking.html)
+* Connect your wallet
+* Choose your lock tier
+* Earn rewards!
 
 ## Next Steps
 
