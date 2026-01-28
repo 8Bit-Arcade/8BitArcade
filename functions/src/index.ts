@@ -64,8 +64,3 @@ export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard }
 
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
-
-// Export faucet Discord function only when running in Firebase
-if (process.env.FUNCTIONS_EMULATOR || process.env.NODE_ENV === 'production') {
-  export { discord as faucetDiscord } from './faucet/index';
-}
