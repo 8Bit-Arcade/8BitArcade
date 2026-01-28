@@ -64,9 +64,3 @@ export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard }
 
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
-
-// functions/src/index.ts
-if (process.env.FUNCTIONS_EMULATOR || process.env.NODE_ENV === 'production') {
-  const { discord } = require('./faucet/index');
-  exports.faucetDiscord = discord;
-}
