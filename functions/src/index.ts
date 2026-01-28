@@ -64,3 +64,6 @@ export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard }
 
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
+
+// Export faucet Discord function alongside your other functions
+export { discord as faucetDiscord } from './faucet/index';
