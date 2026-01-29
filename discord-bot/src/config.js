@@ -3,45 +3,45 @@ require('dotenv').config();
 // Role configuration with thresholds and airdrop points
 const ROLES = {
   // Discord Activity Roles
-  PLAYER_1: {
-    id: process.env.ROLE_PLAYER_1,
-    name: 'Player 1',
+  NOOB: {
+    id: process.env.ROLE_NOOB,
+    name: 'Noob',
     emoji: '🕹️',
     type: 'discord',
     threshold: 0, // Just join
     points: 5,
     color: '#00d4ff'
   },
-  ARCADE_REGULAR: {
-    id: process.env.ROLE_ARCADE_REGULAR,
-    name: 'Arcade Regular',
+  PLAYER_1: {
+    id: process.env.ROLE_PLAYER_1,
+    name: 'Player 1',
     emoji: '🎮',
     type: 'discord',
     threshold: 50, // 50+ messages
     points: 25,
     color: '#ff00ff'
   },
-  HIGH_SCORER: {
-    id: process.env.ROLE_HIGH_SCORER,
-    name: 'High Scorer',
+  KEYBOARD_WARRIOR: {
+    id: process.env.ROLE_KEYBOARD_WARRIOR,
+    name: 'Keyboard Warrior',
     emoji: '👾',
     type: 'discord',
     threshold: 200, // 200+ messages
     points: 50,
     color: '#00ff88'
   },
-  LEADERBOARD_LEGEND: {
-    id: process.env.ROLE_LEADERBOARD_LEGEND,
-    name: 'Leaderboard Legend',
+  KEYBOARD_OVERLORD: {
+    id: process.env.ROLE_KEYBOARD_OVERLORD,
+    name: 'Keyboard Overlord',
     emoji: '🏆',
     type: 'discord',
     threshold: 500, // 500+ messages
     points: 100,
     color: '#ffff00'
   },
-  OG_GAMER: {
-    id: process.env.ROLE_OG_GAMER,
-    name: 'OG Gamer',
+  ARCADE_OG: {
+    id: process.env.ROLE_ARCADE_OG,
+    name: 'Arcade OG',
     emoji: '⭐',
     type: 'discord',
     threshold: 'og', // Joined before cutoff
@@ -59,45 +59,45 @@ const ROLES = {
     points: 10,
     color: '#00d4ff'
   },
-  GETTING_WARMED_UP: {
-    id: process.env.ROLE_GETTING_WARMED_UP,
-    name: 'Getting Warmed Up',
+  WARMING_UP: {
+    id: process.env.ROLE_WARMING_UP,
+    name: 'Warming Up',
     emoji: '🔥',
     type: 'game',
     threshold: 25, // 25+ games
     points: 25,
     color: '#ff00ff'
   },
-  DEDICATED_PLAYER: {
-    id: process.env.ROLE_DEDICATED_PLAYER,
-    name: 'Dedicated Player',
+  GRIND_MODE: {
+    id: process.env.ROLE_GRIND_MODE,
+    name: 'Grind Mode',
     emoji: '💪',
     type: 'game',
     threshold: 100, // 100+ games
     points: 75,
     color: '#00ff88'
   },
-  ARCADE_VETERAN: {
-    id: process.env.ROLE_ARCADE_VETERAN,
-    name: 'Arcade Veteran',
+  PIXEL_OVERLORD: {
+    id: process.env.ROLE_PIXEL_OVERLORD,
+    name: 'Pixel Overlord',
     emoji: '🎖️',
     type: 'game',
     threshold: 500, // 500+ games
     points: 150,
     color: '#ffff00'
   },
-  DAILY_TOP_10: {
-    id: process.env.ROLE_DAILY_TOP_10,
-    name: 'Daily Top 10',
+  DAILY_FINAL_BOSS: {
+    id: process.env.ROLE_DAILY_FINAL_BOSS,
+    name: 'Daily Final Boss',
     emoji: '🏅',
     type: 'game',
     threshold: 'leaderboard', // Hit daily top 10
     points: 50,
     color: '#ff6600'
   },
-  TOURNAMENT_VICTOR: {
-    id: process.env.ROLE_TOURNAMENT_VICTOR,
-    name: 'Tournament Victor',
+  TOURNAMENT_CHAMPION: {
+    id: process.env.ROLE_TOURNAMENT_CHAMPION,
+    name: 'Tournament Champion',
     emoji: '🥇',
     type: 'game',
     threshold: 'tournament', // Won a tournament
@@ -106,46 +106,64 @@ const ROLES = {
   },
 
   // Token Holder Roles
-  TOKEN_HOLDER: {
-    id: process.env.ROLE_TOKEN_HOLDER,
-    name: 'Token Holder',
+  EIGHT_BIT_HOLDER: {
+    id: process.env.ROLE_8BIT_HOLDER,
+    name: '8bit Holder',
     emoji: '💎',
     type: 'holder',
     threshold: 1, // Any 8BIT
     points: 50,
     color: '#9933ff'
   },
-  WHALE: {
-    id: process.env.ROLE_WHALE,
-    name: 'Whale',
+  BOSS_LEVEL_WHALE: {
+    id: process.env.ROLE_BOSS_LEVEL_WHALE,
+    name: 'Boss Level Whale',
     emoji: '🔥',
     type: 'holder',
-    threshold: 100000, // 100k+ 8BIT
+    threshold: 1000000, // 1M+ 8BIT
     points: 100,
     color: '#ffd700'
+  },
+
+  // Epic Roles
+  LEVEL_99: {
+    id: process.env.ROLE_LEVEL_99,
+    name: 'Level 99',
+    emoji: '🌟',
+    type: 'epic',
+    threshold: 'all', // Maxed all milestones
+    points: 300,
+    color: '#ff9900'
   }
 };
 
 // Discord message thresholds for role progression
 const MESSAGE_THRESHOLDS = [
-  { count: 0, role: 'PLAYER_1' },
-  { count: 50, role: 'ARCADE_REGULAR' },
-  { count: 200, role: 'HIGH_SCORER' },
-  { count: 500, role: 'LEADERBOARD_LEGEND' }
+  { count: 0, role: 'NOOB' },
+  { count: 50, role: 'PLAYER_1' },
+  { count: 200, role: 'KEYBOARD_WARRIOR' },
+  { count: 500, role: 'KEYBOARD_OVERLORD' }
 ];
 
 // Game thresholds for role progression
 const GAME_THRESHOLDS = [
   { count: 1, role: 'FIRST_BLOOD' },
-  { count: 25, role: 'GETTING_WARMED_UP' },
-  { count: 100, role: 'DEDICATED_PLAYER' },
-  { count: 500, role: 'ARCADE_VETERAN' }
+  { count: 25, role: 'WARMING_UP' },
+  { count: 100, role: 'GRIND_MODE' },
+  { count: 500, role: 'PIXEL_OVERLORD' }
 ];
 
 // Token holder thresholds
 const HOLDER_THRESHOLDS = [
-  { amount: 1, role: 'TOKEN_HOLDER' },
-  { amount: 100000, role: 'WHALE' }
+  { amount: 1, role: 'EIGHT_BIT_HOLDER' },
+  { amount: 1000000, role: 'BOSS_LEVEL_WHALE' }
+];
+
+// Roles required for Level 99 (must have ALL of these)
+const LEVEL_99_REQUIREMENTS = [
+  'KEYBOARD_OVERLORD',  // 500+ messages
+  'PIXEL_OVERLORD',     // 500+ games
+  'EIGHT_BIT_HOLDER'    // Hold 8BIT
 ];
 
 module.exports = {
@@ -153,6 +171,7 @@ module.exports = {
   MESSAGE_THRESHOLDS,
   GAME_THRESHOLDS,
   HOLDER_THRESHOLDS,
+  LEVEL_99_REQUIREMENTS,
   DISCORD_TOKEN: process.env.DISCORD_BOT_TOKEN,
   CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   GUILD_ID: process.env.DISCORD_GUILD_ID,

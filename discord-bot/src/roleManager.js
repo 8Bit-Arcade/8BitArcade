@@ -1,4 +1,4 @@
-const { ROLES, MESSAGE_THRESHOLDS, GAME_THRESHOLDS, OG_CUTOFF_DATE } = require('./config');
+const { ROLES, MESSAGE_THRESHOLDS, GAME_THRESHOLDS, HOLDER_THRESHOLDS, LEVEL_99_REQUIREMENTS, OG_CUTOFF_DATE } = require('./config');
 const firebase = require('./firebase');
 const { ethers } = require('ethers');
 
@@ -24,6 +24,7 @@ async function getTokenBalance(walletAddress) {
 async function calculateUserRoles(discordId, member) {
   const rolesToAdd = [];
   const rolesToRemove = [];
+  const achievedRoles = new Set(); // Track which roles user has earned
 
   // Get Discord activity
   const discordActivity = await firebase.getDiscordActivity(discordId);
@@ -34,65 +35,96 @@ async function calculateUserRoles(discordId, member) {
 
   // === DISCORD ROLES ===
 
-  // Player 1 (everyone gets this)
-  if (ROLES.PLAYER_1.id) {
-    rolesToAdd.push(ROLES.PLAYER_1.id);
+  // Noob (everyone gets this on join)
+  if (ROLES.NOOB?.id) {
+    rolesToAdd.push(ROLES.NOOB.id);
+    achievedRoles.add('NOOB');
   }
 
   // Message-based roles
   for (const threshold of MESSAGE_THRESHOLDS) {
-    if (threshold.count > 0 && messageCount >= threshold.count) {
+    if (messageCount >= threshold.count) {
       const role = ROLES[threshold.role];
-      if (role?.id) rolesToAdd.push(role.id);
+      if (role?.id) {
+        rolesToAdd.push(role.id);
+        achievedRoles.add(threshold.role);
+      }
     }
   }
 
-  // OG Gamer (joined before cutoff)
-  if (ROLES.OG_GAMER.id && member.joinedAt < OG_CUTOFF_DATE) {
-    rolesToAdd.push(ROLES.OG_GAMER.id);
+  // Arcade OG (joined before cutoff)
+  if (ROLES.ARCADE_OG?.id && member.joinedAt < OG_CUTOFF_DATE) {
+    rolesToAdd.push(ROLES.ARCADE_OG.id);
+    achievedRoles.add('ARCADE_OG');
   }
 
   // === GAME ROLES (requires linked wallet) ===
+  let gamesPlayed = 0;
+  let balance = 0;
+
   if (walletAddress) {
     const gameStats = await firebase.getGameStats(walletAddress);
 
     if (gameStats) {
-      const gamesPlayed = gameStats.totalGamesPlayed || 0;
+      gamesPlayed = gameStats.totalGamesPlayed || 0;
 
       // Game count roles
       for (const threshold of GAME_THRESHOLDS) {
         if (gamesPlayed >= threshold.count) {
           const role = ROLES[threshold.role];
-          if (role?.id) rolesToAdd.push(role.id);
+          if (role?.id) {
+            rolesToAdd.push(role.id);
+            achievedRoles.add(threshold.role);
+          }
         }
       }
 
-      // Daily Top 10
-      if (ROLES.DAILY_TOP_10.id) {
+      // Daily Final Boss
+      if (ROLES.DAILY_FINAL_BOSS?.id) {
         const isTop10 = await firebase.checkDailyTop10(walletAddress);
-        if (isTop10) rolesToAdd.push(ROLES.DAILY_TOP_10.id);
+        if (isTop10) {
+          rolesToAdd.push(ROLES.DAILY_FINAL_BOSS.id);
+          achievedRoles.add('DAILY_FINAL_BOSS');
+        }
       }
 
-      // Tournament Victor
-      if (ROLES.TOURNAMENT_VICTOR.id) {
+      // Tournament Champion
+      if (ROLES.TOURNAMENT_CHAMPION?.id) {
         const hasTournamentWin = await firebase.checkTournamentWins(walletAddress);
-        if (hasTournamentWin) rolesToAdd.push(ROLES.TOURNAMENT_VICTOR.id);
+        if (hasTournamentWin) {
+          rolesToAdd.push(ROLES.TOURNAMENT_CHAMPION.id);
+          achievedRoles.add('TOURNAMENT_CHAMPION');
+        }
       }
     }
 
     // === HOLDER ROLES ===
-    const balance = await getTokenBalance(walletAddress);
+    balance = await getTokenBalance(walletAddress);
 
-    if (ROLES.TOKEN_HOLDER.id && balance >= 1) {
-      rolesToAdd.push(ROLES.TOKEN_HOLDER.id);
-    }
-
-    if (ROLES.WHALE.id && balance >= 100000) {
-      rolesToAdd.push(ROLES.WHALE.id);
+    for (const threshold of HOLDER_THRESHOLDS) {
+      if (balance >= threshold.amount) {
+        const role = ROLES[threshold.role];
+        if (role?.id) {
+          rolesToAdd.push(role.id);
+          achievedRoles.add(threshold.role);
+        }
+      }
     }
   }
 
-  return { rolesToAdd: [...new Set(rolesToAdd)], rolesToRemove };
+  // === EPIC ROLES ===
+
+  // Level 99 - Check if user has ALL required roles
+  if (ROLES.LEVEL_99?.id) {
+    const hasAllRequirements = LEVEL_99_REQUIREMENTS.every(req => achievedRoles.has(req));
+    if (hasAllRequirements) {
+      rolesToAdd.push(ROLES.LEVEL_99.id);
+      achievedRoles.add('LEVEL_99');
+      console.log(`🌟 ${member.user.tag} qualified for Level 99!`);
+    }
+  }
+
+  return { rolesToAdd: [...new Set(rolesToAdd)], rolesToRemove, achievedRoles };
 }
 
 // Sync roles for a single user
@@ -147,8 +179,10 @@ async function calculateAirdropPoints(discordId) {
   for (const threshold of MESSAGE_THRESHOLDS) {
     if (messageCount >= threshold.count) {
       const role = ROLES[threshold.role];
-      totalPoints += role.points;
-      breakdown.push({ role: role.name, points: role.points });
+      if (role) {
+        totalPoints += role.points;
+        breakdown.push({ role: role.name, points: role.points });
+      }
     }
   }
 
@@ -160,32 +194,46 @@ async function calculateAirdropPoints(discordId) {
       for (const threshold of GAME_THRESHOLDS) {
         if (gameStats.totalGamesPlayed >= threshold.count) {
           const role = ROLES[threshold.role];
-          totalPoints += role.points;
-          breakdown.push({ role: role.name, points: role.points });
+          if (role) {
+            totalPoints += role.points;
+            breakdown.push({ role: role.name, points: role.points });
+          }
         }
       }
 
       // Check special achievements
       if (await firebase.checkDailyTop10(walletAddress)) {
-        totalPoints += ROLES.DAILY_TOP_10.points;
-        breakdown.push({ role: ROLES.DAILY_TOP_10.name, points: ROLES.DAILY_TOP_10.points });
+        totalPoints += ROLES.DAILY_FINAL_BOSS.points;
+        breakdown.push({ role: ROLES.DAILY_FINAL_BOSS.name, points: ROLES.DAILY_FINAL_BOSS.points });
       }
 
       if (await firebase.checkTournamentWins(walletAddress)) {
-        totalPoints += ROLES.TOURNAMENT_VICTOR.points;
-        breakdown.push({ role: ROLES.TOURNAMENT_VICTOR.name, points: ROLES.TOURNAMENT_VICTOR.points });
+        totalPoints += ROLES.TOURNAMENT_CHAMPION.points;
+        breakdown.push({ role: ROLES.TOURNAMENT_CHAMPION.name, points: ROLES.TOURNAMENT_CHAMPION.points });
       }
     }
 
     // Holder points
     const balance = await getTokenBalance(walletAddress);
-    if (balance >= 1) {
-      totalPoints += ROLES.TOKEN_HOLDER.points;
-      breakdown.push({ role: ROLES.TOKEN_HOLDER.name, points: ROLES.TOKEN_HOLDER.points });
+
+    for (const threshold of HOLDER_THRESHOLDS) {
+      if (balance >= threshold.amount) {
+        const role = ROLES[threshold.role];
+        if (role) {
+          totalPoints += role.points;
+          breakdown.push({ role: role.name, points: role.points });
+        }
+      }
     }
-    if (balance >= 100000) {
-      totalPoints += ROLES.WHALE.points;
-      breakdown.push({ role: ROLES.WHALE.name, points: ROLES.WHALE.points });
+
+    // Level 99 bonus (if they have all requirements)
+    const hasKeyboardOverlord = messageCount >= 500;
+    const hasPixelOverlord = gameStats?.totalGamesPlayed >= 500;
+    const hasHolder = balance >= 1;
+
+    if (hasKeyboardOverlord && hasPixelOverlord && hasHolder) {
+      totalPoints += ROLES.LEVEL_99.points;
+      breakdown.push({ role: ROLES.LEVEL_99.name, points: ROLES.LEVEL_99.points });
     }
   }
 

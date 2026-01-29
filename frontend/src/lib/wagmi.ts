@@ -24,7 +24,7 @@ const chains = USE_TESTNET
 
 export const config = getDefaultConfig({
   appName: '8-Bit Arcade',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID',
   chains,
   transports: {
   [chains[0].id]: http(
