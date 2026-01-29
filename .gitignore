@@ -1,4 +1,22 @@
-"frontend/.next_bak/" 
-"frontend/node_modules_bak/" 
-".next/" 
-"node_modules/" 
+# Build / caches
+frontend/.next/
+frontend/.next_bak/
+frontend/node_modules/
+node_modules/
+
+# Firebase / tooling
+.firebase/
+frontend/.firebase/
+
+# Temp / editor junk
+*.swp
+.tmp.driveupload/
+FETCH_HEAD
+
+# Local scripts / scratch
+testEnterTournament.js
+abis/
+
+# Root-level node stuff (if not intended)
+package.json
+package-lock.json
