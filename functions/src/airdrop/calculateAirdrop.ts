@@ -14,6 +14,8 @@ import { keccak256, encodePacked } from 'viem';
  * - Tournament Entries: 25 points each
  * - Tournament Top 10 Finish: 100 points each
  * - Early Adopter Bonus: 2x multiplier for first 100 users
+ * - Discord Activity: 5-100 points based on message count
+ * - Discord Roles: Bonus points for game-linked roles
  *
  * Allocation Tiers (of 15M total):
  * - Legendary (Top 1%): 3M tokens
@@ -21,7 +23,7 @@ import { keccak256, encodePacked } from 'viem';
  * - Rare (Top 20%): 5M tokens
  * - Common (All eligible): 3M tokens
  *
- * Minimum eligibility: 5 games played OR 1 tournament entry
+ * Minimum eligibility: 5 games played OR 1 tournament entry OR 50 Discord messages (with linked wallet)
  */
 
 // Constants
@@ -53,14 +55,25 @@ interface PlayerScore {
   highScoreAchievements: number;
   isEarlyAdopter: boolean;
   firstActivityDate: Date | null;
+  discordId: string | null;
+  discordMessages: number;
   breakdown: {
     gamePoints: number;
     tournamentEntryPoints: number;
     tournamentFinishPoints: number;
     highScorePoints: number;
+    discordPoints: number;
     multiplier: number;
   };
 }
+
+// Discord point thresholds (matches bot config)
+const DISCORD_POINTS = {
+  PLAYER_1: 5,        // Join server
+  ARCADE_REGULAR: 25, // 50+ messages
+  HIGH_SCORER: 50,    // 200+ messages
+  LEADERBOARD_LEGEND: 100, // 500+ messages
+};
 
 interface AirdropAllocation {
   wallet: string;
@@ -129,11 +142,14 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
         highScoreAchievements: 0,
         isEarlyAdopter: false,
         firstActivityDate: null,
+        discordId: null,
+        discordMessages: 0,
         breakdown: {
           gamePoints: 0,
           tournamentEntryPoints: 0,
           tournamentFinishPoints: 0,
           highScorePoints: 0,
+          discordPoints: 0,
           multiplier: 1,
         },
       });
@@ -272,7 +288,61 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
   }
 
   // ============================================
-  // 5. Calculate final points for each player
+  // 5. Fetch Discord activity (linked wallets only)
+  // ============================================
+  console.log('💬 Fetching Discord activity...');
+
+  // Get all Discord-wallet links
+  const discordLinksSnapshot = await db.collection('discord_links').get();
+  console.log(`   Found ${discordLinksSnapshot.size} Discord-wallet links`);
+
+  // Create map of wallet -> discordId
+  const walletToDiscord: Map<string, string> = new Map();
+  for (const doc of discordLinksSnapshot.docs) {
+    const data = doc.data();
+    if (data.walletAddress) {
+      walletToDiscord.set(data.walletAddress.toLowerCase(), doc.id);
+    }
+  }
+
+  // Get all Discord activity
+  const discordActivitySnapshot = await db.collection('discord_activity').get();
+  console.log(`   Found ${discordActivitySnapshot.size} Discord activity records`);
+
+  // Create map of discordId -> messageCount
+  const discordActivity: Map<string, number> = new Map();
+  for (const doc of discordActivitySnapshot.docs) {
+    const data = doc.data();
+    discordActivity.set(doc.id, data.messageCount || 0);
+  }
+
+  // Apply Discord points to linked wallets
+  for (const [wallet, discordId] of walletToDiscord) {
+    const messageCount = discordActivity.get(discordId) || 0;
+
+    if (messageCount > 0) {
+      const player = getOrCreatePlayer(wallet);
+      player.discordId = discordId;
+      player.discordMessages = messageCount;
+
+      // Calculate Discord points based on message thresholds
+      let discordPoints = DISCORD_POINTS.PLAYER_1; // Base points for linking
+
+      if (messageCount >= 500) {
+        discordPoints += DISCORD_POINTS.LEADERBOARD_LEGEND;
+      } else if (messageCount >= 200) {
+        discordPoints += DISCORD_POINTS.HIGH_SCORER;
+      } else if (messageCount >= 50) {
+        discordPoints += DISCORD_POINTS.ARCADE_REGULAR;
+      }
+
+      player.breakdown.discordPoints = discordPoints;
+      console.log(`   ${wallet.slice(0, 10)}... linked to Discord: ${messageCount} messages = ${discordPoints} pts`);
+    }
+  }
+
+  // ============================================
+  // 6. Calculate final points for each player
   // ============================================
   console.log('🧮 Calculating final scores...');
 
@@ -291,12 +361,13 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
     // Early adopter multiplier
     player.breakdown.multiplier = player.isEarlyAdopter ? 2.0 : 1.0;
 
-    // Calculate total points
+    // Calculate total points (including Discord)
     const basePoints =
       player.breakdown.gamePoints +
       player.breakdown.tournamentEntryPoints +
       player.breakdown.tournamentFinishPoints +
-      player.breakdown.highScorePoints;
+      player.breakdown.highScorePoints +
+      player.breakdown.discordPoints;
 
     player.points = Math.floor(basePoints * player.breakdown.multiplier);
   }
@@ -320,10 +391,13 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
 function calculateAllocations(players: PlayerScore[]): AirdropAllocation[] {
   console.log('💰 Calculating token allocations...');
 
-  // Filter for eligible players
+  // Filter for eligible players (now includes Discord activity)
+  const MIN_DISCORD_MESSAGES = 50; // Minimum Discord messages to qualify alone
+
   const eligible = players.filter(p =>
     p.gamesPlayed >= MIN_GAMES_FOR_ELIGIBILITY ||
-    p.tournamentEntries >= MIN_TOURNAMENT_ENTRIES
+    p.tournamentEntries >= MIN_TOURNAMENT_ENTRIES ||
+    (p.discordId && p.discordMessages >= MIN_DISCORD_MESSAGES)
   );
 
   console.log(`   ${eligible.length} players eligible (of ${players.length} total)`);
@@ -580,6 +654,8 @@ export const triggerAirdropSnapshot = onCall(async (request) => {
         tournamentTop10Finishes: player.tournamentTop10Finishes,
         highScoreAchievements: player.highScoreAchievements,
         isEarlyAdopter: player.isEarlyAdopter,
+        discordId: player.discordId,
+        discordMessages: player.discordMessages,
         breakdown: player.breakdown,
       });
     }
