@@ -25,7 +25,54 @@ client.once('ready', async () => {
 
   // Set bot status
   client.user.setActivity('8-Bit Arcade | /link', { type: 3 }); // "Watching"
+
+  // Start auto-sync every 30 minutes
+  startAutoSync();
 });
+
+// Auto-sync roles for all linked users
+async function startAutoSync() {
+  const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+  async function syncAllUsers() {
+    console.log('🔄 Starting auto-sync for all linked users...');
+
+    try {
+      const guild = client.guilds.cache.get(GUILD_ID);
+      if (!guild) {
+        console.error('❌ Could not find guild');
+        return;
+      }
+
+      const allLinks = await firebase.getAllLinks();
+      let synced = 0;
+      let failed = 0;
+
+      for (const link of allLinks) {
+        try {
+          const member = await guild.members.fetch(link.discordId).catch(() => null);
+          if (member) {
+            await roleManager.syncUserRoles(member);
+            synced++;
+          }
+        } catch (error) {
+          failed++;
+        }
+      }
+
+      console.log(`✅ Auto-sync complete: ${synced} users synced, ${failed} failed`);
+    } catch (error) {
+      console.error('❌ Auto-sync error:', error.message);
+    }
+  }
+
+  // Run immediately on startup
+  setTimeout(syncAllUsers, 10000); // Wait 10 seconds after startup
+
+  // Then run every 30 minutes
+  setInterval(syncAllUsers, SYNC_INTERVAL);
+  console.log('⏰ Auto-sync scheduled every 30 minutes');
+}
 
 // Track messages for activity
 client.on('messageCreate', async (message) => {
