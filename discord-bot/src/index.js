@@ -33,6 +33,10 @@ client.once('ready', async () => {
 // Auto-sync roles for all linked users
 async function startAutoSync() {
   const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+  const DELAY_BETWEEN_USERS = 500; // 500ms delay between each user to prevent blocking
+
+  // Helper to delay execution
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   async function syncAllUsers() {
     console.log('🔄 Starting auto-sync for all linked users...');
@@ -58,6 +62,8 @@ async function startAutoSync() {
         } catch (error) {
           failed++;
         }
+        // Add delay between users to prevent blocking the event loop
+        await delay(DELAY_BETWEEN_USERS);
       }
 
       console.log(`✅ Auto-sync complete: ${synced} users synced, ${failed} failed`);
@@ -236,6 +242,8 @@ async function handleStats(interaction) {
 
 // /roles command - View all available roles
 async function handleRoles(interaction) {
+  await interaction.deferReply();
+
   const discordRoles = Object.values(ROLES).filter(r => r.type === 'discord');
   const gameRoles = Object.values(ROLES).filter(r => r.type === 'game');
   const holderRoles = Object.values(ROLES).filter(r => r.type === 'holder');
@@ -269,7 +277,7 @@ async function handleRoles(interaction) {
     )
     .setFooter({ text: 'Link your wallet with /link to unlock game & holder roles!' });
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.editReply({ embeds: [embed] });
 }
 
 // /sync command - Manually sync roles
