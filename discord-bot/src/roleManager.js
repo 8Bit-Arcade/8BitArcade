@@ -6,13 +6,34 @@ const { ethers } = require('ethers');
 const TOKEN_ADDRESS = '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d';
 const TOKEN_ABI = ['function balanceOf(address) view returns (uint256)'];
 const RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc';
+const RPC_TIMEOUT = 5000; // 5 second timeout for RPC calls
 
-// Check token balance
+// Singleton provider instance
+let provider = null;
+function getProvider() {
+  if (!provider) {
+    provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+  }
+  return provider;
+}
+
+// Helper to add timeout to promises
+function withTimeout(promise, ms, errorMessage = 'Operation timed out') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(errorMessage)), ms))
+  ]);
+}
+
+// Check token balance with timeout protection
 async function getTokenBalance(walletAddress) {
   try {
-    const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-    const contract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
-    const balance = await contract.balanceOf(walletAddress);
+    const contract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, getProvider());
+    const balance = await withTimeout(
+      contract.balanceOf(walletAddress),
+      RPC_TIMEOUT,
+      'RPC call timed out'
+    );
     return parseFloat(ethers.utils.formatEther(balance));
   } catch (error) {
     console.error('Error checking token balance:', error.message);
