@@ -33,6 +33,8 @@ client.once('ready', async () => {
 // Auto-sync roles for all linked users
 async function startAutoSync() {
   const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+  const BATCH_SIZE = 5; // Process 5 users at a time
+  const BATCH_DELAY = 2000; // 2 second delay between batches
 
   async function syncAllUsers() {
     console.log('🔄 Starting auto-sync for all linked users...');
@@ -48,15 +50,34 @@ async function startAutoSync() {
       let synced = 0;
       let failed = 0;
 
-      for (const link of allLinks) {
-        try {
-          const member = await guild.members.fetch(link.discordId).catch(() => null);
-          if (member) {
-            await roleManager.syncUserRoles(member);
+      // Process in batches to avoid blocking event loop
+      for (let i = 0; i < allLinks.length; i += BATCH_SIZE) {
+        const batch = allLinks.slice(i, i + BATCH_SIZE);
+
+        // Process batch concurrently
+        const results = await Promise.allSettled(
+          batch.map(async (link) => {
+            const member = await guild.members.fetch(link.discordId).catch(() => null);
+            if (member) {
+              await roleManager.syncUserRoles(member);
+              return true;
+            }
+            return false;
+          })
+        );
+
+        // Count results
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value) {
             synced++;
+          } else {
+            failed++;
           }
-        } catch (error) {
-          failed++;
+        }
+
+        // Delay between batches to let other operations through
+        if (i + BATCH_SIZE < allLinks.length) {
+          await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
         }
       }
 
@@ -236,6 +257,8 @@ async function handleStats(interaction) {
 
 // /roles command - View all available roles
 async function handleRoles(interaction) {
+  await interaction.deferReply();
+
   const discordRoles = Object.values(ROLES).filter(r => r.type === 'discord');
   const gameRoles = Object.values(ROLES).filter(r => r.type === 'game');
   const holderRoles = Object.values(ROLES).filter(r => r.type === 'holder');
@@ -269,7 +292,7 @@ async function handleRoles(interaction) {
     )
     .setFooter({ text: 'Link your wallet with /link to unlock game & holder roles!' });
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.editReply({ embeds: [embed] });
 }
 
 // /sync command - Manually sync roles

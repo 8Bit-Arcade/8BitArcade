@@ -7,12 +7,21 @@ const TOKEN_ADDRESS = '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d';
 const TOKEN_ABI = ['function balanceOf(address) view returns (uint256)'];
 const RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc';
 
-// Check token balance
+// Check token balance with timeout
 async function getTokenBalance(walletAddress) {
+  const RPC_TIMEOUT = 5000; // 5 second timeout
+
   try {
     const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
     const contract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
-    const balance = await contract.balanceOf(walletAddress);
+
+    // Add timeout to prevent hanging
+    const balancePromise = contract.balanceOf(walletAddress);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('RPC timeout')), RPC_TIMEOUT)
+    );
+
+    const balance = await Promise.race([balancePromise, timeoutPromise]);
     return parseFloat(ethers.utils.formatEther(balance));
   } catch (error) {
     console.error('Error checking token balance:', error.message);
