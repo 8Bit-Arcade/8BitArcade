@@ -183,61 +183,67 @@ export const createWeeklyTournaments = onSchedule(
       const startTime = now + 3600; // Start in 1 hour
       const endTime = startTime + (7 * 24 * 60 * 60); // 7 days duration
 
-      // Get next tournament ID before creating
-      const nextId1 = await tournamentManager.nextTournamentId();
+      // Create Standard Weekly Tournament - try on-chain first, fallback to Firebase-only
+      try {
+        const nextId1 = await tournamentManager.nextTournamentId();
+        logger.info('Creating Standard Weekly tournament...');
+        const tx1 = await tournamentManager.createTournament(
+          Tier.STANDARD,
+          Period.WEEKLY,
+          startTime,
+          endTime
+        );
+        const receipt1 = await tx1.wait();
+        logger.info('Standard Weekly tournament created on-chain', { txHash: receipt1?.hash });
 
-      // Create Standard Weekly Tournament
-      logger.info('Creating Standard Weekly tournament...');
-      const tx1 = await tournamentManager.createTournament(
-        Tier.STANDARD,
-        Period.WEEKLY,
-        startTime,
-        endTime
-      );
-      const receipt1 = await tx1.wait();
-      logger.info('Standard Weekly tournament created on-chain', { txHash: receipt1?.hash });
+        // Create Firebase document for Standard Weekly
+        const standardConfig = TOURNAMENT_CONFIG.weekly.standard;
+        await createFirebaseTournament(
+          nextId1.toString(),
+          'standard',
+          'weekly',
+          startTime,
+          endTime,
+          standardConfig.entryFee,
+          standardConfig.prizePool,
+          receipt1?.hash || ''
+        );
+      } catch (onChainError) {
+        logger.warn('On-chain Standard Weekly creation failed, using Firebase-only fallback:', onChainError);
+        await createFirebaseOnlyTournament('standard', 'weekly', startTime, endTime);
+      }
 
-      // Create Firebase document for Standard Weekly
-      const standardConfig = TOURNAMENT_CONFIG.weekly.standard;
-      await createFirebaseTournament(
-        nextId1.toString(),
-        'standard',
-        'weekly',
-        startTime,
-        endTime,
-        standardConfig.entryFee,
-        standardConfig.prizePool,
-        receipt1?.hash || ''
-      );
+      // Create High Roller Weekly Tournament - try on-chain first, fallback to Firebase-only
+      try {
+        const nextId2 = await tournamentManager.nextTournamentId();
+        logger.info('Creating High Roller Weekly tournament...');
+        const tx2 = await tournamentManager.createTournament(
+          Tier.HIGH_ROLLER,
+          Period.WEEKLY,
+          startTime,
+          endTime
+        );
+        const receipt2 = await tx2.wait();
+        logger.info('High Roller Weekly tournament created on-chain', { txHash: receipt2?.hash });
 
-      // Get next tournament ID for High Roller
-      const nextId2 = await tournamentManager.nextTournamentId();
+        // Create Firebase document for High Roller Weekly
+        const highRollerConfig = TOURNAMENT_CONFIG.weekly.highRoller;
+        await createFirebaseTournament(
+          nextId2.toString(),
+          'highRoller',
+          'weekly',
+          startTime,
+          endTime,
+          highRollerConfig.entryFee,
+          highRollerConfig.prizePool,
+          receipt2?.hash || ''
+        );
+      } catch (onChainError) {
+        logger.warn('On-chain High Roller Weekly creation failed, using Firebase-only fallback:', onChainError);
+        await createFirebaseOnlyTournament('highRoller', 'weekly', startTime, endTime);
+      }
 
-      // Create High Roller Weekly Tournament
-      logger.info('Creating High Roller Weekly tournament...');
-      const tx2 = await tournamentManager.createTournament(
-        Tier.HIGH_ROLLER,
-        Period.WEEKLY,
-        startTime,
-        endTime
-      );
-      const receipt2 = await tx2.wait();
-      logger.info('High Roller Weekly tournament created on-chain', { txHash: receipt2?.hash });
-
-      // Create Firebase document for High Roller Weekly
-      const highRollerConfig = TOURNAMENT_CONFIG.weekly.highRoller;
-      await createFirebaseTournament(
-        nextId2.toString(),
-        'highRoller',
-        'weekly',
-        startTime,
-        endTime,
-        highRollerConfig.entryFee,
-        highRollerConfig.prizePool,
-        receipt2?.hash || ''
-      );
-
-      logger.info('Weekly tournaments created successfully (on-chain + Firebase)!');
+      logger.info('Weekly tournaments created successfully!');
 
     } catch (error) {
       logger.error('Error creating weekly tournaments:', error);
@@ -286,61 +292,67 @@ export const createMonthlyTournaments = onSchedule(
       const startTime = now + 3600; // Start in 1 hour
       const endTime = startTime + (30 * 24 * 60 * 60); // 30 days duration
 
-      // Get next tournament ID before creating
-      const nextId1 = await tournamentManager.nextTournamentId();
+      // Create Standard Monthly Tournament - try on-chain first, fallback to Firebase-only
+      try {
+        const nextId1 = await tournamentManager.nextTournamentId();
+        logger.info('Creating Standard Monthly tournament...');
+        const tx1 = await tournamentManager.createTournament(
+          Tier.STANDARD,
+          Period.MONTHLY,
+          startTime,
+          endTime
+        );
+        const receipt1 = await tx1.wait();
+        logger.info('Standard Monthly tournament created on-chain', { txHash: receipt1?.hash });
 
-      // Create Standard Monthly Tournament
-      logger.info('Creating Standard Monthly tournament...');
-      const tx1 = await tournamentManager.createTournament(
-        Tier.STANDARD,
-        Period.MONTHLY,
-        startTime,
-        endTime
-      );
-      const receipt1 = await tx1.wait();
-      logger.info('Standard Monthly tournament created on-chain', { txHash: receipt1?.hash });
+        // Create Firebase document for Standard Monthly
+        const standardConfig = TOURNAMENT_CONFIG.monthly.standard;
+        await createFirebaseTournament(
+          nextId1.toString(),
+          'standard',
+          'monthly',
+          startTime,
+          endTime,
+          standardConfig.entryFee,
+          standardConfig.prizePool,
+          receipt1?.hash || ''
+        );
+      } catch (onChainError) {
+        logger.warn('On-chain Standard Monthly creation failed, using Firebase-only fallback:', onChainError);
+        await createFirebaseOnlyTournament('standard', 'monthly', startTime, endTime);
+      }
 
-      // Create Firebase document for Standard Monthly
-      const standardConfig = TOURNAMENT_CONFIG.monthly.standard;
-      await createFirebaseTournament(
-        nextId1.toString(),
-        'standard',
-        'monthly',
-        startTime,
-        endTime,
-        standardConfig.entryFee,
-        standardConfig.prizePool,
-        receipt1?.hash || ''
-      );
+      // Create High Roller Monthly Tournament - try on-chain first, fallback to Firebase-only
+      try {
+        const nextId2 = await tournamentManager.nextTournamentId();
+        logger.info('Creating High Roller Monthly tournament...');
+        const tx2 = await tournamentManager.createTournament(
+          Tier.HIGH_ROLLER,
+          Period.MONTHLY,
+          startTime,
+          endTime
+        );
+        const receipt2 = await tx2.wait();
+        logger.info('High Roller Monthly tournament created on-chain', { txHash: receipt2?.hash });
 
-      // Get next tournament ID for High Roller
-      const nextId2 = await tournamentManager.nextTournamentId();
+        // Create Firebase document for High Roller Monthly
+        const highRollerConfig = TOURNAMENT_CONFIG.monthly.highRoller;
+        await createFirebaseTournament(
+          nextId2.toString(),
+          'highRoller',
+          'monthly',
+          startTime,
+          endTime,
+          highRollerConfig.entryFee,
+          highRollerConfig.prizePool,
+          receipt2?.hash || ''
+        );
+      } catch (onChainError) {
+        logger.warn('On-chain High Roller Monthly creation failed, using Firebase-only fallback:', onChainError);
+        await createFirebaseOnlyTournament('highRoller', 'monthly', startTime, endTime);
+      }
 
-      // Create High Roller Monthly Tournament
-      logger.info('Creating High Roller Monthly tournament...');
-      const tx2 = await tournamentManager.createTournament(
-        Tier.HIGH_ROLLER,
-        Period.MONTHLY,
-        startTime,
-        endTime
-      );
-      const receipt2 = await tx2.wait();
-      logger.info('High Roller Monthly tournament created on-chain', { txHash: receipt2?.hash });
-
-      // Create Firebase document for High Roller Monthly
-      const highRollerConfig = TOURNAMENT_CONFIG.monthly.highRoller;
-      await createFirebaseTournament(
-        nextId2.toString(),
-        'highRoller',
-        'monthly',
-        startTime,
-        endTime,
-        highRollerConfig.entryFee,
-        highRollerConfig.prizePool,
-        receipt2?.hash || ''
-      );
-
-      logger.info('Monthly tournaments created successfully (on-chain + Firebase)!');
+      logger.info('Monthly tournaments created successfully!');
 
     } catch (error) {
       logger.error('Error creating monthly tournaments:', error);
