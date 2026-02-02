@@ -865,25 +865,36 @@ async function calculateRealTimeEligibility(wallet: string) {
                      discordMessages >= 50;
 
   // Estimate tier based on points (this is approximate without full snapshot)
+  // With ~200 users and 10M tokens, allocations should be substantial
   let tier: 'legendary' | 'epic' | 'rare' | 'common';
   let estimatedTokens: number;
 
+  // Tier distribution from 10M pool:
+  // Legendary (top 1% ~2 users): 2M tokens = ~1,000,000 each
+  // Epic (top 5% ~10 users): 2.5M tokens = ~250,000 each
+  // Rare (top 20% ~40 users): 3.5M tokens = ~87,500 each
+  // Common (remaining ~150 users): 2M tokens = ~13,333 each
+
   if (totalPoints >= 500) {
     tier = 'legendary';
-    estimatedTokens = 150000 + Math.floor(totalPoints * 100);
+    // Top performers get largest share of 2M legendary pool
+    estimatedTokens = 500000 + Math.floor(totalPoints * 500);
   } else if (totalPoints >= 200) {
     tier = 'epic';
-    estimatedTokens = 50000 + Math.floor(totalPoints * 50);
+    // Epic tier shares 2.5M among ~8 users
+    estimatedTokens = 200000 + Math.floor(totalPoints * 250);
   } else if (totalPoints >= 50) {
     tier = 'rare';
-    estimatedTokens = 20000 + Math.floor(totalPoints * 20);
+    // Rare tier shares 3.5M among ~30 users
+    estimatedTokens = 75000 + Math.floor(totalPoints * 150);
   } else {
     tier = 'common';
-    estimatedTokens = 5000 + Math.floor(totalPoints * 10);
+    // Common tier shares 2M among remaining users
+    estimatedTokens = 10000 + Math.floor(totalPoints * 100);
   }
 
-  // Cap tokens at reasonable amounts
-  estimatedTokens = Math.min(estimatedTokens, 500000);
+  // Cap tokens at reasonable max (top legendary shouldn't exceed ~2M)
+  estimatedTokens = Math.min(estimatedTokens, 2000000);
 
   const tokenAmount = (BigInt(estimatedTokens) * BigInt(10 ** 18)).toString();
 
