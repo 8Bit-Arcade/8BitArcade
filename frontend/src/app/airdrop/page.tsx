@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { useAirdrop } from '@/hooks/useAirdrop';
@@ -31,16 +30,7 @@ export default function AirdropPage() {
     isClaimPending,
     isClaimConfirming,
     claimTxHash,
-    leaderboard,
-    loadLeaderboard,
   } = useAirdrop();
-
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-
-  // Load leaderboard on mount
-  useEffect(() => {
-    loadLeaderboard();
-  }, [loadLeaderboard]);
 
   // Format numbers
   const formatNumber = (num: number) => num.toLocaleString();
@@ -441,60 +431,6 @@ export default function AirdropPage() {
             </div>
           </div>
         )}
-
-        {/* Leaderboard Toggle */}
-        <div className="mt-8">
-          <button
-            onClick={() => setShowLeaderboard(!showLeaderboard)}
-            className="w-full bg-arcade-gray hover:bg-arcade-gray/80 rounded-lg p-4 flex items-center justify-between"
-          >
-            <span className="font-bold">Airdrop Leaderboard</span>
-            <span className="text-gray-400">{showLeaderboard ? '▲' : '▼'}</span>
-          </button>
-
-          {showLeaderboard && (
-            <div className="mt-2 bg-arcade-gray rounded-lg p-4 max-h-96 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-arcade-gray">
-                  <tr className="text-gray-400 border-b border-gray-700">
-                    <th className="text-left py-2">Rank</th>
-                    <th className="text-left py-2">Wallet</th>
-                    <th className="text-left py-2">Tier</th>
-                    <th className="text-right py-2">Points</th>
-                    <th className="text-right py-2">Tokens</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.map((entry) => (
-                    <tr
-                      key={entry.wallet}
-                      className={`border-b border-gray-800 ${
-                        entry.wallet.toLowerCase() === address?.toLowerCase()
-                          ? 'bg-arcade-purple/20'
-                          : ''
-                      }`}
-                    >
-                      <td className="py-2">#{entry.rank}</td>
-                      <td className="py-2 font-mono">
-                        {entry.wallet.slice(0, 6)}...{entry.wallet.slice(-4)}
-                        {entry.wallet.toLowerCase() === address?.toLowerCase() && (
-                          <span className="ml-2 text-xs text-arcade-cyan">(you)</span>
-                        )}
-                      </td>
-                      <td className={`py-2 ${getTierColor(entry.tier)}`}>
-                        {entry.tier}
-                      </td>
-                      <td className="py-2 text-right">{formatNumber(entry.points)}</td>
-                      <td className="py-2 text-right font-bold">
-                        {formatNumber(entry.tokenAmountFormatted)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
 
         {/* How It Works */}
         <div className="mt-8 bg-arcade-gray rounded-lg p-6">
