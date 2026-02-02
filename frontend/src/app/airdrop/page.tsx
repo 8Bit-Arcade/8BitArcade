@@ -283,6 +283,10 @@ export default function AirdropPage() {
                       <span className="text-gray-500">Zealy ({status.stats.zealyXP || 0} XP)</span>
                       <span className="font-bold text-arcade-pink">+{status.stats.breakdown.zealyPoints || 0}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Telegram ({status.stats.telegramMessages || 0} msgs)</span>
+                      <span className="font-bold text-blue-400">+{status.stats.breakdown.telegramPoints || 0}</span>
+                    </div>
                   </div>
                   {status.stats.breakdown.multiplier > 1 && (
                     <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
