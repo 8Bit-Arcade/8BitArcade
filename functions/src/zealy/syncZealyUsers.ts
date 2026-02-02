@@ -9,7 +9,7 @@ const db = getFirestore();
 const zealyApiKey = defineSecret('ZEALY_API_KEY');
 
 // Your Zealy community subdomain
-const ZEALY_SUBDOMAIN = '8bitarcade';
+const ZEALY_SUBDOMAIN = '8bit-arcade';
 
 interface ZealyUser {
   id: string;
