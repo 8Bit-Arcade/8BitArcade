@@ -135,6 +135,16 @@ export default function AirdropPage() {
           </div>
         )}
 
+        {/* Live Preview Notice */}
+        {status?.status === 'preview' && (
+          <div className="bg-arcade-green/20 border border-arcade-green/50 rounded-lg p-4 mb-6 text-center">
+            <p className="text-arcade-green font-bold">Live Preview</p>
+            <p className="text-sm text-arcade-green/80 mt-1">
+              {status.message || 'Showing your estimated allocation based on current activity. Final allocation determined at snapshot.'}
+            </p>
+          </div>
+        )}
+
         {/* Demo Mode Notice */}
         {status?.status === 'demo' && (
           <div className="bg-arcade-purple/20 border border-arcade-purple/50 rounded-lg p-4 mb-6 text-center">
@@ -180,10 +190,18 @@ export default function AirdropPage() {
             {status?.stats && (
               <div className="mt-6 p-4 bg-arcade-dark rounded-lg inline-block text-left">
                 <p className="text-sm text-gray-500 mb-2">Your testnet activity:</p>
-                <p className="text-sm">Games Played: {status.stats.gamesPlayed || 0}</p>
-                <p className="text-sm">Tournament Entries: {status.stats.tournamentEntries || 0}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Minimum required: 5 games or 1 tournament entry
+                <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                  <p>Games Played: <span className="font-bold">{status.stats.gamesPlayed || 0}</span></p>
+                  <p>Tournaments: <span className="font-bold">{status.stats.tournamentEntries || 0}</span></p>
+                  {status.stats.discordMessages !== undefined && (
+                    <p>Discord Messages: <span className="font-bold">{status.stats.discordMessages}</span></p>
+                  )}
+                  {status.stats.zealyXP !== undefined && (
+                    <p>Zealy XP: <span className="font-bold">{status.stats.zealyXP}</span></p>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-3">
+                  Minimum required: 5 games, 1 tournament, or 50 Discord messages
                 </p>
               </div>
             )}
@@ -239,6 +257,57 @@ export default function AirdropPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Points Breakdown (for preview mode) */}
+              {status?.stats?.breakdown && (
+                <div className="bg-arcade-dark rounded-lg p-4 mb-6">
+                  <p className="text-sm text-gray-400 mb-3">Your Points Breakdown</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Games ({status.stats.gamesPlayed})</span>
+                      <span className="font-bold text-arcade-cyan">+{status.stats.breakdown.gamePoints}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Tournaments ({status.stats.tournamentEntries})</span>
+                      <span className="font-bold text-arcade-cyan">+{status.stats.breakdown.tournamentEntryPoints}</span>
+                    </div>
+                    {status.stats.breakdown.tournamentFinishPoints > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Top 10 Finishes</span>
+                        <span className="font-bold text-arcade-cyan">+{status.stats.breakdown.tournamentFinishPoints}</span>
+                      </div>
+                    )}
+                    {status.stats.breakdown.highScorePoints > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">High Scores ({status.stats.highScoreAchievements})</span>
+                        <span className="font-bold text-arcade-cyan">+{status.stats.breakdown.highScorePoints}</span>
+                      </div>
+                    )}
+                    {status.stats.breakdown.discordPoints > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Discord ({status.stats.discordMessages} msgs)</span>
+                        <span className="font-bold text-arcade-purple">+{status.stats.breakdown.discordPoints}</span>
+                      </div>
+                    )}
+                    {status.stats.breakdown.zealyPoints > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Zealy ({status.stats.zealyXP} XP)</span>
+                        <span className="font-bold text-arcade-pink">+{status.stats.breakdown.zealyPoints}</span>
+                      </div>
+                    )}
+                  </div>
+                  {status.stats.breakdown.multiplier > 1 && (
+                    <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
+                      <span className="text-yellow-400">Early Adopter Bonus</span>
+                      <span className="font-bold text-yellow-400">x{status.stats.breakdown.multiplier}</span>
+                    </div>
+                  )}
+                  <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
+                    <span className="font-bold">Total Points</span>
+                    <span className="font-bold text-white">{status.stats.breakdown.totalPoints}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Contract Vesting Info (if claimed) */}
               {vestingInfo && vestingInfo.totalAmount > BigInt(0) && (

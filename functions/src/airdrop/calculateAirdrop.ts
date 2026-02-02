@@ -693,79 +693,223 @@ export const triggerAirdropSnapshot = onCall(async (request) => {
 });
 
 /**
- * Generate demo airdrop data for testing when no real airdrop exists
- * Shows user as a top-tier participant to test the full claiming UI
+ * Calculate real-time eligibility for a wallet based on actual Firestore data
+ * This fetches live data from games, tournaments, Discord, and Zealy
  */
-function generateDemoAirdropData(wallet: string) {
-  // Generate deterministic but varied data based on wallet address
-  // Use last 4 chars for small variation while keeping everyone in top tiers
-  const walletNum = parseInt(wallet.slice(-4), 16);
-  const points = 800 + (walletNum % 200); // High points (800-1000)
-  const rank = 1 + (walletNum % 10); // Top 10 rank for demo
+async function calculateRealTimeEligibility(wallet: string) {
+  console.log(`📊 Calculating real-time eligibility for ${wallet}`);
+  const normalizedWallet = wallet.toLowerCase();
 
-  // Everyone gets legendary or epic in demo mode for proper UI testing
+  // Initialize stats
+  let gamesPlayed = 0;
+  let tournamentEntries = 0;
+  let tournamentTop10Finishes = 0;
+  let highScoreAchievements = 0;
+  let highScorePoints = 0;
+  let discordMessages = 0;
+  let discordPoints = 0;
+  let zealyXP = 0;
+  let zealyQuests = 0;
+  let isEarlyAdopter = false;
+
+  // 1. Get games played from users collection
+  const userDoc = await db.collection('users').doc(normalizedWallet).get();
+  if (userDoc.exists) {
+    const userData = userDoc.data();
+    gamesPlayed = userData?.totalGamesPlayed || 0;
+    // Check if early adopter (user created in first month or first 100 users)
+    const createdAt = userData?.createdAt?.toDate?.();
+    if (createdAt) {
+      const earlyDate = new Date('2024-01-01'); // Adjust based on launch date
+      isEarlyAdopter = createdAt < earlyDate;
+    }
+  }
+
+  // 2. Also check sessions collection for accurate game count
+  const sessionsSnapshot = await db.collection('sessions')
+    .where('player', '==', normalizedWallet)
+    .where('completedAt', '!=', null)
+    .get();
+
+  if (sessionsSnapshot.size > gamesPlayed) {
+    gamesPlayed = sessionsSnapshot.size;
+  }
+
+  // 3. Get tournament entries and finishes
+  const tournamentsSnapshot = await db.collection('tournaments').get();
+  for (const tournamentDoc of tournamentsSnapshot.docs) {
+    const entryDoc = await db.collection('tournaments')
+      .doc(tournamentDoc.id)
+      .collection('entries')
+      .doc(normalizedWallet)
+      .get();
+
+    if (entryDoc.exists) {
+      tournamentEntries++;
+
+      // Check for top 10 finish in completed tournaments
+      const tournamentData = tournamentDoc.data();
+      if (tournamentData.status === 'completed') {
+        const allEntries = await db.collection('tournaments')
+          .doc(tournamentDoc.id)
+          .collection('entries')
+          .orderBy('bestScore', 'desc')
+          .limit(10)
+          .get();
+
+        const top10Wallets = allEntries.docs.map(d => d.id.toLowerCase());
+        if (top10Wallets.includes(normalizedWallet)) {
+          tournamentTop10Finishes++;
+        }
+      }
+    }
+  }
+
+  // 4. Get high score achievements from leaderboards
+  const leaderboardsSnapshot = await db.collection('leaderboards').get();
+  for (const leaderboardDoc of leaderboardsSnapshot.docs) {
+    const data = leaderboardDoc.data();
+    const allTimeEntries = data.allTime || [];
+
+    for (let i = 0; i < Math.min(allTimeEntries.length, 100); i++) {
+      const entry = allTimeEntries[i];
+      if (entry.odedId?.toLowerCase() === normalizedWallet) {
+        highScoreAchievements++;
+        highScorePoints += calculateHighScorePoints(i + 1);
+        break; // Only count once per game
+      }
+    }
+  }
+
+  // 5. Get Discord activity
+  const discordLinkDoc = await db.collection('discord_links')
+    .where('walletAddress', '==', normalizedWallet)
+    .limit(1)
+    .get();
+
+  if (!discordLinkDoc.empty) {
+    const discordId = discordLinkDoc.docs[0].id;
+    const discordActivityDoc = await db.collection('discord_activity').doc(discordId).get();
+
+    if (discordActivityDoc.exists) {
+      discordMessages = discordActivityDoc.data()?.messageCount || 0;
+
+      // Calculate Discord points
+      discordPoints = DISCORD_POINTS.PLAYER_1; // Base points for linking
+      if (discordMessages >= 500) {
+        discordPoints += DISCORD_POINTS.LEADERBOARD_LEGEND;
+      } else if (discordMessages >= 200) {
+        discordPoints += DISCORD_POINTS.HIGH_SCORER;
+      } else if (discordMessages >= 50) {
+        discordPoints += DISCORD_POINTS.ARCADE_REGULAR;
+      }
+    }
+  }
+
+  // 6. Get Zealy data
+  const zealyDoc = await db.collection('zealy_users').doc(normalizedWallet).get();
+  if (zealyDoc.exists) {
+    const zealyData = zealyDoc.data();
+    zealyXP = zealyData?.xp || 0;
+    zealyQuests = zealyData?.questsCompleted || 0;
+  }
+
+  // Calculate total points
+  const gamePoints = calculateGamePoints(gamesPlayed);
+  const tournamentEntryPoints = tournamentEntries * 25;
+  const tournamentFinishPoints = tournamentTop10Finishes * 100;
+  const zealyPoints = Math.min(zealyXP / 10, 200); // Cap Zealy at 200 points
+
+  const multiplier = isEarlyAdopter ? 2.0 : 1.0;
+
+  const basePoints = gamePoints + tournamentEntryPoints + tournamentFinishPoints +
+                     highScorePoints + discordPoints + zealyPoints;
+  const totalPoints = Math.floor(basePoints * multiplier);
+
+  // Determine eligibility
+  const isEligible = gamesPlayed >= MIN_GAMES_FOR_ELIGIBILITY ||
+                     tournamentEntries >= MIN_TOURNAMENT_ENTRIES ||
+                     discordMessages >= 50;
+
+  // Estimate tier based on points (this is approximate without full snapshot)
   let tier: 'legendary' | 'epic' | 'rare' | 'common';
-  if (rank <= 3) tier = 'legendary';
-  else if (rank <= 7) tier = 'epic';
-  else tier = 'rare';
+  let estimatedTokens: number;
 
-  // Realistic token amounts based on 10M total allocation
-  // Legendary (top 1%): ~2M tokens / ~100 people = ~20,000 each
-  // Epic (top 5%): ~2.5M tokens / ~400 people = ~6,250 each
-  // Rare (top 20%): ~3.5M tokens / ~1500 people = ~2,333 each
-  const tierTokens = {
-    legendary: 150000 + (walletNum % 50000), // 150k-200k tokens
-    epic: 50000 + (walletNum % 25000),       // 50k-75k tokens
-    rare: 20000 + (walletNum % 10000),       // 20k-30k tokens
-    common: 5000 + (walletNum % 5000),       // 5k-10k tokens
-  };
+  if (totalPoints >= 500) {
+    tier = 'legendary';
+    estimatedTokens = 150000 + Math.floor(totalPoints * 100);
+  } else if (totalPoints >= 200) {
+    tier = 'epic';
+    estimatedTokens = 50000 + Math.floor(totalPoints * 50);
+  } else if (totalPoints >= 50) {
+    tier = 'rare';
+    estimatedTokens = 20000 + Math.floor(totalPoints * 20);
+  } else {
+    tier = 'common';
+    estimatedTokens = 5000 + Math.floor(totalPoints * 10);
+  }
 
-  const tokenAmountFormatted = tierTokens[tier];
-  const tokenAmount = (BigInt(tokenAmountFormatted) * BigInt(10 ** 18)).toString();
+  // Cap tokens at reasonable amounts
+  estimatedTokens = Math.min(estimatedTokens, 500000);
 
-  // Generate a mock Merkle proof (32-byte hashes)
-  const mockProof = [
-    '0x' + wallet.slice(2).padEnd(64, 'a'),
-    '0x' + wallet.slice(2).padEnd(64, 'b'),
-    '0x' + wallet.slice(2).padEnd(64, 'c'),
-  ];
+  const tokenAmount = (BigInt(estimatedTokens) * BigInt(10 ** 18)).toString();
 
   const claimDeadline = new Date();
   claimDeadline.setDate(claimDeadline.getDate() + 90);
 
+  console.log(`✅ Real-time calculation complete for ${wallet}:`);
+  console.log(`   Games: ${gamesPlayed}, Tournaments: ${tournamentEntries}, Discord: ${discordMessages}, Zealy XP: ${zealyXP}`);
+  console.log(`   Total Points: ${totalPoints}, Tier: ${tier}, Estimated Tokens: ${estimatedTokens}`);
+
   return {
-    eligible: true,
-    airdropId: 'demo_airdrop',
-    wallet: wallet,
-    tier,
-    rank,
-    points,
-    tokenAmount,
-    tokenAmountFormatted,
-    proof: mockProof,
+    eligible: isEligible,
+    airdropId: 'realtime_preview',
+    wallet: normalizedWallet,
+    tier: isEligible ? tier : null,
+    rank: null, // Can't determine rank without full snapshot
+    points: totalPoints,
+    tokenAmount: isEligible ? tokenAmount : '0',
+    tokenAmountFormatted: isEligible ? estimatedTokens : 0,
+    proof: [], // No proof until official snapshot
     claimed: false,
     claimedAt: null,
     claimDeadline: claimDeadline.toISOString(),
-    merkleRoot: '0x' + 'demo'.padEnd(64, '0'),
-    contractAddress: null, // Contract not deployed yet
-    status: 'demo',
-    message: 'Demo mode - showing sample eligibility data for testing',
+    merkleRoot: null,
+    contractAddress: null,
+    status: 'preview',
+    message: isEligible
+      ? 'Live preview based on your current activity. Final allocation will be determined at snapshot.'
+      : `Not yet eligible. Need ${MIN_GAMES_FOR_ELIGIBILITY} games or ${MIN_TOURNAMENT_ENTRIES} tournament entry.`,
     vesting: {
       vestedAmount: 0,
       nextUnlockDate: null,
       nextUnlockAmount: 0,
-      totalAmount: tokenAmountFormatted,
+      totalAmount: isEligible ? estimatedTokens : 0,
       schedule: [
-        { month: 0, percent: 33.33, unlocked: true },
+        { month: 0, percent: 33.33, unlocked: false },
         { month: 1, percent: 33.33, unlocked: false },
         { month: 2, percent: 33.34, unlocked: false },
       ],
     },
     stats: {
-      gamesPlayed: 10 + (walletNum % 50),
-      tournamentEntries: 1 + (walletNum % 5),
-      tournamentTop10Finishes: walletNum % 3,
-      isEarlyAdopter: rank <= 10,
+      gamesPlayed,
+      tournamentEntries,
+      tournamentTop10Finishes,
+      highScoreAchievements,
+      discordMessages,
+      zealyXP,
+      zealyQuests,
+      isEarlyAdopter,
+      breakdown: {
+        gamePoints,
+        tournamentEntryPoints,
+        tournamentFinishPoints,
+        highScorePoints,
+        discordPoints,
+        zealyPoints: Math.floor(zealyPoints),
+        multiplier,
+        totalPoints,
+      },
     },
   };
 }
@@ -799,9 +943,9 @@ export const getAirdropStatus = onCall(async (request) => {
       const allAirdrops = await db.collection('airdrops').get();
 
       if (allAirdrops.empty) {
-        console.log('📭 No airdrops found in database - returning demo data');
-        // Return demo data for testing when no airdrop exists
-        return generateDemoAirdropData(targetWallet);
+        console.log('📭 No airdrops found in database - calculating real-time eligibility');
+        // Return real-time eligibility based on actual user data
+        return await calculateRealTimeEligibility(targetWallet);
       }
 
       // Sort by createdAt descending and find active or most recent
@@ -824,9 +968,9 @@ export const getAirdropStatus = onCall(async (request) => {
     }
 
     if (!airdropDoc || !airdropDoc.exists) {
-      console.log('📭 No valid airdrop document - returning demo data');
-      // Return demo data for testing when no airdrop exists
-      return generateDemoAirdropData(targetWallet);
+      console.log('📭 No valid airdrop document - calculating real-time eligibility');
+      // Return real-time eligibility based on actual user data
+      return await calculateRealTimeEligibility(targetWallet);
     }
 
   const airdropData = airdropDoc.data()!;
@@ -840,9 +984,9 @@ export const getAirdropStatus = onCall(async (request) => {
     .get();
 
   if (!allocationDoc.exists) {
-    // If no allocation, return demo data for testing purposes
-    console.log(`📭 No allocation found for ${targetWallet} - returning demo data`);
-    return generateDemoAirdropData(targetWallet);
+    // If no allocation in snapshot, return real-time eligibility
+    console.log(`📭 No allocation found for ${targetWallet} - calculating real-time eligibility`);
+    return await calculateRealTimeEligibility(targetWallet);
   }
 
   const allocation = allocationDoc.data()!;
