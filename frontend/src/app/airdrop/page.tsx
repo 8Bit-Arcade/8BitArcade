@@ -135,6 +135,16 @@ export default function AirdropPage() {
           </div>
         )}
 
+        {/* Demo Mode Notice */}
+        {status?.status === 'demo' && (
+          <div className="bg-arcade-purple/20 border border-arcade-purple/50 rounded-lg p-4 mb-6 text-center">
+            <p className="text-arcade-purple font-bold">Demo Mode</p>
+            <p className="text-sm text-arcade-purple/80 mt-1">
+              Showing sample eligibility data for testing. Actual airdrop data will appear when available.
+            </p>
+          </div>
+        )}
+
         {/* Connect Wallet */}
         {!isConnected ? (
           <div className="bg-arcade-gray rounded-lg p-8 text-center">
