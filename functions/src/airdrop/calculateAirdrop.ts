@@ -694,26 +694,30 @@ export const triggerAirdropSnapshot = onCall(async (request) => {
 
 /**
  * Generate demo airdrop data for testing when no real airdrop exists
+ * Shows user as a top-tier participant to test the full claiming UI
  */
 function generateDemoAirdropData(wallet: string) {
   // Generate deterministic but varied data based on wallet address
-  const walletNum = parseInt(wallet.slice(2, 10), 16);
-  const points = 150 + (walletNum % 500);
-  const rank = 1 + (walletNum % 50);
+  // Use last 4 chars for small variation while keeping everyone in top tiers
+  const walletNum = parseInt(wallet.slice(-4), 16);
+  const points = 800 + (walletNum % 200); // High points (800-1000)
+  const rank = 1 + (walletNum % 10); // Top 10 rank for demo
 
-  // Determine tier based on rank
+  // Everyone gets legendary or epic in demo mode for proper UI testing
   let tier: 'legendary' | 'epic' | 'rare' | 'common';
-  if (rank <= 5) tier = 'legendary';
-  else if (rank <= 15) tier = 'epic';
-  else if (rank <= 35) tier = 'rare';
-  else tier = 'common';
+  if (rank <= 3) tier = 'legendary';
+  else if (rank <= 7) tier = 'epic';
+  else tier = 'rare';
 
-  // Token amounts by tier
+  // Realistic token amounts based on 10M total allocation
+  // Legendary (top 1%): ~2M tokens / ~100 people = ~20,000 each
+  // Epic (top 5%): ~2.5M tokens / ~400 people = ~6,250 each
+  // Rare (top 20%): ~3.5M tokens / ~1500 people = ~2,333 each
   const tierTokens = {
-    legendary: 50000,
-    epic: 25000,
-    rare: 10000,
-    common: 5000,
+    legendary: 150000 + (walletNum % 50000), // 150k-200k tokens
+    epic: 50000 + (walletNum % 25000),       // 50k-75k tokens
+    rare: 20000 + (walletNum % 10000),       // 20k-30k tokens
+    common: 5000 + (walletNum % 5000),       // 5k-10k tokens
   };
 
   const tokenAmountFormatted = tierTokens[tier];
