@@ -1340,3 +1340,170 @@ export const setAirdropContract = onCall(async (request) => {
 
   return { success: true };
 });
+
+/**
+ * ADMIN: Get all user allocations for admin dashboard
+ * Returns all users with their activity stats and estimated token allocations
+ */
+export const getAdminAirdropAllocations = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  // Admin wallet addresses that can access this endpoint
+  const ADMIN_WALLETS = [
+    '0x96e0b627454ce3b8c55c6d36b5fcbb13849dc297',
+  ];
+
+  const callerAddress = request.auth.uid.toLowerCase();
+
+  if (!ADMIN_WALLETS.includes(callerAddress)) {
+    throw new HttpsError('permission-denied', 'Only admins can access this data');
+  }
+
+  console.log('📊 Admin fetching all user allocations...');
+
+  try {
+    const users: Array<{
+      wallet: string;
+      gamesPlayed: number;
+      totalPoints: number;
+      tier: string;
+      tokenAmount: number;
+      tournamentEntries: number;
+      discordMessages: number;
+      zealyXP: number;
+      isEarlyAdopter: boolean;
+      createdAt?: string;
+    }> = [];
+
+    // Get all users with game activity
+    const usersSnapshot = await db.collection('users')
+      .orderBy('totalGamesPlayed', 'desc')
+      .get();
+
+    console.log(`   Found ${usersSnapshot.size} users`);
+
+    // Get Discord links for all users
+    const discordLinksSnapshot = await db.collection('discord_links').get();
+    const walletToDiscord: Map<string, string> = new Map();
+    for (const doc of discordLinksSnapshot.docs) {
+      const data = doc.data();
+      if (data.walletAddress) {
+        walletToDiscord.set(data.walletAddress.toLowerCase(), doc.id);
+      }
+    }
+
+    // Get Discord activity
+    const discordActivitySnapshot = await db.collection('discord_activity').get();
+    const discordActivity: Map<string, number> = new Map();
+    for (const doc of discordActivitySnapshot.docs) {
+      discordActivity.set(doc.id, doc.data().messageCount || 0);
+    }
+
+    // Get Zealy data
+    const zealySnapshot = await db.collection('zealy_users').get();
+    const zealyData: Map<string, number> = new Map();
+    for (const doc of zealySnapshot.docs) {
+      zealyData.set(doc.id.toLowerCase(), doc.data().xp || 0);
+    }
+
+    // Process each user
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
+      const wallet = userDoc.id.toLowerCase();
+      const gamesPlayed = userData.totalGamesPlayed || 0;
+
+      // Calculate game points
+      const gamePoints = calculateGamePoints(gamesPlayed);
+
+      // Get Discord messages
+      const discordId = walletToDiscord.get(wallet);
+      const discordMessages = discordId ? (discordActivity.get(discordId) || 0) : 0;
+      let discordPoints = 0;
+      if (discordId) {
+        discordPoints = DISCORD_POINTS.PLAYER_1;
+        if (discordMessages >= 500) {
+          discordPoints += DISCORD_POINTS.LEADERBOARD_LEGEND;
+        } else if (discordMessages >= 200) {
+          discordPoints += DISCORD_POINTS.HIGH_SCORER;
+        } else if (discordMessages >= 50) {
+          discordPoints += DISCORD_POINTS.ARCADE_REGULAR;
+        }
+      }
+
+      // Get Zealy XP
+      const zealyXP = zealyData.get(wallet) || 0;
+      const zealyPoints = Math.min(zealyXP / 10, 200);
+
+      // Check early adopter
+      const createdAt = userData.createdAt?.toDate?.();
+      const isEarlyAdopter = createdAt ? createdAt < new Date('2024-06-01') : false;
+      const multiplier = isEarlyAdopter ? 2.0 : 1.0;
+
+      // Calculate total points
+      const totalPoints = Math.floor((gamePoints + discordPoints + zealyPoints) * multiplier);
+
+      // Determine tier and tokens
+      let tier: string;
+      let tokenAmount: number;
+
+      if (totalPoints >= 500) {
+        tier = 'legendary';
+        tokenAmount = 500000 + Math.floor(totalPoints * 500);
+      } else if (totalPoints >= 200) {
+        tier = 'epic';
+        tokenAmount = 200000 + Math.floor(totalPoints * 250);
+      } else if (totalPoints >= 50) {
+        tier = 'rare';
+        tokenAmount = 75000 + Math.floor(totalPoints * 150);
+      } else {
+        tier = 'common';
+        tokenAmount = 10000 + Math.floor(totalPoints * 100);
+      }
+
+      tokenAmount = Math.min(tokenAmount, 2000000);
+
+      // Get tournament entries
+      let tournamentEntries = 0;
+      const tournamentsSnapshot = await db.collection('tournaments').get();
+      for (const tournamentDoc of tournamentsSnapshot.docs) {
+        const entryDoc = await db.collection('tournaments')
+          .doc(tournamentDoc.id)
+          .collection('entries')
+          .doc(wallet)
+          .get();
+        if (entryDoc.exists) {
+          tournamentEntries++;
+        }
+      }
+
+      users.push({
+        wallet,
+        gamesPlayed,
+        totalPoints,
+        tier,
+        tokenAmount,
+        tournamentEntries,
+        discordMessages,
+        zealyXP,
+        isEarlyAdopter,
+        createdAt: createdAt?.toISOString(),
+      });
+    }
+
+    // Sort by total points descending
+    users.sort((a, b) => b.totalPoints - a.totalPoints);
+
+    console.log(`✅ Admin data prepared: ${users.length} users`);
+
+    return {
+      users,
+      total: users.length,
+      generatedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('❌ getAdminAirdropAllocations error:', error);
+    throw new HttpsError('internal', `Failed to fetch admin data: ${error}`);
+  }
+});
