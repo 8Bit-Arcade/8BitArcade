@@ -25,7 +25,7 @@ interface AirdropStatus {
   claimDeadline?: string;
   merkleRoot?: string;
   contractAddress?: string | null;
-  status?: 'pending_deployment' | 'active' | 'ended';
+  status?: 'pending_deployment' | 'active' | 'ended' | 'demo';
   message?: string;
   reason?: string;
   vesting?: {

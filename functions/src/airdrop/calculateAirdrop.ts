@@ -693,6 +693,80 @@ export const triggerAirdropSnapshot = onCall(async (request) => {
 });
 
 /**
+ * Generate demo airdrop data for testing when no real airdrop exists
+ */
+function generateDemoAirdropData(wallet: string) {
+  // Generate deterministic but varied data based on wallet address
+  const walletNum = parseInt(wallet.slice(2, 10), 16);
+  const points = 150 + (walletNum % 500);
+  const rank = 1 + (walletNum % 50);
+
+  // Determine tier based on rank
+  let tier: 'legendary' | 'epic' | 'rare' | 'common';
+  if (rank <= 5) tier = 'legendary';
+  else if (rank <= 15) tier = 'epic';
+  else if (rank <= 35) tier = 'rare';
+  else tier = 'common';
+
+  // Token amounts by tier
+  const tierTokens = {
+    legendary: 50000,
+    epic: 25000,
+    rare: 10000,
+    common: 5000,
+  };
+
+  const tokenAmountFormatted = tierTokens[tier];
+  const tokenAmount = (BigInt(tokenAmountFormatted) * BigInt(10 ** 18)).toString();
+
+  // Generate a mock Merkle proof (32-byte hashes)
+  const mockProof = [
+    '0x' + wallet.slice(2).padEnd(64, 'a'),
+    '0x' + wallet.slice(2).padEnd(64, 'b'),
+    '0x' + wallet.slice(2).padEnd(64, 'c'),
+  ];
+
+  const claimDeadline = new Date();
+  claimDeadline.setDate(claimDeadline.getDate() + 90);
+
+  return {
+    eligible: true,
+    airdropId: 'demo_airdrop',
+    wallet: wallet,
+    tier,
+    rank,
+    points,
+    tokenAmount,
+    tokenAmountFormatted,
+    proof: mockProof,
+    claimed: false,
+    claimedAt: null,
+    claimDeadline: claimDeadline.toISOString(),
+    merkleRoot: '0x' + 'demo'.padEnd(64, '0'),
+    contractAddress: null, // Contract not deployed yet
+    status: 'demo',
+    message: 'Demo mode - showing sample eligibility data for testing',
+    vesting: {
+      vestedAmount: 0,
+      nextUnlockDate: null,
+      nextUnlockAmount: 0,
+      totalAmount: tokenAmountFormatted,
+      schedule: [
+        { month: 0, percent: 33.33, unlocked: true },
+        { month: 1, percent: 33.33, unlocked: false },
+        { month: 2, percent: 33.34, unlocked: false },
+      ],
+    },
+    stats: {
+      gamesPlayed: 10 + (walletNum % 50),
+      tournamentEntries: 1 + (walletNum % 5),
+      tournamentTop10Finishes: walletNum % 3,
+      isEarlyAdopter: rank <= 10,
+    },
+  };
+}
+
+/**
  * Get airdrop status for a wallet
  */
 export const getAirdropStatus = onCall(async (request) => {
@@ -721,12 +795,9 @@ export const getAirdropStatus = onCall(async (request) => {
       const allAirdrops = await db.collection('airdrops').get();
 
       if (allAirdrops.empty) {
-        console.log('📭 No airdrops found in database');
-        return {
-          eligible: false,
-          message: 'No airdrop has been created yet. Check back soon!',
-          status: 'no_airdrop',
-        };
+        console.log('📭 No airdrops found in database - returning demo data');
+        // Return demo data for testing when no airdrop exists
+        return generateDemoAirdropData(targetWallet);
       }
 
       // Sort by createdAt descending and find active or most recent
@@ -749,11 +820,9 @@ export const getAirdropStatus = onCall(async (request) => {
     }
 
     if (!airdropDoc || !airdropDoc.exists) {
-      return {
-        eligible: false,
-        message: 'No airdrop has been created yet. Check back soon!',
-        status: 'no_airdrop',
-      };
+      console.log('📭 No valid airdrop document - returning demo data');
+      // Return demo data for testing when no airdrop exists
+      return generateDemoAirdropData(targetWallet);
     }
 
   const airdropData = airdropDoc.data()!;
@@ -767,19 +836,9 @@ export const getAirdropStatus = onCall(async (request) => {
     .get();
 
   if (!allocationDoc.exists) {
-    // Check player details to show why they didn't qualify
-    const detailsDoc = await db.collection('airdrops')
-      .doc(airdropId)
-      .collection('playerDetails')
-      .doc(targetWallet)
-      .get();
-
-    return {
-      eligible: false,
-      message: 'Not eligible for airdrop',
-      reason: 'Did not meet minimum requirements (5 games or 1 tournament entry)',
-      stats: detailsDoc.exists ? detailsDoc.data() : null,
-    };
+    // If no allocation, return demo data for testing purposes
+    console.log(`📭 No allocation found for ${targetWallet} - returning demo data`);
+    return generateDemoAirdropData(targetWallet);
   }
 
   const allocation = allocationDoc.data()!;
@@ -848,6 +907,50 @@ export const getAirdropStatus = onCall(async (request) => {
 });
 
 /**
+ * Generate demo leaderboard data for testing
+ */
+function generateDemoLeaderboard(limit: number = 100) {
+  const tierTokens = {
+    legendary: 50000,
+    epic: 25000,
+    rare: 10000,
+    common: 5000,
+  };
+
+  const leaderboard = [];
+  for (let i = 0; i < Math.min(limit, 50); i++) {
+    let tier: 'legendary' | 'epic' | 'rare' | 'common';
+    if (i < 3) tier = 'legendary';
+    else if (i < 10) tier = 'epic';
+    else if (i < 25) tier = 'rare';
+    else tier = 'common';
+
+    leaderboard.push({
+      rank: i + 1,
+      wallet: `0x${(i + 1).toString(16).padStart(4, '0')}${'0'.repeat(36)}`,
+      tier,
+      points: 500 - (i * 8),
+      tokenAmountFormatted: tierTokens[tier],
+      claimed: i % 5 === 0, // Some have claimed
+    });
+  }
+
+  return {
+    airdropId: 'demo_airdrop',
+    leaderboard,
+    total: 50,
+    tierStats: {
+      legendary: 3,
+      epic: 7,
+      rare: 15,
+      common: 25,
+    },
+    status: 'demo',
+    message: 'Demo leaderboard - sample data for testing',
+  };
+}
+
+/**
  * Get airdrop leaderboard (for display on claim page)
  */
 export const getAirdropLeaderboard = onCall(async (request) => {
@@ -865,7 +968,9 @@ export const getAirdropLeaderboard = onCall(async (request) => {
       .get();
 
     if (airdropsSnapshot.empty) {
-      return { leaderboard: [], total: 0 };
+      // Return demo leaderboard for testing
+      console.log('📭 No airdrops found - returning demo leaderboard');
+      return generateDemoLeaderboard(limit);
     }
 
     airdropId = airdropsSnapshot.docs[0].id;
@@ -878,6 +983,12 @@ export const getAirdropLeaderboard = onCall(async (request) => {
     .orderBy('rank', 'asc')
     .limit(Math.min(limit, 100))
     .get();
+
+  // If no allocations found, return demo data
+  if (allocationsSnapshot.empty) {
+    console.log('📭 No allocations found - returning demo leaderboard');
+    return generateDemoLeaderboard(limit);
+  }
 
   const leaderboard = allocationsSnapshot.docs.map(doc => {
     const data = doc.data();
