@@ -59,6 +59,7 @@ export {
 
 // Zealy integration
 export { zealyVerifyQuest } from './zealy/verifyQuest';
+export { syncZealyUsers, scheduledZealySync, zealyWebhook, linkZealyWallet } from './zealy/syncZealyUsers';
 
 // Rewards distribution
 export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard } from './rewards/distributeRewards';
