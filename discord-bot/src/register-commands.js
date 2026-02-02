@@ -34,12 +34,8 @@ const commands = [
     .setDefaultMemberPermissions(0), // Admin only
 
   new SlashCommandBuilder()
-    .setName('airdrop')
-    .setDescription('View your estimated airdrop allocation'),
-
-  new SlashCommandBuilder()
-    .setName('airdrop-export')
-    .setDescription('(Admin) Export full airdrop distribution as CSV')
+    .setName('airdrop-test')
+    .setDescription('(Admin) Test airdrop calculation system')
     .setDefaultMemberPermissions(0), // Admin only
 ].map(command => command.toJSON());
 

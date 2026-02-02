@@ -150,12 +150,8 @@ client.on('interactionCreate', async (interaction) => {
         await handleSnapshot(interaction);
         break;
 
-      case 'airdrop':
-        await handleAirdrop(interaction);
-        break;
-
-      case 'airdrop-export':
-        await handleAirdropExport(interaction);
+      case 'airdrop-test':
+        await handleAirdropTest(interaction);
         break;
 
       default:
@@ -428,83 +424,59 @@ async function handleSnapshot(interaction) {
   await interaction.editReply({ content: '', embeds: [embed] });
 }
 
-// /airdrop command - View your estimated airdrop allocation
-async function handleAirdrop(interaction) {
-  await interaction.deferReply({ ephemeral: true });
-
-  const estimate = await roleManager.getAirdropEstimate(interaction.user.id);
-
-  if (!estimate.eligible) {
-    return interaction.editReply(`❌ You're not eligible for the airdrop yet. ${estimate.reason}\n\nLink your wallet with \`/link\` and earn points to qualify!`);
-  }
-
-  const embed = new EmbedBuilder()
-    .setColor('#ffd700')
-    .setTitle('🪂 Your Airdrop Estimate')
-    .setDescription(`Based on current participation, here's your estimated allocation from the **${roleManager.AIRDROP_TOTAL.toLocaleString()} 8BIT** airdrop pool.`)
-    .addFields(
-      { name: '⭐ Your Points', value: `**${estimate.points}**`, inline: true },
-      { name: '📊 Your Share', value: `**${estimate.percentage.toFixed(4)}%**`, inline: true },
-      { name: '🏆 Your Rank', value: `**#${estimate.rank}** of ${estimate.totalUsers}`, inline: true },
-      { name: '🪙 Estimated Tokens', value: `**${estimate.estimatedTokens.toLocaleString()} 8BIT**`, inline: false }
-    )
-    .setFooter({ text: '⚠️ This is an estimate. Final allocation calculated at airdrop time.' });
-
-  // Add breakdown if available
-  if (estimate.breakdown && estimate.breakdown.length > 0) {
-    const breakdownText = estimate.breakdown
-      .map(b => `${b.role}: +${b.points}`)
-      .join('\n');
-    embed.addFields({ name: '📋 Points Breakdown', value: breakdownText, inline: false });
-  }
-
-  await interaction.editReply({ embeds: [embed] });
-}
-
-// /airdrop-export command - Admin: Export full airdrop distribution
-async function handleAirdropExport(interaction) {
+// /airdrop-test command - Admin: Test airdrop calculation system
+async function handleAirdropTest(interaction) {
   // Check admin permission
   if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
     return interaction.reply({ content: '❌ Admin only command', ephemeral: true });
   }
 
   await interaction.deferReply({ ephemeral: true });
-  await interaction.editReply('🔄 Calculating airdrop allocations for all users...');
+  await interaction.editReply('🔄 Testing airdrop calculation system...');
 
   const data = await roleManager.calculateAirdropAllocations();
 
   // Create summary embed
   const embed = new EmbedBuilder()
     .setColor('#00ff88')
-    .setTitle('🪂 Airdrop Distribution Summary')
+    .setTitle('🧪 Airdrop System Test')
+    .setDescription('This is an admin-only test. Users check eligibility on the website.')
     .addFields(
       { name: '🪙 Total Pool', value: `${data.totalPool.toLocaleString()} 8BIT`, inline: true },
       { name: '👥 Eligible Users', value: `${data.totalUsers}`, inline: true },
       { name: '⭐ Total Points', value: `${data.totalPoints.toLocaleString()}`, inline: true }
     );
 
-  // Top 10 recipients
+  // Top 10 recipients preview
   const top10 = data.allocations.slice(0, 10)
     .map((a, i) => `${i + 1}. **${a.discordUsername || 'Unknown'}** - ${a.tokens.toLocaleString()} 8BIT (${a.percentage.toFixed(2)}%)`)
     .join('\n');
-  embed.addFields({ name: '🏆 Top 10 Recipients', value: top10 || 'None', inline: false });
+  embed.addFields({ name: '🏆 Top 10 Preview', value: top10 || 'No eligible users yet', inline: false });
 
-  // Create CSV export
+  // Verify totals
+  const totalAllocated = data.allocations.reduce((sum, a) => sum + a.tokens, 0);
+  const unallocated = data.totalPool - totalAllocated;
+  embed.addFields({
+    name: '✅ Verification',
+    value: `Allocated: ${totalAllocated.toLocaleString()}\nUnallocated (rounding): ${unallocated.toLocaleString()}`,
+    inline: false
+  });
+
+  // Create CSV export for testing
   const csvHeader = 'wallet_address,discord_id,discord_username,points,percentage,tokens\n';
   const csvRows = data.allocations.map(a =>
     `${a.walletAddress},${a.discordId},${a.discordUsername || ''},${a.points},${a.percentage.toFixed(6)},${a.tokens}`
   ).join('\n');
   const csv = csvHeader + csvRows;
 
-  // Send as file attachment
   const buffer = Buffer.from(csv, 'utf-8');
   const attachment = {
     attachment: buffer,
-    name: `airdrop-distribution-${new Date().toISOString().split('T')[0]}.csv`
+    name: `airdrop-test-${new Date().toISOString().split('T')[0]}.csv`
   };
 
   await interaction.editReply({
-    content: '✅ Airdrop distribution calculated!',
+    content: '✅ Airdrop system test complete!',
     embeds: [embed],
     files: [attachment]
   });
