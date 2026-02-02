@@ -47,6 +47,7 @@ interface AirdropStatus {
     discordMessages?: number;
     zealyXP?: number;
     zealyQuests?: number;
+    telegramMessages?: number;
     isEarlyAdopter: boolean;
     breakdown?: {
       gamePoints: number;
@@ -55,6 +56,7 @@ interface AirdropStatus {
       highScorePoints: number;
       discordPoints: number;
       zealyPoints: number;
+      telegramPoints: number;
       multiplier: number;
       totalPoints: number;
     };
