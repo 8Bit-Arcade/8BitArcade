@@ -712,106 +712,139 @@ async function calculateRealTimeEligibility(wallet: string) {
   let zealyQuests = 0;
   let isEarlyAdopter = false;
 
-  // 1. Get games played from users collection
+  // 1. Get games played from users collection (primary source)
   const userDoc = await db.collection('users').doc(normalizedWallet).get();
   if (userDoc.exists) {
     const userData = userDoc.data();
     gamesPlayed = userData?.totalGamesPlayed || 0;
+    console.log(`   Users collection: totalGamesPlayed = ${gamesPlayed}`);
     // Check if early adopter (user created in first month or first 100 users)
     const createdAt = userData?.createdAt?.toDate?.();
     if (createdAt) {
-      const earlyDate = new Date('2024-01-01'); // Adjust based on launch date
+      const earlyDate = new Date('2024-06-01'); // Adjust based on actual launch date
       isEarlyAdopter = createdAt < earlyDate;
     }
+  } else {
+    console.log(`   Users collection: No document found for ${normalizedWallet}`);
   }
 
-  // 2. Also check sessions collection for accurate game count
-  const sessionsSnapshot = await db.collection('sessions')
-    .where('player', '==', normalizedWallet)
-    .where('completedAt', '!=', null)
-    .get();
-
-  if (sessionsSnapshot.size > gamesPlayed) {
-    gamesPlayed = sessionsSnapshot.size;
+  // 2. Also check scores collection for game count (backup source)
+  const scoresDoc = await db.collection('scores').doc(normalizedWallet).get();
+  if (scoresDoc.exists) {
+    const scoresData = scoresDoc.data();
+    const scoresTotalGames = scoresData?.totalGames || 0;
+    console.log(`   Scores collection: totalGames = ${scoresTotalGames}`);
+    if (scoresTotalGames > gamesPlayed) {
+      gamesPlayed = scoresTotalGames;
+    }
   }
 
   // 3. Get tournament entries and finishes
-  const tournamentsSnapshot = await db.collection('tournaments').get();
-  for (const tournamentDoc of tournamentsSnapshot.docs) {
-    const entryDoc = await db.collection('tournaments')
-      .doc(tournamentDoc.id)
-      .collection('entries')
-      .doc(normalizedWallet)
-      .get();
+  try {
+    const tournamentsSnapshot = await db.collection('tournaments').get();
+    console.log(`   Found ${tournamentsSnapshot.size} tournaments to check`);
 
-    if (entryDoc.exists) {
-      tournamentEntries++;
+    for (const tournamentDoc of tournamentsSnapshot.docs) {
+      const entryDoc = await db.collection('tournaments')
+        .doc(tournamentDoc.id)
+        .collection('entries')
+        .doc(normalizedWallet)
+        .get();
 
-      // Check for top 10 finish in completed tournaments
-      const tournamentData = tournamentDoc.data();
-      if (tournamentData.status === 'completed') {
-        const allEntries = await db.collection('tournaments')
-          .doc(tournamentDoc.id)
-          .collection('entries')
-          .orderBy('bestScore', 'desc')
-          .limit(10)
-          .get();
+      if (entryDoc.exists) {
+        tournamentEntries++;
+        console.log(`   Found entry in tournament ${tournamentDoc.id}`);
 
-        const top10Wallets = allEntries.docs.map(d => d.id.toLowerCase());
-        if (top10Wallets.includes(normalizedWallet)) {
-          tournamentTop10Finishes++;
+        // Check for top 10 finish in completed tournaments
+        const tournamentData = tournamentDoc.data();
+        if (tournamentData.status === 'completed') {
+          const allEntries = await db.collection('tournaments')
+            .doc(tournamentDoc.id)
+            .collection('entries')
+            .orderBy('bestScore', 'desc')
+            .limit(10)
+            .get();
+
+          const top10Wallets = allEntries.docs.map(d => d.id.toLowerCase());
+          if (top10Wallets.includes(normalizedWallet)) {
+            tournamentTop10Finishes++;
+          }
         }
       }
     }
+  } catch (err) {
+    console.error('   Error checking tournaments:', err);
   }
 
   // 4. Get high score achievements from leaderboards
-  const leaderboardsSnapshot = await db.collection('leaderboards').get();
-  for (const leaderboardDoc of leaderboardsSnapshot.docs) {
-    const data = leaderboardDoc.data();
-    const allTimeEntries = data.allTime || [];
+  try {
+    const leaderboardsSnapshot = await db.collection('leaderboards').get();
+    console.log(`   Found ${leaderboardsSnapshot.size} leaderboards to check`);
 
-    for (let i = 0; i < Math.min(allTimeEntries.length, 100); i++) {
-      const entry = allTimeEntries[i];
-      if (entry.odedId?.toLowerCase() === normalizedWallet) {
-        highScoreAchievements++;
-        highScorePoints += calculateHighScorePoints(i + 1);
-        break; // Only count once per game
+    for (const leaderboardDoc of leaderboardsSnapshot.docs) {
+      const data = leaderboardDoc.data();
+      const allTimeEntries = data.allTime || [];
+
+      for (let i = 0; i < Math.min(allTimeEntries.length, 100); i++) {
+        const entry = allTimeEntries[i];
+        // Check both odedId and odedId fields (case insensitive)
+        const entryWallet = (entry.odedId || entry.playerId || entry.wallet || '').toLowerCase();
+        if (entryWallet === normalizedWallet) {
+          highScoreAchievements++;
+          highScorePoints += calculateHighScorePoints(i + 1);
+          console.log(`   Found in ${leaderboardDoc.id} leaderboard at rank ${i + 1}`);
+          break; // Only count once per game
+        }
       }
     }
+  } catch (err) {
+    console.error('   Error checking leaderboards:', err);
   }
 
   // 5. Get Discord activity
-  const discordLinkDoc = await db.collection('discord_links')
-    .where('walletAddress', '==', normalizedWallet)
-    .limit(1)
-    .get();
+  try {
+    const discordLinkDoc = await db.collection('discord_links')
+      .where('walletAddress', '==', normalizedWallet)
+      .limit(1)
+      .get();
 
-  if (!discordLinkDoc.empty) {
-    const discordId = discordLinkDoc.docs[0].id;
-    const discordActivityDoc = await db.collection('discord_activity').doc(discordId).get();
+    if (!discordLinkDoc.empty) {
+      const discordId = discordLinkDoc.docs[0].id;
+      console.log(`   Found Discord link: ${discordId}`);
+      const discordActivityDoc = await db.collection('discord_activity').doc(discordId).get();
 
-    if (discordActivityDoc.exists) {
-      discordMessages = discordActivityDoc.data()?.messageCount || 0;
+      if (discordActivityDoc.exists) {
+        discordMessages = discordActivityDoc.data()?.messageCount || 0;
+        console.log(`   Discord messages: ${discordMessages}`);
 
-      // Calculate Discord points
-      discordPoints = DISCORD_POINTS.PLAYER_1; // Base points for linking
-      if (discordMessages >= 500) {
-        discordPoints += DISCORD_POINTS.LEADERBOARD_LEGEND;
-      } else if (discordMessages >= 200) {
-        discordPoints += DISCORD_POINTS.HIGH_SCORER;
-      } else if (discordMessages >= 50) {
-        discordPoints += DISCORD_POINTS.ARCADE_REGULAR;
+        // Calculate Discord points
+        discordPoints = DISCORD_POINTS.PLAYER_1; // Base points for linking
+        if (discordMessages >= 500) {
+          discordPoints += DISCORD_POINTS.LEADERBOARD_LEGEND;
+        } else if (discordMessages >= 200) {
+          discordPoints += DISCORD_POINTS.HIGH_SCORER;
+        } else if (discordMessages >= 50) {
+          discordPoints += DISCORD_POINTS.ARCADE_REGULAR;
+        }
       }
+    } else {
+      console.log(`   No Discord link found for wallet`);
     }
+  } catch (err) {
+    console.error('   Error checking Discord:', err);
   }
 
   // 6. Get Zealy data
-  const zealyDoc = await db.collection('zealy_users').doc(normalizedWallet).get();
-  if (zealyDoc.exists) {
-    const zealyData = zealyDoc.data();
-    zealyXP = zealyData?.xp || 0;
-    zealyQuests = zealyData?.questsCompleted || 0;
+  try {
+    const zealyDoc = await db.collection('zealy_users').doc(normalizedWallet).get();
+    if (zealyDoc.exists) {
+      const zealyData = zealyDoc.data();
+      zealyXP = zealyData?.xp || 0;
+      zealyQuests = zealyData?.questsCompleted || 0;
+      console.log(`   Zealy XP: ${zealyXP}, Quests: ${zealyQuests}`);
+    }
+  } catch (err) {
+    console.error('   Error checking Zealy:', err);
   }
 
   // Calculate total points
