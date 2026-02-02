@@ -25,7 +25,7 @@ interface AirdropStatus {
   claimDeadline?: string;
   merkleRoot?: string;
   contractAddress?: string | null;
-  status?: 'pending_deployment' | 'active' | 'ended' | 'demo';
+  status?: 'pending_deployment' | 'active' | 'ended' | 'demo' | 'preview';
   message?: string;
   reason?: string;
   vesting?: {
@@ -43,7 +43,21 @@ interface AirdropStatus {
     gamesPlayed: number;
     tournamentEntries: number;
     tournamentTop10Finishes: number;
+    highScoreAchievements?: number;
+    discordMessages?: number;
+    zealyXP?: number;
+    zealyQuests?: number;
     isEarlyAdopter: boolean;
+    breakdown?: {
+      gamePoints: number;
+      tournamentEntryPoints: number;
+      tournamentFinishPoints: number;
+      highScorePoints: number;
+      discordPoints: number;
+      zealyPoints: number;
+      multiplier: number;
+      totalPoints: number;
+    };
   };
 }
 
