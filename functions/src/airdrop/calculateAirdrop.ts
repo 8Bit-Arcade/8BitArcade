@@ -865,25 +865,36 @@ async function calculateRealTimeEligibility(wallet: string) {
                      discordMessages >= 50;
 
   // Estimate tier based on points (this is approximate without full snapshot)
+  // With ~200 users and 10M tokens, allocations should be substantial
   let tier: 'legendary' | 'epic' | 'rare' | 'common';
   let estimatedTokens: number;
 
+  // Tier distribution from 10M pool:
+  // Legendary (top 1% ~2 users): 2M tokens = ~1,000,000 each
+  // Epic (top 5% ~10 users): 2.5M tokens = ~250,000 each
+  // Rare (top 20% ~40 users): 3.5M tokens = ~87,500 each
+  // Common (remaining ~150 users): 2M tokens = ~13,333 each
+
   if (totalPoints >= 500) {
     tier = 'legendary';
-    estimatedTokens = 150000 + Math.floor(totalPoints * 100);
+    // Top performers get largest share of 2M legendary pool
+    estimatedTokens = 500000 + Math.floor(totalPoints * 500);
   } else if (totalPoints >= 200) {
     tier = 'epic';
-    estimatedTokens = 50000 + Math.floor(totalPoints * 50);
+    // Epic tier shares 2.5M among ~8 users
+    estimatedTokens = 200000 + Math.floor(totalPoints * 250);
   } else if (totalPoints >= 50) {
     tier = 'rare';
-    estimatedTokens = 20000 + Math.floor(totalPoints * 20);
+    // Rare tier shares 3.5M among ~30 users
+    estimatedTokens = 75000 + Math.floor(totalPoints * 150);
   } else {
     tier = 'common';
-    estimatedTokens = 5000 + Math.floor(totalPoints * 10);
+    // Common tier shares 2M among remaining users
+    estimatedTokens = 10000 + Math.floor(totalPoints * 100);
   }
 
-  // Cap tokens at reasonable amounts
-  estimatedTokens = Math.min(estimatedTokens, 500000);
+  // Cap tokens at reasonable max (top legendary shouldn't exceed ~2M)
+  estimatedTokens = Math.min(estimatedTokens, 2000000);
 
   const tokenAmount = (BigInt(estimatedTokens) * BigInt(10 ** 18)).toString();
 
@@ -1088,46 +1099,97 @@ export const getAirdropStatus = onCall(async (request) => {
 });
 
 /**
- * Generate demo leaderboard data for testing
+ * Generate real-time leaderboard from actual user data in Firestore
  */
-function generateDemoLeaderboard(limit: number = 100) {
-  const tierTokens = {
-    legendary: 50000,
-    epic: 25000,
-    rare: 10000,
-    common: 5000,
-  };
+async function generateRealTimeLeaderboard(limit: number = 100) {
+  console.log('📊 Generating real-time leaderboard from Firestore...');
 
-  const leaderboard = [];
-  for (let i = 0; i < Math.min(limit, 50); i++) {
+  const leaderboardEntries: Array<{
+    wallet: string;
+    points: number;
+    gamesPlayed: number;
+    tier: 'legendary' | 'epic' | 'rare' | 'common';
+    tokenAmountFormatted: number;
+  }> = [];
+
+  // Get all users with game activity
+  const usersSnapshot = await db.collection('users')
+    .where('totalGamesPlayed', '>', 0)
+    .orderBy('totalGamesPlayed', 'desc')
+    .limit(500)
+    .get();
+
+  console.log(`   Found ${usersSnapshot.size} users with games played`);
+
+  for (const userDoc of usersSnapshot.docs) {
+    const userData = userDoc.data();
+    const wallet = userDoc.id.toLowerCase();
+    const gamesPlayed = userData.totalGamesPlayed || 0;
+
+    // Calculate points (simplified - just games for leaderboard)
+    const gamePoints = calculateGamePoints(gamesPlayed);
+    const points = gamePoints;
+
+    // Determine tier based on points
     let tier: 'legendary' | 'epic' | 'rare' | 'common';
-    if (i < 3) tier = 'legendary';
-    else if (i < 10) tier = 'epic';
-    else if (i < 25) tier = 'rare';
-    else tier = 'common';
+    let tokenAmountFormatted: number;
 
-    leaderboard.push({
-      rank: i + 1,
-      wallet: `0x${(i + 1).toString(16).padStart(4, '0')}${'0'.repeat(36)}`,
+    if (points >= 500) {
+      tier = 'legendary';
+      tokenAmountFormatted = 500000 + Math.floor(points * 500);
+    } else if (points >= 200) {
+      tier = 'epic';
+      tokenAmountFormatted = 200000 + Math.floor(points * 250);
+    } else if (points >= 50) {
+      tier = 'rare';
+      tokenAmountFormatted = 75000 + Math.floor(points * 150);
+    } else {
+      tier = 'common';
+      tokenAmountFormatted = 10000 + Math.floor(points * 100);
+    }
+
+    tokenAmountFormatted = Math.min(tokenAmountFormatted, 2000000);
+
+    leaderboardEntries.push({
+      wallet,
+      points,
+      gamesPlayed,
       tier,
-      points: 500 - (i * 8),
-      tokenAmountFormatted: tierTokens[tier],
-      claimed: i % 5 === 0, // Some have claimed
+      tokenAmountFormatted,
     });
   }
 
+  // Sort by points descending
+  leaderboardEntries.sort((a, b) => b.points - a.points);
+
+  // Take top entries and add rank
+  const leaderboard = leaderboardEntries.slice(0, limit).map((entry, index) => ({
+    rank: index + 1,
+    wallet: entry.wallet,
+    tier: entry.tier,
+    points: entry.points,
+    tokenAmountFormatted: entry.tokenAmountFormatted,
+    claimed: false,
+  }));
+
+  // Count tiers
+  const tierStats = {
+    legendary: leaderboard.filter(e => e.tier === 'legendary').length,
+    epic: leaderboard.filter(e => e.tier === 'epic').length,
+    rare: leaderboard.filter(e => e.tier === 'rare').length,
+    common: leaderboard.filter(e => e.tier === 'common').length,
+  };
+
+  console.log(`   Leaderboard generated: ${leaderboard.length} entries`);
+  console.log(`   Tiers: L=${tierStats.legendary}, E=${tierStats.epic}, R=${tierStats.rare}, C=${tierStats.common}`);
+
   return {
-    airdropId: 'demo_airdrop',
+    airdropId: 'realtime_preview',
     leaderboard,
-    total: 50,
-    tierStats: {
-      legendary: 3,
-      epic: 7,
-      rare: 15,
-      common: 25,
-    },
-    status: 'demo',
-    message: 'Demo leaderboard - sample data for testing',
+    total: leaderboardEntries.length,
+    tierStats,
+    status: 'preview',
+    message: 'Live leaderboard based on current user activity',
   };
 }
 
@@ -1149,9 +1211,9 @@ export const getAirdropLeaderboard = onCall(async (request) => {
       .get();
 
     if (airdropsSnapshot.empty) {
-      // Return demo leaderboard for testing
-      console.log('📭 No airdrops found - returning demo leaderboard');
-      return generateDemoLeaderboard(limit);
+      // Return real-time leaderboard from actual user data
+      console.log('📭 No airdrops found - generating real-time leaderboard');
+      return await generateRealTimeLeaderboard(limit);
     }
 
     airdropId = airdropsSnapshot.docs[0].id;
@@ -1165,10 +1227,10 @@ export const getAirdropLeaderboard = onCall(async (request) => {
     .limit(Math.min(limit, 100))
     .get();
 
-  // If no allocations found, return demo data
+  // If no allocations found, return real-time data
   if (allocationsSnapshot.empty) {
-    console.log('📭 No allocations found - returning demo leaderboard');
-    return generateDemoLeaderboard(limit);
+    console.log('📭 No allocations found - generating real-time leaderboard');
+    return await generateRealTimeLeaderboard(limit);
   }
 
   const leaderboard = allocationsSnapshot.docs.map(doc => {
