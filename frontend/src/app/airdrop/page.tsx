@@ -279,12 +279,10 @@ export default function AirdropPage() {
                         <span className="font-bold text-arcade-purple">+{status.stats.breakdown.discordPoints}</span>
                       </div>
                     )}
-                    {status.stats.breakdown.zealyPoints > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Zealy ({status.stats.zealyXP} XP)</span>
-                        <span className="font-bold text-arcade-pink">+{status.stats.breakdown.zealyPoints}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Zealy ({status.stats.zealyXP || 0} XP)</span>
+                      <span className="font-bold text-arcade-pink">+{status.stats.breakdown.zealyPoints || 0}</span>
+                    </div>
                   </div>
                   {status.stats.breakdown.multiplier > 1 && (
                     <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
