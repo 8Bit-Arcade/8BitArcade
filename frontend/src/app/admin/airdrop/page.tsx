@@ -29,6 +29,8 @@ export default function AdminAirdropPage() {
   const { signInWithWallet, isAuthenticating, isFirebaseAuthenticated } = useWalletAuth();
   const [users, setUsers] = useState<UserAllocation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [sortBy, setSortBy] = useState<'points' | 'games' | 'tokens'>('points');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -60,6 +62,26 @@ export default function AdminAirdropPage() {
       setError(err.message || 'Failed to load allocations');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Sync Zealy data
+  const syncZealy = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    setError('');
+    try {
+      const syncZealyUsers = httpsCallable(functions, 'syncZealyUsers');
+      const result = await syncZealyUsers({});
+      const data = result.data as { totalUsers: number; usersWithWallet: number; message: string };
+      setSyncResult(`✓ ${data.message}`);
+      // Reload allocations to show updated Zealy data
+      await loadAllocations();
+    } catch (err: any) {
+      console.error('Error syncing Zealy:', err);
+      setError(err.message || 'Failed to sync Zealy data');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -152,18 +174,33 @@ export default function AdminAirdropPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-pixel text-arcade-green">AIRDROP ADMIN</h1>
-          <button
-            onClick={loadAllocations}
-            disabled={loading}
-            className="bg-arcade-green text-arcade-black px-4 py-2 font-pixel text-sm hover:bg-arcade-green/80 disabled:opacity-50"
-          >
-            {loading ? 'LOADING...' : 'REFRESH'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={syncZealy}
+              disabled={syncing || loading}
+              className="bg-purple-600 text-white px-4 py-2 font-pixel text-sm hover:bg-purple-500 disabled:opacity-50"
+            >
+              {syncing ? 'SYNCING...' : 'SYNC ZEALY'}
+            </button>
+            <button
+              onClick={loadAllocations}
+              disabled={loading}
+              className="bg-arcade-green text-arcade-black px-4 py-2 font-pixel text-sm hover:bg-arcade-green/80 disabled:opacity-50"
+            >
+              {loading ? 'LOADING...' : 'REFRESH'}
+            </button>
+          </div>
         </div>
 
         {error && (
           <div className="bg-red-500/20 border border-red-500 text-red-400 p-4 mb-6 font-pixel text-sm">
             {error}
+          </div>
+        )}
+
+        {syncResult && (
+          <div className="bg-green-500/20 border border-green-500 text-green-400 p-4 mb-6 font-pixel text-sm">
+            {syncResult}
           </div>
         )}
 
