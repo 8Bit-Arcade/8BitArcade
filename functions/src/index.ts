@@ -53,7 +53,8 @@ export {
     getAirdropStatus,
     getAirdropLeaderboard,
     markAirdropClaimed,
-    setAirdropContract
+    setAirdropContract,
+    getAdminAirdropAllocations
 } from './airdrop/calculateAirdrop';
 
 // Zealy integration
