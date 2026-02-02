@@ -75,6 +75,14 @@ const DISCORD_POINTS = {
   LEADERBOARD_LEGEND: 100, // 500+ messages
 };
 
+// Telegram point thresholds (matches bot config)
+const TELEGRAM_POINTS = {
+  LINKED: 5,          // Linked wallet
+  ACTIVE_50: 25,      // 50+ messages
+  ACTIVE_200: 50,     // 200+ messages
+  ACTIVE_500: 100,    // 500+ messages
+};
+
 interface AirdropAllocation {
   wallet: string;
   points: number;
@@ -710,6 +718,8 @@ async function calculateRealTimeEligibility(wallet: string) {
   let discordPoints = 0;
   let zealyXP = 0;
   let zealyQuests = 0;
+  let telegramMessages = 0;
+  let telegramPoints = 0;
   let isEarlyAdopter = false;
 
   // 1. Get games played from users collection (primary source)
@@ -847,6 +857,30 @@ async function calculateRealTimeEligibility(wallet: string) {
     console.error('   Error checking Zealy:', err);
   }
 
+  // 7. Get Telegram activity
+  try {
+    const telegramDoc = await db.collection('telegram_users').doc(normalizedWallet).get();
+    if (telegramDoc.exists) {
+      const telegramData = telegramDoc.data();
+      telegramMessages = telegramData?.messageCount || 0;
+      console.log(`   Telegram messages: ${telegramMessages}`);
+
+      // Calculate Telegram points
+      telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
+      if (telegramMessages >= 500) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+      } else if (telegramMessages >= 200) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+      } else if (telegramMessages >= 50) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+      }
+    } else {
+      console.log(`   No Telegram link found for wallet`);
+    }
+  } catch (err) {
+    console.error('   Error checking Telegram:', err);
+  }
+
   // Calculate total points
   const gamePoints = calculateGamePoints(gamesPlayed);
   const tournamentEntryPoints = tournamentEntries * 25;
@@ -856,13 +890,14 @@ async function calculateRealTimeEligibility(wallet: string) {
   const multiplier = isEarlyAdopter ? 2.0 : 1.0;
 
   const basePoints = gamePoints + tournamentEntryPoints + tournamentFinishPoints +
-                     highScorePoints + discordPoints + zealyPoints;
+                     highScorePoints + discordPoints + zealyPoints + telegramPoints;
   const totalPoints = Math.floor(basePoints * multiplier);
 
   // Determine eligibility
   const isEligible = gamesPlayed >= MIN_GAMES_FOR_ELIGIBILITY ||
                      tournamentEntries >= MIN_TOURNAMENT_ENTRIES ||
-                     discordMessages >= 50;
+                     discordMessages >= 50 ||
+                     telegramMessages >= 50;
 
   // Estimate tier based on points (this is approximate without full snapshot)
   // With ~200 users and 10M tokens, allocations should be substantial
@@ -902,7 +937,7 @@ async function calculateRealTimeEligibility(wallet: string) {
   claimDeadline.setDate(claimDeadline.getDate() + 90);
 
   console.log(`✅ Real-time calculation complete for ${wallet}:`);
-  console.log(`   Games: ${gamesPlayed}, Tournaments: ${tournamentEntries}, Discord: ${discordMessages}, Zealy XP: ${zealyXP}`);
+  console.log(`   Games: ${gamesPlayed}, Tournaments: ${tournamentEntries}, Discord: ${discordMessages}, Zealy XP: ${zealyXP}, Telegram: ${telegramMessages}`);
   console.log(`   Total Points: ${totalPoints}, Tier: ${tier}, Estimated Tokens: ${estimatedTokens}`);
 
   // Calculate user's rank by comparing against all other users
@@ -966,6 +1001,7 @@ async function calculateRealTimeEligibility(wallet: string) {
       discordMessages,
       zealyXP,
       zealyQuests,
+      telegramMessages,
       isEarlyAdopter,
       breakdown: {
         gamePoints,
@@ -974,6 +1010,7 @@ async function calculateRealTimeEligibility(wallet: string) {
         highScorePoints,
         discordPoints,
         zealyPoints: Math.floor(zealyPoints),
+        telegramPoints,
         multiplier,
         totalPoints,
       },
