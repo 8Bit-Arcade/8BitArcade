@@ -32,11 +32,6 @@ const commands = [
     .setName('snapshot')
     .setDescription('(Admin) Scan message history and assign roles retroactively')
     .setDefaultMemberPermissions(0), // Admin only
-
-  new SlashCommandBuilder()
-    .setName('airdrop-test')
-    .setDescription('(Admin) Test airdrop calculation system')
-    .setDefaultMemberPermissions(0), // Admin only
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
