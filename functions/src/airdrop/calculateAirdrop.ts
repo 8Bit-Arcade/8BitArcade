@@ -905,12 +905,35 @@ async function calculateRealTimeEligibility(wallet: string) {
   console.log(`   Games: ${gamesPlayed}, Tournaments: ${tournamentEntries}, Discord: ${discordMessages}, Zealy XP: ${zealyXP}`);
   console.log(`   Total Points: ${totalPoints}, Tier: ${tier}, Estimated Tokens: ${estimatedTokens}`);
 
+  // Calculate user's rank by comparing against all other users
+  let rank: number | null = null;
+  try {
+    const allUsersSnapshot = await db.collection('users')
+      .where('totalGamesPlayed', '>', 0)
+      .get();
+
+    // Count how many users have more points
+    let usersWithMorePoints = 0;
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data();
+      const userGames = userData.totalGamesPlayed || 0;
+      const userPoints = calculateGamePoints(userGames);
+      if (userPoints > totalPoints) {
+        usersWithMorePoints++;
+      }
+    }
+    rank = usersWithMorePoints + 1;
+    console.log(`   Calculated rank: #${rank} out of ${allUsersSnapshot.size} users`);
+  } catch (err) {
+    console.error('   Error calculating rank:', err);
+  }
+
   return {
     eligible: isEligible,
     airdropId: 'realtime_preview',
     wallet: normalizedWallet,
     tier: isEligible ? tier : null,
-    rank: null, // Can't determine rank without full snapshot
+    rank: rank, // Calculated by comparing against all users
     points: totalPoints,
     tokenAmount: isEligible ? tokenAmount : '0',
     tokenAmountFormatted: isEligible ? estimatedTokens : 0,
