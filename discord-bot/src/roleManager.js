@@ -261,9 +261,79 @@ async function calculateAirdropPoints(discordId) {
   return { totalPoints, breakdown, messageCount, walletAddress };
 }
 
+// Airdrop configuration
+const AIRDROP_TOTAL = 10_000_000; // 10 million tokens
+
+// Calculate airdrop allocation for all eligible users
+async function calculateAirdropAllocations() {
+  const allLinks = await firebase.getAllLinks();
+  const allocations = [];
+  let totalPoints = 0;
+
+  // First pass: calculate points for all linked users
+  for (const link of allLinks) {
+    const stats = await calculateAirdropPoints(link.discordId);
+    if (stats.totalPoints > 0) {
+      allocations.push({
+        discordId: link.discordId,
+        discordUsername: link.discordUsername,
+        walletAddress: link.walletAddress,
+        points: stats.totalPoints,
+        breakdown: stats.breakdown
+      });
+      totalPoints += stats.totalPoints;
+    }
+  }
+
+  // Second pass: calculate token allocation proportionally
+  for (const alloc of allocations) {
+    alloc.percentage = (alloc.points / totalPoints) * 100;
+    alloc.tokens = Math.floor((alloc.points / totalPoints) * AIRDROP_TOTAL);
+  }
+
+  // Sort by tokens descending
+  allocations.sort((a, b) => b.tokens - a.tokens);
+
+  return {
+    totalPool: AIRDROP_TOTAL,
+    totalPoints,
+    totalUsers: allocations.length,
+    allocations
+  };
+}
+
+// Get single user's airdrop estimate
+async function getAirdropEstimate(discordId) {
+  const allData = await calculateAirdropAllocations();
+  const userAlloc = allData.allocations.find(a => a.discordId === discordId);
+
+  if (!userAlloc) {
+    return {
+      eligible: false,
+      reason: 'No points earned or wallet not linked'
+    };
+  }
+
+  const rank = allData.allocations.findIndex(a => a.discordId === discordId) + 1;
+
+  return {
+    eligible: true,
+    points: userAlloc.points,
+    percentage: userAlloc.percentage,
+    estimatedTokens: userAlloc.tokens,
+    rank,
+    totalUsers: allData.totalUsers,
+    totalPoints: allData.totalPoints,
+    breakdown: userAlloc.breakdown
+  };
+}
+
 module.exports = {
   calculateUserRoles,
   syncUserRoles,
   calculateAirdropPoints,
-  getTokenBalance
+  getTokenBalance,
+  calculateAirdropAllocations,
+  getAirdropEstimate,
+  AIRDROP_TOTAL
 };
