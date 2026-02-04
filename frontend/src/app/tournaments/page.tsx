@@ -49,8 +49,9 @@ export default function TournamentsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // DYNAMIC TOURNAMENT DISCOVERY - Check first 12 tournament slots
-  const MAX_TOURNAMENTS = 12;
+  // DYNAMIC TOURNAMENT DISCOVERY - Check tournament slots
+  // Increased to cover more tournaments (IDs can go up to 100)
+  const MAX_TOURNAMENTS = 100;
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
   //  dynamic tournament queries
