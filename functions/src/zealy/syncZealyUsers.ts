@@ -139,9 +139,22 @@ export const syncZealyUsers = onCall(
 
       console.log(`📊 Fetched ${allUsers.length} users from Zealy`);
 
+      // Get all Discord-wallet links to match Zealy users via Discord
+      const discordLinksSnapshot = await db.collection('discord_links').get();
+      const discordToWallet: Map<string, string> = new Map();
+      for (const doc of discordLinksSnapshot.docs) {
+        const data = doc.data();
+        if (data.walletAddress) {
+          // doc.id is the Discord ID
+          discordToWallet.set(doc.id, data.walletAddress.toLowerCase());
+        }
+      }
+      console.log(`📊 Found ${discordToWallet.size} Discord-wallet links`);
+
       // Store in Firebase
       let synced = 0;
       let withWallet = 0;
+      let withDiscordMatch = 0;
       let skipped = 0;
 
       const batch = db.batch();
@@ -154,35 +167,54 @@ export const syncZealyUsers = onCall(
           continue;
         }
 
+        // Try to find wallet - first from direct connection, then via Discord
+        let walletAddress: string | null = null;
+
+        // Option 1: Direct wallet connection in Zealy
+        if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
+          const wallet = user.connectedWallet.toLowerCase().trim();
+          if (wallet.startsWith('0x') && wallet.length === 42) {
+            walletAddress = wallet;
+          }
+        }
+
+        // Option 2: Match via Discord ID
+        if (!walletAddress && user.discordId) {
+          const discordWallet = discordToWallet.get(user.discordId);
+          if (discordWallet) {
+            walletAddress = discordWallet;
+            withDiscordMatch++;
+            console.log(`   Matched ${user.name} via Discord ${user.discordId} -> ${walletAddress.slice(0, 8)}...`);
+          }
+        }
+
         // Store by Zealy ID
         const zealyRef = db.collection('zealy_users_by_id').doc(user.id);
         batch.set(zealyRef, {
-          zealyId: user.id,
+          odedId: user.id,
           name: user.name || 'Unknown',
           xp: user.xp || 0,
           rank: user.rank || 0,
           questsCompleted: user.questsCompleted || 0,
-          connectedWallet: user.connectedWallet || null,
+          connectedWallet: walletAddress,
           discordId: user.discordId || null,
           twitterId: user.twitterId || null,
           lastSynced: FieldValue.serverTimestamp(),
         }, { merge: true });
 
-        // If user has connected wallet, also store by wallet
-        if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
-          const walletAddress = user.connectedWallet.toLowerCase().trim();
-          if (walletAddress.startsWith('0x') && walletAddress.length === 42) {
-            const walletRef = db.collection('zealy_users').doc(walletAddress);
-            batch.set(walletRef, {
-              zealyId: user.id,
-              name: user.name || 'Unknown',
-              xp: user.xp || 0,
-              rank: user.rank || 0,
-              questsCompleted: user.questsCompleted || 0,
-              lastSynced: FieldValue.serverTimestamp(),
-            }, { merge: true });
-            withWallet++;
-          }
+        // If we found a wallet (direct or via Discord), store by wallet
+        if (walletAddress) {
+          const walletRef = db.collection('zealy_users').doc(walletAddress);
+          batch.set(walletRef, {
+            odedId: user.id,
+            name: user.name || 'Unknown',
+            xp: user.xp || 0,
+            rank: user.rank || 0,
+            questsCompleted: user.questsCompleted || 0,
+            discordId: user.discordId || null,
+            lastSynced: FieldValue.serverTimestamp(),
+          }, { merge: true });
+          withWallet++;
         }
 
         synced++;
@@ -190,13 +222,14 @@ export const syncZealyUsers = onCall(
 
       await batch.commit();
 
-      console.log(`✅ Zealy sync complete: ${synced} users synced, ${withWallet} with connected wallets, ${skipped} skipped`);
+      console.log(`✅ Zealy sync complete: ${synced} users synced, ${withWallet} with wallets (${withDiscordMatch} via Discord), ${skipped} skipped`);
 
       return {
         success: true,
         totalUsers: synced,
         usersWithWallet: withWallet,
-        message: `Synced ${synced} Zealy users (${withWallet} with connected wallets)`,
+        matchedViaDiscord: withDiscordMatch,
+        message: `Synced ${synced} Zealy users (${withWallet} with wallets, ${withDiscordMatch} matched via Discord)`,
       };
     } catch (error) {
       console.error('❌ Zealy sync error:', error);
@@ -241,14 +274,43 @@ export const scheduledZealySync = onSchedule(
 
       console.log(`📊 Fetched ${allUsers.length} users from Zealy`);
 
+      // Get Discord-wallet links to match via Discord
+      const discordLinksSnapshot = await db.collection('discord_links').get();
+      const discordToWallet: Map<string, string> = new Map();
+      for (const doc of discordLinksSnapshot.docs) {
+        const data = doc.data();
+        if (data.walletAddress) {
+          discordToWallet.set(doc.id, data.walletAddress.toLowerCase());
+        }
+      }
+
       let synced = 0;
       let withWallet = 0;
+      let withDiscordMatch = 0;
       const batch = db.batch();
 
       for (const user of allUsers) {
         // Skip users with empty or invalid IDs
         if (!user.id || typeof user.id !== 'string' || user.id.trim() === '') {
           continue;
+        }
+
+        // Try to find wallet - direct or via Discord
+        let walletAddress: string | null = null;
+
+        if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
+          const wallet = user.connectedWallet.toLowerCase().trim();
+          if (wallet.startsWith('0x') && wallet.length === 42) {
+            walletAddress = wallet;
+          }
+        }
+
+        if (!walletAddress && user.discordId) {
+          const discordWallet = discordToWallet.get(user.discordId);
+          if (discordWallet) {
+            walletAddress = discordWallet;
+            withDiscordMatch++;
+          }
         }
 
         const zealyRef = db.collection('zealy_users_by_id').doc(user.id);
@@ -258,26 +320,24 @@ export const scheduledZealySync = onSchedule(
           xp: user.xp || 0,
           rank: user.rank || 0,
           questsCompleted: user.questsCompleted || 0,
-          connectedWallet: user.connectedWallet || null,
+          connectedWallet: walletAddress,
           discordId: user.discordId || null,
           twitterId: user.twitterId || null,
           lastSynced: FieldValue.serverTimestamp(),
         }, { merge: true });
 
-        if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
-          const walletAddress = user.connectedWallet.toLowerCase().trim();
-          if (walletAddress.startsWith('0x') && walletAddress.length === 42) {
-            const walletRef = db.collection('zealy_users').doc(walletAddress);
-            batch.set(walletRef, {
-              zealyId: user.id,
-              name: user.name || 'Unknown',
-              xp: user.xp || 0,
-              rank: user.rank || 0,
-              questsCompleted: user.questsCompleted || 0,
-              lastSynced: FieldValue.serverTimestamp(),
-            }, { merge: true });
-            withWallet++;
-          }
+        if (walletAddress) {
+          const walletRef = db.collection('zealy_users').doc(walletAddress);
+          batch.set(walletRef, {
+            zealyId: user.id,
+            name: user.name || 'Unknown',
+            xp: user.xp || 0,
+            rank: user.rank || 0,
+            questsCompleted: user.questsCompleted || 0,
+            discordId: user.discordId || null,
+            lastSynced: FieldValue.serverTimestamp(),
+          }, { merge: true });
+          withWallet++;
         }
         synced++;
       }
