@@ -18,6 +18,7 @@ interface ZealyUser {
   rank: number;
   questsCompleted?: number;
   connectedWallet?: string;
+  discordHandle?: string;
   discordId?: string;
   twitterId?: string;
 }
@@ -66,6 +67,7 @@ async function fetchZealyLeaderboard(apiKey: string, page = 1, limit = 100): Pro
     questsCompleted: u.questsCompleted || u.completedQuests || 0,
     connectedWallet: u.connectedWallet || u.wallet || u.address || u.ethAddress || null,
     discordId: u.discordId || u.discord?.id || null,
+    discordHandle: u.discordHandle || u.discord?.handle || u.discord?.username || null,
     twitterId: u.twitterId || u.twitter?.id || null,
   }));
 }
@@ -141,15 +143,24 @@ export const syncZealyUsers = onCall(
 
       // Get all Discord-wallet links to match Zealy users via Discord
       const discordLinksSnapshot = await db.collection('discord_links').get();
-      const discordToWallet: Map<string, string> = new Map();
+      const discordIdToWallet: Map<string, string> = new Map();
+      const discordHandleToWallet: Map<string, string> = new Map();
       for (const doc of discordLinksSnapshot.docs) {
         const data = doc.data();
         if (data.walletAddress) {
-          // doc.id is the Discord ID
-          discordToWallet.set(doc.id, data.walletAddress.toLowerCase());
+          const wallet = data.walletAddress.toLowerCase();
+          // doc.id is the Discord ID (numeric)
+          discordIdToWallet.set(doc.id, wallet);
+          // Also map by Discord handle/username if available
+          if (data.discordUsername) {
+            discordHandleToWallet.set(data.discordUsername.toLowerCase(), wallet);
+          }
+          if (data.discordHandle) {
+            discordHandleToWallet.set(data.discordHandle.toLowerCase(), wallet);
+          }
         }
       }
-      console.log(`📊 Found ${discordToWallet.size} Discord-wallet links`);
+      console.log(`📊 Found ${discordIdToWallet.size} Discord ID links, ${discordHandleToWallet.size} Discord handle links`);
 
       // Store in Firebase
       let synced = 0;
@@ -178,13 +189,24 @@ export const syncZealyUsers = onCall(
           }
         }
 
-        // Option 2: Match via Discord ID
+        // Option 2: Match via Discord ID (numeric)
         if (!walletAddress && user.discordId) {
-          const discordWallet = discordToWallet.get(user.discordId);
+          const discordWallet = discordIdToWallet.get(user.discordId);
           if (discordWallet) {
             walletAddress = discordWallet;
             withDiscordMatch++;
-            console.log(`   Matched ${user.name} via Discord ${user.discordId} -> ${walletAddress.slice(0, 8)}...`);
+            console.log(`   Matched ${user.name} via Discord ID ${user.discordId} -> ${walletAddress.slice(0, 8)}...`);
+          }
+        }
+
+        // Option 3: Match via Discord handle/username
+        if (!walletAddress && user.discordHandle) {
+          const handleLower = user.discordHandle.toLowerCase();
+          const discordWallet = discordHandleToWallet.get(handleLower);
+          if (discordWallet) {
+            walletAddress = discordWallet;
+            withDiscordMatch++;
+            console.log(`   Matched ${user.name} via Discord handle ${user.discordHandle} -> ${walletAddress.slice(0, 8)}...`);
           }
         }
 
@@ -198,6 +220,7 @@ export const syncZealyUsers = onCall(
           questsCompleted: user.questsCompleted || 0,
           connectedWallet: walletAddress,
           discordId: user.discordId || null,
+          discordHandle: user.discordHandle || null,
           twitterId: user.twitterId || null,
           lastSynced: FieldValue.serverTimestamp(),
         }, { merge: true });
@@ -276,11 +299,19 @@ export const scheduledZealySync = onSchedule(
 
       // Get Discord-wallet links to match via Discord
       const discordLinksSnapshot = await db.collection('discord_links').get();
-      const discordToWallet: Map<string, string> = new Map();
+      const discordIdToWallet: Map<string, string> = new Map();
+      const discordHandleToWallet: Map<string, string> = new Map();
       for (const doc of discordLinksSnapshot.docs) {
         const data = doc.data();
         if (data.walletAddress) {
-          discordToWallet.set(doc.id, data.walletAddress.toLowerCase());
+          const wallet = data.walletAddress.toLowerCase();
+          discordIdToWallet.set(doc.id, wallet);
+          if (data.discordUsername) {
+            discordHandleToWallet.set(data.discordUsername.toLowerCase(), wallet);
+          }
+          if (data.discordHandle) {
+            discordHandleToWallet.set(data.discordHandle.toLowerCase(), wallet);
+          }
         }
       }
 
@@ -290,12 +321,10 @@ export const scheduledZealySync = onSchedule(
       const batch = db.batch();
 
       for (const user of allUsers) {
-        // Skip users with empty or invalid IDs
         if (!user.id || typeof user.id !== 'string' || user.id.trim() === '') {
           continue;
         }
 
-        // Try to find wallet - direct or via Discord
         let walletAddress: string | null = null;
 
         if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
@@ -306,7 +335,15 @@ export const scheduledZealySync = onSchedule(
         }
 
         if (!walletAddress && user.discordId) {
-          const discordWallet = discordToWallet.get(user.discordId);
+          const discordWallet = discordIdToWallet.get(user.discordId);
+          if (discordWallet) {
+            walletAddress = discordWallet;
+            withDiscordMatch++;
+          }
+        }
+
+        if (!walletAddress && user.discordHandle) {
+          const discordWallet = discordHandleToWallet.get(user.discordHandle.toLowerCase());
           if (discordWallet) {
             walletAddress = discordWallet;
             withDiscordMatch++;
@@ -322,6 +359,7 @@ export const scheduledZealySync = onSchedule(
           questsCompleted: user.questsCompleted || 0,
           connectedWallet: walletAddress,
           discordId: user.discordId || null,
+          discordHandle: user.discordHandle || null,
           twitterId: user.twitterId || null,
           lastSynced: FieldValue.serverTimestamp(),
         }, { merge: true });
@@ -335,6 +373,7 @@ export const scheduledZealySync = onSchedule(
             rank: user.rank || 0,
             questsCompleted: user.questsCompleted || 0,
             discordId: user.discordId || null,
+            discordHandle: user.discordHandle || null,
             lastSynced: FieldValue.serverTimestamp(),
           }, { merge: true });
           withWallet++;
