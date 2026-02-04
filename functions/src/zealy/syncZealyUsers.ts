@@ -152,15 +152,23 @@ export const syncZealyUsers = onCall(
           // doc.id is the Discord ID (numeric)
           discordIdToWallet.set(doc.id, wallet);
           // Also map by Discord handle/username if available
-          if (data.discordUsername) {
-            discordHandleToWallet.set(data.discordUsername.toLowerCase(), wallet);
-          }
-          if (data.discordHandle) {
-            discordHandleToWallet.set(data.discordHandle.toLowerCase(), wallet);
+          // Store multiple variations to handle format differences
+          const username = data.discordUsername || data.discordHandle;
+          if (username) {
+            const usernameLower = username.toLowerCase();
+            discordHandleToWallet.set(usernameLower, wallet);
+            // Also store without discriminator (user#1234 -> user)
+            if (usernameLower.includes('#')) {
+              discordHandleToWallet.set(usernameLower.split('#')[0], wallet);
+            }
+            // Also store without @ prefix
+            if (usernameLower.startsWith('@')) {
+              discordHandleToWallet.set(usernameLower.slice(1), wallet);
+            }
           }
         }
       }
-      console.log(`📊 Found ${discordIdToWallet.size} Discord ID links, ${discordHandleToWallet.size} Discord handle links`);
+      console.log(`📊 Found ${discordIdToWallet.size} Discord ID links, ${discordHandleToWallet.size} Discord handle variations`);
 
       // Store in Firebase
       let synced = 0;
@@ -201,8 +209,17 @@ export const syncZealyUsers = onCall(
 
         // Option 3: Match via Discord handle/username
         if (!walletAddress && user.discordHandle) {
-          const handleLower = user.discordHandle.toLowerCase();
-          const discordWallet = discordHandleToWallet.get(handleLower);
+          let handleLower = user.discordHandle.toLowerCase();
+          // Try exact match first
+          let discordWallet = discordHandleToWallet.get(handleLower);
+          // Try without discriminator
+          if (!discordWallet && handleLower.includes('#')) {
+            discordWallet = discordHandleToWallet.get(handleLower.split('#')[0]);
+          }
+          // Try without @ prefix
+          if (!discordWallet && handleLower.startsWith('@')) {
+            discordWallet = discordHandleToWallet.get(handleLower.slice(1));
+          }
           if (discordWallet) {
             walletAddress = discordWallet;
             withDiscordMatch++;
@@ -306,11 +323,16 @@ export const scheduledZealySync = onSchedule(
         if (data.walletAddress) {
           const wallet = data.walletAddress.toLowerCase();
           discordIdToWallet.set(doc.id, wallet);
-          if (data.discordUsername) {
-            discordHandleToWallet.set(data.discordUsername.toLowerCase(), wallet);
-          }
-          if (data.discordHandle) {
-            discordHandleToWallet.set(data.discordHandle.toLowerCase(), wallet);
+          const username = data.discordUsername || data.discordHandle;
+          if (username) {
+            const usernameLower = username.toLowerCase();
+            discordHandleToWallet.set(usernameLower, wallet);
+            if (usernameLower.includes('#')) {
+              discordHandleToWallet.set(usernameLower.split('#')[0], wallet);
+            }
+            if (usernameLower.startsWith('@')) {
+              discordHandleToWallet.set(usernameLower.slice(1), wallet);
+            }
           }
         }
       }
@@ -343,7 +365,14 @@ export const scheduledZealySync = onSchedule(
         }
 
         if (!walletAddress && user.discordHandle) {
-          const discordWallet = discordHandleToWallet.get(user.discordHandle.toLowerCase());
+          let handleLower = user.discordHandle.toLowerCase();
+          let discordWallet = discordHandleToWallet.get(handleLower);
+          if (!discordWallet && handleLower.includes('#')) {
+            discordWallet = discordHandleToWallet.get(handleLower.split('#')[0]);
+          }
+          if (!discordWallet && handleLower.startsWith('@')) {
+            discordWallet = discordHandleToWallet.get(handleLower.slice(1));
+          }
           if (discordWallet) {
             walletAddress = discordWallet;
             withDiscordMatch++;
