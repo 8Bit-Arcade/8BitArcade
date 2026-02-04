@@ -195,14 +195,12 @@ export const syncZealyUsers = onCall(
         // Try to find wallet - PRIORITIZE Discord matching to get 8BitArcade wallet
         // (Zealy's direct wallet may be different from user's 8BitArcade wallet)
         let walletAddress: string | null = null;
-        let matchMethod = '';
 
         // Option 1 (PRIORITY): Match via Discord ID (numeric) - links to 8BitArcade wallet
         if (user.discordId) {
           const discordWallet = discordIdToWallet.get(user.discordId);
           if (discordWallet) {
             walletAddress = discordWallet;
-            matchMethod = 'discord_id';
             withDiscordMatch++;
             console.log(`   Matched ${user.name} via Discord ID ${user.discordId} -> ${walletAddress.slice(0, 8)}...`);
           }
@@ -210,7 +208,7 @@ export const syncZealyUsers = onCall(
 
         // Option 2 (PRIORITY): Match via Discord handle/username - links to 8BitArcade wallet
         if (!walletAddress && user.discordHandle) {
-          let handleLower = user.discordHandle.toLowerCase();
+          const handleLower = user.discordHandle.toLowerCase();
           // Try exact match first
           let discordWallet = discordHandleToWallet.get(handleLower);
           // Try without discriminator
@@ -223,7 +221,6 @@ export const syncZealyUsers = onCall(
           }
           if (discordWallet) {
             walletAddress = discordWallet;
-            matchMethod = 'discord_handle';
             withDiscordMatch++;
             console.log(`   Matched ${user.name} via Discord handle ${user.discordHandle} -> ${walletAddress.slice(0, 8)}...`);
           }
@@ -234,7 +231,6 @@ export const syncZealyUsers = onCall(
           const wallet = user.connectedWallet.toLowerCase().trim();
           if (wallet.startsWith('0x') && wallet.length === 42) {
             walletAddress = wallet;
-            matchMethod = 'zealy_wallet';
           }
         }
 
