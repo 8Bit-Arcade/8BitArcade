@@ -174,6 +174,18 @@ export const createWeeklyTournaments = onSchedule(
   async (event) => {
     logger.info('Creating weekly tournaments...', { time: event.scheduleTime });
 
+    // Check if active/upcoming weekly tournaments already exist
+    const existingSnapshot = await db
+      .collection('tournaments')
+      .where('period', '==', 'weekly')
+      .where('status', 'in', ['active', 'upcoming'])
+      .get();
+
+    if (!existingSnapshot.empty) {
+      logger.info(`Weekly tournaments already exist (${existingSnapshot.size} found), skipping creation`);
+      return;
+    }
+
     try {
       // Get secrets
       const managerAddress = tournamentManagerAddress.value();
@@ -293,6 +305,18 @@ export const createMonthlyTournaments = onSchedule(
   async (event) => {
     logger.info('Creating monthly tournaments...', { time: event.scheduleTime });
 
+    // Check if active/upcoming monthly tournaments already exist
+    const existingSnapshot = await db
+      .collection('tournaments')
+      .where('period', '==', 'monthly')
+      .where('status', 'in', ['active', 'upcoming'])
+      .get();
+
+    if (!existingSnapshot.empty) {
+      logger.info(`Monthly tournaments already exist (${existingSnapshot.size} found), skipping creation`);
+      return;
+    }
+
     try {
       // Get secrets
       const managerAddress = tournamentManagerAddress.value();
@@ -400,8 +424,9 @@ export const createMonthlyTournaments = onSchedule(
  * Manual tournament creation callable function
  * Can be triggered via Firebase console, CLI, or frontend admin panel
  *
- * Usage: Call with { period: 'weekly' | 'monthly' }
+ * Usage: Call with { period: 'weekly' | 'monthly', force?: boolean }
  * This will create BOTH Standard and High Roller tournaments for that period
+ * Will NOT create if active/upcoming tournaments already exist (unless force=true)
  */
 export const createTournamentManual = onCall(
   {
@@ -410,13 +435,34 @@ export const createTournamentManual = onCall(
     timeoutSeconds: 300, // 5 minutes for retries
   },
   async (request) => {
-    const { period } = request.data as { period?: 'weekly' | 'monthly' };
+    const { period, force } = request.data as { period?: 'weekly' | 'monthly'; force?: boolean };
 
     if (!period || !['weekly', 'monthly'].includes(period)) {
       throw new HttpsError('invalid-argument', 'Period must be "weekly" or "monthly"');
     }
 
-    logger.info(`Manual ${period} tournament creation triggered`);
+    logger.info(`Manual ${period} tournament creation triggered`, { force });
+
+    // Check if active/upcoming tournaments already exist for this period
+    const existingSnapshot = await db
+      .collection('tournaments')
+      .where('period', '==', period)
+      .where('status', 'in', ['active', 'upcoming'])
+      .get();
+
+    if (!existingSnapshot.empty && !force) {
+      const existing = existingSnapshot.docs.map(doc => ({
+        id: doc.id,
+        tier: doc.data().tier,
+        status: doc.data().status,
+      }));
+      logger.info(`${period} tournaments already exist, skipping creation`, { existing });
+      return {
+        success: false,
+        message: `${period} tournaments already exist. Use force=true to create anyway.`,
+        existing,
+      };
+    }
 
     try {
       // Get secrets
