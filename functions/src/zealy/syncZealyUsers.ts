@@ -170,6 +170,12 @@ export const syncZealyUsers = onCall(
       }
       console.log(`📊 Found ${discordIdToWallet.size} Discord ID links, ${discordHandleToWallet.size} Discord handle variations`);
 
+      // Debug: Count how many Zealy users have Discord info
+      const zealyWithDiscordId = allUsers.filter(u => u.discordId).length;
+      const zealyWithDiscordHandle = allUsers.filter(u => u.discordHandle).length;
+      const zealyWithWallet = allUsers.filter(u => u.connectedWallet).length;
+      console.log(`📊 Zealy users with Discord ID: ${zealyWithDiscordId}, with Discord handle: ${zealyWithDiscordHandle}, with wallet: ${zealyWithWallet}`);
+
       // Store in Firebase
       let synced = 0;
       let withWallet = 0;
@@ -186,28 +192,23 @@ export const syncZealyUsers = onCall(
           continue;
         }
 
-        // Try to find wallet - first from direct connection, then via Discord
+        // Try to find wallet - PRIORITIZE Discord matching to get 8BitArcade wallet
+        // (Zealy's direct wallet may be different from user's 8BitArcade wallet)
         let walletAddress: string | null = null;
+        let matchMethod = '';
 
-        // Option 1: Direct wallet connection in Zealy
-        if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
-          const wallet = user.connectedWallet.toLowerCase().trim();
-          if (wallet.startsWith('0x') && wallet.length === 42) {
-            walletAddress = wallet;
-          }
-        }
-
-        // Option 2: Match via Discord ID (numeric)
-        if (!walletAddress && user.discordId) {
+        // Option 1 (PRIORITY): Match via Discord ID (numeric) - links to 8BitArcade wallet
+        if (user.discordId) {
           const discordWallet = discordIdToWallet.get(user.discordId);
           if (discordWallet) {
             walletAddress = discordWallet;
+            matchMethod = 'discord_id';
             withDiscordMatch++;
             console.log(`   Matched ${user.name} via Discord ID ${user.discordId} -> ${walletAddress.slice(0, 8)}...`);
           }
         }
 
-        // Option 3: Match via Discord handle/username
+        // Option 2 (PRIORITY): Match via Discord handle/username - links to 8BitArcade wallet
         if (!walletAddress && user.discordHandle) {
           let handleLower = user.discordHandle.toLowerCase();
           // Try exact match first
@@ -222,8 +223,18 @@ export const syncZealyUsers = onCall(
           }
           if (discordWallet) {
             walletAddress = discordWallet;
+            matchMethod = 'discord_handle';
             withDiscordMatch++;
             console.log(`   Matched ${user.name} via Discord handle ${user.discordHandle} -> ${walletAddress.slice(0, 8)}...`);
+          }
+        }
+
+        // Option 3 (FALLBACK): Direct wallet connection in Zealy (only if no Discord match)
+        if (!walletAddress && user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
+          const wallet = user.connectedWallet.toLowerCase().trim();
+          if (wallet.startsWith('0x') && wallet.length === 42) {
+            walletAddress = wallet;
+            matchMethod = 'zealy_wallet';
           }
         }
 
@@ -347,16 +358,11 @@ export const scheduledZealySync = onSchedule(
           continue;
         }
 
+        // PRIORITIZE Discord matching to get 8BitArcade wallet
         let walletAddress: string | null = null;
 
-        if (user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
-          const wallet = user.connectedWallet.toLowerCase().trim();
-          if (wallet.startsWith('0x') && wallet.length === 42) {
-            walletAddress = wallet;
-          }
-        }
-
-        if (!walletAddress && user.discordId) {
+        // Option 1 (PRIORITY): Match via Discord ID
+        if (user.discordId) {
           const discordWallet = discordIdToWallet.get(user.discordId);
           if (discordWallet) {
             walletAddress = discordWallet;
@@ -364,6 +370,7 @@ export const scheduledZealySync = onSchedule(
           }
         }
 
+        // Option 2 (PRIORITY): Match via Discord handle
         if (!walletAddress && user.discordHandle) {
           let handleLower = user.discordHandle.toLowerCase();
           let discordWallet = discordHandleToWallet.get(handleLower);
@@ -376,6 +383,14 @@ export const scheduledZealySync = onSchedule(
           if (discordWallet) {
             walletAddress = discordWallet;
             withDiscordMatch++;
+          }
+        }
+
+        // Option 3 (FALLBACK): Direct wallet from Zealy
+        if (!walletAddress && user.connectedWallet && typeof user.connectedWallet === 'string' && user.connectedWallet.trim() !== '') {
+          const wallet = user.connectedWallet.toLowerCase().trim();
+          if (wallet.startsWith('0x') && wallet.length === 42) {
+            walletAddress = wallet;
           }
         }
 
