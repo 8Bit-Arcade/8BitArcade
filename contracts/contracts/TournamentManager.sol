@@ -337,6 +337,26 @@ contract TournamentManager is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @dev Batch cancel multiple tournaments in a single transaction
+     * @param tournamentIds Array of tournament IDs to cancel
+     * @notice Skips tournaments that have already started or have entries (no revert)
+     */
+    function batchCancelTournaments(uint256[] calldata tournamentIds) external onlyOwner {
+        uint256 currentTime = block.timestamp;
+
+        for (uint256 i = 0; i < tournamentIds.length; i++) {
+            Tournament storage t = tournaments[tournamentIds[i]];
+
+            // Skip if already started or has entries (don't revert, just skip)
+            if (currentTime >= t.startTime || t.totalEntries > 0) {
+                continue;
+            }
+
+            t.isActive = false;
+        }
+    }
+
+    /**
      * @dev Get active tournaments count
      * @notice Gas-optimized: caches storage reads and timestamp
      */
