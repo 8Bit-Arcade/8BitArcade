@@ -1445,6 +1445,24 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       zealyData.set(doc.id.toLowerCase(), doc.data().xp || 0);
     }
 
+    // Pre-fetch tournament entries for all users (avoid N*M queries)
+    console.log('   Fetching tournament entries...');
+    const tournamentEntriesMap: Map<string, number> = new Map();
+    const tournamentsSnapshot = await db.collection('tournaments').get();
+
+    for (const tournamentDoc of tournamentsSnapshot.docs) {
+      const entriesSnapshot = await db.collection('tournaments')
+        .doc(tournamentDoc.id)
+        .collection('entries')
+        .get();
+
+      for (const entryDoc of entriesSnapshot.docs) {
+        const wallet = entryDoc.id.toLowerCase();
+        tournamentEntriesMap.set(wallet, (tournamentEntriesMap.get(wallet) || 0) + 1);
+      }
+    }
+    console.log(`   Found ${tournamentEntriesMap.size} users with tournament entries`);
+
     // Process each user
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
@@ -1501,19 +1519,8 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
 
       tokenAmount = Math.min(tokenAmount, 2000000);
 
-      // Get tournament entries
-      let tournamentEntries = 0;
-      const tournamentsSnapshot = await db.collection('tournaments').get();
-      for (const tournamentDoc of tournamentsSnapshot.docs) {
-        const entryDoc = await db.collection('tournaments')
-          .doc(tournamentDoc.id)
-          .collection('entries')
-          .doc(wallet)
-          .get();
-        if (entryDoc.exists) {
-          tournamentEntries++;
-        }
-      }
+      // Get tournament entries from pre-fetched map
+      const tournamentEntries = tournamentEntriesMap.get(wallet) || 0;
 
       users.push({
         wallet,
