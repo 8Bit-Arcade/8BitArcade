@@ -187,7 +187,7 @@ async function syncUserRoles(member) {
 }
 
 // Calculate airdrop points for a user
-async function calculateAirdropPoints(discordId) {
+async function calculateAirdropPoints(discordId, member = null) {
   let totalPoints = 0;
   const breakdown = [];
 
@@ -205,6 +205,12 @@ async function calculateAirdropPoints(discordId) {
         breakdown.push({ role: role.name, points: role.points });
       }
     }
+  }
+
+  // Arcade OG points (joined before cutoff)
+  if (member && member.joinedAt && member.joinedAt < OG_CUTOFF_DATE) {
+    totalPoints += ROLES.ARCADE_OG.points;
+    breakdown.push({ role: ROLES.ARCADE_OG.name, points: ROLES.ARCADE_OG.points });
   }
 
   // Game activity points (if wallet linked)
