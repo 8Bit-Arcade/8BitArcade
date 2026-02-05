@@ -349,7 +349,7 @@ async function handleSnapshot(interaction) {
 
       // Fetch up to 1000 messages per channel
       let channelTotal = 0;
-      const maxMessages = 1000;
+      const maxMessages = 1000000;
 
       do {
         fetchedMessages = await channel.messages.fetch({
