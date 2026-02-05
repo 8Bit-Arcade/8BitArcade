@@ -20,8 +20,8 @@ const client = new Client({
 
 // Bot ready
 client.once('ready', async () => {
-  console.log(`🎮 8-Bit Arcade Bot is online as ${client.user.tag}`);
-  console.log(`📊 Tracking activity in guild: ${GUILD_ID}`);
+  console.log(`ðŸŽ® 8-Bit Arcade Bot is online as ${client.user.tag}`);
+  console.log(`ðŸ“Š Tracking activity in guild: ${GUILD_ID}`);
 
   // Set bot status
   client.user.setActivity('8-Bit Arcade | /link', { type: 3 }); // "Watching"
@@ -47,14 +47,14 @@ async function startAutoSync() {
         return;
       }
 
-      // Fetch every member the bot can see in this guild
+      // Fetch every member
       const members = await guild.members.fetch();
       let synced = 0;
       let failed = 0;
 
       for (const member of members.values()) {
         try {
-          await roleManager.syncUserRoles(member);
+          await roleManager.syncUserRoles(member); // runs the OG joinedAt check
           synced++;
         } catch (error) {
           failed++;
@@ -70,13 +70,8 @@ async function startAutoSync() {
     }
   }
 
-  setTimeout(syncAllUsers, 10000); // Wait 10 seconds after startup
-  setInterval(syncAllUsers, SYNC_INTERVAL);
-  console.log('⏰ Auto-sync scheduled every 30 minutes');
-}
-
-  // Run immediately on startup
-  setTimeout(syncAllUsers, 10000); // Wait 10 seconds after startup
+  // Run once after startup
+  setTimeout(syncAllUsers, 10000);
 
   // Then run every 30 minutes
   setInterval(syncAllUsers, SYNC_INTERVAL);
@@ -106,11 +101,11 @@ client.on('messageCreate', async (message) => {
           const member = message.member;
           if (member && !member.roles.cache.has(role.id)) {
             await member.roles.add(role.id);
-            console.log(`🎉 ${message.author.tag} earned ${role.emoji} ${role.name}!`);
+            console.log(`ðŸŽ‰ ${message.author.tag} earned ${role.emoji} ${role.name}!`);
 
             // Optional: Send congratulations message
             message.channel.send({
-              content: `🎉 <@${message.author.id}> just earned the **${role.emoji} ${role.name}** role!`
+              content: `ðŸŽ‰ <@${message.author.id}> just earned the **${role.emoji} ${role.name}** role!`
             }).catch(() => {}); // Ignore if can't send
           }
         }
@@ -158,7 +153,7 @@ client.on('interactionCreate', async (interaction) => {
     }
   } catch (error) {
     console.error(`Error handling /${commandName}:`, error);
-    const reply = { content: `❌ Error: ${error.message}`, ephemeral: true };
+    const reply = { content: `âŒ Error: ${error.message}`, ephemeral: true };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(reply);
     } else {
@@ -173,7 +168,7 @@ async function handleLink(interaction, walletAddress) {
 
   // Validate wallet address
   if (!ethers.utils.isAddress(walletAddress)) {
-    return interaction.editReply('❌ Invalid wallet address. Please provide a valid Ethereum address (0x...)');
+    return interaction.editReply('âŒ Invalid wallet address. Please provide a valid Ethereum address (0x...)');
   }
 
   const result = await firebase.linkWallet(
@@ -183,7 +178,7 @@ async function handleLink(interaction, walletAddress) {
   );
 
   if (!result.success) {
-    return interaction.editReply(`❌ ${result.error}`);
+    return interaction.editReply(`âŒ ${result.error}`);
   }
 
   // Sync roles after linking
@@ -191,11 +186,11 @@ async function handleLink(interaction, walletAddress) {
 
   const embed = new EmbedBuilder()
     .setColor('#00ff88')
-    .setTitle('🎮 Wallet Linked!')
+    .setTitle('ðŸŽ® Wallet Linked!')
     .setDescription(`Your wallet has been linked to your Discord account.`)
     .addFields(
-      { name: '💳 Wallet', value: `\`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}\``, inline: true },
-      { name: '🎯 Status', value: 'Roles synced!', inline: true }
+      { name: 'ðŸ’³ Wallet', value: `\`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}\``, inline: true },
+      { name: 'ðŸŽ¯ Status', value: 'Roles synced!', inline: true }
     )
     .setFooter({ text: 'Use /stats to see your airdrop points' });
 
@@ -211,21 +206,21 @@ async function handleStats(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#00d4ff')
-    .setTitle(`📊 Stats for ${interaction.user.username}`)
+    .setTitle(`ðŸ“Š Stats for ${interaction.user.username}`)
     .setThumbnail(interaction.user.displayAvatarURL());
 
   // Add message count
-  embed.addFields({ name: '💬 Discord Messages', value: `${stats.messageCount}`, inline: true });
+  embed.addFields({ name: 'ðŸ’¬ Discord Messages', value: `${stats.messageCount}`, inline: true });
 
   // Add wallet status
   if (stats.walletAddress) {
     embed.addFields({
-      name: '💳 Linked Wallet',
+      name: 'ðŸ’³ Linked Wallet',
       value: `\`${stats.walletAddress.slice(0, 6)}...${stats.walletAddress.slice(-4)}\``,
       inline: true
     });
   } else {
-    embed.addFields({ name: '💳 Wallet', value: 'Not linked - use `/link`', inline: true });
+    embed.addFields({ name: 'ðŸ’³ Wallet', value: 'Not linked - use `/link`', inline: true });
   }
 
   // Add points breakdown
@@ -233,10 +228,10 @@ async function handleStats(interaction) {
     const breakdownText = stats.breakdown
       .map(b => `${b.role}: **+${b.points}**`)
       .join('\n');
-    embed.addFields({ name: '🏆 Points Breakdown', value: breakdownText, inline: false });
+    embed.addFields({ name: 'ðŸ† Points Breakdown', value: breakdownText, inline: false });
   }
 
-  embed.addFields({ name: '⭐ Total Airdrop Points', value: `**${stats.totalPoints}**`, inline: false });
+  embed.addFields({ name: 'â­ Total Airdrop Points', value: `**${stats.totalPoints}**`, inline: false });
 
   embed.setFooter({ text: 'Keep playing games and chatting to earn more points!' });
 
@@ -271,12 +266,12 @@ async function handleRoles(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#ff00ff')
-    .setTitle('🎮 8-Bit Arcade Roles')
+    .setTitle('ðŸŽ® 8-Bit Arcade Roles')
     .setDescription('Earn roles through Discord activity, gameplay, and holding tokens!')
     .addFields(
-      { name: '💬 Discord Roles', value: discordRoles.map(formatRole).join('\n'), inline: false },
-      { name: '🎯 Game Roles', value: gameRoles.map(formatRole).join('\n'), inline: false },
-      { name: '💎 Holder Roles', value: holderRoles.map(formatRole).join('\n'), inline: false }
+      { name: 'ðŸ’¬ Discord Roles', value: discordRoles.map(formatRole).join('\n'), inline: false },
+      { name: 'ðŸŽ¯ Game Roles', value: gameRoles.map(formatRole).join('\n'), inline: false },
+      { name: 'ðŸ’Ž Holder Roles', value: holderRoles.map(formatRole).join('\n'), inline: false }
     )
     .setFooter({ text: 'Link your wallet with /link to unlock game & holder roles!' });
 
@@ -290,9 +285,9 @@ async function handleSync(interaction) {
   const result = await roleManager.syncUserRoles(interaction.member);
 
   if (result.success) {
-    await interaction.editReply('✅ Roles synced! Your roles have been updated based on your activity.');
+    await interaction.editReply('âœ… Roles synced! Your roles have been updated based on your activity.');
   } else {
-    await interaction.editReply(`❌ Error syncing roles: ${result.error}`);
+    await interaction.editReply(`âŒ Error syncing roles: ${result.error}`);
   }
 }
 
@@ -314,14 +309,14 @@ async function handleLeaderboard(interaction) {
 
   const leaderboardText = sorted
     .map((a, i) => {
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+      const medal = i === 0 ? 'ðŸ¥‡' : i === 1 ? 'ðŸ¥ˆ' : i === 2 ? 'ðŸ¥‰' : `${i + 1}.`;
       return `${medal} **${a.discordUsername || 'Unknown'}** - ${a.messageCount} messages`;
     })
     .join('\n');
 
   const embed = new EmbedBuilder()
     .setColor('#ffd700')
-    .setTitle('🏆 Discord Activity Leaderboard')
+    .setTitle('ðŸ† Discord Activity Leaderboard')
     .setDescription(leaderboardText)
     .setFooter({ text: 'Keep chatting to climb the leaderboard!' });
 
@@ -332,11 +327,11 @@ async function handleLeaderboard(interaction) {
 async function handleSnapshot(interaction) {
   // Check admin permission
   if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-    return interaction.reply({ content: '❌ Admin only command', ephemeral: true });
+    return interaction.reply({ content: 'âŒ Admin only command', ephemeral: true });
   }
 
   await interaction.deferReply();
-  await interaction.editReply('🔄 Starting message history scan... This may take a while.');
+  await interaction.editReply('ðŸ”„ Starting message history scan... This may take a while.');
 
   const guild = interaction.guild;
   const channels = guild.channels.cache.filter(c => c.isTextBased() && c.viewable);
@@ -378,7 +373,7 @@ async function handleSnapshot(interaction) {
 
         // Update progress every 500 messages
         if (totalMessages % 500 === 0) {
-          await interaction.editReply(`🔄 Scanned ${totalMessages} messages from ${channels.size} channels...`);
+          await interaction.editReply(`ðŸ”„ Scanned ${totalMessages} messages from ${channels.size} channels...`);
         }
       } while (fetchedMessages.size === 100 && channelTotal < maxMessages);
 
@@ -388,7 +383,7 @@ async function handleSnapshot(interaction) {
   }
 
   // Store counts and assign roles
-  await interaction.editReply(`📊 Scanned ${totalMessages} messages. Assigning roles to ${userCounts.size} users...`);
+  await interaction.editReply(`ðŸ“Š Scanned ${totalMessages} messages. Assigning roles to ${userCounts.size} users...`);
 
   for (const [userId, userData] of userCounts) {
     try {
@@ -413,11 +408,11 @@ async function handleSnapshot(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#00ff88')
-    .setTitle('✅ Snapshot Complete!')
+    .setTitle('âœ… Snapshot Complete!')
     .addFields(
-      { name: '📨 Messages Scanned', value: totalMessages.toLocaleString(), inline: true },
-      { name: '👥 Users Found', value: userCounts.size.toLocaleString(), inline: true },
-      { name: '🎭 Roles Assigned', value: usersUpdated.toLocaleString(), inline: true }
+      { name: 'ðŸ“¨ Messages Scanned', value: totalMessages.toLocaleString(), inline: true },
+      { name: 'ðŸ‘¥ Users Found', value: userCounts.size.toLocaleString(), inline: true },
+      { name: 'ðŸŽ­ Roles Assigned', value: usersUpdated.toLocaleString(), inline: true }
     );
 
   await interaction.editReply({ content: '', embeds: [embed] });
@@ -428,7 +423,7 @@ client.on('guildMemberAdd', async (member) => {
   if (ROLES.PLAYER_1.id) {
     try {
       await member.roles.add(ROLES.PLAYER_1.id);
-      console.log(`🎮 ${member.user.tag} joined and got Player 1 role`);
+      console.log(`ðŸŽ® ${member.user.tag} joined and got Player 1 role`);
     } catch (error) {
       console.error('Error adding Player 1 role:', error.message);
     }
