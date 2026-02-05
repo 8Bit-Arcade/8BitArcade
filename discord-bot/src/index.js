@@ -30,15 +30,14 @@ client.once('ready', async () => {
   startAutoSync();
 });
 
-// Auto-sync roles for all guild members
 async function startAutoSync() {
   const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
-  const DELAY_BETWEEN_USERS = 500; // 500ms delay between each user to prevent blocking
+  const DELAY_BETWEEN_USERS = 500;
 
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   async function syncAllUsers() {
-    console.log('🔄 Starting auto-sync for all guild members...');
+    console.log('🔄 Starting auto-sync for ALL guild members...');
 
     try {
       const guild = client.guilds.cache.get(GUILD_ID);
@@ -47,35 +46,40 @@ async function startAutoSync() {
         return;
       }
 
-      // Fetch every member
-      const members = await guild.members.fetch();
+      // FORCE fetch ALL members (not just cached ones)
+      console.log(`📊 Guild has ${guild.memberCount} total members`);
+      const members = await guild.members.fetch({ force: true });
+      console.log(`✅ Fetched ${members.size} members from Discord`);
+      
+      let ogCount = 0;
       let synced = 0;
       let failed = 0;
 
       for (const member of members.values()) {
         try {
-          await roleManager.syncUserRoles(member); // runs the OG joinedAt check
-          synced++;
+          const result = await roleManager.syncUserRoles(member);
+          if (result.success) {
+            // Check if they got OG
+            if (member.roles.cache.has(process.env.ROLE_ARCADE_OG)) {
+              ogCount++;
+            }
+            synced++;
+          }
         } catch (error) {
           failed++;
-          console.error(`Error syncing ${member.user.tag}:`, error.message);
         }
-
         await delay(DELAY_BETWEEN_USERS);
       }
 
-      console.log(`✅ Auto-sync complete: ${synced} users synced, ${failed} failed`);
+      console.log(`✅ Auto-sync complete: ${synced} synced, ${failed} failed, ${ogCount} got OG`);
     } catch (error) {
       console.error('❌ Auto-sync error:', error.message);
     }
   }
 
-  // Run once after startup
-  setTimeout(syncAllUsers, 10000);
-
-  // Then run every 30 minutes
+  setTimeout(syncAllUsers, 15000); // 15s delay
   setInterval(syncAllUsers, SYNC_INTERVAL);
-  console.log('⏰ Auto-sync scheduled every 30 minutes');
+  console.log('⏰ Auto-sync scheduled every 30 minutes (ALL members)');
 }
 
 // Track messages for activity
