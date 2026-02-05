@@ -30,16 +30,15 @@ client.once('ready', async () => {
   startAutoSync();
 });
 
-// Auto-sync roles for all linked users
+// Auto-sync roles for all guild members
 async function startAutoSync() {
   const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
   const DELAY_BETWEEN_USERS = 500; // 500ms delay between each user to prevent blocking
 
-  // Helper to delay execution
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   async function syncAllUsers() {
-    console.log('🔄 Starting auto-sync for all linked users...');
+    console.log('🔄 Starting auto-sync for all guild members...');
 
     try {
       const guild = client.guilds.cache.get(GUILD_ID);
@@ -48,21 +47,20 @@ async function startAutoSync() {
         return;
       }
 
-      const allLinks = await firebase.getAllLinks();
+      // Fetch every member the bot can see in this guild
+      const members = await guild.members.fetch();
       let synced = 0;
       let failed = 0;
 
-      for (const link of allLinks) {
+      for (const member of members.values()) {
         try {
-          const member = await guild.members.fetch(link.discordId).catch(() => null);
-          if (member) {
-            await roleManager.syncUserRoles(member);
-            synced++;
-          }
+          await roleManager.syncUserRoles(member);
+          synced++;
         } catch (error) {
           failed++;
+          console.error(`Error syncing ${member.user.tag}:`, error.message);
         }
-        // Add delay between users to prevent blocking the event loop
+
         await delay(DELAY_BETWEEN_USERS);
       }
 
@@ -71,6 +69,11 @@ async function startAutoSync() {
       console.error('❌ Auto-sync error:', error.message);
     }
   }
+
+  setTimeout(syncAllUsers, 10000); // Wait 10 seconds after startup
+  setInterval(syncAllUsers, SYNC_INTERVAL);
+  console.log('⏰ Auto-sync scheduled every 30 minutes');
+}
 
   // Run immediately on startup
   setTimeout(syncAllUsers, 10000); // Wait 10 seconds after startup
