@@ -441,18 +441,21 @@ export default function AirdropPage() {
             <div className="flex items-start gap-3">
               <span className="text-arcade-cyan font-bold">1.</span>
               <div>
-                <p className="font-bold">Eligibility</p>
+                <p className="font-bold">Earn Points</p>
                 <p className="text-gray-400">
-                  Players who participated in the testnet (played 5+ games or entered 1+ tournament) are eligible.
+                  Points are earned from multiple sources: playing games, tournament entries, high scores,
+                  Discord activity, Telegram activity, Zealy quests, and early adopter bonuses.
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-arcade-cyan font-bold">2.</span>
+              <span className="text-arcade-purple font-bold">2.</span>
               <div>
-                <p className="font-bold">Point System</p>
+                <p className="font-bold">Community Activity</p>
                 <p className="text-gray-400">
-                  Points are earned based on games played, tournament participation, high scores, and early adopter status.
+                  <span className="text-arcade-purple">Discord:</span> Link your wallet with /link and chat to earn points (50/200/500+ msgs).{' '}
+                  <span className="text-blue-400">Telegram:</span> Join our group and link your wallet.{' '}
+                  <span className="text-arcade-pink">Zealy:</span> Complete quests to earn XP that converts to points.
                 </p>
               </div>
             </div>
@@ -461,8 +464,8 @@ export default function AirdropPage() {
               <div>
                 <p className="font-bold">Tier Allocation</p>
                 <p className="text-gray-400">
-                  Top 1% = Legendary, Top 5% = Epic, Top 20% = Rare, Everyone else = Common.
-                  Higher tiers receive larger token allocations.
+                  Your total points determine your tier: Legendary (500+), Epic (200+), Rare (50+), or Common.
+                  Higher tiers receive larger token allocations with multipliers.
                 </p>
               </div>
             </div>

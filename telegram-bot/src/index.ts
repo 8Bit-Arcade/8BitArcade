@@ -2,16 +2,49 @@ import { Telegraf, Context } from 'telegraf';
 import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
 dotenv.config();
 
-// Initialize Firebase
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : require('../serviceAccountKey.json');
+// Initialize Firebase - try multiple service account locations
+let serviceAccount: ServiceAccount;
+
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  // Option 1: Environment variable (JSON string)
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  console.log('Using Firebase service account from environment variable');
+} else {
+  // Option 2: Try multiple file paths
+  const possiblePaths = [
+    path.join(__dirname, '../serviceAccountKey.json'),
+    path.join(__dirname, '../service-account.json'),
+    path.join(__dirname, '../../discord-bot/service-account.json'),
+    path.join(__dirname, '../../functions/serviceAccountKey.json'),
+  ];
+
+  let foundPath: string | null = null;
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      foundPath = p;
+      break;
+    }
+  }
+
+  if (!foundPath) {
+    console.error('ERROR: Firebase service account not found!');
+    console.error('Please either:');
+    console.error('1. Set FIREBASE_SERVICE_ACCOUNT env var with JSON string');
+    console.error('2. Place serviceAccountKey.json in telegram-bot folder');
+    process.exit(1);
+  }
+
+  serviceAccount = require(foundPath);
+  console.log(`Using Firebase service account from: ${foundPath}`);
+}
 
 initializeApp({
-  credential: cert(serviceAccount as ServiceAccount),
+  credential: cert(serviceAccount),
 });
 
 const db = getFirestore();
