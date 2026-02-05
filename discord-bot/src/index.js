@@ -325,7 +325,7 @@ async function handleLeaderboard(interaction) {
   await interaction.editReply({ embeds: [embed] });
 }
 
-// /snapshot command - Admin: Scan history and assign roles
+// /snapshot command - Admin: Scan ALL history and assign roles
 async function handleSnapshot(interaction) {
   // Check admin permission
   if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
@@ -333,24 +333,27 @@ async function handleSnapshot(interaction) {
   }
 
   await interaction.deferReply();
-  await interaction.editReply('🔄 Starting message history scan... This may take a while.');
+  await interaction.editReply('🔄 Starting FULL message history scan... This will take a while (scanning ALL messages).');
 
   const guild = interaction.guild;
   const channels = guild.channels.cache.filter(c => c.isTextBased() && c.viewable);
 
   let totalMessages = 0;
   let usersUpdated = 0;
+  let countsIncreased = 0;
   const userCounts = new Map();
+
+  console.log(`📊 Starting snapshot scan of ${channels.size} channels...`);
 
   for (const [channelId, channel] of channels) {
     try {
       let lastId;
       let fetchedMessages;
-
-      // Fetch up to 1000 messages per channel
       let channelTotal = 0;
-      const maxMessages = 1000;
 
+      console.log(`   Scanning #${channel.name}...`);
+
+      // Fetch ALL messages - no limit
       do {
         fetchedMessages = await channel.messages.fetch({
           limit: 100,
@@ -373,29 +376,41 @@ async function handleSnapshot(interaction) {
         lastId = fetchedMessages.last()?.id;
         channelTotal += fetchedMessages.size;
 
-        // Update progress every 500 messages
-        if (totalMessages % 500 === 0) {
-          await interaction.editReply(`🔄 Scanned ${totalMessages} messages from ${channels.size} channels...`);
+        // Small delay to avoid rate limiting
+        if (fetchedMessages.size === 100) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
-      } while (fetchedMessages.size === 100 && channelTotal < maxMessages);
+
+        // Update progress every 1000 messages
+        if (totalMessages % 1000 === 0) {
+          await interaction.editReply(`🔄 Scanned ${totalMessages.toLocaleString()} messages... (currently in #${channel.name})`).catch(() => {});
+        }
+      } while (fetchedMessages.size === 100); // Continue until we get less than 100 (end of channel)
+
+      console.log(`   #${channel.name}: ${channelTotal} messages`);
 
     } catch (error) {
-      console.log(`Skipping channel ${channel.name}: ${error.message}`);
+      console.log(`   Skipping channel ${channel.name}: ${error.message}`);
     }
   }
 
   // Store counts and assign roles
-  await interaction.editReply(`📊 Scanned ${totalMessages} messages. Assigning roles to ${userCounts.size} users...`);
+  await interaction.editReply(`📊 Scanned ${totalMessages.toLocaleString()} total messages. Updating ${userCounts.size} users...`);
 
   for (const [userId, userData] of userCounts) {
     try {
-      // Store in Firebase
-      await firebase.storeDiscordActivity(userId, {
+      // Store in Firebase (will only update if count is higher)
+      const result = await firebase.storeDiscordActivity(userId, {
         discordId: userId,
         discordUsername: userData.username,
         messageCount: userData.count,
         snapshotAt: new Date()
       });
+
+      if (result.wasUpdated) {
+        countsIncreased++;
+        console.log(`   📈 ${userData.username}: ${result.previousCount} -> ${result.newCount}`);
+      }
 
       // Try to get member and sync roles
       const member = await guild.members.fetch(userId).catch(() => null);
@@ -410,12 +425,15 @@ async function handleSnapshot(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor('#00ff88')
-    .setTitle('✅ Snapshot Complete!')
+    .setTitle('✅ Full Snapshot Complete!')
+    .setDescription('Scanned ALL message history (no limits)')
     .addFields(
       { name: '📨 Messages Scanned', value: totalMessages.toLocaleString(), inline: true },
       { name: '👥 Users Found', value: userCounts.size.toLocaleString(), inline: true },
-      { name: '🎭 Roles Assigned', value: usersUpdated.toLocaleString(), inline: true }
-    );
+      { name: '🎭 Roles Synced', value: usersUpdated.toLocaleString(), inline: true },
+      { name: '📈 Counts Increased', value: countsIncreased.toLocaleString(), inline: true }
+    )
+    .setFooter({ text: 'Message counts only increase, never decrease' });
 
   await interaction.editReply({ content: '', embeds: [embed] });
 }

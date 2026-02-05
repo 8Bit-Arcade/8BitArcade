@@ -67,10 +67,25 @@ async function checkTournamentWins(walletAddress) {
   return !tournamentsSnap.empty;
 }
 
-// Store Discord activity
+// Store Discord activity (only updates messageCount if higher than existing)
 async function storeDiscordActivity(discordId, data) {
   const ref = db.collection('discord_activity').doc(discordId);
-  await ref.set(data, { merge: true });
+
+  // Get existing data to check message count
+  const existing = await ref.get();
+  const existingCount = existing.exists ? (existing.data().messageCount || 0) : 0;
+
+  // Only update messageCount if new count is higher
+  const newCount = data.messageCount || 0;
+  const finalCount = Math.max(existingCount, newCount);
+
+  await ref.set({
+    ...data,
+    messageCount: finalCount,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  return { previousCount: existingCount, newCount: finalCount, wasUpdated: finalCount > existingCount };
 }
 
 // Get Discord activity
