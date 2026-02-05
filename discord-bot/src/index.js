@@ -7,7 +7,7 @@ const { ethers } = require('ethers');
 
 // Initialize Firebase 
 firebase.initFirebase();
-//
+
 // Create Discord client
 const client = new Client({
   intents: [
