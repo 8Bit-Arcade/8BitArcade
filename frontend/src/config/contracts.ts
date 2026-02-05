@@ -293,6 +293,13 @@ export const TOURNAMENT_MANAGER_ABI = [
   },
   {
     inputs: [],
+    name: 'nextTournamentId',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'STANDARD_WEEKLY_FEE',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',

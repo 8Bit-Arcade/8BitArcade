@@ -49,8 +49,9 @@ export default function TournamentsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // DYNAMIC TOURNAMENT DISCOVERY - Check first 12 tournament slots
-  const MAX_TOURNAMENTS = 12;
+  // DYNAMIC TOURNAMENT DISCOVERY - Check tournament slots
+  // Increased to cover more tournaments (IDs can go up to 100)
+  const MAX_TOURNAMENTS = 100;
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
   //  dynamic tournament queries
@@ -267,34 +268,47 @@ export default function TournamentsPage() {
       }
     }
 
-    // Dedupe only active/upcoming tournaments by tier+period
-    const deduped = new Map<string, Tournament>();
+    // Dedupe active/upcoming tournaments by tier+period
+    // For weekly: keep last 2 tournaments per tier (to handle duplicates gracefully)
+    // For monthly: keep only 1 per tier
+    const weeklyByTier = new Map<string, Tournament[]>();
+    const monthlyByTier = new Map<string, Tournament>();
+
     for (const t of activeTournaments) {
-      const key = `${t.tier}-${t.period}`;
-      const existing = deduped.get(key);
-
-      if (!existing) {
-        deduped.set(key, t);
+      if (t.period === 'Weekly') {
+        const key = t.tier;
+        if (!weeklyByTier.has(key)) {
+          weeklyByTier.set(key, []);
+        }
+        weeklyByTier.get(key)!.push(t);
       } else {
-        // Priority order: active (0) > upcoming (1)
-        const statusPriority = (status: TournamentStatus) =>
-          status === 'active' ? 0 : 1;
-
-        const existingPriority = statusPriority(existing.status);
-        const newPriority = statusPriority(t.status);
-
-        // If new tournament has higher priority, or same priority but more recent start
-        if (newPriority < existingPriority ||
-            (newPriority === existingPriority && t.startTime > existing.startTime)) {
-          deduped.set(key, t);
+        // Monthly - keep only one per tier (most recent/active)
+        const key = t.tier;
+        const existing = monthlyByTier.get(key);
+        if (!existing) {
+          monthlyByTier.set(key, t);
+        } else {
+          const statusPriority = (status: TournamentStatus) =>
+            status === 'active' ? 0 : 1;
+          if (statusPriority(t.status) < statusPriority(existing.status) ||
+              (statusPriority(t.status) === statusPriority(existing.status) && t.startTime > existing.startTime)) {
+            monthlyByTier.set(key, t);
+          }
         }
       }
     }
 
-    // Combine deduped active/upcoming with all ended tournaments
-    const dedupedTournaments = [...Array.from(deduped.values()), ...endedTournaments];
+    // For weekly, sort by ID descending (highest/most recent first) and keep last 2
+    const weeklyTournaments: Tournament[] = [];
+    for (const tournaments of weeklyByTier.values()) {
+      tournaments.sort((a, b) => Number(b.id) - Number(a.id)); // Most recent ID first
+      weeklyTournaments.push(...tournaments.slice(0, 2)); // Keep only last 2
+    }
+
+    // Combine weekly (max 2 per tier) + monthly (1 per tier) + all ended
+    const dedupedTournaments = [...weeklyTournaments, ...Array.from(monthlyByTier.values()), ...endedTournaments];
     console.log('🏁 [FINAL] Tournaments after deduplication:', dedupedTournaments.length,
-      `(${deduped.size} active/upcoming, ${endedTournaments.length} ended)`);
+      `(${weeklyTournaments.length} weekly, ${monthlyByTier.size} monthly, ${endedTournaments.length} ended)`);
 
     setTournaments(dedupedTournaments);
     setLoading(anyLoading);

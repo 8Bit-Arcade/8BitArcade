@@ -5,7 +5,7 @@ const firebase = require('./firebase');
 const roleManager = require('./roleManager');
 const { ethers } = require('ethers');
 
-// Initialize Firebase
+// Initialize Firebase 
 firebase.initFirebase();
 
 // Create Discord client
