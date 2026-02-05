@@ -175,5 +175,5 @@ module.exports = {
   DISCORD_TOKEN: process.env.DISCORD_BOT_TOKEN,
   CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   GUILD_ID: process.env.DISCORD_GUILD_ID,
-  OG_CUTOFF_DATE: new Date(process.env.OG_CUTOFF_DATE || '2025-02-25T23:59:59Z')
+  OG_CUTOFF_DATE: new Date(process.env.OG_CUTOFF_DATE || '2026-02-25T23:59:59Z')
 };
