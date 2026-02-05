@@ -30,45 +30,47 @@ client.once('ready', async () => {
   startAutoSync();
 });
 
-// Auto-sync roles for all linked users
+// Auto-sync roles for ALL guild members (wallet roles still protected in roleManager)
 async function startAutoSync() {
   const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
-  const DELAY_BETWEEN_USERS = 500; // 500ms delay between each user to prevent blocking
+  const DELAY_BETWEEN_USERS = 500; // 500ms delay between each user
 
   // Helper to delay execution
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   async function syncAllUsers() {
-    console.log('ðŸ”„ Starting auto-sync for all linked users...');
+    console.log('🔄 Starting auto-sync for all guild members...');
 
     try {
       const guild = client.guilds.cache.get(GUILD_ID);
       if (!guild) {
-        console.error('âŒ Could not find guild');
+        console.error('❌ Could not find guild');
         return;
       }
 
-      const allLinks = await firebase.getAllLinks();
+      // Fetch ALL guild members
+      await guild.members.fetch();
+
+      const members = guild.members.cache;
       let synced = 0;
       let failed = 0;
 
-      for (const link of allLinks) {
+      for (const member of members.values()) {
         try {
-          const member = await guild.members.fetch(link.discordId).catch(() => null);
-          if (member) {
-            await roleManager.syncUserRoles(member);
-            synced++;
-          }
+          await roleManager.syncUserRoles(member);
+          synced++;
         } catch (error) {
           failed++;
+          console.error(`❌ Failed syncing ${member.user.tag}:`, error.message);
         }
-        // Add delay between users to prevent blocking the event loop
+
+        // delay to avoid Discord rate limits
         await delay(DELAY_BETWEEN_USERS);
       }
 
-      console.log(`âœ… Auto-sync complete: ${synced} users synced, ${failed} failed`);
+      console.log(`✅ Auto-sync complete: ${synced} users synced, ${failed} failed`);
     } catch (error) {
-      console.error('âŒ Auto-sync error:', error.message);
+      console.error('❌ Auto-sync error:', error.message);
     }
   }
 
@@ -77,8 +79,9 @@ async function startAutoSync() {
 
   // Then run every 30 minutes
   setInterval(syncAllUsers, SYNC_INTERVAL);
-  console.log('â° Auto-sync scheduled every 30 minutes');
+  console.log('⏰ Auto-sync scheduled every 30 minutes');
 }
+
 
 // Track messages for activity
 client.on('messageCreate', async (message) => {
