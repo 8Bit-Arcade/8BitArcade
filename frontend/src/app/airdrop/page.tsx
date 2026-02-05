@@ -275,8 +275,8 @@ export default function AirdropPage() {
                     )}
                     {status.stats.breakdown.discordPoints > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Discord ({status.stats.discordMessages} msgs)</span>
-                        <span className="font-bold text-arcade-purple">+{status.stats.breakdown.discordPoints}</span>
+                        <span className="text-gray-500">Discord ({status.stats.discordMessages} msgs)</span>
+                        <span className="font-bold text-arcade-cyan">+{status.stats.breakdown.discordPoints}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
