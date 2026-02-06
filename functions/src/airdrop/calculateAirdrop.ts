@@ -921,22 +921,35 @@ async function calculateRealTimeEligibility(wallet: string) {
     console.error('   Error checking Zealy:', err);
   }
 
-  // 7. Get Telegram activity
+  // 7. Get Telegram activity (query telegram_links → telegram_activity for live data)
   try {
-    const telegramDoc = await db.collection('telegram_users').doc(normalizedWallet).get();
-    if (telegramDoc.exists) {
-      const telegramData = telegramDoc.data();
-      telegramMessages = telegramData?.messageCount || 0;
-      console.log(`   Telegram messages: ${telegramMessages}`);
+    const telegramLinkDoc = await db.collection('telegram_links')
+      .where('walletAddress', '==', normalizedWallet)
+      .limit(1)
+      .get();
 
-      // Calculate Telegram points
-      telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
-      if (telegramMessages >= 500) {
-        telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
-      } else if (telegramMessages >= 200) {
-        telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
-      } else if (telegramMessages >= 50) {
-        telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+    if (!telegramLinkDoc.empty) {
+      const telegramId = telegramLinkDoc.docs[0].id;
+      console.log(`   Found Telegram link: ${telegramId}`);
+      const telegramActivityDoc = await db.collection('telegram_activity').doc(telegramId).get();
+
+      if (telegramActivityDoc.exists) {
+        telegramMessages = telegramActivityDoc.data()?.messageCount || 0;
+        console.log(`   Telegram messages: ${telegramMessages}`);
+
+        // Calculate Telegram points
+        telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
+        if (telegramMessages >= 500) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+        } else if (telegramMessages >= 200) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+        } else if (telegramMessages >= 50) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+        }
+      } else {
+        // Linked but no activity yet - still get base points
+        telegramPoints = TELEGRAM_POINTS.LINKED;
+        console.log(`   Telegram linked but no activity yet`);
       }
     } else {
       console.log(`   No Telegram link found for wallet`);
