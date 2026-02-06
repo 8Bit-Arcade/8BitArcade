@@ -453,7 +453,7 @@ export default function AirdropPage() {
               <div>
                 <p className="font-bold">Community Activity</p>
                 <p className="text-gray-400">
-                  <span className="text-arcade-purple">Discord:</span> Link your wallet with /link and chat to earn points (50/200/500+ msgs).{' '}
+                  <span className="text-blue-400">Discord:</span> Link your wallet with /link and chat to earn points (50/200/500+ msgs).{' '}
                   <span className="text-blue-400">Telegram:</span> Join our group and link your wallet.{' '}
                   <span className="text-arcade-pink">Zealy:</span> Complete quests to earn XP that converts to points.
                 </p>
