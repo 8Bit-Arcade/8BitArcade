@@ -53,7 +53,7 @@ const db = getFirestore();
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
 // DEBUG: Log ALL incoming updates including entities
-bot.use((ctx, next) => {
+bot.use(async (ctx, next) => {
   console.log('--- INCOMING UPDATE ---');
   console.log('Type:', ctx.updateType);
   console.log('Chat:', ctx.chat?.type, ctx.chat?.id);
@@ -62,9 +62,24 @@ bot.use((ctx, next) => {
     const msg = ctx.message as any;
     console.log('Text:', msg.text);
     console.log('Entities:', JSON.stringify(msg.entities || []));
+
+    // NUCLEAR TEST: /ping bypasses ALL handler logic
+    // If /ping works but /help doesn't, the issue is in command matching
+    // If /ping doesn't work either, the bot can't send messages at all
+    if (msg.text === '/ping') {
+      console.log('>>> PING TEST: attempting reply...');
+      try {
+        await ctx.reply('pong! Bot is alive and can send messages.');
+        console.log('>>> PING TEST: reply sent OK');
+      } catch (err) {
+        console.error('>>> PING TEST FAILED:', err);
+      }
+      return; // don't pass to other handlers
+    }
   }
   console.log('------------------------');
-  return next();
+  await next();
+  console.log('>>> Middleware chain completed for update');
 });
 
 // Store for pending wallet links (telegramId -> verification code)
