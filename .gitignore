@@ -18,5 +18,5 @@ testEnterTournament.js
 abis/
 
 # Root-level node stuff (if not intended)
-package.json
-package-lock.json
+/package.json
+/package-lock.json
