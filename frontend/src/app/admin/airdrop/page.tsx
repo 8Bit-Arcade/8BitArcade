@@ -19,6 +19,7 @@ interface UserAllocation {
   tokenAmount: number;
   tournamentEntries: number;
   discordMessages: number;
+  telegramMessages: number;
   zealyXP: number;
   isEarlyAdopter: boolean;
   createdAt?: string;
@@ -271,6 +272,7 @@ export default function AdminAirdropPage() {
                 <th className="p-3 text-right">TOKENS</th>
                 <th className="p-3 text-right">TOURNAMENTS</th>
                 <th className="p-3 text-right">DISCORD</th>
+                <th className="p-3 text-right">TELEGRAM</th>
                 <th className="p-3 text-right">ZEALY</th>
                 <th className="p-3 text-center">EARLY</th>
               </tr>
@@ -299,6 +301,7 @@ export default function AdminAirdropPage() {
                   </td>
                   <td className="p-3 text-right text-gray-300">{user.tournamentEntries}</td>
                   <td className="p-3 text-right text-gray-300">{user.discordMessages}</td>
+                  <td className="p-3 text-right text-gray-300">{user.telegramMessages}</td>
                   <td className="p-3 text-right text-gray-300">{user.zealyXP}</td>
                   <td className="p-3 text-center">
                     {user.isEarlyAdopter && <span className="text-yellow-400">★</span>}

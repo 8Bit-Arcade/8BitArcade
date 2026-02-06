@@ -16,6 +16,7 @@ import { keccak256, encodePacked } from 'viem';
  * - Early Adopter Bonus: 2x multiplier for first 100 users
  * - Discord Activity: 5-100 points based on message count
  * - Discord Roles: Bonus points for game-linked roles
+ * - Telegram Activity: 5-100 points based on message count
  *
  * Allocation Tiers (of 15M total):
  * - Legendary (Top 1%): 3M tokens
@@ -23,7 +24,7 @@ import { keccak256, encodePacked } from 'viem';
  * - Rare (Top 20%): 5M tokens
  * - Common (All eligible): 3M tokens
  *
- * Minimum eligibility: 5 games played OR 1 tournament entry OR 50 Discord messages (with linked wallet)
+ * Minimum eligibility: 5 games played OR 1 tournament entry OR 50 Discord messages OR 50 Telegram messages (with linked wallet)
  */
 
 // Constants
@@ -57,12 +58,15 @@ interface PlayerScore {
   firstActivityDate: Date | null;
   discordId: string | null;
   discordMessages: number;
+  telegramId: string | null;
+  telegramMessages: number;
   breakdown: {
     gamePoints: number;
     tournamentEntryPoints: number;
     tournamentFinishPoints: number;
     highScorePoints: number;
     discordPoints: number;
+    telegramPoints: number;
     multiplier: number;
   };
 }
@@ -152,12 +156,15 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
         firstActivityDate: null,
         discordId: null,
         discordMessages: 0,
+        telegramId: null,
+        telegramMessages: 0,
         breakdown: {
           gamePoints: 0,
           tournamentEntryPoints: 0,
           tournamentFinishPoints: 0,
           highScorePoints: 0,
           discordPoints: 0,
+          telegramPoints: 0,
           multiplier: 1,
         },
       });
@@ -350,6 +357,60 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
   }
 
   // ============================================
+  // 5b. Fetch Telegram activity (linked wallets only)
+  // ============================================
+  console.log('📱 Fetching Telegram activity...');
+
+  // Get all Telegram-wallet links
+  const telegramLinksSnapshot = await db.collection('telegram_links').get();
+  console.log(`   Found ${telegramLinksSnapshot.size} Telegram-wallet links`);
+
+  // Create map of wallet -> telegramId
+  const walletToTelegram: Map<string, string> = new Map();
+  for (const doc of telegramLinksSnapshot.docs) {
+    const data = doc.data();
+    if (data.walletAddress) {
+      walletToTelegram.set(data.walletAddress.toLowerCase(), doc.id);
+    }
+  }
+
+  // Get all Telegram activity
+  const telegramActivitySnapshot = await db.collection('telegram_activity').get();
+  console.log(`   Found ${telegramActivitySnapshot.size} Telegram activity records`);
+
+  // Create map of telegramId -> messageCount
+  const telegramActivity: Map<string, number> = new Map();
+  for (const doc of telegramActivitySnapshot.docs) {
+    const data = doc.data();
+    telegramActivity.set(doc.id, data.messageCount || 0);
+  }
+
+  // Apply Telegram points to linked wallets
+  for (const [wallet, telegramId] of walletToTelegram) {
+    const messageCount = telegramActivity.get(telegramId) || 0;
+
+    if (messageCount > 0) {
+      const player = getOrCreatePlayer(wallet);
+      player.telegramId = telegramId;
+      player.telegramMessages = messageCount;
+
+      // Calculate Telegram points based on message thresholds
+      let telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
+
+      if (messageCount >= 500) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+      } else if (messageCount >= 200) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+      } else if (messageCount >= 50) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+      }
+
+      player.breakdown.telegramPoints = telegramPoints;
+      console.log(`   ${wallet.slice(0, 10)}... linked to Telegram: ${messageCount} messages = ${telegramPoints} pts`);
+    }
+  }
+
+  // ============================================
   // 6. Calculate final points for each player
   // ============================================
   console.log('🧮 Calculating final scores...');
@@ -369,13 +430,14 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
     // Early adopter multiplier
     player.breakdown.multiplier = player.isEarlyAdopter ? 2.0 : 1.0;
 
-    // Calculate total points (including Discord)
+    // Calculate total points (including Discord + Telegram)
     const basePoints =
       player.breakdown.gamePoints +
       player.breakdown.tournamentEntryPoints +
       player.breakdown.tournamentFinishPoints +
       player.breakdown.highScorePoints +
-      player.breakdown.discordPoints;
+      player.breakdown.discordPoints +
+      player.breakdown.telegramPoints;
 
     player.points = Math.floor(basePoints * player.breakdown.multiplier);
   }
@@ -399,13 +461,15 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
 function calculateAllocations(players: PlayerScore[]): AirdropAllocation[] {
   console.log('💰 Calculating token allocations...');
 
-  // Filter for eligible players (now includes Discord activity)
+  // Filter for eligible players (includes Discord + Telegram activity)
   const MIN_DISCORD_MESSAGES = 50; // Minimum Discord messages to qualify alone
+  const MIN_TELEGRAM_MESSAGES = 50; // Minimum Telegram messages to qualify alone
 
   const eligible = players.filter(p =>
     p.gamesPlayed >= MIN_GAMES_FOR_ELIGIBILITY ||
     p.tournamentEntries >= MIN_TOURNAMENT_ENTRIES ||
-    (p.discordId && p.discordMessages >= MIN_DISCORD_MESSAGES)
+    (p.discordId && p.discordMessages >= MIN_DISCORD_MESSAGES) ||
+    (p.telegramId && p.telegramMessages >= MIN_TELEGRAM_MESSAGES)
   );
 
   console.log(`   ${eligible.length} players eligible (of ${players.length} total)`);
@@ -1409,6 +1473,7 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       tokenAmount: number;
       tournamentEntries: number;
       discordMessages: number;
+      telegramMessages: number;
       zealyXP: number;
       isEarlyAdopter: boolean;
       createdAt?: string;
@@ -1443,6 +1508,22 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
     const zealyData: Map<string, number> = new Map();
     for (const doc of zealySnapshot.docs) {
       zealyData.set(doc.id.toLowerCase(), doc.data().xp || 0);
+    }
+
+    // Get Telegram links and activity
+    const telegramLinksAdminSnapshot = await db.collection('telegram_links').get();
+    const walletToTelegramAdmin: Map<string, string> = new Map();
+    for (const doc of telegramLinksAdminSnapshot.docs) {
+      const data = doc.data();
+      if (data.walletAddress) {
+        walletToTelegramAdmin.set(data.walletAddress.toLowerCase(), doc.id);
+      }
+    }
+
+    const telegramActivityAdminSnapshot = await db.collection('telegram_activity').get();
+    const telegramActivityAdmin: Map<string, number> = new Map();
+    for (const doc of telegramActivityAdminSnapshot.docs) {
+      telegramActivityAdmin.set(doc.id, doc.data().messageCount || 0);
     }
 
     // Pre-fetch tournament entries for all users (avoid N*M queries)
@@ -1491,13 +1572,28 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       const zealyXP = zealyData.get(wallet) || 0;
       const zealyPoints = Math.min(zealyXP / 10, 200);
 
+      // Get Telegram messages
+      const telegramId = walletToTelegramAdmin.get(wallet);
+      const telegramMessages = telegramId ? (telegramActivityAdmin.get(telegramId) || 0) : 0;
+      let telegramPoints = 0;
+      if (telegramId) {
+        telegramPoints = TELEGRAM_POINTS.LINKED;
+        if (telegramMessages >= 500) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+        } else if (telegramMessages >= 200) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+        } else if (telegramMessages >= 50) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+        }
+      }
+
       // Check early adopter
       const createdAt = userData.createdAt?.toDate?.();
       const isEarlyAdopter = createdAt ? createdAt < new Date('2024-06-01') : false;
       const multiplier = isEarlyAdopter ? 2.0 : 1.0;
 
       // Calculate total points
-      const totalPoints = Math.floor((gamePoints + discordPoints + zealyPoints) * multiplier);
+      const totalPoints = Math.floor((gamePoints + discordPoints + zealyPoints + telegramPoints) * multiplier);
 
       // Determine tier and tokens
       let tier: string;
@@ -1530,6 +1626,7 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
         tokenAmount,
         tournamentEntries,
         discordMessages,
+        telegramMessages,
         zealyXP,
         isEarlyAdopter,
         createdAt: createdAt?.toISOString(),
