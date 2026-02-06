@@ -52,6 +52,19 @@ const db = getFirestore();
 // Initialize Telegram Bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
+// DEBUG: Log ALL incoming updates
+bot.use((ctx, next) => {
+  console.log('--- INCOMING UPDATE ---');
+  console.log('Type:', ctx.updateType);
+  console.log('Chat:', ctx.chat?.type, ctx.chat?.id);
+  console.log('From:', ctx.from?.username || ctx.from?.id);
+  if (ctx.message && 'text' in ctx.message) {
+    console.log('Text:', (ctx.message as any).text);
+  }
+  console.log('------------------------');
+  return next();
+});
+
 // Store for pending wallet links (telegramId -> verification code)
 const pendingLinks: Map<string, { code: string; expires: number }> = new Map();
 
@@ -405,9 +418,15 @@ bot.catch((err, ctx) => {
   console.error(`Error for ${ctx.updateType}:`, err);
 });
 
-// Start bot
-bot.launch().then(() => {
+// Start bot - delete webhook first to ensure polling works
+bot.telegram.deleteWebhook().then(() => {
+  console.log('Webhook deleted, starting bot with polling...');
+  return bot.launch();
+}).then(() => {
   console.log('8-Bit Arcade Telegram Bot is running!');
+  console.log('Waiting for messages...');
+}).catch((err) => {
+  console.error('FAILED TO START BOT:', err);
 });
 
 // Graceful shutdown
