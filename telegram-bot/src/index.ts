@@ -111,7 +111,9 @@ bot.on('message', async (ctx) => {
  * /start command - Welcome message
  */
 bot.command('start', async (ctx) => {
-  const welcomeMessage = `
+  console.log('>>> /start command received');
+  try {
+    const welcomeMessage = `
 Welcome to 8-Bit Arcade!
 
 I track your activity in this group for the airdrop.
@@ -125,7 +127,12 @@ Commands:
 Link your wallet to earn airdrop points!
   `;
 
-  await ctx.reply(welcomeMessage);
+    console.log('>>> Sending reply...');
+    await ctx.reply(welcomeMessage);
+    console.log('>>> Reply sent successfully');
+  } catch (error) {
+    console.error('>>> ERROR in /start:', error);
+  }
 });
 
 /**
