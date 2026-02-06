@@ -77,37 +77,6 @@ const TELEGRAM_POINTS = {
 };
 
 /**
- * Track message activity
- */
-bot.on('message', async (ctx) => {
-  try {
-    const userId = ctx.from?.id.toString();
-    const chatId = ctx.chat?.id.toString();
-    const username = ctx.from?.username || ctx.from?.first_name || 'Unknown';
-
-    if (!userId || !chatId) return;
-
-    // Only track group messages (not DMs for privacy)
-    if (ctx.chat?.type === 'private') return;
-
-    // Update message count in Firebase
-    const activityRef = db.collection('telegram_activity').doc(userId);
-
-    await activityRef.set({
-      odedId: userId,
-      username,
-      messageCount: FieldValue.increment(1),
-      lastMessage: FieldValue.serverTimestamp(),
-      chatId,
-    }, { merge: true });
-
-    // console.log(`Tracked message from ${username} (${userId})`);
-  } catch (error) {
-    console.error('Error tracking message:', error);
-  }
-});
-
-/**
  * /start command - Welcome message
  */
 bot.command('start', async (ctx) => {
@@ -417,6 +386,40 @@ bot.command('stats', async (ctx) => {
   } catch (error) {
     console.error('Error getting stats:', error);
     await ctx.reply('Error fetching stats.');
+  }
+});
+
+/**
+ * Track message activity
+ * IMPORTANT: This must be registered AFTER all bot.command() handlers.
+ * bot.on('message') matches all messages including commands, and since it
+ * does not call next(), any command handlers registered after it would never run.
+ */
+bot.on('message', async (ctx) => {
+  try {
+    const userId = ctx.from?.id.toString();
+    const chatId = ctx.chat?.id.toString();
+    const username = ctx.from?.username || ctx.from?.first_name || 'Unknown';
+
+    if (!userId || !chatId) return;
+
+    // Only track group messages (not DMs for privacy)
+    if (ctx.chat?.type === 'private') return;
+
+    // Update message count in Firebase
+    const activityRef = db.collection('telegram_activity').doc(userId);
+
+    await activityRef.set({
+      odedId: userId,
+      username,
+      messageCount: FieldValue.increment(1),
+      lastMessage: FieldValue.serverTimestamp(),
+      chatId,
+    }, { merge: true });
+
+    // console.log(`Tracked message from ${username} (${userId})`);
+  } catch (error) {
+    console.error('Error tracking message:', error);
   }
 });
 
