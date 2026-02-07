@@ -57,6 +57,24 @@ export {
     getAdminAirdropAllocations
 } from './airdrop/calculateAirdrop';
 
+// Airdrop Admin functions
+export {
+    getAirdropConfig_fn as getAirdropConfig,
+    updateAirdropConfig,
+    startAirdrop,
+    pauseAirdrop,
+    resumeAirdrop,
+    stopAirdrop,
+    extendAirdrop,
+    editUserWallet,
+    overrideUserAllocation,
+    getAllocationOverrides,
+    removeAllocationOverride,
+    getWalletChangeHistory,
+    testAirdropDistribution,
+    getAirdropDashboardStats
+} from './airdrop/airdropAdmin';
+
 // Zealy integration
 export { zealyVerifyQuest } from './zealy/verifyQuest';
 export { syncZealyUsers, scheduledZealySync, zealyWebhook, linkZealyWallet } from './zealy/syncZealyUsers';
