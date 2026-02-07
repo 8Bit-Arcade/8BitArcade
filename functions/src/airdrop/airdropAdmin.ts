@@ -67,7 +67,7 @@ async function getAirdropConfig() {
 /**
  * Get airdrop configuration and status
  */
-export const getAirdropConfig_fn = onCall(async (request) => {
+export const getAirdropConfig_fn = onCall({ cors: true }, async (request) => {
   verifyAdmin(request);
 
   const config = await getAirdropConfig();
@@ -90,7 +90,7 @@ export const getAirdropConfig_fn = onCall(async (request) => {
 /**
  * Update airdrop configuration
  */
-export const updateAirdropConfig = onCall(async (request) => {
+export const updateAirdropConfig = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const {
@@ -143,7 +143,7 @@ export const updateAirdropConfig = onCall(async (request) => {
 /**
  * Start the airdrop (or schedule it)
  */
-export const startAirdrop = onCall(async (request) => {
+export const startAirdrop = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const { immediate, scheduledStart } = request.data as {
@@ -189,7 +189,7 @@ export const startAirdrop = onCall(async (request) => {
 /**
  * Pause the airdrop
  */
-export const pauseAirdrop = onCall(async (request) => {
+export const pauseAirdrop = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const config = await getAirdropConfig();
@@ -218,7 +218,7 @@ export const pauseAirdrop = onCall(async (request) => {
 /**
  * Resume the airdrop
  */
-export const resumeAirdrop = onCall(async (request) => {
+export const resumeAirdrop = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const config = await getAirdropConfig();
@@ -243,7 +243,7 @@ export const resumeAirdrop = onCall(async (request) => {
 /**
  * Stop/End the airdrop
  */
-export const stopAirdrop = onCall(async (request) => {
+export const stopAirdrop = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const { reason } = request.data as { reason?: string };
@@ -272,7 +272,7 @@ export const stopAirdrop = onCall(async (request) => {
 /**
  * Extend the airdrop end date
  */
-export const extendAirdrop = onCall(async (request) => {
+export const extendAirdrop = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const { newEndDate } = request.data as { newEndDate: string };
@@ -296,7 +296,7 @@ export const extendAirdrop = onCall(async (request) => {
 /**
  * Edit a user's receiving wallet address
  */
-export const editUserWallet = onCall(async (request) => {
+export const editUserWallet = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const { oldWallet, newWallet, reason } = request.data as {
@@ -399,7 +399,7 @@ export const editUserWallet = onCall(async (request) => {
 /**
  * Override a user's allocation
  */
-export const overrideUserAllocation = onCall(async (request) => {
+export const overrideUserAllocation = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const {
@@ -466,7 +466,7 @@ export const overrideUserAllocation = onCall(async (request) => {
 /**
  * Get all allocation overrides
  */
-export const getAllocationOverrides = onCall(async (request) => {
+export const getAllocationOverrides = onCall({ cors: true }, async (request) => {
   verifyAdmin(request);
 
   const overridesSnapshot = await db.collection('allocation_overrides')
@@ -485,7 +485,7 @@ export const getAllocationOverrides = onCall(async (request) => {
 /**
  * Remove an allocation override
  */
-export const removeAllocationOverride = onCall(async (request) => {
+export const removeAllocationOverride = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const { wallet } = request.data as { wallet: string };
@@ -506,7 +506,7 @@ export const removeAllocationOverride = onCall(async (request) => {
 /**
  * Get wallet change history
  */
-export const getWalletChangeHistory = onCall(async (request) => {
+export const getWalletChangeHistory = onCall({ cors: true }, async (request) => {
   verifyAdmin(request);
 
   const changesSnapshot = await db.collection('wallet_changes')
@@ -527,7 +527,7 @@ export const getWalletChangeHistory = onCall(async (request) => {
  * Test airdrop distribution (testnet only)
  * Simulates sending tokens to eligible users
  */
-export const testAirdropDistribution = onCall(async (request) => {
+export const testAirdropDistribution = onCall({ cors: true }, async (request) => {
   const adminWallet = verifyAdmin(request);
 
   const { wallets, tokenAmount } = request.data as {
@@ -583,7 +583,7 @@ export const testAirdropDistribution = onCall(async (request) => {
 /**
  * Get dashboard stats for admin
  */
-export const getAirdropDashboardStats = onCall(async (request) => {
+export const getAirdropDashboardStats = onCall({ cors: true }, async (request) => {
   verifyAdmin(request);
 
   const config = await getAirdropConfig();
