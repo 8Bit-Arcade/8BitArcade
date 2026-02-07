@@ -191,7 +191,7 @@ export default function AirdropPage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-3">
-                  Minimum required: 5 games, 1 tournament, or 50 Discord messages
+                  Minimum required: 5 games, 1 tournament, 50 Discord/Telegram messages, or active stake
                 </p>
               </div>
             )}
@@ -287,6 +287,12 @@ export default function AirdropPage() {
                       <span className="text-gray-400">Telegram ({status.stats.telegramMessages || 0} msgs)</span>
                       <span className="font-bold text-blue-400">+{status.stats.breakdown.telegramPoints || 0}</span>
                     </div>
+                    {(status.stats.breakdown.stakingPoints || 0) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Staking ({status.stats.stakedAmount?.toLocaleString() || 0} tokens)</span>
+                        <span className="font-bold text-arcade-cyan">+{status.stats.breakdown.stakingPoints}</span>
+                      </div>
+                    )}
                   </div>
                   {status.stats.breakdown.multiplier > 1 && (
                     <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
@@ -444,7 +450,7 @@ export default function AirdropPage() {
                 <p className="font-bold">Earn Points</p>
                 <p className="text-gray-400">
                   Points are earned from multiple sources: playing games, tournament entries, high scores,
-                  Discord activity, Telegram activity, Zealy quests, and early adopter bonuses.
+                  Discord activity, Telegram activity, staking, Zealy quests, and early adopter bonuses.
                 </p>
               </div>
             </div>
@@ -455,6 +461,7 @@ export default function AirdropPage() {
                 <p className="text-gray-400">
                   <span className="text-blue-400">Discord:</span> Link your wallet with /link and chat to earn points (50/200/500+ msgs).{' '}
                   <span className="text-blue-400">Telegram:</span> Join our group and link your wallet.{' '}
+                  <span className="text-arcade-cyan">Staking:</span> Stake tokens for bonus points — longer locks earn more (up to 200 pts).{' '}
                   <span className="text-arcade-pink">Zealy:</span> Complete quests to earn XP that converts to points.
                 </p>
               </div>
