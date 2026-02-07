@@ -72,7 +72,28 @@ export {
     removeAllocationOverride,
     getWalletChangeHistory,
     testAirdropDistribution,
-    getAirdropDashboardStats
+    getAirdropDashboardStats,
+    // Future-proofing functions
+    blacklistWallet,
+    removeFromBlacklist,
+    getBlacklist,
+    whitelistWallet,
+    removeFromWhitelist,
+    getWhitelist,
+    bulkOverrideAllocations,
+    exportAllocations,
+    recalculateUserAllocation,
+    getClaimStatus,
+    createSnapshotBackup,
+    restoreFromBackup,
+    getBackups,
+    getTierConfig,
+    updateTierConfig,
+    getAuditLog,
+    emergencyPause,
+    liftEmergencyPause,
+    getSystemVersion,
+    runMigration
 } from './airdrop/airdropAdmin';
 
 // Zealy integration
