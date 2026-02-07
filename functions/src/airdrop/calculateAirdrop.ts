@@ -1,6 +1,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { db, Timestamp } from '../config/firebase';
 import { keccak256, encodePacked } from 'viem';
+import { ethers } from 'ethers';
+import { STAKING_ADDRESS, ARBITRUM_RPC_URL } from '../config';
 
 /**
  * Airdrop Calculation System for 8-Bit Arcade Testnet Rewards
@@ -15,7 +17,8 @@ import { keccak256, encodePacked } from 'viem';
  * - Tournament Top 10 Finish: 100 points each
  * - Early Adopter Bonus: 2x multiplier for first 100 users
  * - Discord Activity: 5-100 points based on message count
- * - Discord Roles: Bonus points for game-linked roles
+ * - Telegram Activity: 5-100 points based on message count
+ * - Staking: 10-200 points based on amount + lock duration
  *
  * Allocation Tiers (of 15M total):
  * - Legendary (Top 1%): 3M tokens
@@ -23,7 +26,7 @@ import { keccak256, encodePacked } from 'viem';
  * - Rare (Top 20%): 5M tokens
  * - Common (All eligible): 3M tokens
  *
- * Minimum eligibility: 5 games played OR 1 tournament entry OR 50 Discord messages (with linked wallet)
+ * Minimum eligibility: 5 games played OR 1 tournament entry OR 50 Discord/Telegram messages OR active stake (with linked wallet)
  */
 
 // Constants
@@ -57,12 +60,18 @@ interface PlayerScore {
   firstActivityDate: Date | null;
   discordId: string | null;
   discordMessages: number;
+  telegramId: string | null;
+  telegramMessages: number;
+  stakedAmount: number;
+  highestLockTier: number;
   breakdown: {
     gamePoints: number;
     tournamentEntryPoints: number;
     tournamentFinishPoints: number;
     highScorePoints: number;
     discordPoints: number;
+    telegramPoints: number;
+    stakingPoints: number;
     multiplier: number;
   };
 }
@@ -82,6 +91,105 @@ const TELEGRAM_POINTS = {
   ACTIVE_200: 50,     // 200+ messages
   ACTIVE_500: 100,    // 500+ messages
 };
+
+// Staking point thresholds — incentivizes both amount and lock duration
+// Amount points (based on total raw stake)
+const STAKING_AMOUNT_POINTS = {
+  ANY: 10,             // Any active stake
+  STAKE_10K: 25,       // 10,000+ tokens staked
+  STAKE_100K: 50,      // 100,000+ tokens staked
+  STAKE_500K: 100,     // 500,000+ tokens staked
+  STAKE_1M: 150,       // 1,000,000+ tokens staked
+};
+
+// Lock duration bonus (based on longest active lock tier)
+// LockTier enum: 0=7days, 1=1month, 2=3months, 3=6months
+const STAKING_LOCK_BONUS = {
+  DAYS_7: 0,           // 7-day lock: no bonus
+  MONTH_1: 15,         // 1-month lock: +15
+  MONTHS_3: 30,        // 3-month lock: +30
+  MONTHS_6: 50,        // 6-month lock: +50
+};
+
+// TieredStaking contract ABI (read-only for airdrop calculation)
+const TIERED_STAKING_ABI = [
+  'function userTotalStaked(address) view returns (uint256)',
+  'function userStakeCount(address) view returns (uint256)',
+  'function userStakes(address, uint256) view returns (uint256 amount, uint256 weightedAmount, uint256 rewardPerTokenPaid, uint256 pendingRewards, uint256 stakedAt, uint256 unlockTime, uint8 tier, bool exists)',
+];
+
+/**
+ * Get staking contract instance (read-only, no signer needed)
+ */
+function getStakingContract(): ethers.Contract | null {
+  if (!STAKING_ADDRESS) return null;
+  try {
+    const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
+    return new ethers.Contract(STAKING_ADDRESS, TIERED_STAKING_ABI, provider);
+  } catch (err) {
+    console.error('Failed to create staking contract:', err);
+    return null;
+  }
+}
+
+/**
+ * Calculate staking points for a wallet
+ */
+async function calculateStakingPoints(
+  stakingContract: ethers.Contract,
+  wallet: string
+): Promise<{ stakedAmount: number; highestLockTier: number; stakingPoints: number }> {
+  try {
+    const totalStakedWei = await stakingContract.userTotalStaked(wallet);
+    const stakedAmount = Math.floor(Number(ethers.formatEther(totalStakedWei)));
+
+    if (stakedAmount === 0) {
+      return { stakedAmount: 0, highestLockTier: -1, stakingPoints: 0 };
+    }
+
+    // Calculate amount points
+    let amountPoints = STAKING_AMOUNT_POINTS.ANY;
+    if (stakedAmount >= 1_000_000) {
+      amountPoints = STAKING_AMOUNT_POINTS.STAKE_1M;
+    } else if (stakedAmount >= 500_000) {
+      amountPoints = STAKING_AMOUNT_POINTS.STAKE_500K;
+    } else if (stakedAmount >= 100_000) {
+      amountPoints = STAKING_AMOUNT_POINTS.STAKE_100K;
+    } else if (stakedAmount >= 10_000) {
+      amountPoints = STAKING_AMOUNT_POINTS.STAKE_10K;
+    }
+
+    // Find highest lock tier from active stakes
+    let highestLockTier = 0;
+    try {
+      const stakeCount = Number(await stakingContract.userStakeCount(wallet));
+      for (let i = 0; i < stakeCount; i++) {
+        const stake = await stakingContract.userStakes(wallet, i);
+        if (stake.exists && stake.amount > 0) {
+          const tier = Number(stake.tier);
+          if (tier > highestLockTier) highestLockTier = tier;
+        }
+      }
+    } catch {
+      // If individual stake reads fail, default to tier 0
+    }
+
+    // Calculate lock bonus
+    let lockBonus = STAKING_LOCK_BONUS.DAYS_7;
+    if (highestLockTier >= 3) lockBonus = STAKING_LOCK_BONUS.MONTHS_6;
+    else if (highestLockTier >= 2) lockBonus = STAKING_LOCK_BONUS.MONTHS_3;
+    else if (highestLockTier >= 1) lockBonus = STAKING_LOCK_BONUS.MONTH_1;
+
+    return {
+      stakedAmount,
+      highestLockTier,
+      stakingPoints: amountPoints + lockBonus,
+    };
+  } catch (err) {
+    console.error(`   Error reading staking for ${wallet}:`, err);
+    return { stakedAmount: 0, highestLockTier: -1, stakingPoints: 0 };
+  }
+}
 
 interface AirdropAllocation {
   wallet: string;
@@ -152,12 +260,18 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
         firstActivityDate: null,
         discordId: null,
         discordMessages: 0,
+        telegramId: null,
+        telegramMessages: 0,
+        stakedAmount: 0,
+        highestLockTier: -1,
         breakdown: {
           gamePoints: 0,
           tournamentEntryPoints: 0,
           tournamentFinishPoints: 0,
           highScorePoints: 0,
           discordPoints: 0,
+          telegramPoints: 0,
+          stakingPoints: 0,
           multiplier: 1,
         },
       });
@@ -350,6 +464,89 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
   }
 
   // ============================================
+  // 5b. Fetch Telegram activity (linked wallets only)
+  // ============================================
+  console.log('📱 Fetching Telegram activity...');
+
+  // Get all Telegram-wallet links
+  const telegramLinksSnapshot = await db.collection('telegram_links').get();
+  console.log(`   Found ${telegramLinksSnapshot.size} Telegram-wallet links`);
+
+  // Create map of wallet -> telegramId
+  const walletToTelegram: Map<string, string> = new Map();
+  for (const doc of telegramLinksSnapshot.docs) {
+    const data = doc.data();
+    if (data.walletAddress) {
+      walletToTelegram.set(data.walletAddress.toLowerCase(), doc.id);
+    }
+  }
+
+  // Get all Telegram activity
+  const telegramActivitySnapshot = await db.collection('telegram_activity').get();
+  console.log(`   Found ${telegramActivitySnapshot.size} Telegram activity records`);
+
+  // Create map of telegramId -> messageCount
+  const telegramActivity: Map<string, number> = new Map();
+  for (const doc of telegramActivitySnapshot.docs) {
+    const data = doc.data();
+    telegramActivity.set(doc.id, data.messageCount || 0);
+  }
+
+  // Apply Telegram points to linked wallets
+  for (const [wallet, telegramId] of walletToTelegram) {
+    const messageCount = telegramActivity.get(telegramId) || 0;
+
+    if (messageCount > 0) {
+      const player = getOrCreatePlayer(wallet);
+      player.telegramId = telegramId;
+      player.telegramMessages = messageCount;
+
+      // Calculate Telegram points based on message thresholds
+      let telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
+
+      if (messageCount >= 500) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+      } else if (messageCount >= 200) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+      } else if (messageCount >= 50) {
+        telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+      }
+
+      player.breakdown.telegramPoints = telegramPoints;
+      console.log(`   ${wallet.slice(0, 10)}... linked to Telegram: ${messageCount} messages = ${telegramPoints} pts`);
+    }
+  }
+
+  // ============================================
+  // 5c. Fetch on-chain staking data
+  // ============================================
+  console.log('🥩 Fetching staking data from chain...');
+
+  const stakingContract = getStakingContract();
+  if (stakingContract) {
+    const wallets = Array.from(playerScores.keys());
+    let stakersFound = 0;
+
+    for (const wallet of wallets) {
+      const { stakedAmount, highestLockTier, stakingPoints } =
+        await calculateStakingPoints(stakingContract, wallet);
+
+      if (stakedAmount > 0) {
+        const player = playerScores.get(wallet)!;
+        player.stakedAmount = stakedAmount;
+        player.highestLockTier = highestLockTier;
+        player.breakdown.stakingPoints = stakingPoints;
+        stakersFound++;
+        console.log(`   ${wallet.slice(0, 10)}... staked ${stakedAmount.toLocaleString()} (tier ${highestLockTier}) = ${stakingPoints} pts`);
+      }
+    }
+
+    console.log(`   Found ${stakersFound} stakers out of ${wallets.length} players`);
+  } else {
+    console.log('   ⚠️ Staking contract not available, skipping');
+  }
+
+  // ============================================
   // 6. Calculate final points for each player
   // ============================================
   console.log('🧮 Calculating final scores...');
@@ -369,13 +566,15 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
     // Early adopter multiplier
     player.breakdown.multiplier = player.isEarlyAdopter ? 2.0 : 1.0;
 
-    // Calculate total points (including Discord)
+    // Calculate total points (including Discord + Telegram + Staking)
     const basePoints =
       player.breakdown.gamePoints +
       player.breakdown.tournamentEntryPoints +
       player.breakdown.tournamentFinishPoints +
       player.breakdown.highScorePoints +
-      player.breakdown.discordPoints;
+      player.breakdown.discordPoints +
+      player.breakdown.telegramPoints +
+      player.breakdown.stakingPoints;
 
     player.points = Math.floor(basePoints * player.breakdown.multiplier);
   }
@@ -399,13 +598,16 @@ async function calculatePlayerScores(): Promise<PlayerScore[]> {
 function calculateAllocations(players: PlayerScore[]): AirdropAllocation[] {
   console.log('💰 Calculating token allocations...');
 
-  // Filter for eligible players (now includes Discord activity)
-  const MIN_DISCORD_MESSAGES = 50; // Minimum Discord messages to qualify alone
+  // Filter for eligible players (includes Discord + Telegram + Staking)
+  const MIN_DISCORD_MESSAGES = 50;
+  const MIN_TELEGRAM_MESSAGES = 50;
 
   const eligible = players.filter(p =>
     p.gamesPlayed >= MIN_GAMES_FOR_ELIGIBILITY ||
     p.tournamentEntries >= MIN_TOURNAMENT_ENTRIES ||
-    (p.discordId && p.discordMessages >= MIN_DISCORD_MESSAGES)
+    (p.discordId && p.discordMessages >= MIN_DISCORD_MESSAGES) ||
+    (p.telegramId && p.telegramMessages >= MIN_TELEGRAM_MESSAGES) ||
+    p.stakedAmount > 0
   );
 
   console.log(`   ${eligible.length} players eligible (of ${players.length} total)`);
@@ -857,28 +1059,62 @@ async function calculateRealTimeEligibility(wallet: string) {
     console.error('   Error checking Zealy:', err);
   }
 
-  // 7. Get Telegram activity
+  // 7. Get Telegram activity (query telegram_links → telegram_activity for live data)
   try {
-    const telegramDoc = await db.collection('telegram_users').doc(normalizedWallet).get();
-    if (telegramDoc.exists) {
-      const telegramData = telegramDoc.data();
-      telegramMessages = telegramData?.messageCount || 0;
-      console.log(`   Telegram messages: ${telegramMessages}`);
+    const telegramLinkDoc = await db.collection('telegram_links')
+      .where('walletAddress', '==', normalizedWallet)
+      .limit(1)
+      .get();
 
-      // Calculate Telegram points
-      telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
-      if (telegramMessages >= 500) {
-        telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
-      } else if (telegramMessages >= 200) {
-        telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
-      } else if (telegramMessages >= 50) {
-        telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+    if (!telegramLinkDoc.empty) {
+      const telegramId = telegramLinkDoc.docs[0].id;
+      console.log(`   Found Telegram link: ${telegramId}`);
+      const telegramActivityDoc = await db.collection('telegram_activity').doc(telegramId).get();
+
+      if (telegramActivityDoc.exists) {
+        telegramMessages = telegramActivityDoc.data()?.messageCount || 0;
+        console.log(`   Telegram messages: ${telegramMessages}`);
+
+        // Calculate Telegram points
+        telegramPoints = TELEGRAM_POINTS.LINKED; // Base points for linking
+        if (telegramMessages >= 500) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+        } else if (telegramMessages >= 200) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+        } else if (telegramMessages >= 50) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+        }
+      } else {
+        // Linked but no activity yet - still get base points
+        telegramPoints = TELEGRAM_POINTS.LINKED;
+        console.log(`   Telegram linked but no activity yet`);
       }
     } else {
       console.log(`   No Telegram link found for wallet`);
     }
   } catch (err) {
     console.error('   Error checking Telegram:', err);
+  }
+
+  // 8. Get on-chain staking data
+  let stakedAmount = 0;
+  let highestLockTier = -1;
+  let stakingPoints = 0;
+  try {
+    const stakingContract = getStakingContract();
+    if (stakingContract) {
+      const result = await calculateStakingPoints(stakingContract, normalizedWallet);
+      stakedAmount = result.stakedAmount;
+      highestLockTier = result.highestLockTier;
+      stakingPoints = result.stakingPoints;
+      if (stakedAmount > 0) {
+        console.log(`   Staked: ${stakedAmount.toLocaleString()} tokens, tier ${highestLockTier}, ${stakingPoints} pts`);
+      } else {
+        console.log(`   No active stake`);
+      }
+    }
+  } catch (err) {
+    console.error('   Error checking staking:', err);
   }
 
   // Calculate total points
@@ -890,14 +1126,15 @@ async function calculateRealTimeEligibility(wallet: string) {
   const multiplier = isEarlyAdopter ? 2.0 : 1.0;
 
   const basePoints = gamePoints + tournamentEntryPoints + tournamentFinishPoints +
-                     highScorePoints + discordPoints + zealyPoints + telegramPoints;
+                     highScorePoints + discordPoints + zealyPoints + telegramPoints + stakingPoints;
   const totalPoints = Math.floor(basePoints * multiplier);
 
   // Determine eligibility
   const isEligible = gamesPlayed >= MIN_GAMES_FOR_ELIGIBILITY ||
                      tournamentEntries >= MIN_TOURNAMENT_ENTRIES ||
                      discordMessages >= 50 ||
-                     telegramMessages >= 50;
+                     telegramMessages >= 50 ||
+                     stakedAmount > 0;
 
   // Estimate tier based on points (this is approximate without full snapshot)
   // With ~200 users and 10M tokens, allocations should be substantial
@@ -1002,6 +1239,8 @@ async function calculateRealTimeEligibility(wallet: string) {
       zealyXP,
       zealyQuests,
       telegramMessages,
+      stakedAmount,
+      highestLockTier,
       isEarlyAdopter,
       breakdown: {
         gamePoints,
@@ -1011,6 +1250,7 @@ async function calculateRealTimeEligibility(wallet: string) {
         discordPoints,
         zealyPoints: Math.floor(zealyPoints),
         telegramPoints,
+        stakingPoints,
         multiplier,
         totalPoints,
       },
@@ -1409,6 +1649,8 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       tokenAmount: number;
       tournamentEntries: number;
       discordMessages: number;
+      telegramMessages: number;
+      stakedAmount: number;
       zealyXP: number;
       isEarlyAdopter: boolean;
       createdAt?: string;
@@ -1443,6 +1685,43 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
     const zealyData: Map<string, number> = new Map();
     for (const doc of zealySnapshot.docs) {
       zealyData.set(doc.id.toLowerCase(), doc.data().xp || 0);
+    }
+
+    // Get Telegram links and activity
+    const telegramLinksAdminSnapshot = await db.collection('telegram_links').get();
+    const walletToTelegramAdmin: Map<string, string> = new Map();
+    for (const doc of telegramLinksAdminSnapshot.docs) {
+      const data = doc.data();
+      if (data.walletAddress) {
+        walletToTelegramAdmin.set(data.walletAddress.toLowerCase(), doc.id);
+      }
+    }
+
+    const telegramActivityAdminSnapshot = await db.collection('telegram_activity').get();
+    const telegramActivityAdmin: Map<string, number> = new Map();
+    for (const doc of telegramActivityAdminSnapshot.docs) {
+      telegramActivityAdmin.set(doc.id, doc.data().messageCount || 0);
+    }
+
+    // Pre-fetch staking data for all wallets
+    console.log('   Fetching on-chain staking data...');
+    const stakingContract = getStakingContract();
+    const walletStakingData: Map<string, { stakedAmount: number; highestLockTier: number; stakingPoints: number }> = new Map();
+    if (stakingContract) {
+      for (const userDoc of usersSnapshot.docs) {
+        const wallet = userDoc.id.toLowerCase();
+        try {
+          const result = await calculateStakingPoints(stakingContract, wallet);
+          if (result.stakedAmount > 0) {
+            walletStakingData.set(wallet, result);
+          }
+        } catch {
+          // Skip wallets that fail
+        }
+      }
+      console.log(`   Found ${walletStakingData.size} stakers`);
+    } else {
+      console.log('   ⚠️ Staking contract not available, skipping');
     }
 
     // Pre-fetch tournament entries for all users (avoid N*M queries)
@@ -1491,13 +1770,33 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       const zealyXP = zealyData.get(wallet) || 0;
       const zealyPoints = Math.min(zealyXP / 10, 200);
 
+      // Get Telegram messages
+      const telegramId = walletToTelegramAdmin.get(wallet);
+      const telegramMessages = telegramId ? (telegramActivityAdmin.get(telegramId) || 0) : 0;
+      let telegramPoints = 0;
+      if (telegramId) {
+        telegramPoints = TELEGRAM_POINTS.LINKED;
+        if (telegramMessages >= 500) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_500;
+        } else if (telegramMessages >= 200) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_200;
+        } else if (telegramMessages >= 50) {
+          telegramPoints += TELEGRAM_POINTS.ACTIVE_50;
+        }
+      }
+
+      // Get staking data
+      const staking = walletStakingData.get(wallet);
+      const stakedAmount = staking?.stakedAmount || 0;
+      const stakingPts = staking?.stakingPoints || 0;
+
       // Check early adopter
       const createdAt = userData.createdAt?.toDate?.();
       const isEarlyAdopter = createdAt ? createdAt < new Date('2024-06-01') : false;
       const multiplier = isEarlyAdopter ? 2.0 : 1.0;
 
-      // Calculate total points
-      const totalPoints = Math.floor((gamePoints + discordPoints + zealyPoints) * multiplier);
+      // Calculate total points (including staking)
+      const totalPoints = Math.floor((gamePoints + discordPoints + zealyPoints + telegramPoints + stakingPts) * multiplier);
 
       // Determine tier and tokens
       let tier: string;
@@ -1530,6 +1829,8 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
         tokenAmount,
         tournamentEntries,
         discordMessages,
+        telegramMessages,
+        stakedAmount,
         zealyXP,
         isEarlyAdopter,
         createdAt: createdAt?.toISOString(),

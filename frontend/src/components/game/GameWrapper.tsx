@@ -560,9 +560,10 @@ export default function GameWrapper({
       gameRef.current.destroy(true);
       gameRef.current = null;
     }
+    resetGameState();
     setSelectedMode(null);
     setShowModeSelect(true);
-  }, []);
+  }, [resetGameState]);
 
   // Back to games
   const handleBackToGames = useCallback(() => {

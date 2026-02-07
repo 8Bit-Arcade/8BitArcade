@@ -34,7 +34,9 @@ async function getTokenBalance(walletAddress) {
       RPC_TIMEOUT,
       'RPC call timed out'
     );
-    return parseFloat(ethers.utils.formatEther(balance));
+    const formatted = parseFloat(ethers.utils.formatEther(balance));
+    console.log(`💰 Token balance for ${walletAddress.slice(0, 8)}...: ${formatted} 8BIT`);
+    return formatted;
   } catch (error) {
     console.error('Error checking token balance:', error.message);
     return 0;
@@ -121,13 +123,17 @@ async function calculateUserRoles(discordId, member) {
 
     // === HOLDER ROLES ===
     balance = await getTokenBalance(walletAddress);
+    console.log(`🔍 Checking holder roles for ${member.user.tag}: balance=${balance}, ROLE_8BIT_HOLDER=${ROLES.EIGHT_BIT_HOLDER?.id || 'NOT SET'}`);
 
     for (const threshold of HOLDER_THRESHOLDS) {
       if (balance >= threshold.amount) {
         const role = ROLES[threshold.role];
         if (role?.id) {
+          console.log(`✅ ${member.user.tag} qualifies for ${role.name} (${balance} >= ${threshold.amount})`);
           rolesToAdd.push(role.id);
           achievedRoles.add(threshold.role);
+        } else {
+          console.log(`⚠️ Role ${threshold.role} ID not set in .env`);
         }
       }
     }
