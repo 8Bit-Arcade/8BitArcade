@@ -52,17 +52,34 @@ const db = getFirestore();
 // Initialize Telegram Bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
-// DEBUG: Log ALL incoming updates
-bot.use((ctx, next) => {
+// DEBUG: Log ALL incoming updates including entities
+bot.use(async (ctx, next) => {
   console.log('--- INCOMING UPDATE ---');
   console.log('Type:', ctx.updateType);
   console.log('Chat:', ctx.chat?.type, ctx.chat?.id);
   console.log('From:', ctx.from?.username || ctx.from?.id);
   if (ctx.message && 'text' in ctx.message) {
-    console.log('Text:', (ctx.message as any).text);
+    const msg = ctx.message as any;
+    console.log('Text:', msg.text);
+    console.log('Entities:', JSON.stringify(msg.entities || []));
+
+    // NUCLEAR TEST: /ping bypasses ALL handler logic
+    // If /ping works but /help doesn't, the issue is in command matching
+    // If /ping doesn't work either, the bot can't send messages at all
+    if (msg.text === '/ping') {
+      console.log('>>> PING TEST: attempting reply...');
+      try {
+        await ctx.reply('pong! Bot is alive and can send messages.');
+        console.log('>>> PING TEST: reply sent OK');
+      } catch (err) {
+        console.error('>>> PING TEST FAILED:', err);
+      }
+      return; // don't pass to other handlers
+    }
   }
   console.log('------------------------');
-  return next();
+  await next();
+  console.log('>>> Middleware chain completed for update');
 });
 
 // Store for pending wallet links (telegramId -> verification code)
@@ -76,60 +93,28 @@ const TELEGRAM_POINTS = {
   ACTIVE_500: 100,     // 500+ messages
 };
 
-/**
- * Track message activity
- */
-bot.on('message', async (ctx) => {
-  try {
-    const userId = ctx.from?.id.toString();
-    const chatId = ctx.chat?.id.toString();
-    const username = ctx.from?.username || ctx.from?.first_name || 'Unknown';
-
-    if (!userId || !chatId) return;
-
-    // Only track group messages (not DMs for privacy)
-    if (ctx.chat?.type === 'private') return;
-
-    // Update message count in Firebase
-    const activityRef = db.collection('telegram_activity').doc(userId);
-
-    await activityRef.set({
-      odedId: userId,
-      username,
-      messageCount: FieldValue.increment(1),
-      lastMessage: FieldValue.serverTimestamp(),
-      chatId,
-    }, { merge: true });
-
-    // console.log(`Tracked message from ${username} (${userId})`);
-  } catch (error) {
-    console.error('Error tracking message:', error);
-  }
-});
+// ============================================================
+// COMMAND HANDLERS
+// All bot.command() handlers MUST be registered BEFORE bot.on('message')
+// ============================================================
 
 /**
  * /start command - Welcome message
  */
 bot.command('start', async (ctx) => {
-  console.log('>>> /start command received');
+  console.log('>>> /start command handler ENTERED');
   try {
-    const welcomeMessage = `
-Welcome to 8-Bit Arcade!
-
-I track your activity in this group for the airdrop.
-
-Commands:
-/link <wallet> - Link your wallet address
-/status - Check your activity stats
-/points - See your airdrop points breakdown
-/help - Show this message
-
-Link your wallet to earn airdrop points!
-  `;
-
-    console.log('>>> Sending reply...');
-    await ctx.reply(welcomeMessage);
-    console.log('>>> Reply sent successfully');
+    await ctx.reply(
+      `Welcome to 8-Bit Arcade!\n\n` +
+      `I track your activity in this group for the airdrop.\n\n` +
+      `Commands:\n` +
+      `/link <wallet> - Link your wallet address\n` +
+      `/status - Check your activity stats\n` +
+      `/points - See your airdrop points breakdown\n` +
+      `/help - Show all commands\n\n` +
+      `Link your wallet to earn airdrop points!`
+    );
+    console.log('>>> /start reply sent successfully');
   } catch (error) {
     console.error('>>> ERROR in /start:', error);
   }
@@ -139,32 +124,33 @@ Link your wallet to earn airdrop points!
  * /help command
  */
 bot.command('help', async (ctx) => {
-  const helpMessage = `
-8-Bit Arcade Telegram Bot
-
-Commands:
-/link <wallet> - Link your Ethereum wallet (0x...)
-/unlink - Remove your wallet link
-/status - Check your message count and stats
-/points - See your estimated airdrop points
-/verify <code> - Verify wallet link with code from dapp
-
-Earn points by:
-- Linking your wallet: +5 points
-- 50+ messages: +25 points
-- 200+ messages: +50 points
-- 500+ messages: +100 points
-
-Questions? Join our Discord!
-  `;
-
-  await ctx.reply(helpMessage);
+  console.log('>>> /help command handler ENTERED');
+  try {
+    await ctx.reply(
+      `8-Bit Arcade Telegram Bot\n\n` +
+      `Commands:\n` +
+      `/link <wallet> - Link your Ethereum wallet (0x...)\n` +
+      `/unlink - Remove your wallet link\n` +
+      `/status - Check your message count and stats\n` +
+      `/points - See your estimated airdrop points\n\n` +
+      `Earn points by:\n` +
+      `- Linking your wallet: +5 points\n` +
+      `- 50+ messages: +25 points\n` +
+      `- 200+ messages: +50 points\n` +
+      `- 500+ messages: +100 points\n\n` +
+      `Questions? Join our Discord!`
+    );
+    console.log('>>> /help reply sent successfully');
+  } catch (error) {
+    console.error('>>> ERROR in /help:', error);
+  }
 });
 
 /**
  * /link command - Link wallet to Telegram account
  */
 bot.command('link', async (ctx) => {
+  console.log('>>> /link command handler ENTERED');
   const userId = ctx.from?.id.toString();
   const username = ctx.from?.username || ctx.from?.first_name || 'Unknown';
 
@@ -253,6 +239,7 @@ bot.command('link', async (ctx) => {
  * /unlink command - Remove wallet link
  */
 bot.command('unlink', async (ctx) => {
+  console.log('>>> /unlink command handler ENTERED');
   const userId = ctx.from?.id.toString();
 
   if (!userId) {
@@ -287,6 +274,7 @@ bot.command('unlink', async (ctx) => {
  * /status command - Show activity stats
  */
 bot.command('status', async (ctx) => {
+  console.log('>>> /status command handler ENTERED');
   const userId = ctx.from?.id.toString();
 
   if (!userId) {
@@ -332,6 +320,7 @@ bot.command('status', async (ctx) => {
  * /points command - Show points breakdown
  */
 bot.command('points', async (ctx) => {
+  console.log('>>> /points command handler ENTERED');
   const userId = ctx.from?.id.toString();
 
   if (!userId) {
@@ -391,6 +380,7 @@ bot.command('points', async (ctx) => {
  * /stats command (admin) - Show group stats
  */
 bot.command('stats', async (ctx) => {
+  console.log('>>> /stats command handler ENTERED');
   // Only allow in groups
   if (ctx.chat?.type === 'private') {
     await ctx.reply('This command only works in groups.');
@@ -420,9 +410,80 @@ bot.command('stats', async (ctx) => {
   }
 });
 
+// ============================================================
+// TEXT FALLBACK - catches commands even if entity matching fails
+// This handles the case where Telegram doesn't send bot_command entities
+// ============================================================
+bot.hears(/^\/start/, async (ctx) => {
+  console.log('>>> /start caught by hears() fallback');
+  try {
+    await ctx.reply(
+      `Welcome to 8-Bit Arcade!\n\n` +
+      `Commands:\n` +
+      `/link <wallet> - Link your wallet address\n` +
+      `/status - Check your activity stats\n` +
+      `/points - See your airdrop points breakdown\n` +
+      `/help - Show all commands`
+    );
+  } catch (error) {
+    console.error('>>> ERROR in /start hears fallback:', error);
+  }
+});
+
+bot.hears(/^\/help/, async (ctx) => {
+  console.log('>>> /help caught by hears() fallback');
+  try {
+    await ctx.reply(
+      `8-Bit Arcade Telegram Bot\n\n` +
+      `Commands:\n` +
+      `/link <wallet> - Link your Ethereum wallet (0x...)\n` +
+      `/unlink - Remove your wallet link\n` +
+      `/status - Check your message count and stats\n` +
+      `/points - See your estimated airdrop points\n\n` +
+      `Earn points by:\n` +
+      `- Linking your wallet: +5 points\n` +
+      `- 50+ messages: +25 points\n` +
+      `- 200+ messages: +50 points\n` +
+      `- 500+ messages: +100 points`
+    );
+  } catch (error) {
+    console.error('>>> ERROR in /help hears fallback:', error);
+  }
+});
+
+// ============================================================
+// MESSAGE TRACKER
+// IMPORTANT: Must be AFTER all command handlers
+// ============================================================
+bot.on('message', async (ctx) => {
+  try {
+    const userId = ctx.from?.id.toString();
+    const chatId = ctx.chat?.id.toString();
+    const username = ctx.from?.username || ctx.from?.first_name || 'Unknown';
+
+    if (!userId || !chatId) return;
+
+    // Only track group messages (not DMs for privacy)
+    if (ctx.chat?.type === 'private') return;
+
+    // Update message count in Firebase
+    const activityRef = db.collection('telegram_activity').doc(userId);
+
+    await activityRef.set({
+      odedId: userId,
+      username,
+      messageCount: FieldValue.increment(1),
+      lastMessage: FieldValue.serverTimestamp(),
+      chatId,
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error tracking message:', error);
+  }
+});
+
 // Error handling
-bot.catch((err, ctx) => {
-  console.error(`Error for ${ctx.updateType}:`, err);
+bot.catch((err: any, ctx: any) => {
+  console.error(`Bot error for ${ctx.updateType}:`, err);
 });
 
 // Start bot - delete webhook first to ensure polling works
@@ -432,7 +493,7 @@ bot.telegram.deleteWebhook().then(() => {
 }).then(() => {
   console.log('8-Bit Arcade Telegram Bot is running!');
   console.log('Waiting for messages...');
-}).catch((err) => {
+}).catch((err: any) => {
   console.error('FAILED TO START BOT:', err);
 });
 

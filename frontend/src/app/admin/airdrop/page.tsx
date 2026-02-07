@@ -904,6 +904,62 @@ export default function AdminAirdropPage() {
                   CANCEL
                 </button>
               </div>
+        {/* User Table */}
+        <div className="bg-arcade-dark overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-arcade-black">
+              <tr className="text-gray-400 font-pixel text-xs">
+                <th className="p-3 text-left">#</th>
+                <th className="p-3 text-left">WALLET</th>
+                <th className="p-3 text-right">GAMES</th>
+                <th className="p-3 text-right">POINTS</th>
+                <th className="p-3 text-center">TIER</th>
+                <th className="p-3 text-right">TOKENS</th>
+                <th className="p-3 text-right">TOURNAMENTS</th>
+                <th className="p-3 text-right">DISCORD</th>
+                <th className="p-3 text-right">TELEGRAM</th>
+                <th className="p-3 text-right">STAKING</th>
+                <th className="p-3 text-right">ZEALY</th>
+                <th className="p-3 text-center">EARLY</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user, index) => (
+                <tr key={user.wallet} className="border-t border-arcade-black/50 hover:bg-arcade-black/30">
+                  <td className="p-3 text-gray-500">{index + 1}</td>
+                  <td className="p-3 font-mono text-arcade-cyan">
+                    {user.wallet.slice(0, 6)}...{user.wallet.slice(-4)}
+                  </td>
+                  <td className="p-3 text-right text-white">{user.gamesPlayed}</td>
+                  <td className="p-3 text-right text-arcade-green font-bold">{user.totalPoints}</td>
+                  <td className="p-3 text-center">
+                    <span className={`px-2 py-1 rounded text-xs font-pixel ${
+                      user.tier === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
+                      user.tier === 'epic' ? 'bg-purple-500/20 text-purple-400' :
+                      user.tier === 'rare' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {user.tier.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="p-3 text-right text-arcade-pink font-bold">
+                    {user.tokenAmount.toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-gray-300">{user.tournamentEntries}</td>
+                  <td className="p-3 text-right text-gray-300">{user.discordMessages}</td>
+                  <td className="p-3 text-right text-gray-300">{user.telegramMessages}</td>
+                  <td className="p-3 text-right text-gray-300">{user.stakedAmount ? user.stakedAmount.toLocaleString() : '0'}</td>
+                  <td className="p-3 text-right text-gray-300">{user.zealyXP}</td>
+                  <td className="p-3 text-center">
+                    {user.isEarlyAdopter && <span className="text-yellow-400">★</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredUsers.length === 0 && !loading && (
+            <div className="p-8 text-center text-gray-500 font-pixel">
+              No users found
             </div>
           </div>
         )}
