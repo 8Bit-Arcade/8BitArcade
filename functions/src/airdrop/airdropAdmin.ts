@@ -17,6 +17,26 @@ const ADMIN_WALLETS = [
   '0x96e0b627454ce3b8c55c6d36b5fcbb13849dc297',
 ];
 
+// Airdrop config interface
+interface AirdropConfig {
+  id: string;
+  status: string;
+  scheduledStart: any;
+  scheduledEnd: any;
+  actualStart: any;
+  actualEnd: any;
+  isPaused: boolean;
+  pausedAt: any;
+  totalTokenPool: number;
+  snapshotId: string | null;
+  contractAddress: string | null;
+  testMode: boolean;
+  createdAt: any;
+  updatedAt: any;
+  endReason?: string;
+  updatedBy?: string;
+}
+
 /**
  * Verify the caller is an admin
  */
@@ -36,14 +56,15 @@ function verifyAdmin(request: { auth?: { uid?: string } }) {
 /**
  * Get or create the airdrop config document
  */
-async function getAirdropConfig() {
+async function getAirdropConfig(): Promise<AirdropConfig> {
   const configRef = db.collection('airdrop_config').doc('current');
   const configDoc = await configRef.get();
 
   if (!configDoc.exists) {
     // Create default config
-    const defaultConfig = {
-      status: 'inactive', // inactive, scheduled, active, paused, completed
+    const defaultConfig: AirdropConfig = {
+      id: 'current',
+      status: 'inactive',
       scheduledStart: null,
       scheduledEnd: null,
       actualStart: null,
@@ -58,10 +79,10 @@ async function getAirdropConfig() {
       updatedAt: Timestamp.now(),
     };
     await configRef.set(defaultConfig);
-    return { id: 'current', ...defaultConfig };
+    return defaultConfig;
   }
 
-  return { id: configDoc.id, ...configDoc.data() };
+  return { id: configDoc.id, ...configDoc.data() } as AirdropConfig;
 }
 
 /**
