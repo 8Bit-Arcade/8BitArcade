@@ -287,7 +287,7 @@
                     <p style="color: #aaa; margin-top: 1rem; font-family: 'Inter', sans-serif;">
                         A Blockchain-Powered Play-to-Earn Retro Gaming Platform
                     </p>
-                    <p class="wp-version">Version 2.0 | January 2025</p>
+                    <p class="wp-version">Version 2.1 | February 2026</p>
                 </div>
 
                 <!-- Table of Contents -->
@@ -298,6 +298,7 @@
                         <li><a href="#introduction">Introduction</a></li>
                         <li><a href="#market">Market Opportunity</a></li>
                         <li><a href="#platform">Platform Overview</a></li>
+                        <li><a href="#airdrop">Testnet Airdrop</a></li>
                         <li><a href="#architecture">Technical Architecture</a></li>
                         <li><a href="#tokenomics">Token Economics</a></li>
                         <li><a href="#security">Security Framework</a></li>
@@ -505,11 +506,87 @@
                     </div>
                 </div>
 
-                <!-- 5. Technical Architecture -->
-                <div class="wp-section" id="architecture">
-                    <h2>5. TECHNICAL ARCHITECTURE</h2>
+                <!-- 5. Testnet Airdrop -->
+                <div class="wp-section" id="airdrop">
+                    <h2>5. TESTNET AIRDROP</h2>
+                    <p>
+                        10 million 8BIT tokens are allocated to reward early testnet participants. The airdrop
+                        distribution is based on a comprehensive point system that rewards gaming activity,
+                        community participation, and staking.
+                    </p>
 
-                    <h3>5.1 Technology Stack</h3>
+                    <h3>5.1 Eligibility</h3>
+                    <p>Users qualify by meeting ANY of these criteria:</p>
+                    <ul>
+                        <li>5+ games played on testnet</li>
+                        <li>1+ tournament entry</li>
+                        <li>50+ messages in Discord or Telegram (with linked wallet)</li>
+                        <li>Active stake with linked wallet</li>
+                    </ul>
+
+                    <h3>5.2 Point System</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Category</th>
+                            <th>Activity</th>
+                            <th>Points</th>
+                        </tr>
+                        <tr><td rowspan="4"><strong>Gaming</strong></td><td>Games Played (1-100)</td><td>1 each</td></tr>
+                        <tr><td>Games Played (101-500)</td><td>0.5 each</td></tr>
+                        <tr><td>Tournament Entry</td><td>25 each</td></tr>
+                        <tr><td>Tournament Top 10 Finish</td><td>100 each</td></tr>
+                        <tr><td rowspan="5"><strong>Discord</strong></td><td>Noob Role (join)</td><td>5</td></tr>
+                        <tr><td>Player 1 (50+ msgs)</td><td>25</td></tr>
+                        <tr><td>Keyboard Warrior (200+ msgs)</td><td>50</td></tr>
+                        <tr><td>Keyboard Overlord (500+ msgs)</td><td>100</td></tr>
+                        <tr><td>Arcade OG (early member)</td><td>150</td></tr>
+                        <tr><td rowspan="3"><strong>Telegram</strong></td><td>50+ messages</td><td>25</td></tr>
+                        <tr><td>200+ messages</td><td>50</td></tr>
+                        <tr><td>500+ messages</td><td>100</td></tr>
+                        <tr><td rowspan="4"><strong>Staking</strong></td><td>10K+ tokens staked</td><td>25</td></tr>
+                        <tr><td>100K+ tokens staked</td><td>50</td></tr>
+                        <tr><td>500K+ tokens staked</td><td>100</td></tr>
+                        <tr><td>1M+ tokens staked</td><td>150</td></tr>
+                    </table>
+
+                    <div class="wp-highlight">
+                        <strong>Early Adopter Bonus:</strong> The first 100 users by activity date receive a 2x multiplier on all points!
+                    </div>
+
+                    <h3>5.3 Allocation Tiers</h3>
+                    <table class="wp-table">
+                        <tr>
+                            <th>Tier</th>
+                            <th>Eligibility</th>
+                            <th>Token Pool</th>
+                        </tr>
+                        <tr><td><strong>Legendary</strong></td><td>Top 1%</td><td>2,000,000 8BIT</td></tr>
+                        <tr><td><strong>Epic</strong></td><td>Top 5%</td><td>2,500,000 8BIT</td></tr>
+                        <tr><td><strong>Rare</strong></td><td>Top 20%</td><td>3,500,000 8BIT</td></tr>
+                        <tr><td><strong>Common</strong></td><td>Everyone else</td><td>2,000,000 8BIT</td></tr>
+                    </table>
+
+                    <h3>5.4 How to Link Your Wallet</h3>
+                    <p>To receive credit for Discord and Telegram activity, you must link your wallet:</p>
+                    <ul>
+                        <li><strong>Discord:</strong> Use <code>/link 0xYourWallet</code> in any channel</li>
+                        <li><strong>Telegram:</strong> Message <code>/link 0xYourWallet</code> to the bot</li>
+                    </ul>
+
+                    <h3>5.5 Vesting Schedule</h3>
+                    <p>Claimed tokens vest over 60 days:</p>
+                    <ul>
+                        <li>33.33% available immediately upon claim</li>
+                        <li>33.33% unlocks after 30 days</li>
+                        <li>33.34% unlocks after 60 days</li>
+                    </ul>
+                </div>
+
+                <!-- 6. Technical Architecture -->
+                <div class="wp-section" id="architecture">
+                    <h2>6. TECHNICAL ARCHITECTURE</h2>
+
+                    <h3>6.1 Technology Stack</h3>
                     <table class="wp-table">
                         <tr>
                             <th>Layer</th>
@@ -548,7 +625,7 @@
                         </tr>
                     </table>
 
-                    <h3>5.2 System Architecture</h3>
+                    <h3>6.2 System Architecture</h3>
                     <div class="wp-arch-diagram">
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        8-BIT ARCADE SYSTEM                          │
@@ -571,7 +648,7 @@
 └─────────────────────────────────────────────────────────────────────┘
                     </div>
 
-                    <h3>5.3 Smart Contract Architecture</h3>
+                    <h3>6.3 Smart Contract Architecture</h3>
                     <p>
                         The platform operates through a suite of interconnected smart contracts deployed on Arbitrum One:
                     </p>
@@ -623,7 +700,7 @@
                         </tr>
                     </table>
 
-                    <h3>5.4 Security Measures</h3>
+                    <h3>6.4 Security Measures</h3>
                     <ul>
                         <li><strong>Anti-Cheat System:</strong> Server-side game replay validation prevents score manipulation</li>
                         <li><strong>Rate Limiting:</strong> API throttling prevents automated abuse</li>
@@ -634,9 +711,9 @@
 
                 <!-- 6. Token Economics -->
                 <div class="wp-section" id="tokenomics">
-                    <h2>6. TOKEN ECONOMICS</h2>
+                    <h2>7. TOKEN ECONOMICS</h2>
 
-                    <h3>6.1 Token Specifications</h3>
+                    <h3>7.1 Token Specifications</h3>
                     <table class="wp-table">
                         <tr>
                             <th>Parameter</th>
@@ -651,7 +728,7 @@
                         <tr><td>Presale Price</td><td>$0.0005 USD</td></tr>
                     </table>
 
-                    <h3>6.2 Token Distribution</h3>
+                    <h3>7.2 Token Distribution</h3>
                     <table class="wp-table">
                         <tr>
                             <th>Allocation</th>
@@ -709,7 +786,7 @@
                         </tr>
                     </table>
 
-                    <h3>6.3 Deflationary Mechanism</h3>
+                    <h3>7.3 Deflationary Mechanism</h3>
                     <div class="wp-highlight">
                         <strong>Buyback and Burn Protocol:</strong> 50% of all tournament entry fees are used to
                         purchase 8BIT tokens from the open market via Uniswap V3, which are then permanently
@@ -726,7 +803,7 @@
                         <li>Remaining 50% → Prize pool for winners</li>
                     </ol>
 
-                    <h3>6.4 Emissions Schedule</h3>
+                    <h3>7.4 Emissions Schedule</h3>
                     <table class="wp-table">
                         <tr>
                             <th>Period</th>
@@ -742,7 +819,7 @@
                     </table>
                     <p><em>After Year 5, no new emissions from the rewards pool. Circulating supply stabilizes and deflationary pressure increases.</em></p>
 
-                    <h3>6.5 Token Utility</h3>
+                    <h3>7.5 Token Utility</h3>
                     <ul>
                         <li><span class="wp-badge">ACTIVE</span> Tournament entry fees</li>
                         <li><span class="wp-badge">ACTIVE</span> Prize pool distributions</li>
@@ -755,9 +832,9 @@
 
                 <!-- 7. Security Framework -->
                 <div class="wp-section" id="security">
-                    <h2>7. SECURITY FRAMEWORK</h2>
+                    <h2>8. SECURITY FRAMEWORK</h2>
 
-                    <h3>7.1 Smart Contract Security</h3>
+                    <h3>8.1 Smart Contract Security</h3>
                     <ul>
                         <li><strong>OpenZeppelin Standards:</strong> Industry-standard implementations for ERC-20, access controls, and security patterns</li>
                         <li><strong>Reentrancy Guards:</strong> Protection against reentrancy attacks on all state-changing functions</li>
@@ -765,7 +842,7 @@
                         <li><strong>Emergency Controls:</strong> Pausable functionality for rapid response to discovered vulnerabilities</li>
                     </ul>
 
-                    <h3>7.2 Anti-Cheat Implementation</h3>
+                    <h3>8.2 Anti-Cheat Implementation</h3>
                     <p>
                         The platform implements multi-layered anti-cheat protection:
                     </p>
@@ -776,7 +853,7 @@
                         <li><strong>Wallet Reputation:</strong> New wallets subject to additional scrutiny</li>
                     </ul>
 
-                    <h3>7.3 Infrastructure Security</h3>
+                    <h3>8.3 Infrastructure Security</h3>
                     <ul>
                         <li><strong>Firebase Security Rules:</strong> Granular access controls on all database operations</li>
                         <li><strong>HTTPS Everywhere:</strong> All communications encrypted via TLS 1.3</li>
@@ -792,7 +869,7 @@
 
                 <!-- 8. Roadmap -->
                 <div class="wp-section" id="roadmap">
-                    <h2>8. DEVELOPMENT ROADMAP</h2>
+                    <h2>9. DEVELOPMENT ROADMAP</h2>
 
                     <table class="wp-table">
                         <tr>
@@ -850,9 +927,9 @@
 
                 <!-- 9. Team & Governance -->
                 <div class="wp-section" id="team">
-                    <h2>9. TEAM & GOVERNANCE</h2>
+                    <h2>10. TEAM & GOVERNANCE</h2>
 
-                    <h3>9.1 Team Allocation</h3>
+                    <h3>10.1 Team Allocation</h3>
                     <p>
                         The team allocation represents only <strong>1% of total supply</strong>—significantly below
                         the industry standard of 15-20%. This demonstrates commitment to community-first tokenomics
@@ -864,7 +941,7 @@
                         <li><strong>Performance Alignment:</strong> Team benefits only when project succeeds</li>
                     </ul>
 
-                    <h3>9.2 Governance Model</h3>
+                    <h3>10.2 Governance Model</h3>
                     <p>
                         The platform will transition to community governance through the following phases:
                     </p>
@@ -875,7 +952,7 @@
                         <li><strong>DAO Phase:</strong> Full decentralization of treasury and development decisions</li>
                     </ol>
 
-                    <h3>9.3 Transparency Commitments</h3>
+                    <h3>10.3 Transparency Commitments</h3>
                     <ul>
                         <li>All smart contracts verified and open-source</li>
                         <li>Treasury wallet publicly viewable on-chain</li>
@@ -886,7 +963,7 @@
 
                 <!-- 10. Conclusion -->
                 <div class="wp-section" id="conclusion">
-                    <h2>10. CONCLUSION</h2>
+                    <h2>11. CONCLUSION</h2>
                     <p>
                         8-Bit Arcade represents a new paradigm in blockchain gaming: one where players genuinely
                         enjoy the games they play while earning meaningful rewards for their skill and dedication.
