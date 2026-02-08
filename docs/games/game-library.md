@@ -2,56 +2,54 @@
 
 ## 12+ Classic Arcade Games to Earn Crypto
 
-8-Bit Arcade features beloved retro-style games, each with its own daily leaderboard and earning potential. Find your favorite and start earning!
+8-Bit Arcade features beloved retro-style games, each with its own daily leaderboard and earning potential. New games are added regularly based on community feedback.
 
 ## All Games Overview
 
-| Game | Difficulty | Avg. Score | Top Score | Earning Potential |
-|------|------------|------------|-----------|-------------------|
-| Chomper | ⭐ Easy | 8,500 | 25,000+ | High (easy to rank) |
-| Brick Breaker | ⭐ Easy | 12,000 | 40,000+ | High |
-| Pixel Snake | ⭐⭐ Medium | 6,000 | 18,000+ | Medium |
-| Block Drop | ⭐⭐ Medium | 15,000 | 50,000+ | Medium |
-| Space Rocks | ⭐⭐ Medium | 10,000 | 35,000+ | Medium |
-| Flappy Pixel | ⭐⭐⭐ Hard | 50 | 300+ | Low (but less competition) |
-| More coming... | - | - | - | - |
-
-## Featured Games
-
-### 🍒 Chomper (Pac-Man Style)
-
-**Description:**
-Navigate mazes, eat dots, avoid ghosts, and rack up points in this Pac-Man inspired classic.
-
-**How to Play:**
-- Eat all dots to complete level
-- Avoid red ghosts (instant death)
-- Eat power pellets to chase ghosts
-- Bonus points for eating ghosts
-- Each level gets faster
-
-**Difficulty:** ⭐ Easy (Great for beginners!)
-
-**Strategy Tips:**
-- Clear corners first (escape routes)
-- Save power pellets for emergencies
-- Learn ghost movement patterns
-- Don't get greedy - survival > points
-
-**Earning Potential:**
-- Easy to rank top 10
-- Popular game = more competition
-- Good for consistent daily earnings
-- Perfect for beginners
-
-**Controls:** Arrow keys or WASD
+| Game | Genre | Inspiration | Difficulty | Earning Potential |
+|------|-------|-------------|------------|-------------------|
+| Chomper | Maze | Pac-Man | Easy | High |
+| Brick Breaker | Action | Breakout | Easy | High |
+| Pixel Snake | Action | Snake | Medium | Medium |
+| Block Drop | Puzzle | Tetris | Medium | Medium |
+| Space Rocks | Shooter | Asteroids | Medium | Medium |
+| Flappy Bird | Action | Flappy Bird | Hard | Low (less competition) |
+| Alien Assault | Shooter | Space Invaders | Medium | Medium |
+| Bug Blaster | Shooter | Centipede | Medium | Medium |
+| Road Hopper | Action | Frogger | Medium | Medium |
+| Galaxy Fighter | Shooter | Galaga | Medium | Medium |
+| Missile Command | Strategy | Missile Command | Hard | Medium |
+| Paddle Battle | Sports | Pong | Easy | High |
 
 ---
 
-### 🎾 Brick Breaker (Breakout Style)
+## Featured Games
 
-**Description:**
-Bounce the ball with your paddle to break all bricks. Classic Breakout gameplay with power-ups.
+### Chomper (Pac-Man Style)
+
+**Description:** Navigate mazes, eat dots, avoid ghosts, and rack up points in this Pac-Man inspired classic.
+
+**How to Play:**
+- Eat all dots to complete each level
+- Avoid red ghosts (instant death)
+- Eat power pellets to chase ghosts temporarily
+- Bonus points for eating ghosts
+- Speed increases each level
+
+**Difficulty:** Easy - Great for beginners!
+
+**Controls:** Arrow keys or WASD
+
+**Tips:**
+- Clear corners first for escape routes
+- Save power pellets for emergencies
+- Learn ghost movement patterns
+
+---
+
+### Brick Breaker (Breakout Style)
+
+**Description:** Bounce the ball with your paddle to break all bricks. Classic Breakout gameplay with power-ups.
 
 **How to Play:**
 - Move paddle to keep ball in play
@@ -60,87 +58,65 @@ Bounce the ball with your paddle to break all bricks. Classic Breakout gameplay 
 - Some bricks require multiple hits
 - Don't let ball fall off bottom
 
-**Difficulty:** ⭐ Easy
-
-**Strategy Tips:**
-- Aim for top corners to create chain reactions
-- Keep ball bouncing in brick area
-- Prioritize catching "multi-ball" power-up
-- Fast paddle movement = better angle control
-
-**Earning Potential:**
-- Very accessible
-- Moderate competition
-- Good for multi-game strategy
+**Difficulty:** Easy
 
 **Controls:** Left/Right arrows or A/D keys
 
+**Tips:**
+- Aim for top corners to create chain reactions
+- Multi-ball power-up is most valuable
+- Paddle edge controls ball angle
+
 ---
 
-### 🐍 Pixel Snake (Snake Game)
+### Pixel Snake
 
-**Description:**
-Guide your snake to eat food and grow. Don't hit walls or your own tail!
+**Description:** Guide your snake to eat food and grow. Don't hit walls or your own tail!
 
 **How to Play:**
 - Snake moves continuously
-- Eat food to grow and score
-- Each food = +10 points
-- Don't hit walls or yourself
-- Gets harder as you grow
+- Eat food to grow and score (+10 points each)
+- Avoid walls and your own body
+- Gets harder as you grow longer
 
-**Difficulty:** ⭐⭐ Medium
-
-**Strategy Tips:**
-- Spiral from outside to inside
-- Leave yourself escape routes
-- Don't chase food into corners
-- Smooth movements > jerky turns
-
-**Earning Potential:**
-- Medium difficulty
-- Skill cap rewards practice
-- Less competition than easy games
+**Difficulty:** Medium
 
 **Controls:** Arrow keys only
 
+**Tips:**
+- Spiral from outside to inside
+- Always leave escape routes
+- Don't chase food into corners
+
 ---
 
-### 🧱 Block Drop (Tetris Style)
+### Block Drop (Tetris Style)
 
-**Description:**
-Stack falling blocks to clear lines. Classic puzzle gameplay with increasing speed.
+**Description:** Stack falling blocks to clear lines. Classic puzzle gameplay with increasing speed.
 
 **How to Play:**
 - Rotate and position falling blocks
-- Complete horizontal lines to clear
+- Complete horizontal lines to clear them
 - Cleared lines = points
 - Speed increases over time
 - Game ends when blocks reach top
 
-**Difficulty:** ⭐⭐ Medium
-
-**Strategy Tips:**
-- Leave a column for long pieces
-- Clear lines consistently (don't stack high)
-- Learn piece rotation patterns
-- Plan 2-3 pieces ahead
-
-**Earning Potential:**
-- Skill-based rewards
-- High scores possible with practice
-- Competitive but fair
+**Difficulty:** Medium
 
 **Controls:**
 - Arrows: Move/rotate
 - Space: Hard drop
 
+**Tips:**
+- Leave a column open for long pieces
+- Clear lines consistently - don't stack high
+- Plan 2-3 pieces ahead
+
 ---
 
-### 🚀 Space Rocks (Asteroids Style)
+### Space Rocks (Asteroids Style)
 
-**Description:**
-Pilot a spaceship through an asteroid field. Shoot rocks and dodge debris.
+**Description:** Pilot a spaceship through an asteroid field. Shoot rocks and dodge debris.
 
 **How to Play:**
 - Shoot asteroids to break them up
@@ -149,308 +125,246 @@ Pilot a spaceship through an asteroid field. Shoot rocks and dodge debris.
 - Thrust to move, rotate to aim
 - UFOs appear for bonus points
 
-**Difficulty:** ⭐⭐ Medium
-
-**Strategy Tips:**
-- Stay in center of screen
-- Shoot large rocks from distance
-- Use momentum for movement
-- Don't stop moving
-- Kill UFOs immediately (dangerous but valuable)
-
-**Earning Potential:**
-- Moderate competition
-- High skill ceiling
-- Popular in tournaments
+**Difficulty:** Medium
 
 **Controls:**
 - Arrow keys: Rotate/thrust
 - Space: Shoot
 
+**Tips:**
+- Stay in center of screen
+- Shoot large rocks from distance
+- Kill UFOs immediately (dangerous but valuable)
+
 ---
 
-### 🐦 Flappy Pixel (Flappy Bird Style)
+### Flappy Bird
 
-**Description:**
-Tap to fly through gaps between pipes. One mistake = game over. Simple but brutally hard.
+**Description:** Tap to fly through gaps between pipes. One mistake = game over. Simple but brutally hard.
 
 **How to Play:**
 - Tap/click to flap wings
 - Fly through pipe gaps
 - Each pipe cleared = 1 point
 - Touching anything = death
-- Perfect timing required
 
-**Difficulty:** ⭐⭐⭐ Hard
-
-**Strategy Tips:**
-- Consistent rhythm tapping
-- Stay in middle of gaps
-- Don't over-flap
-- Practice timing extensively
-- Even 10+ is a good score
-
-**Earning Potential:**
-- Very hard to master
-- Less competition (many give up)
-- Low scores can rank if consistent
-- Niche but rewarding
+**Difficulty:** Hard
 
 **Controls:** Space bar or click
 
+**Tips:**
+- Consistent rhythm tapping
+- Stay in middle of gaps
+- Even 10+ is a good score
+
 ---
 
-## Upcoming Games
+### Alien Assault (Space Invaders Style)
 
-### 🎮 In Development
+**Description:** Defend Earth from waves of descending aliens. Classic shooter action.
 
-**Space Invaders Clone**
-- Wave-based alien shooter
-- Power-ups and boss fights
-- Expected: Q1 2025
+**How to Play:**
+- Move left/right to aim
+- Shoot aliens before they reach you
+- Aliens move faster as you destroy more
+- Mystery ships give bonus points
+- Use barriers for cover
 
-**Retro Platformer**
-- Side-scrolling adventure
-- Multiple levels and enemies
-- Expected: Q2 2025
+**Difficulty:** Medium
 
-**Puzzle Quest**
-- Match-3 style gameplay
-- RPG elements
-- Expected: Q2 2025
+**Controls:**
+- Arrow keys: Move
+- Space: Shoot
 
-### 💡 Community Requests
+**Tips:**
+- Focus on outer columns first
+- Don't let aliens get too low
+- Save barriers for emergencies
 
-Want a specific game added?
-- Vote in Discord
-- Suggest in forum
-- Community governance (Phase 4)
+---
 
-## Game Selection Strategy
+### Bug Blaster (Centipede Style)
 
-### For Beginners
+**Description:** Blast the centipede as it winds through mushrooms. Fast-paced shooter action.
 
-**Start with:**
-1. **Chomper** - Easiest to learn
-2. **Brick Breaker** - Simple mechanics
-3. **Pixel Snake** - Good skill progression
+**How to Play:**
+- Shoot the centipede segments
+- Each hit splits the centipede
+- Destroy mushrooms for clear paths
+- Avoid spiders and other bugs
+- Clear all segments to advance
 
-**Avoid:**
-- Flappy Pixel (too hard initially)
-- Space Rocks (complex controls)
+**Difficulty:** Medium
 
-### For Competitive Players
+**Controls:**
+- Arrow keys: Move
+- Space: Shoot
 
-**Focus on:**
-1. **Games you enjoy** (motivation matters)
-2. **Medium difficulty** (less competition than easy)
-3. **High skill ceiling** (practice advantage)
+**Tips:**
+- Aim for the head
+- Clear mushroom clusters
+- Watch for spiders from sides
 
-**Best combinations:**
-- 1 easy game (consistent earnings)
-- 2 medium games (competitive edge)
-- Maybe 1 hard game (less competition)
+---
 
-### For Maximum Earnings
+### Road Hopper (Frogger Style)
 
-**Multi-game approach:**
-- Play 3-5 games daily
-- Rank 6th-10th in each
-- Multiple smaller rewards > one big reward
-- Diversification reduces risk
+**Description:** Guide your frog across busy roads and rivers to reach home safely.
 
-**Example:**
-- Chomper: Rank 8th = 250 8BIT
-- Brick Breaker: Rank 6th = 250 8BIT
-- Pixel Snake: Rank 7th = 250 8BIT
-- **Total: 750 8BIT/day** vs 1,250 for one #1 spot
+**How to Play:**
+- Cross roads avoiding cars
+- Jump on logs to cross rivers
+- Reach lily pads at the top
+- Avoid alligators and snakes
+- Time bonus for speed
 
-## Game Mechanics
+**Difficulty:** Medium
 
-### Scoring Systems
+**Controls:** Arrow keys
 
-**Most games use:**
-- Points for actions (eating dots, breaking bricks)
-- Multipliers for combos/power-ups
-- Bonus for completing levels
-- Penalties for deaths (in some games)
+**Tips:**
+- Time gaps between cars
+- Jump to logs quickly
+- Don't wait too long on logs
 
-**Higher score ≠ Always better strategy:**
-- Sometimes surviving longer matters
-- Consistency > risky high-score attempts
-- Study what actually ranks top 10
+---
 
-### Difficulty Progression
+### Galaxy Fighter (Galaga Style)
 
-**All games get harder over time:**
-- Speed increases
-- More obstacles
-- Fewer power-ups
-- Pattern complexity
+**Description:** Battle waves of alien fighters in space. Dual-ship power-up available!
 
-**Key to high scores:**
-- Master early levels quickly
-- Survive late-game difficulty spike
-- Don't take unnecessary risks early
-- Practice high-level gameplay
+**How to Play:**
+- Shoot enemy fighters
+- Avoid enemy fire
+- Capture enemies for bonus
+- Boss fighters take multiple hits
+- Bonus stages for extra points
 
-### Power-Ups
+**Difficulty:** Medium
 
-**Common power-ups across games:**
-- **Speed Boost** - Temporary faster movement
-- **Shield** - One-hit protection
-- **Multi** - Double points or projectiles
-- **Slow-Mo** - Slow down gameplay briefly
-- **Extra Life** - One more chance
+**Controls:**
+- Arrow keys: Move
+- Space: Shoot
 
-**Power-up strategy:**
-- Save shields for late-game
-- Use speed boosts to clear levels fast
-- Catch multi-ball/multi-shot immediately
-- Don't risk death chasing power-ups
+**Tips:**
+- Learn attack patterns
+- Bonus stages are free points
+- Stay near bottom for reaction time
 
-## Practice vs Competition Mode
+---
+
+### Missile Command
+
+**Description:** Defend your cities from incoming missiles. Strategic shooting with limited ammo.
+
+**How to Play:**
+- Click to launch missiles
+- Missiles explode at cursor position
+- Protect all 6 cities
+- Ammo is limited - use wisely
+- Faster waves as you progress
+
+**Difficulty:** Hard
+
+**Controls:** Mouse click to fire
+
+**Tips:**
+- Lead your targets
+- Save ammo for close threats
+- Prioritize missiles heading for cities
+
+---
+
+### Paddle Battle (Pong Style)
+
+**Description:** Classic 2-paddle ball game. Single player vs AI or practice mode.
+
+**How to Play:**
+- Move paddle to hit ball
+- Score when ball passes opponent
+- First to target score wins
+- Ball speed increases over time
+
+**Difficulty:** Easy
+
+**Controls:**
+- W/S or Up/Down arrows: Move paddle
+
+**Tips:**
+- Anticipate ball trajectory
+- Hit with paddle edge for angle
+- Keep paddle centered when possible
+
+---
+
+## Practice vs Competitive Mode
 
 ### Free Practice Mode
 
-**Play without submitting scores:**
+Play without submitting scores:
 - Learn game mechanics
 - Try new strategies
 - No gas fees
 - No leaderboard impact
 - Perfect for beginners
 
-**Benefits:**
-- Risk-free experimentation
-- Unlimited attempts
-- No pressure
-- Focus on improvement
-
 ### Competitive Mode
 
-**Play with score submission:**
-- Costs gas fee (~$0.10)
+Play with score submission:
 - Score recorded on-chain
-- Updates leaderboard
-- Eligible for rewards
+- Updates daily leaderboard
+- Eligible for 8BIT rewards
+- Top 10 earns tokens daily
 
-**When to switch:**
-- After practicing extensively
-- When confident in strategy
-- When score is competitive
-- Daily for leaderboard ranking
+## Daily Rewards
 
-## Game Updates & Balance
+Every day at midnight UTC, the top 10 players on each game's leaderboard receive 8BIT tokens:
 
-### Regular Updates
+| Rank | Reward |
+|------|--------|
+| 1st | 1,500 8BIT |
+| 2nd | 1,000 8BIT |
+| 3rd | 750 8BIT |
+| 4th-5th | 500 8BIT |
+| 6th-10th | 250 8BIT |
 
-Games receive updates for:
-- Bug fixes
-- Exploit patches
-- Difficulty adjustments
-- New features
-- Community feedback
+**Staking Bonus:** Players who stake 8BIT tokens earn bonus rewards:
+- 100K staked: +10% bonus
+- 500K staked: +25% bonus
+- 1M staked: +50% bonus
 
-### Balance Changes
+## Game Selection Strategy
 
-**If a game becomes:**
-- Too easy: Difficulty increase
-- Too hard: Slight adjustments
-- Exploitable: Mechanics changed
-- Unpopular: Incentives adjusted
+### For Beginners
 
-**Announced:**
-- 7+ days advance notice
-- Community input considered
-- Gradual rollout
-- Leaderboard reset if major changes
+Start with:
+1. **Chomper** - Easiest to learn
+2. **Brick Breaker** - Simple mechanics
+3. **Paddle Battle** - Basic controls
 
-## Fair Play & Anti-Cheat
+### For Maximum Earnings
 
-### What's Allowed
+Multi-game approach:
+- Play 3-5 games daily
+- Rank 6th-10th in each
+- Multiple smaller rewards stack up
+- Less competition = easier ranking
 
-✅ Practice extensively
-✅ Study top players
-✅ Multiple attempts
-✅ Playing on best hardware
-✅ Using optimal strategies
+## Anti-Cheat System
 
-### What's Prohibited
+All games use server-side validation:
+- Scores verified through replay analysis
+- Impossible patterns detected automatically
+- Cheaters banned and rewards forfeited
 
-❌ Modifying game code
-❌ Using bots/automation
-❌ Exploiting bugs intentionally
-❌ Multiple accounts
-❌ Score manipulation
+See [Anti-Cheat System](anti-cheat.md) for details.
 
-**Penalties:**
-- Account ban
-- Score deletion
-- Reward forfeiture
-- Wallet blacklist
+## Upcoming Games
 
-*See [Anti-Cheat System](anti-cheat.md) for details*
-
-## Game-Specific Tips
-
-### Chomper Tips
-- Clear one side of maze first
-- Use corners for ghost avoidance
-- Power pellet timing is key
-- Each ghost has unique pattern
-
-### Brick Breaker Tips
-- Top corners cause cascades
-- Multi-ball is most valuable power-up
-- Some bricks drop negative power-ups (avoid!)
-- Paddle edge = angle control
-
-### Pixel Snake Tips
-- Spiral strategy for max efficiency
-- Food placement is partially random
-- Leave escape routes always
-- Smooth turning prevents accidents
-
-### Block Drop Tips
-- Never fill the "wait column"
-- T-spins give bonus points
-- Clearing 4 lines at once = "Tetris" = huge points
-- Speed increases at levels 10, 20, 30, etc.
-
-### Space Rocks Tips
-- Big asteroid = 20 pts, medium = 50 pts, small = 100 pts
-- UFOs worth 200-1000 pts (random)
-- Use screen wrapping to escape
-- Shooting creates recoil (use strategically)
-
-### Flappy Pixel Tips
-- Rhythm over reaction
-- Look 2 pipes ahead
-- Stay in middle third vertically
-- Small taps > big flaps
-
-## Accessibility Features
-
-### Coming Soon
-
-**Planned accessibility options:**
-- Colorblind modes
-- Adjustable game speed (practice only)
-- Custom control mapping
-- Screen reader support
-- Mobile-optimized controls
-
-**Request features:**
-- Discord #accessibility channel
-- Email: accessibility@8bitarcade.games
-
-## Next Steps
-
-- [Learn Controls](controls.md) - Master each game
-- [Anti-Cheat System](anti-cheat.md) - Fair play rules
-- [Start Playing](https://play.8bitarcade.games) - Choose your game
-- [Leaderboards](../getting-started/leaderboards.md) - Track rankings
+New games added monthly based on community feedback:
+- Vote in Discord #game-suggestions
+- Community governance coming in Phase 4
 
 ---
 
-*New games added regularly. Community voting for future additions coming in Phase 4.*
+*12+ games live now. More coming regularly!*
