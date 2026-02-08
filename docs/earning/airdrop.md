@@ -4,6 +4,11 @@
 
 8-Bit Arcade rewards early testnet participants with a **10 million 8BIT token airdrop**. Your allocation is based on your activity across gaming, Discord, Telegram, and staking.
 
+**NEW: Proportional Distribution with Breadth Bonus!**
+- No point caps - every game/message counts
+- Tokens distributed proportionally based on your share of total points
+- Use more participation methods = higher multiplier on your allocation
+
 ## Eligibility Requirements
 
 You qualify for the airdrop if you meet **ANY** of these criteria:
@@ -12,16 +17,15 @@ You qualify for the airdrop if you meet **ANY** of these criteria:
 - **50+ messages** in Discord or Telegram (with linked wallet)
 - **Active stake** with linked wallet
 
-## Point System
+## Point System - NO CAPS!
 
-Your airdrop allocation is calculated from points earned across multiple activities:
+Your airdrop allocation is calculated from points earned across multiple activities. **There are no caps** - the more you participate, the more you earn!
 
 ### Gaming Points
 
 | Activity | Points | Notes |
 |----------|--------|-------|
-| Games Played (1-100) | 1 point each | Full points |
-| Games Played (101-500) | 0.5 points each | Diminishing returns |
+| Games Played | 1 point each | **NO CAP** - every game counts! |
 | Tournament Entries | 25 points each | No cap |
 | Tournament Top 10 Finishes | 100 points each | Completed tournaments only |
 | High Score Rankings | 5-50 points per game | Based on all-time leaderboard position |
@@ -81,22 +85,55 @@ Stakers earn additional points based on amount staked and lock duration.
 | 3 months | +30 |
 | 6 months | +50 |
 
+## Breadth Bonus - Use All Methods!
+
+**NEW:** Users who participate in multiple ways get a bonus multiplier on their points!
+
+| Methods Used | Multiplier | Example |
+|--------------|------------|---------|
+| 1 method | 1.0x | Gaming only |
+| 2 methods | 1.2x | Gaming + Discord |
+| 3 methods | 1.4x | Gaming + Discord + Telegram |
+| 4 methods | 1.6x | Gaming + Discord + Telegram + Tournaments |
+| 5 methods | 1.8x | Gaming + Discord + Telegram + Tournaments + Staking |
+| **6 methods (ALL)** | **2.0x** | Gaming + Tournaments + High Scores + Discord + Telegram + Staking |
+
+**The 6 participation methods are:**
+1. Gaming (playing games)
+2. Tournaments (entering any tournament)
+3. High Scores (ranking on any leaderboard)
+4. Discord (messages with linked wallet)
+5. Telegram (messages with linked wallet)
+6. Staking (active stake on-chain)
+
+**Example:** If you have 500 base points and use all 6 methods, your weighted points are 500 × 2.0 = **1,000 weighted points!**
+
 ### Early Adopter Bonus
 
-The **first 100 players** by activity date receive a **2x multiplier** on all points!
+The **first 100 players** by activity date receive a **2x multiplier** on all points! This stacks with the breadth bonus.
 
-## Allocation Tiers
+## Proportional Distribution
 
-Based on your total points, you'll be assigned to a tier:
+**There are no fixed tier caps!** Your allocation is calculated as:
 
-| Tier | Eligibility | Token Pool | Share |
-|------|-------------|------------|-------|
-| **Legendary** | Top 1% | 2,000,000 8BIT | Highest per-player |
-| **Epic** | Top 5% | 2,500,000 8BIT | High per-player |
-| **Rare** | Top 20% | 3,500,000 8BIT | Medium per-player |
-| **Common** | Everyone else | 2,000,000 8BIT | Base per-player |
+```
+Your Tokens = (Your Weighted Points / Total Weighted Points) × 10,000,000
+```
 
-Within each tier, tokens are distributed proportionally based on your points relative to other players in the same tier.
+**How it works:**
+- Everyone's weighted points (base points × breadth multiplier) are added up
+- You receive a share of the 10M pool proportional to your weighted points
+- More points = more tokens, no arbitrary caps
+
+**Tier labels (Legendary/Epic/Rare/Common) are for display only**, based on your rank position:
+- Legendary: Top 1%
+- Epic: Top 5%
+- Rare: Top 20%
+- Common: Everyone else
+
+## Excluded Accounts
+
+Owner and team wallets are tracked in the system but **excluded from receiving airdrop tokens**. Their points are automatically redistributed to community participants.
 
 ## Vesting Schedule
 
@@ -118,10 +155,12 @@ The airdrop uses a **3-month vesting schedule**:
 4. ✅ **Be active** - chat in both communities
 5. ✅ **Enter tournaments** for bonus points
 6. ✅ **Stake tokens** if you have any
+7. ✅ **Get on leaderboards** - aim for high scores!
 
 ### Pro Tips
 
-- **Focus on multiple activities** - points stack across all sources
+- **Use ALL 6 methods** - get the 2x breadth bonus!
+- **No caps** - every game and message counts, keep playing!
 - **Be an early adopter** - first 100 users get 2x multiplier
 - **Long-term staking** pays more than short locks
 - **Quality over quantity** - top 10 tournament finishes give huge bonuses
@@ -159,6 +198,12 @@ Staking points are calculated from your on-chain staking activity at snapshot ti
 
 ### When are Discord roles synced?
 Roles are synced automatically throughout the day. If you just reached a threshold, it may take a few hours to update.
+
+### What is the breadth bonus?
+The breadth bonus rewards users who participate in multiple ways. Using all 6 methods (gaming, tournaments, high scores, Discord, Telegram, staking) gives you a 2x multiplier on your base points!
+
+### Are there any point caps?
+No! We removed all caps. Every game you play and every message you send counts toward your allocation. The more active you are, the more you earn.
 
 ## Technical Details
 
