@@ -105,13 +105,9 @@ function isExcludedFromRewards(
   return false;
 }
 
-// Tier allocations (percentages)
-const TIER_ALLOCATIONS = {
-  legendary: { percent: 0.01, tokens: 2_000_000 },  // Top 1%
-  epic: { percent: 0.05, tokens: 2_500_000 },       // Top 5% (excluding legendary)
-  rare: { percent: 0.20, tokens: 3_500_000 },       // Top 20% (excluding epic)
-  common: { percent: 1.00, tokens: 2_000_000 },     // Everyone else
-};
+// Note: We no longer use fixed tier allocations
+// Tokens are distributed proportionally based on weighted points
+// Tier labels (Legendary/Epic/Rare/Common) are for display only, based on rank percentile
 
 interface PlayerScore {
   wallet: string;

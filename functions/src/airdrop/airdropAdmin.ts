@@ -17,27 +17,8 @@ const ADMIN_WALLETS = [
   '0x96e0b627454ce3b8c55c6d36b5fcbb13849dc297',
 ];
 
-// Wallets excluded from airdrop rewards (owner/team)
-// These are tracked but don't receive tokens - their share is redistributed
-const EXCLUDED_WALLETS = [
-  '0x96e0b627454ce3b8c55c6d36b5fcbb13849dc297', // Owner wallet
-];
-
-const EXCLUDED_DISCORD_IDS = [
-  '266737233967448066', // @EightBitDev
-];
-
-const EXCLUDED_TELEGRAM_IDS = [
-  '@EightBitDev',
-  'EightBitDev',
-];
-
-/**
- * Check if a wallet is excluded from rewards
- */
-function isExcludedWallet(wallet: string): boolean {
-  return EXCLUDED_WALLETS.includes(wallet.toLowerCase());
-}
+// Note: Exclusion lists for airdrop rewards are maintained in calculateAirdrop.ts
+// Owner/team wallets are tracked but don't receive tokens
 
 // Current system version for migrations
 const SYSTEM_VERSION = '1.0.0';
