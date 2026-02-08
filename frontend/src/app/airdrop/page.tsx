@@ -169,6 +169,32 @@ export default function AirdropPage() {
               Try Again
             </Button>
           </div>
+        ) : status?.excluded ? (
+          /* Excluded Account (Owner/Team) */
+          <div className="bg-arcade-gray rounded-lg p-8 text-center">
+            <div className="text-6xl mb-4">🛡️</div>
+            <h2 className="text-2xl font-bold mb-4">Excluded from Rewards</h2>
+            <p className="text-gray-400 mb-2">
+              This account is excluded from the airdrop (owner/team wallet).
+            </p>
+            <p className="text-gray-500 text-sm mb-4">
+              Your activity is tracked in the system, but tokens are redistributed to community participants.
+            </p>
+            {status?.stats && (
+              <div className="mt-6 p-4 bg-arcade-dark rounded-lg inline-block text-left">
+                <p className="text-sm text-gray-500 mb-2">Your tracked activity:</p>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                  <p>Games Played: <span className="font-bold">{status.stats.gamesPlayed || 0}</span></p>
+                  <p>Tournaments: <span className="font-bold">{status.stats.tournamentEntries || 0}</span></p>
+                  <p>Points: <span className="font-bold">{status.points || 0}</span></p>
+                  <p>Methods Used: <span className="font-bold">{status.stats.methodsUsed || 0}/6</span></p>
+                </div>
+                <p className="text-xs text-gray-600 mt-3">
+                  These points are redistributed to other participants.
+                </p>
+              </div>
+            )}
+          </div>
         ) : !isEligible ? (
           /* Not Eligible */
           <div className="bg-arcade-gray rounded-lg p-8 text-center">
