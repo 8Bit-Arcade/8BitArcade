@@ -12,11 +12,13 @@ import { VESTED_AIRDROP_ADDRESS, VESTED_AIRDROP_ABI } from '@/config/contracts';
  */
 interface AirdropStatus {
   eligible: boolean;
+  excluded?: boolean; // Owner/team accounts excluded from rewards
   airdropId?: string;
   wallet?: string;
   tier?: 'legendary' | 'epic' | 'rare' | 'common';
   rank?: number;
   points?: number;
+  weightedPoints?: number; // Points after breadth bonus
   tokenAmount?: string; // Wei
   tokenAmountFormatted?: number;
   proof?: string[];
@@ -51,6 +53,7 @@ interface AirdropStatus {
     stakedAmount?: number;
     highestLockTier?: number;
     isEarlyAdopter: boolean;
+    methodsUsed?: number; // Number of distinct participation methods (1-6)
     breakdown?: {
       gamePoints: number;
       tournamentEntryPoints: number;
@@ -60,7 +63,11 @@ interface AirdropStatus {
       zealyPoints: number;
       telegramPoints: number;
       stakingPoints: number;
-      multiplier: number;
+      multiplier?: number; // Legacy field
+      earlyAdopterMultiplier?: number;
+      breadthMultiplier?: number; // Bonus for using multiple methods
+      basePoints?: number;
+      weightedPoints?: number;
       totalPoints: number;
     };
   };

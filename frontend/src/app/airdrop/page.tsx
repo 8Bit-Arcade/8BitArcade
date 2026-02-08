@@ -169,6 +169,32 @@ export default function AirdropPage() {
               Try Again
             </Button>
           </div>
+        ) : status?.excluded ? (
+          /* Excluded Account (Owner/Team) */
+          <div className="bg-arcade-gray rounded-lg p-8 text-center">
+            <div className="text-6xl mb-4">🛡️</div>
+            <h2 className="text-2xl font-bold mb-4">Excluded from Rewards</h2>
+            <p className="text-gray-400 mb-2">
+              This account is excluded from the airdrop (owner/team wallet).
+            </p>
+            <p className="text-gray-500 text-sm mb-4">
+              Your activity is tracked in the system, but tokens are redistributed to community participants.
+            </p>
+            {status?.stats && (
+              <div className="mt-6 p-4 bg-arcade-dark rounded-lg inline-block text-left">
+                <p className="text-sm text-gray-500 mb-2">Your tracked activity:</p>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                  <p>Games Played: <span className="font-bold">{status.stats.gamesPlayed || 0}</span></p>
+                  <p>Tournaments: <span className="font-bold">{status.stats.tournamentEntries || 0}</span></p>
+                  <p>Points: <span className="font-bold">{status.points || 0}</span></p>
+                  <p>Methods Used: <span className="font-bold">{status.stats.methodsUsed || 0}/6</span></p>
+                </div>
+                <p className="text-xs text-gray-600 mt-3">
+                  These points are redistributed to other participants.
+                </p>
+              </div>
+            )}
+          </div>
         ) : !isEligible ? (
           /* Not Eligible */
           <div className="bg-arcade-gray rounded-lg p-8 text-center">
@@ -294,15 +320,21 @@ export default function AirdropPage() {
                       </div>
                     )}
                   </div>
-                  {status.stats.breakdown.multiplier > 1 && (
+                  {(status.stats.breakdown.earlyAdopterMultiplier ?? status.stats.breakdown.multiplier ?? 1) > 1 && (
                     <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
                       <span className="text-yellow-400">Early Adopter Bonus</span>
-                      <span className="font-bold text-yellow-400">x{status.stats.breakdown.multiplier}</span>
+                      <span className="font-bold text-yellow-400">x{status.stats.breakdown.earlyAdopterMultiplier ?? status.stats.breakdown.multiplier}</span>
+                    </div>
+                  )}
+                  {(status.stats.breakdown.breadthMultiplier ?? 1) > 1 && (
+                    <div className="mt-2 flex justify-between">
+                      <span className="text-arcade-green">Breadth Bonus ({status.stats.methodsUsed || 1}/6 methods)</span>
+                      <span className="font-bold text-arcade-green">x{status.stats.breakdown.breadthMultiplier?.toFixed(1)}</span>
                     </div>
                   )}
                   <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
                     <span className="font-bold">Total Points</span>
-                    <span className="font-bold text-white">{status.stats.breakdown.totalPoints}</span>
+                    <span className="font-bold text-white">{status.stats.breakdown.weightedPoints ?? status.stats.breakdown.totalPoints}</span>
                   </div>
                 </div>
               )}
