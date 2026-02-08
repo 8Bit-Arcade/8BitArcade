@@ -23,6 +23,7 @@ interface UserAllocation {
   stakedAmount: number;
   zealyXP: number;
   isEarlyAdopter: boolean;
+  excluded?: boolean; // Flag for excluded accounts (owner/team)
   createdAt?: string;
 }
 
@@ -287,10 +288,11 @@ export default function AdminAirdropPage() {
             </thead>
             <tbody>
               {filteredUsers.map((user, index) => (
-                <tr key={user.wallet} className="border-t border-arcade-black/50 hover:bg-arcade-black/30">
+                <tr key={user.wallet} className={`border-t border-arcade-black/50 hover:bg-arcade-black/30 ${user.excluded ? 'opacity-60' : ''}`}>
                   <td className="p-3 text-gray-500">{index + 1}</td>
                   <td className="p-3 font-mono text-arcade-cyan">
                     {user.wallet.slice(0, 6)}...{user.wallet.slice(-4)}
+                    {user.excluded && <span className="ml-2 text-xs text-red-400" title="Excluded from rewards">[EXCLUDED]</span>}
                   </td>
                   <td className="p-3 text-right text-white">{user.gamesPlayed}</td>
                   <td className="p-3 text-right text-arcade-green font-bold">{user.totalPoints}</td>
