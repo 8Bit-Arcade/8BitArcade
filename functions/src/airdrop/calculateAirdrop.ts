@@ -1793,6 +1793,7 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       stakedAmount: number;
       zealyXP: number;
       isEarlyAdopter: boolean;
+      excluded: boolean; // Flag for excluded accounts (still shown, but marked)
       createdAt?: string;
     }> = [];
 
@@ -1961,6 +1962,9 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
       // Get tournament entries from pre-fetched map
       const tournamentEntries = tournamentEntriesMap.get(wallet) || 0;
 
+      // Check if this wallet is excluded from rewards (admin can still see all data)
+      const isExcluded = isExcludedFromRewards(wallet, discordId || null, telegramId || null);
+
       users.push({
         wallet,
         gamesPlayed,
@@ -1973,6 +1977,7 @@ export const getAdminAirdropAllocations = onCall(async (request) => {
         stakedAmount,
         zealyXP,
         isEarlyAdopter,
+        excluded: isExcluded, // Flag so admin knows this wallet won't receive tokens
         createdAt: createdAt?.toISOString(),
       });
     }
