@@ -317,7 +317,7 @@ export default function FaucetPage() {
             </li>
             <li className="flex gap-2">
               <span className="text-arcade-green">2.</span>
-              <span>Click "Claim Tokens" to receive 10,000 8BIT</span>
+              <span>Click &quot;Claim Tokens&quot; to receive 10,000 8BIT</span>
             </li>
             <li className="flex gap-2">
               <span className="text-arcade-green">3.</span>
@@ -336,6 +336,95 @@ export default function FaucetPage() {
             <p className="font-arcade text-xs text-gray-300">
               After claiming tokens, head to the games section to start playing and earning more!
             </p>
+          </div>
+        </Card>
+
+        {/* Getting ETH on Arbitrum Sepolia */}
+        <Card className="mt-6">
+          <h2 className="font-pixel text-arcade-yellow mb-4">NEED ETH ON ARBITRUM SEPOLIA?</h2>
+
+          <div className="font-arcade text-sm text-gray-300 space-y-4">
+            <p>
+              You need ETH on Arbitrum Sepolia to pay for gas when using the 8BIT faucet.
+              Follow these steps to get testnet ETH:
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-arcade-cyan font-bold mb-2">Step 1: Get ETH on Ethereum Sepolia</p>
+                <p className="text-gray-400 text-xs mb-2">Use one of these faucets:</p>
+
+                <div className="space-y-2 ml-4">
+                  <p className="text-arcade-green text-xs font-bold">POW Faucet (no mainnet ETH required):</p>
+                  <a
+                    href="https://sepolia-faucet.pk910.de/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-arcade-cyan hover:underline text-xs"
+                  >
+                    → sepolia-faucet.pk910.de
+                  </a>
+
+                  <p className="text-arcade-green text-xs font-bold mt-3">Standard Faucets (require small mainnet ETH balance):</p>
+                  <div className="space-y-1">
+                    <a
+                      href="https://www.alchemy.com/faucets/ethereum-sepolia"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-arcade-cyan hover:underline text-xs"
+                    >
+                      → Alchemy Sepolia Faucet
+                    </a>
+                    <a
+                      href="https://getblock.io/faucet/eth-sepolia/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-arcade-cyan hover:underline text-xs"
+                    >
+                      → GetBlock Sepolia Faucet
+                    </a>
+                    <a
+                      href="https://thirdweb.com/sepolia"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-arcade-cyan hover:underline text-xs"
+                    >
+                      → Thirdweb Sepolia Faucet
+                    </a>
+                    <a
+                      href="https://faucets.chain.link/sepolia"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-arcade-cyan hover:underline text-xs"
+                    >
+                      → Chainlink Sepolia Faucet
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-arcade-cyan font-bold mb-2">Step 2: Bridge ETH to Arbitrum Sepolia</p>
+                <p className="text-gray-400 text-xs mb-2">
+                  Once you have ETH on Ethereum Sepolia, bridge it to Arbitrum Sepolia:
+                </p>
+                <a
+                  href="https://portal.arbitrum.io/bridge?amount=0&sourceChain=sepolia&destinationChain=arbitrum-sepolia&tab=bridge&sanitized=true"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-4 py-2 bg-arcade-cyan/20 border border-arcade-cyan/50 rounded text-arcade-cyan hover:bg-arcade-cyan/30 transition-colors text-xs"
+                >
+                  🌉 Open Arbitrum Sepolia Bridge
+                </a>
+              </div>
+
+              <div>
+                <p className="text-arcade-cyan font-bold mb-2">Step 3: Claim 8BIT Tokens</p>
+                <p className="text-gray-400 text-xs">
+                  Once you have ETH on Arbitrum Sepolia, you can use the 8BIT faucet above to claim testnet tokens!
+                </p>
+              </div>
+            </div>
           </div>
         </Card>
       </div>
