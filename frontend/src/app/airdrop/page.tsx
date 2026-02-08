@@ -320,15 +320,21 @@ export default function AirdropPage() {
                       </div>
                     )}
                   </div>
-                  {status.stats.breakdown.multiplier > 1 && (
+                  {(status.stats.breakdown.earlyAdopterMultiplier ?? status.stats.breakdown.multiplier ?? 1) > 1 && (
                     <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
                       <span className="text-yellow-400">Early Adopter Bonus</span>
-                      <span className="font-bold text-yellow-400">x{status.stats.breakdown.multiplier}</span>
+                      <span className="font-bold text-yellow-400">x{status.stats.breakdown.earlyAdopterMultiplier ?? status.stats.breakdown.multiplier}</span>
+                    </div>
+                  )}
+                  {(status.stats.breakdown.breadthMultiplier ?? 1) > 1 && (
+                    <div className="mt-2 flex justify-between">
+                      <span className="text-arcade-green">Breadth Bonus ({status.stats.methodsUsed || 1}/6 methods)</span>
+                      <span className="font-bold text-arcade-green">x{status.stats.breakdown.breadthMultiplier?.toFixed(1)}</span>
                     </div>
                   )}
                   <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
                     <span className="font-bold">Total Points</span>
-                    <span className="font-bold text-white">{status.stats.breakdown.totalPoints}</span>
+                    <span className="font-bold text-white">{status.stats.breakdown.weightedPoints ?? status.stats.breakdown.totalPoints}</span>
                   </div>
                 </div>
               )}
