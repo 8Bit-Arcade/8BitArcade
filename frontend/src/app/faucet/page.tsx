@@ -104,11 +104,13 @@ export default function FaucetPage() {
     if (!isConnected) return;
 
     claim({
-      address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
-      abi: TESTNET_FAUCET_ABI,
-      functionName: 'claimTokens',
-    });
-  };
+  address: TESTNET_FAUCET_ADDRESS as `0x${string}`,
+  abi: TESTNET_FAUCET_ABI,
+  functionName: 'claimTokens',
+  chainId: ARBITRUM_CHAIN_ID,      // ✅ force correct chain
+  gas: BigInt(200_000),            // ✅ prevent insane gas estimates
+});
+
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
