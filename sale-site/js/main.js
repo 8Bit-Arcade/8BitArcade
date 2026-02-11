@@ -1,15 +1,17 @@
 // Main JavaScript for 8-Bit Arcade Landing Page
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const navLinks = document.querySelector('.nav-links');
+// Mobile menu toggle (supports multiple navbars safely)
+const mobileMenuButtons = document.querySelectorAll('#mobileMenuBtn');
+const navLinksList = document.querySelectorAll('.nav-links');
 
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
-    }
+mobileMenuButtons.forEach((btn, index) => {
+    btn.addEventListener('click', () => {
+        const nav = navLinksList[index] || navLinksList[0];
+        if (nav) {
+            nav.classList.toggle('active');
+        }
+    });
+});
 
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
