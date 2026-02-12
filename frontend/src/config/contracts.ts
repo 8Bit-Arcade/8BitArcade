@@ -46,6 +46,9 @@ const TESTNET_CONTRACTS = {
   TESTNET_FAUCET: '0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952',
   VESTED_AIRDROP: '0x0000000000000000000000000000000000000000', // ← UPDATE after deploying airdrop contract
   TIERED_STAKING: '0xC193451f59De0df09EC8359D091F8890A80F20c4', // Deployed with 9.9M 8BIT initial funding
+  ACHIEVEMENT_BADGES: '0x0000000000000000000000000000000000000000', // ← UPDATE after deploying NFT rewards
+  TRADEABLE_ITEMS: '0x0000000000000000000000000000000000000000',   // ← UPDATE after deploying NFT rewards
+  ACHIEVEMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE after deploying NFT rewards
   USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
   CHAIN_ID: 421614, // Arbitrum Sepolia
   CHAIN_NAME: 'Arbitrum Sepolia',
@@ -73,6 +76,9 @@ const MAINNET_CONTRACTS = {
   TREASURY_GAS_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: TreasuryGasManager address
   TESTNET_FAUCET: undefined, // Faucet not deployed on mainnet
   VESTED_AIRDROP: '0x0000000000000000000000000000000000000000', // ← UPDATE: VestedAirdrop address
+  ACHIEVEMENT_BADGES: '0x0000000000000000000000000000000000000000', // ← UPDATE: AchievementBadges address
+  TRADEABLE_ITEMS: '0x0000000000000000000000000000000000000000',   // ← UPDATE: TradeableItems address
+  ACHIEVEMENT_MANAGER: '0x0000000000000000000000000000000000000000', // ← UPDATE: AchievementManager address
   USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One USDC
   CHAIN_ID: 42161, // Arbitrum One
   CHAIN_NAME: 'Arbitrum One',
@@ -99,6 +105,9 @@ export const TOKEN_SALE_ADDRESS = CONTRACTS.TOKEN_SALE;
 export const TREASURY_GAS_MANAGER_ADDRESS = CONTRACTS.TREASURY_GAS_MANAGER;
 export const TESTNET_FAUCET_ADDRESS = CONTRACTS.TESTNET_FAUCET;
 export const VESTED_AIRDROP_ADDRESS = CONTRACTS.VESTED_AIRDROP;
+export const ACHIEVEMENT_BADGES_ADDRESS = CONTRACTS.ACHIEVEMENT_BADGES;
+export const TRADEABLE_ITEMS_ADDRESS = CONTRACTS.TRADEABLE_ITEMS;
+export const ACHIEVEMENT_MANAGER_ADDRESS = CONTRACTS.ACHIEVEMENT_MANAGER;
 export const USDC_ADDRESS = CONTRACTS.USDC;
 export const ARBITRUM_CHAIN_ID = CONTRACTS.CHAIN_ID;
 export const ARBITRUM_CHAIN_NAME = CONTRACTS.CHAIN_NAME;
@@ -638,6 +647,283 @@ export const TESTNET_FAUCET_ABI = [
   },
 ] as const;
 
+
+// ═══════════════════════════════════════════════════════════
+// NFT REWARDS ABIS
+// ═══════════════════════════════════════════════════════════
+
+export const ACHIEVEMENT_BADGES_ABI = [
+  {
+    inputs: [{ internalType: 'address', name: 'player', type: 'address' }, { internalType: 'uint256', name: 'achievementTypeId', type: 'uint256' }],
+    name: 'hasAchievement',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'player', type: 'address' }, { internalType: 'uint256', name: 'achievementTypeId', type: 'uint256' }],
+    name: 'getAchievementToken',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'achievementTypeId', type: 'uint256' }],
+    name: 'getAchievementCount',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ internalType: 'string', name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'ownerOf',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'nextTokenId',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'tokenAchievementType',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'locked',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'player', type: 'address' },
+      { indexed: true, internalType: 'uint256', name: 'tokenId', type: 'uint256' },
+      { indexed: true, internalType: 'uint256', name: 'achievementTypeId', type: 'uint256' },
+    ],
+    name: 'BadgeMinted',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: false, internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'Locked',
+    type: 'event',
+  },
+] as const;
+
+export const TRADEABLE_ITEMS_ABI = [
+  {
+    inputs: [{ internalType: 'uint256', name: 'itemTypeId', type: 'uint256' }],
+    name: 'mint',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'itemTypeId', type: 'uint256' }],
+    name: 'getItemType',
+    outputs: [
+      { internalType: 'uint256', name: 'maxSupply', type: 'uint256' },
+      { internalType: 'uint256', name: 'totalMinted', type: 'uint256' },
+      { internalType: 'uint256', name: 'requiredAchievement', type: 'uint256' },
+      { internalType: 'uint256', name: 'priceInWei', type: 'uint256' },
+      { internalType: 'bool', name: 'active', type: 'bool' },
+      { internalType: 'string', name: 'uri', type: 'string' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'player', type: 'address' }, { internalType: 'uint256', name: 'itemTypeId', type: 'uint256' }],
+    name: 'canMint',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ internalType: 'string', name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'ownerOf',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'owner', type: 'address' }, { internalType: 'uint256', name: 'index', type: 'uint256' }],
+    name: 'tokenOfOwnerByIndex',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'nextTokenId',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'nextItemTypeId',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'tokenId', type: 'uint256' }],
+    name: 'tokenItemType',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'tokenId', type: 'uint256' },
+      { internalType: 'uint256', name: 'salePrice', type: 'uint256' },
+    ],
+    name: 'royaltyInfo',
+    outputs: [
+      { internalType: 'address', name: 'receiver', type: 'address' },
+      { internalType: 'uint256', name: 'royaltyAmount', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'to', type: 'address' },
+      { indexed: true, internalType: 'uint256', name: 'tokenId', type: 'uint256' },
+      { indexed: true, internalType: 'uint256', name: 'itemTypeId', type: 'uint256' },
+    ],
+    name: 'ItemMinted',
+    type: 'event',
+  },
+] as const;
+
+export const ACHIEVEMENT_MANAGER_ABI = [
+  {
+    inputs: [{ internalType: 'uint256', name: 'goalId', type: 'uint256' }],
+    name: 'getGoal',
+    outputs: [
+      { internalType: 'string', name: 'name', type: 'string' },
+      { internalType: 'string', name: 'description', type: 'string' },
+      { internalType: 'uint8', name: 'category', type: 'uint8' },
+      { internalType: 'uint256', name: 'threshold', type: 'uint256' },
+      { internalType: 'string', name: 'gameId', type: 'string' },
+      { internalType: 'uint256', name: 'achievementTypeId', type: 'uint256' },
+      { internalType: 'uint256', name: 'rewardItemTypeId', type: 'uint256' },
+      { internalType: 'uint256', name: 'rewardTokenAmount', type: 'uint256' },
+      { internalType: 'bool', name: 'active', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'player', type: 'address' }, { internalType: 'uint256', name: 'goalId', type: 'uint256' }],
+    name: 'hasCompletedGoal',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'player', type: 'address' }],
+    name: 'getPlayerAchievementCount',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'player', type: 'address' },
+      { internalType: 'uint256[]', name: 'goalIds', type: 'uint256[]' },
+    ],
+    name: 'getPlayerGoalStatuses',
+    outputs: [{ internalType: 'bool[]', name: 'completed', type: 'bool[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'nextGoalId',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalAchievementsAwarded',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'player', type: 'address' },
+      { indexed: true, internalType: 'uint256', name: 'goalId', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'badgeTokenId', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'rewardItemTokenId', type: 'uint256' },
+      { indexed: false, internalType: 'uint256', name: 'rewardTokenAmount', type: 'uint256' },
+    ],
+    name: 'AchievementAwarded',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: 'uint256', name: 'goalId', type: 'uint256' },
+      { indexed: false, internalType: 'string', name: 'name', type: 'string' },
+      { indexed: false, internalType: 'uint8', name: 'category', type: 'uint8' },
+      { indexed: false, internalType: 'uint256', name: 'threshold', type: 'uint256' },
+    ],
+    name: 'GoalCreated',
+    type: 'event',
+  },
+] as const;
 
 // ═══════════════════════════════════════════════════════════
 // HELPER FUNCTIONS

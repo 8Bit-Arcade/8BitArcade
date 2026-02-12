@@ -26,6 +26,11 @@ export const STAKING_BONUS_ADDRESS = USE_TESTNET
   ? '0x04c02F24F930500B8b7c0808c9A8d5093BE8fD3f' // UPDATE: Deploy StakingBonus and add address here
   : ''; // UPDATE: Deploy to mainnet
 
+// NFT Rewards contracts
+export const ACHIEVEMENT_MANAGER_ADDRESS = USE_TESTNET
+  ? '0x0000000000000000000000000000000000000000' // UPDATE: Deploy AchievementManager to testnet
+  : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy to mainnet
+
 // RPC URLs
 export const ARBITRUM_RPC_URL = USE_TESTNET
   ? 'https://sepolia-rollup.arbitrum.io/rpc' // Arbitrum Sepolia testnet
