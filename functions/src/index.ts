@@ -103,5 +103,8 @@ export { syncZealyUsers, scheduledZealySync, zealyWebhook, linkZealyWallet } fro
 // Rewards distribution
 export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard } from './rewards/distributeRewards';
 
+// Achievement / NFT rewards
+export { getAchievements, checkAchievement, checkAndAwardAchievements, manualCheckAchievements } from './achievements/checkAchievements';
+
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
