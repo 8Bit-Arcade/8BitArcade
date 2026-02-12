@@ -10,7 +10,7 @@ The VestedAirdrop contract distributes 10 million 8BIT tokens to testnet partici
 |----------|-------|
 | **Contract** | VestedAirdrop.sol |
 | **Network** | Arbitrum Sepolia (testnet) |
-| **Address** | [`0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B`](https://sepolia.arbiscan.io/address/0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B) |
+| **Address** | [`0xC9aaa944B163eB4A580151DE852836330ECB50b1`](https://sepolia.arbiscan.io/address/0xC9aaa944B163eB4A580151DE852836330ECB50b1) |
 | **Total Allocation** | 10,000,000 8BIT |
 | **Claim Window** | 90 days |
 | **Vesting Period** | 60 days |
