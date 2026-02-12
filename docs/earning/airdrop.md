@@ -205,10 +205,17 @@ The breadth bonus rewards users who participate in multiple ways. Using all 6 me
 ### Are there any point caps?
 No! We removed all caps. Every game you play and every message you send counts toward your allocation. The more active you are, the more you earn.
 
+## Contract Address
+
+| Network | Address |
+|---------|---------|
+| Arbitrum Sepolia (Testnet) | [`0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B`](https://sepolia.arbiscan.io/address/0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B) |
+| Arbitrum One (Mainnet) | TBD |
+
 ## Technical Details
 
 The airdrop uses a Merkle tree for gas-efficient verification. See [VestedAirdrop Contract](../contracts/vested-airdrop.md) for technical details.
 
 ---
 
-*Snapshot not yet taken. Keep playing and participating to maximize your allocation!*
+*Snapshot not yet taken. Contract deployed and ready - keep playing and participating to maximize your allocation!*
