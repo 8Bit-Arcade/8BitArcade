@@ -209,7 +209,7 @@ No! We removed all caps. Every game you play and every message you send counts t
 
 | Network | Address |
 |---------|---------|
-| Arbitrum Sepolia (Testnet) | [`0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B`](https://sepolia.arbiscan.io/address/0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B) |
+| Arbitrum Sepolia (Testnet) | [`0xC9aaa944B163eB4A580151DE852836330ECB50b1`](https://sepolia.arbiscan.io/address/0xC9aaa944B163eB4A580151DE852836330ECB50b1) |
 | Arbitrum One (Mainnet) | TBD |
 
 ## Technical Details

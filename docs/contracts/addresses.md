@@ -22,7 +22,7 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 | **Testnet Faucet**       | [`0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) | Free test tokens (testnet only)                       |
 | **Tiered Staking**       | [`0xC193451f59De0df09EC8359D091F8890A80F20c4`](https://sepolia.arbiscan.io/address/0xC193451f59De0df09EC8359D091F8890A80F20c4) | Staking with lock tiers (7d-6mo)                      |
 | **Staking Bonus**        | [`0xC193451f59De0df09EC8359D091F8890A80F20c4`](https://sepolia.arbiscan.io/address/0xC193451f59De0df09EC8359D091F8890A80F20c4) | Bonus rewards for stakers on leaderboards             |
-| **Vested Airdrop**       | [`0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B`](https://sepolia.arbiscan.io/address/0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B) | Testnet airdrop with 3-month vesting                  |
+| **Vested Airdrop**       | [`0xC9aaa944B163eB4A580151DE852836330ECB50b1`](https://sepolia.arbiscan.io/address/0xC9aaa944B163eB4A580151DE852836330ECB50b1) | Testnet airdrop with 3-month vesting                  |
 
 ### External Tokens
 
