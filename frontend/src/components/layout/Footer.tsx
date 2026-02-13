@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { USE_TESTNET } from '@/config/contracts';
 
 export default function Footer() {
   return (
@@ -56,6 +57,14 @@ export default function Footer() {
             >
               Discord
             </a>
+            {USE_TESTNET && (
+              <Link
+                href="/faucet"
+                className="font-arcade text-sm text-gray-400 hover:text-arcade-yellow transition-colors"
+              >
+                Faucet
+              </Link>
+            )}
           </div>
 
           {/* Network Status */}
