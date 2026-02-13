@@ -115,9 +115,6 @@ const GOALS: GoalDefinition[] = [
   { id: 43, name: "The Answer", description: "Score exactly 42 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 74, rewardItemTypeId: 0, rewardTokenAmount: "420000000000000000000", isHidden: true },
 ];
 
-// Achievement type IDs that are hidden
-const HIDDEN_ACHIEVEMENT_IDS = new Set([70, 71, 72, 73, 74]);
-
 /**
  * Check if a number is a palindrome
  */
