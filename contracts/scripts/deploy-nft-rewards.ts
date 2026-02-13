@@ -1,14 +1,14 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 
 /**
- * Deployment Script for NFT Goal-Based Rewards System
+ * Deployment Script for NFT Goal-Based Rewards System (UUPS Proxies)
  *
  * Deploys:
- * 1. AchievementBadges - Soulbound ERC-721 for achievement badges
- * 2. TradeableItems - Standard ERC-721 for tradeable collectibles (8BIT token payments)
- * 3. AchievementManager - Goal tracking and minting coordinator
+ * 1. AchievementBadges - Soulbound ERC-721 (UUPS proxy)
+ * 2. TradeableItems - Standard ERC-721 (UUPS proxy)
+ * 3. AchievementManager - Goal tracking coordinator (UUPS proxy)
  *
- * Then links them together and seeds initial goals.
+ * Then links them together and seeds initial goals (38 + 5 hidden = 43 total).
  *
  * PREREQUISITES:
  * - EightBitToken must already be deployed
@@ -30,6 +30,7 @@ async function main() {
 
   console.log("═══════════════════════════════════════════════════");
   console.log("  8-BIT ARCADE - NFT REWARDS SYSTEM DEPLOYMENT");
+  console.log("  (UUPS Upgradeable Proxies)");
   console.log("═══════════════════════════════════════════════════");
   console.log();
   console.log("Deploying with account:", deployer.address);
@@ -37,41 +38,43 @@ async function main() {
   console.log("8BIT Token:", EIGHT_BIT_TOKEN_ADDRESS);
   console.log();
 
-  // ─── 1. Deploy AchievementBadges (Soulbound) ───
-  console.log("Deploying AchievementBadges (Soulbound NFTs)...");
+  // ─── 1. Deploy AchievementBadges (Soulbound, UUPS Proxy) ───
+  console.log("Deploying AchievementBadges (Soulbound NFTs, UUPS Proxy)...");
   const AchievementBadges = await ethers.getContractFactory("AchievementBadges");
-  const badges = await AchievementBadges.deploy(BADGE_METADATA_BASE_URI);
+  const badges = await upgrades.deployProxy(
+    AchievementBadges,
+    [BADGE_METADATA_BASE_URI],
+    { kind: "uups" }
+  );
   await badges.waitForDeployment();
   const badgesAddress = await badges.getAddress();
-  console.log("AchievementBadges deployed to:", badgesAddress);
+  console.log("AchievementBadges proxy deployed to:", badgesAddress);
   console.log();
 
-  // ─── 2. Deploy TradeableItems (8BIT token payments) ───
-  console.log("Deploying TradeableItems (Tradeable NFTs, 8BIT payments)...");
+  // ─── 2. Deploy TradeableItems (8BIT token payments, UUPS Proxy) ───
+  console.log("Deploying TradeableItems (Tradeable NFTs, UUPS Proxy)...");
   const TradeableItems = await ethers.getContractFactory("TradeableItems");
-  const items = await TradeableItems.deploy(
-    badgesAddress,              // AchievementBadges for gating
-    EIGHT_BIT_TOKEN_ADDRESS,    // 8BIT token for payments
-    deployer.address,           // Treasury
-    ITEM_CONTRACT_URI
+  const items = await upgrades.deployProxy(
+    TradeableItems,
+    [badgesAddress, EIGHT_BIT_TOKEN_ADDRESS, deployer.address, ITEM_CONTRACT_URI],
+    { kind: "uups" }
   );
   await items.waitForDeployment();
   const itemsAddress = await items.getAddress();
-  console.log("TradeableItems deployed to:", itemsAddress);
+  console.log("TradeableItems proxy deployed to:", itemsAddress);
   console.log();
 
-  // ─── 3. Deploy AchievementManager ───
-  console.log("Deploying AchievementManager...");
+  // ─── 3. Deploy AchievementManager (UUPS Proxy) ───
+  console.log("Deploying AchievementManager (UUPS Proxy)...");
   const AchievementManager = await ethers.getContractFactory("AchievementManager");
-  const manager = await AchievementManager.deploy(
-    badgesAddress,
-    itemsAddress,
-    EIGHT_BIT_TOKEN_ADDRESS,
-    BADGE_METADATA_BASE_URI
+  const manager = await upgrades.deployProxy(
+    AchievementManager,
+    [badgesAddress, itemsAddress, EIGHT_BIT_TOKEN_ADDRESS, BADGE_METADATA_BASE_URI],
+    { kind: "uups" }
   );
   await manager.waitForDeployment();
   const managerAddress = await manager.getAddress();
-  console.log("AchievementManager deployed to:", managerAddress);
+  console.log("AchievementManager proxy deployed to:", managerAddress);
   console.log();
 
   // ─── 4. Link contracts together ───
@@ -90,7 +93,7 @@ async function main() {
   await tx.wait();
   console.log();
 
-  // ─── 5. Seed achievement goals ───
+  // ─── 5. Seed achievement goals (38 standard + 5 hidden = 43 total) ───
   console.log("Creating achievement goals...");
 
   const goalConfigs = [
@@ -145,6 +148,13 @@ async function main() {
 
     // ── RESERVED: Community-designed NFT (hardest achievement) ──
     { name: "Arcade Immortal", desc: "Hold #1 on any all-time leaderboard for 7 consecutive days", category: 6, threshold: 7, gameId: "", achievementType: 99, rewardItem: 0, rewardTokens: ethers.parseEther("50000") },
+
+    // ── HIDDEN: Secret achievements (descriptions are vague on purpose) ──
+    { name: "Lucky 777", desc: "???", category: 6, threshold: 1, gameId: "", achievementType: 70, rewardItem: 0, rewardTokens: ethers.parseEther("777") },
+    { name: "Night Owl", desc: "???", category: 6, threshold: 1, gameId: "", achievementType: 71, rewardItem: 0, rewardTokens: ethers.parseEther("500") },
+    { name: "Palindrome Master", desc: "???", category: 6, threshold: 1, gameId: "", achievementType: 72, rewardItem: 0, rewardTokens: ethers.parseEther("1000") },
+    { name: "Double Trouble", desc: "???", category: 6, threshold: 1, gameId: "", achievementType: 73, rewardItem: 0, rewardTokens: ethers.parseEther("750") },
+    { name: "The Answer", desc: "???", category: 6, threshold: 1, gameId: "", achievementType: 74, rewardItem: 0, rewardTokens: ethers.parseEther("420") },
   ];
 
   for (const g of goalConfigs) {
@@ -165,42 +175,47 @@ async function main() {
 
   // ─── Summary ───
   console.log("═══════════════════════════════════════════════════");
-  console.log("  DEPLOYMENT SUMMARY");
+  console.log("  DEPLOYMENT SUMMARY (UUPS PROXIES)");
   console.log("═══════════════════════════════════════════════════");
   console.log();
-  console.log("AchievementBadges (Soulbound):", badgesAddress);
-  console.log("TradeableItems (Tradeable, 8BIT payments):", itemsAddress);
-  console.log("AchievementManager:", managerAddress);
+  console.log("AchievementBadges (Soulbound, Proxy):", badgesAddress);
+  console.log("TradeableItems (Tradeable, Proxy):", itemsAddress);
+  console.log("AchievementManager (Proxy):", managerAddress);
   console.log("8BIT Token:", EIGHT_BIT_TOKEN_ADDRESS);
   console.log("Deployer/Verifier:", deployer.address);
-  console.log("Goals Created:", goalConfigs.length);
+  console.log("Goals Created:", goalConfigs.length, `(${goalConfigs.length - 5} standard + 5 hidden)`);
   console.log();
   console.log("SOULBOUND BADGE TIERS:");
   console.log("  8Bit Gamer    = 10 badges (achievementTypeId: 60)");
   console.log("  8Bit Prodigy  = 20 badges (achievementTypeId: 61)");
   console.log("  8Bit God      = 33 badges (achievementTypeId: 62)");
   console.log();
+  console.log("HIDDEN ACHIEVEMENTS (5):");
+  console.log("  Lucky 777          (achievementTypeId: 70) - Score exactly 777");
+  console.log("  Night Owl          (achievementTypeId: 71) - Play at 3:00-3:05 AM UTC");
+  console.log("  Palindrome Master  (achievementTypeId: 72) - Palindrome score over 1000");
+  console.log("  Double Trouble     (achievementTypeId: 73) - Same score in 2 different games");
+  console.log("  The Answer         (achievementTypeId: 74) - Score exactly 42");
+  console.log();
   console.log("TRADEABLE ITEMS: None pre-created. Add later via:");
   console.log(`  items.createItemType(maxSupply, requiredAchievement, priceInTokens, perWalletCap, uri)`);
   console.log("  Example: items.createItemType(500, 0, ethers.parseEther('1000'), 1, 'ipfs://...')");
-  console.log("  (500 supply, no achievement required, costs 1000 8BIT, 1 per wallet)");
   console.log();
   console.log("COMMUNITY NFT: Arcade Immortal slot reserved (achievementTypeId: 99)");
-  console.log("  Art TBD - community will design the NFT for this achievement");
+  console.log();
+  console.log("UPGRADES: All contracts use UUPS proxy pattern. To upgrade:");
+  console.log("  const NewImpl = await ethers.getContractFactory('AchievementBadgesV2');");
+  console.log("  await upgrades.upgradeProxy(proxyAddress, NewImpl);");
   console.log();
   console.log("NEXT STEPS:");
   console.log("───────────────────────────────────────────────────");
-  console.log("1. Update frontend/src/config/contracts.ts with these addresses");
+  console.log("1. Update frontend/src/config/contracts.ts with proxy addresses");
   console.log("2. Authorize AchievementManager as minter on EightBitToken:");
   console.log(`   token.setAuthorizedMinter("${managerAddress}", true)`);
   console.log("3. Set your backend wallet as authorized verifier:");
   console.log(`   manager.setAuthorizedVerifier(BACKEND_WALLET, true)`);
   console.log("4. Upload badge metadata to IPFS and update base URI");
   console.log("5. When ready, create tradeable item types on TradeableItems");
-  console.log("6. Verify contracts on Arbiscan:");
-  console.log(`   npx hardhat verify --network arbitrumSepolia ${badgesAddress} "${BADGE_METADATA_BASE_URI}"`);
-  console.log(`   npx hardhat verify --network arbitrumSepolia ${itemsAddress} "${badgesAddress}" "${EIGHT_BIT_TOKEN_ADDRESS}" "${deployer.address}" "${ITEM_CONTRACT_URI}"`);
-  console.log(`   npx hardhat verify --network arbitrumSepolia ${managerAddress} "${badgesAddress}" "${itemsAddress}" "${EIGHT_BIT_TOKEN_ADDRESS}" "${BADGE_METADATA_BASE_URI}"`);
   console.log("═══════════════════════════════════════════════════");
 }
 

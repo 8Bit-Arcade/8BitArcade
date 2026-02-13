@@ -1,14 +1,14 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 /**
- * NFT GOAL-BASED REWARDS TESTS
- * =============================
+ * NFT GOAL-BASED REWARDS TESTS (UUPS Upgradeable)
+ * =================================================
  * Tests for the NFT rewards system covering:
- * - AchievementBadges: Soulbound minting, transfer blocking, EIP-5192
- * - TradeableItems: Minting, transfers, achievement gating, royalties
- * - AchievementManager: Goal creation, achievement awarding, full flow
+ * - AchievementBadges: Soulbound minting, transfer blocking, EIP-5192, proxy
+ * - TradeableItems: Minting, transfers, achievement gating, royalties, proxy
+ * - AchievementManager: Goal creation, achievement awarding, full flow, proxy
  */
 
 describe("NFT Rewards System", function () {
@@ -25,33 +25,45 @@ describe("NFT Rewards System", function () {
   beforeEach(async function () {
     [owner, verifier, player1, player2, treasury] = await ethers.getSigners();
 
-    // Deploy EightBitToken
+    // Deploy EightBitToken (not upgradeable)
     const EightBitToken = await ethers.getContractFactory("EightBitToken");
     token = await EightBitToken.deploy();
     await token.waitForDeployment();
 
-    // Deploy AchievementBadges
+    // Deploy AchievementBadges as UUPS proxy
     const AchievementBadges = await ethers.getContractFactory("AchievementBadges");
-    badges = await AchievementBadges.deploy("ipfs://badges/");
+    badges = await upgrades.deployProxy(
+      AchievementBadges,
+      ["ipfs://badges/"],
+      { kind: "uups" }
+    );
     await badges.waitForDeployment();
 
-    // Deploy TradeableItems (with token payment support)
+    // Deploy TradeableItems as UUPS proxy
     const TradeableItems = await ethers.getContractFactory("TradeableItems");
-    items = await TradeableItems.deploy(
-      await badges.getAddress(),
-      await token.getAddress(),    // 8BIT token for payments
-      treasury.address,
-      "ipfs://collection.json"
+    items = await upgrades.deployProxy(
+      TradeableItems,
+      [
+        await badges.getAddress(),
+        await token.getAddress(),
+        treasury.address,
+        "ipfs://collection.json",
+      ],
+      { kind: "uups" }
     );
     await items.waitForDeployment();
 
-    // Deploy AchievementManager
+    // Deploy AchievementManager as UUPS proxy
     const AchievementManager = await ethers.getContractFactory("AchievementManager");
-    manager = await AchievementManager.deploy(
-      await badges.getAddress(),
-      await items.getAddress(),
-      await token.getAddress(),
-      "ipfs://badges/"
+    manager = await upgrades.deployProxy(
+      AchievementManager,
+      [
+        await badges.getAddress(),
+        await items.getAddress(),
+        await token.getAddress(),
+        "ipfs://badges/",
+      ],
+      { kind: "uups" }
     );
     await manager.waitForDeployment();
 
@@ -84,8 +96,6 @@ describe("NFT Rewards System", function () {
 
     describe("Minting", function () {
       it("should allow authorized minter to mint a badge", async function () {
-        // Manager is authorized, so use manager to award
-        // But let's also test direct mint by authorizing owner
         await badges.setAuthorizedMinter(owner.address, true);
 
         const tx = await badges.mintBadge(player1.address, 1, "achievement_1.json");
@@ -146,7 +156,6 @@ describe("NFT Rewards System", function () {
           ["a1.json", "a2.json"]
         );
 
-        // Only token 1 and token 2 should exist (achievement 1 was skipped in batch)
         expect(await badges.nextTokenId()).to.equal(3);
         expect(await badges.hasAchievement(player1.address, 2)).to.be.true;
       });
@@ -177,7 +186,6 @@ describe("NFT Rewards System", function () {
       });
 
       it("should support EIP-5192 interface", async function () {
-        // EIP-5192 interface ID: 0xb45a3c0e
         expect(await badges.supportsInterface("0xb45a3c0e")).to.be.true;
       });
     });
@@ -198,6 +206,14 @@ describe("NFT Rewards System", function () {
         expect(await badges.getAchievementToken(player1.address, 99)).to.equal(0);
       });
     });
+
+    describe("Upgradeable", function () {
+      it("should not allow re-initialization", async function () {
+        await expect(
+          badges.initialize("ipfs://hacked/")
+        ).to.be.reverted;
+      });
+    });
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -216,7 +232,6 @@ describe("NFT Rewards System", function () {
       });
 
       it("should support ERC-2981 royalties", async function () {
-        // ERC-2981 interface ID: 0x2a55205a
         expect(await items.supportsInterface("0x2a55205a")).to.be.true;
       });
     });
@@ -245,14 +260,10 @@ describe("NFT Rewards System", function () {
 
     describe("Minting", function () {
       beforeEach(async function () {
-        // Create a free item type with no achievement requirement
         await items.createItemType(100, 0, 0, 5, "ipfs://free-item.json");
-        // Create a paid item type (costs 1000 8BIT tokens)
         await items.createItemType(50, 0, ethers.parseEther("1000"), 2, "ipfs://paid-item.json");
-        // Create an achievement-gated item type (requires achievement 1)
         await items.createItemType(25, 1, 0, 1, "ipfs://gated-item.json");
 
-        // Mint some tokens to player1 for paid item tests
         await token.setAuthorizedMinter(owner.address, true);
         await token.mintReward(player1.address, ethers.parseEther("5000"));
       });
@@ -265,12 +276,10 @@ describe("NFT Rewards System", function () {
       });
 
       it("should allow public mint for paid items with token approval", async function () {
-        // Approve tokens first
         await token.connect(player1).approve(await items.getAddress(), ethers.parseEther("1000"));
         const tx = await items.connect(player1).mint(2);
         await expect(tx).to.emit(items, "ItemMinted");
         expect(await items.ownerOf(1)).to.equal(player1.address);
-        // Treasury should receive the tokens
         expect(await token.balanceOf(treasury.address)).to.equal(ethers.parseEther("1000"));
       });
 
@@ -281,14 +290,12 @@ describe("NFT Rewards System", function () {
       });
 
       it("should enforce achievement requirement", async function () {
-        // Player doesn't have achievement 1
         await expect(
           items.connect(player1).mint(3)
         ).to.be.revertedWith("Required achievement not earned");
       });
 
       it("should allow mint after earning required achievement", async function () {
-        // Give player1 achievement 1
         await badges.setAuthorizedMinter(owner.address, true);
         await badges.mintBadge(player1.address, 1, "a1.json");
 
@@ -298,7 +305,6 @@ describe("NFT Rewards System", function () {
       });
 
       it("should enforce per-wallet cap", async function () {
-        // Item type 1 has cap of 5
         for (let i = 0; i < 5; i++) {
           await items.connect(player1).mint(1);
         }
@@ -309,7 +315,6 @@ describe("NFT Rewards System", function () {
       });
 
       it("should enforce max supply", async function () {
-        // Create item with supply of 2
         await items.createItemType(2, 0, 0, 0, "ipfs://limited.json");
         const typeId = 4;
 
@@ -367,7 +372,7 @@ describe("NFT Rewards System", function () {
         const [receiver, amount] = await items.royaltyInfo(1, salePrice);
 
         expect(receiver).to.equal(treasury.address);
-        expect(amount).to.equal(ethers.parseEther("0.05")); // 5% of 1 ETH
+        expect(amount).to.equal(ethers.parseEther("0.05"));
       });
     });
 
@@ -381,6 +386,19 @@ describe("NFT Rewards System", function () {
         await items.createItemType(100, 0, 0, 0, "ipfs://item.json");
         await items.updateItemType(1, 100, 0, 0, 0, false, "ipfs://item.json");
         expect(await items.canMint(player1.address, 1)).to.be.false;
+      });
+    });
+
+    describe("Upgradeable", function () {
+      it("should not allow re-initialization", async function () {
+        await expect(
+          items.initialize(
+            await badges.getAddress(),
+            await token.getAddress(),
+            treasury.address,
+            "ipfs://hacked.json"
+          )
+        ).to.be.reverted;
       });
     });
   });
@@ -398,8 +416,8 @@ describe("NFT Rewards System", function () {
           0, // SCORE
           25000,
           "space-rocks",
-          1, // achievement type
-          0, // no item reward
+          1,
+          0,
           ethers.parseEther("500")
         );
 
@@ -431,15 +449,14 @@ describe("NFT Rewards System", function () {
 
     describe("Achievement Awarding", function () {
       beforeEach(async function () {
-        // Create a goal with badge + token reward
         await manager.createGoal(
           "First Steps",
           "Play 10 games",
           1, // GAMES_PLAYED
           10,
           "",
-          10, // achievement type
-          0,  // no item reward
+          10,
+          0,
           ethers.parseEther("50")
         );
       });
@@ -449,14 +466,9 @@ describe("NFT Rewards System", function () {
 
         await expect(tx).to.emit(manager, "AchievementAwarded");
 
-        // Check badge was minted
         expect(await badges.hasAchievement(player1.address, 10)).to.be.true;
-
-        // Check goal completion tracked
         expect(await manager.hasCompletedGoal(player1.address, 1)).to.be.true;
         expect(await manager.getPlayerAchievementCount(player1.address)).to.equal(1);
-
-        // Check token reward was minted
         expect(await token.balanceOf(player1.address)).to.equal(ethers.parseEther("50"));
       });
 
@@ -496,13 +508,11 @@ describe("NFT Rewards System", function () {
       it("should skip already completed players in batch", async function () {
         await manager.connect(verifier).awardAchievement(player1.address, 1);
 
-        // Batch with player1 already completed - should not revert
         await manager.connect(verifier).batchAwardAchievement(
           [player1.address, player2.address],
           1
         );
 
-        // Only player2 should be newly awarded
         expect(await manager.totalAchievementsAwarded()).to.equal(2);
       });
     });
@@ -527,37 +537,41 @@ describe("NFT Rewards System", function () {
 
     describe("Full Integration Flow", function () {
       it("should handle complete goal -> badge -> item -> token flow", async function () {
-        // Create item type for reward
         await items.createItemType(100, 0, 0, 0, "ipfs://reward-skin.json");
 
-        // Create goal with all three reward types
         await manager.createGoal(
           "Ultimate Achievement",
           "The big one",
           6, // SPECIAL
           1,
           "",
-          99,  // achievement type
-          1,   // reward item type 1
+          99,
+          1,
           ethers.parseEther("1000")
         );
 
-        // Award achievement
         const tx = await manager.connect(verifier).awardAchievement(player1.address, 1);
 
-        // Verify badge minted
         expect(await badges.hasAchievement(player1.address, 99)).to.be.true;
-
-        // Verify tradeable item minted
         expect(await items.balanceOf(player1.address)).to.equal(1);
-
-        // Verify tokens minted
         expect(await token.balanceOf(player1.address)).to.equal(ethers.parseEther("1000"));
 
-        // Verify the tradeable item can be transferred (not soulbound)
         const itemTokenId = 1;
         await items.connect(player1).transferFrom(player1.address, player2.address, itemTokenId);
         expect(await items.ownerOf(itemTokenId)).to.equal(player2.address);
+      });
+    });
+
+    describe("Upgradeable", function () {
+      it("should not allow re-initialization", async function () {
+        await expect(
+          manager.initialize(
+            await badges.getAddress(),
+            await items.getAddress(),
+            await token.getAddress(),
+            "ipfs://hacked/"
+          )
+        ).to.be.reverted;
       });
     });
   });

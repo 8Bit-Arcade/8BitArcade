@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
  * @title AchievementManager
  * @notice Coordinates goal definitions, achievement verification, and NFT minting for 8-Bit Arcade
- * @dev Acts as the central hub between the game backend and the NFT contracts.
- *      The backend verifies goals off-chain (Firebase), then calls this contract to mint badges.
+ * @dev UUPS upgradeable. Acts as the central hub between the game backend and the NFT contracts.
  *
  * Goal System:
  *   - Goals are defined on-chain with unique IDs matching the backend goal system
@@ -22,7 +23,12 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  *   3. Backend calls awardAchievement() after verification
  *   4. AchievementManager mints soulbound badge + optional tradeable reward
  */
-contract AchievementManager is Ownable, ReentrancyGuard {
+contract AchievementManager is
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable
+{
 
     // ═══════════════════════════════════════════════════════════
     // TYPES
@@ -109,15 +115,24 @@ contract AchievementManager is Ownable, ReentrancyGuard {
     event VerifierUpdated(address indexed verifier, bool authorized);
 
     // ═══════════════════════════════════════════════════════════
-    // CONSTRUCTOR
+    // INITIALIZER (replaces constructor for proxy)
     // ═══════════════════════════════════════════════════════════
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _achievementBadges,
         address _tradeableItems,
         address _eightBitToken,
         string memory _badgeMetadataBaseURI
-    ) Ownable(msg.sender) {
+    ) public initializer {
+        __Ownable_init(msg.sender);
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         achievementBadges = _achievementBadges;
         tradeableItems = _tradeableItems;
         eightBitToken = _eightBitToken;
@@ -291,7 +306,6 @@ contract AchievementManager is Ownable, ReentrancyGuard {
                 )
             );
             // Token mint is best-effort; don't revert if it fails
-            // (could fail due to supply cap, authorization, etc.)
             success; // Suppress unused variable warning
         }
 
@@ -474,6 +488,12 @@ contract AchievementManager is Ownable, ReentrancyGuard {
     function setBadgeMetadataBaseURI(string calldata _uri) external onlyOwner {
         badgeMetadataBaseURI = _uri;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // UUPS UPGRADE AUTHORIZATION
+    // ═══════════════════════════════════════════════════════════
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ═══════════════════════════════════════════════════════════
     // HELPERS

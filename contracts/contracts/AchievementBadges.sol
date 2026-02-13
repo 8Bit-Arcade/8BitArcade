@@ -1,25 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
  * @title AchievementBadges
  * @notice Soulbound (non-transferable) ERC-721 NFTs for 8-Bit Arcade achievements
- * @dev Implements EIP-5192 "locked" pattern so wallets/marketplaces recognize these as non-transferable.
+ * @dev UUPS upgradeable. Implements EIP-5192 "locked" pattern.
  *      Badges are minted only when a player reaches an in-game goal, verified by the backend.
  *      They cannot be traded, sold, or transferred - they are pure bragging rights.
- *
- * Architecture:
- *   - Only authorized minters (AchievementManager or backend wallet) can mint
- *   - All tokens are permanently locked (soulbound) from the moment of minting
- *   - Supports on-chain metadata via ERC721URIStorage for achievement details
- *   - EIP-5192 Locked event emitted on mint so marketplaces know it's non-transferable
  */
-contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
-
+contract AchievementBadges is
+    Initializable,
+    ERC721Upgradeable,
+    ERC721URIStorageUpgradeable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     // ═══════════════════════════════════════════════════════════
     // STATE
     // ═══════════════════════════════════════════════════════════
@@ -34,7 +35,6 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
     mapping(uint256 => uint256) public tokenAchievementType;
 
     /// @notice Track which achievements a player has earned (player => achievementTypeId => tokenId)
-    /// @dev tokenId of 0 means not earned (since token IDs start at 1)
     mapping(address => mapping(uint256 => uint256)) public playerAchievements;
 
     /// @notice Total badges minted per achievement type
@@ -47,69 +47,53 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
     // EVENTS
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice EIP-5192: Emitted when a token is locked (soulbound)
     event Locked(uint256 tokenId);
-
-    /// @notice Emitted when a badge is minted to a player
-    event BadgeMinted(
-        address indexed player,
-        uint256 indexed tokenId,
-        uint256 indexed achievementTypeId
-    );
-
-    /// @notice Emitted when a minter is authorized or revoked
+    event BadgeMinted(address indexed player, uint256 indexed tokenId, uint256 indexed achievementTypeId);
     event MinterUpdated(address indexed minter, bool authorized);
 
     // ═══════════════════════════════════════════════════════════
-    // CONSTRUCTOR
+    // INITIALIZER (replaces constructor for proxy)
     // ═══════════════════════════════════════════════════════════
 
-    constructor(
-        string memory _baseTokenURI
-    ) ERC721("8-Bit Arcade Achievement Badges", "8BIT-BADGE") Ownable(msg.sender) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(string memory _baseTokenURI) public initializer {
+        __ERC721_init("8-Bit Arcade Achievement Badges", "8BIT-BADGE");
+        __ERC721URIStorage_init();
+        __Ownable_init(msg.sender);
+        __UUPSUpgradeable_init();
+
         baseTokenURI = _baseTokenURI;
-        nextTokenId = 1; // Start at 1 so 0 can mean "not earned"
+        nextTokenId = 1;
     }
 
     // ═══════════════════════════════════════════════════════════
     // SOULBOUND ENFORCEMENT
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * @notice Override transfer to prevent all transfers except minting
-     * @dev Reverts on any transfer where `from` is not address(0) (i.e., not a mint)
-     */
     function _update(
         address to,
         uint256 tokenId,
         address auth
     ) internal override returns (address) {
         address from = _ownerOf(tokenId);
-
-        // Allow minting (from == address(0)), block all transfers and burns
         if (from != address(0)) {
             revert("AchievementBadges: soulbound, cannot transfer");
         }
-
         return super._update(to, tokenId, auth);
     }
 
-    /**
-     * @notice EIP-5192: Check if a token is locked (always true for soulbound)
-     * @return True, all tokens are permanently locked
-     */
     function locked(uint256 tokenId) external view returns (bool) {
         _requireOwned(tokenId);
         return true;
     }
 
-    /**
-     * @notice EIP-165: Declare support for EIP-5192 interface
-     */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
-        // EIP-5192 interface ID: 0xb45a3c0e
+    ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (bool) {
         return interfaceId == 0xb45a3c0e || super.supportsInterface(interfaceId);
     }
 
@@ -117,13 +101,6 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
     // MINTING
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * @notice Mint an achievement badge to a player
-     * @dev Only callable by authorized minters. Each player can only earn each achievement once.
-     * @param to Player address to receive the badge
-     * @param achievementTypeId The type of achievement earned
-     * @param uri Token-specific metadata URI (IPFS hash or URL)
-     */
     function mintBadge(
         address to,
         uint256 achievementTypeId,
@@ -142,20 +119,12 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
         playerAchievements[to][achievementTypeId] = tokenId;
         achievementMintCount[achievementTypeId]++;
 
-        // EIP-5192: Emit Locked event so wallets/marketplaces know it's soulbound
         emit Locked(tokenId);
         emit BadgeMinted(to, tokenId, achievementTypeId);
 
         return tokenId;
     }
 
-    /**
-     * @notice Batch mint multiple achievement badges to a player
-     * @dev Useful for retroactive awards or multi-tier achievements
-     * @param to Player address
-     * @param achievementTypeIds Array of achievement type IDs
-     * @param uris Array of metadata URIs
-     */
     function batchMintBadges(
         address to,
         uint256[] calldata achievementTypeIds,
@@ -167,7 +136,7 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
 
         for (uint256 i = 0; i < achievementTypeIds.length; i++) {
             if (playerAchievements[to][achievementTypeIds[i]] != 0) {
-                continue; // Skip already earned achievements
+                continue;
             }
 
             uint256 tokenId = nextTokenId++;
@@ -188,41 +157,21 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
     // VIEWS
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * @notice Check if a player has earned a specific achievement
-     * @param player Player address
-     * @param achievementTypeId Achievement type to check
-     * @return True if the player has this badge
-     */
     function hasAchievement(address player, uint256 achievementTypeId) external view returns (bool) {
         return playerAchievements[player][achievementTypeId] != 0;
     }
 
-    /**
-     * @notice Get the token ID for a player's specific achievement
-     * @param player Player address
-     * @param achievementTypeId Achievement type
-     * @return Token ID (0 if not earned)
-     */
     function getAchievementToken(address player, uint256 achievementTypeId) external view returns (uint256) {
         return playerAchievements[player][achievementTypeId];
     }
 
-    /**
-     * @notice Get how many times an achievement has been earned across all players
-     * @param achievementTypeId Achievement type
-     * @return Number of times this achievement has been minted
-     */
     function getAchievementCount(uint256 achievementTypeId) external view returns (uint256) {
         return achievementMintCount[achievementTypeId];
     }
 
-    /**
-     * @notice Return the token URI
-     */
     function tokenURI(
         uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
@@ -230,21 +179,12 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
     // ADMIN
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * @notice Authorize or revoke a minter
-     * @param minter Address to authorize/revoke
-     * @param authorized True to authorize, false to revoke
-     */
     function setAuthorizedMinter(address minter, bool authorized) external onlyOwner {
         require(minter != address(0), "Invalid minter address");
         authorizedMinters[minter] = authorized;
         emit MinterUpdated(minter, authorized);
     }
 
-    /**
-     * @notice Update the base URI for token metadata
-     * @param _baseTokenURI New base URI
-     */
     function setBaseTokenURI(string calldata _baseTokenURI) external onlyOwner {
         baseTokenURI = _baseTokenURI;
     }
@@ -252,4 +192,10 @@ contract AchievementBadges is ERC721, ERC721URIStorage, Ownable {
     function _baseURI() internal view override returns (string memory) {
         return baseTokenURI;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // UUPS UPGRADE AUTHORIZATION
+    // ═══════════════════════════════════════════════════════════
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

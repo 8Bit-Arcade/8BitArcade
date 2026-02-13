@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
  * @title TradeableItems
  * @notice Standard ERC-721 NFTs for tradeable 8-Bit Arcade collectibles
- * @dev These are fully transferable NFTs that can be listed on OpenSea, Blur, etc.
- *      They represent skins, characters, special items, and collectibles.
+ * @dev UUPS upgradeable. Fully transferable NFTs for OpenSea, Blur, etc.
  *
  * Minting Modes:
  *   1. Achievement-gated: Only players with specific achievement badges can mint certain items
@@ -27,8 +28,18 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  *   - 8BIT ERC-20 token payments (drives demand for 8BIT token)
  *   - OpenSea/marketplace compatible metadata
  *   - Future-proof: owner can add new item types at any time
+ *   - UUPS upgradeable for future enhancements
  */
-contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Royalty, Ownable, ReentrancyGuard {
+contract TradeableItems is
+    Initializable,
+    ERC721Upgradeable,
+    ERC721URIStorageUpgradeable,
+    ERC721EnumerableUpgradeable,
+    ERC721RoyaltyUpgradeable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable
+{
 
     // ═══════════════════════════════════════════════════════════
     // TYPES
@@ -102,15 +113,28 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
     event PaymentTokenUpdated(address indexed oldToken, address indexed newToken);
 
     // ═══════════════════════════════════════════════════════════
-    // CONSTRUCTOR
+    // INITIALIZER (replaces constructor for proxy)
     // ═══════════════════════════════════════════════════════════
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _achievementBadges,
         address _paymentToken,
         address _treasury,
         string memory _contractURI
-    ) ERC721("8-Bit Arcade Items", "8BIT-ITEM") Ownable(msg.sender) {
+    ) public initializer {
+        __ERC721_init("8-Bit Arcade Items", "8BIT-ITEM");
+        __ERC721URIStorage_init();
+        __ERC721Enumerable_init();
+        __ERC721Royalty_init();
+        __Ownable_init(msg.sender);
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
         achievementBadges = _achievementBadges;
         paymentToken = IERC20(_paymentToken);
         treasury = _treasury;
@@ -188,7 +212,6 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
     /**
      * @notice Public mint - pays with 8BIT tokens
      * @dev Player must approve this contract to spend their 8BIT tokens first.
-     *      Checks achievement requirement and token balance.
      * @param itemTypeId The type of item to mint
      */
     function mint(uint256 itemTypeId) external nonReentrant returns (uint256) {
@@ -224,7 +247,6 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
 
     /**
      * @notice Authorized minter can mint items to any address (reward drops)
-     * @dev Used by AchievementManager or backend for reward distribution
      * @param to Recipient address
      * @param itemTypeId Item type to mint
      */
@@ -240,8 +262,6 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
 
     /**
      * @notice Batch mint reward items to multiple recipients
-     * @param recipients Array of recipient addresses
-     * @param itemTypeId Item type to mint to all
      */
     function batchMintReward(address[] calldata recipients, uint256 itemTypeId) external {
         require(authorizedMinters[msg.sender], "Not authorized to mint");
@@ -390,26 +410,32 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
         address to,
         uint256 tokenId,
         address auth
-    ) internal override(ERC721, ERC721Enumerable) returns (address) {
+    ) internal override(ERC721Upgradeable, ERC721EnumerableUpgradeable) returns (address) {
         return super._update(to, tokenId, auth);
     }
 
     function _increaseBalance(
         address account,
         uint128 value
-    ) internal override(ERC721, ERC721Enumerable) {
+    ) internal override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         super._increaseBalance(account, value);
     }
 
     function tokenURI(
         uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Royalty) returns (bool) {
+    ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721EnumerableUpgradeable, ERC721RoyaltyUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // UUPS UPGRADE AUTHORIZATION
+    // ═══════════════════════════════════════════════════════════
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

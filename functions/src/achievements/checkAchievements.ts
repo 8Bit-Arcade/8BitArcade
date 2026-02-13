@@ -50,9 +50,10 @@ interface GoalDefinition {
   achievementTypeId: number;
   rewardItemTypeId: number;
   rewardTokenAmount: string; // in wei
+  isHidden?: boolean; // hidden achievements show as "???" until earned
 }
 
-// Goal definitions matching deploy-nft-rewards.ts seed data (38 goals)
+// Goal definitions matching deploy-nft-rewards.ts seed data (43 goals: 38 standard + 5 hidden)
 const GOALS: GoalDefinition[] = [
   // ── SCORE: Game-specific high scores ──
   { id: 1, name: "Space Rocks Rookie", description: "Score 5,000 in Space Rocks", category: "SCORE", threshold: 5000, gameId: "space-rocks", achievementTypeId: 1, rewardItemTypeId: 0, rewardTokenAmount: "100000000000000000000" },
@@ -105,7 +106,25 @@ const GOALS: GoalDefinition[] = [
 
   // ── RESERVED: Community-designed NFT (hardest achievement) ──
   { id: 38, name: "Arcade Immortal", description: "Hold #1 on any all-time leaderboard for 7 consecutive days", category: "SPECIAL", threshold: 7, gameId: "", achievementTypeId: 99, rewardItemTypeId: 0, rewardTokenAmount: "50000000000000000000000" },
+
+  // ── HIDDEN: Secret achievements ──
+  { id: 39, name: "Lucky 777", description: "Score exactly 777 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 70, rewardItemTypeId: 0, rewardTokenAmount: "777000000000000000000", isHidden: true },
+  { id: 40, name: "Night Owl", description: "Play a game between 3:00-3:05 AM UTC", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 71, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000", isHidden: true },
+  { id: 41, name: "Palindrome Master", description: "Score a palindrome number over 1000 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 72, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000", isHidden: true },
+  { id: 42, name: "Double Trouble", description: "Get the exact same score in two different games", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 73, rewardItemTypeId: 0, rewardTokenAmount: "750000000000000000000", isHidden: true },
+  { id: 43, name: "The Answer", description: "Score exactly 42 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 74, rewardItemTypeId: 0, rewardTokenAmount: "420000000000000000000", isHidden: true },
 ];
+
+// Achievement type IDs that are hidden
+const HIDDEN_ACHIEVEMENT_IDS = new Set([70, 71, 72, 73, 74]);
+
+/**
+ * Check if a number is a palindrome
+ */
+function isPalindrome(n: number): boolean {
+  const s = n.toString();
+  return s === s.split('').reverse().join('');
+}
 
 /**
  * Get player's progress for a specific goal from Firestore
@@ -241,6 +260,93 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
         return statsDoc.data()?.consecutiveDaysAtNumber1 || 0;
       }
 
+      // ── HIDDEN ACHIEVEMENTS ──
+
+      if (goal.achievementTypeId === 70) {
+        // Lucky 777: check if any score is exactly 777
+        const snap = await db.collection('scores')
+          .where('address', '==', addr)
+          .where('score', '==', 777)
+          .limit(1)
+          .get();
+        return snap.empty ? 0 : 1;
+      }
+
+      if (goal.achievementTypeId === 71) {
+        // Night Owl: check if any game was played between 3:00-3:05 AM UTC
+        // We check scores collection for playedAt timestamps where hour=3, minute<5
+        const scoresSnap = await db.collection('scores')
+          .where('address', '==', addr)
+          .orderBy('playedAt', 'desc')
+          .limit(200)
+          .get();
+
+        for (const doc of scoresSnap.docs) {
+          const playedAt = doc.data().playedAt;
+          if (playedAt && playedAt.toDate) {
+            const date = playedAt.toDate() as Date;
+            const hour = date.getUTCHours();
+            const minute = date.getUTCMinutes();
+            if (hour === 3 && minute < 5) {
+              return 1;
+            }
+          }
+        }
+        return 0;
+      }
+
+      if (goal.achievementTypeId === 72) {
+        // Palindrome Master: check if any score is a palindrome > 1000
+        const scoresSnap = await db.collection('scores')
+          .where('address', '==', addr)
+          .where('score', '>', 1000)
+          .orderBy('score', 'desc')
+          .limit(500)
+          .get();
+
+        for (const doc of scoresSnap.docs) {
+          const score = doc.data().score;
+          if (score > 1000 && isPalindrome(score)) {
+            return 1;
+          }
+        }
+        return 0;
+      }
+
+      if (goal.achievementTypeId === 73) {
+        // Double Trouble: same exact score in 2 different games
+        const scoresSnap = await db.collection('scores')
+          .where('address', '==', addr)
+          .orderBy('score', 'desc')
+          .limit(500)
+          .get();
+
+        // Group scores by value, track which games produced each score
+        const scoreToGames = new Map<number, Set<string>>();
+        for (const doc of scoresSnap.docs) {
+          const { score, gameId } = doc.data();
+          if (!scoreToGames.has(score)) {
+            scoreToGames.set(score, new Set());
+          }
+          scoreToGames.get(score)!.add(gameId);
+        }
+        // Check if any score appeared in 2+ different games
+        for (const games of scoreToGames.values()) {
+          if (games.size >= 2) return 1;
+        }
+        return 0;
+      }
+
+      if (goal.achievementTypeId === 74) {
+        // The Answer: check if any score is exactly 42
+        const snap = await db.collection('scores')
+          .where('address', '==', addr)
+          .where('score', '==', 42)
+          .limit(1)
+          .get();
+        return snap.empty ? 0 : 1;
+      }
+
       return 0;
     }
 
@@ -292,10 +398,20 @@ export const getAchievements = onCall(async (request) => {
   );
 
   // Build goals list with completion status
-  const goals = GOALS.map(goal => ({
-    ...goal,
-    completed: completedGoalIds.has(goal.id),
-  }));
+  // Hidden achievements show "???" unless the player has already earned them
+  const goals = GOALS.map(goal => {
+    const completed = completedGoalIds.has(goal.id);
+    const isHidden = goal.isHidden && !completed;
+
+    return {
+      ...goal,
+      completed,
+      // Mask hidden achievements that haven't been earned yet
+      name: isHidden ? '???' : goal.name,
+      description: isHidden ? 'This is a secret achievement. Keep playing to discover it!' : goal.description,
+      isHidden: goal.isHidden || false,
+    };
+  });
 
   return { goals };
 });
@@ -405,7 +521,8 @@ export const checkAndAwardAchievements = onSchedule(
 
         // Award the achievement on-chain
         try {
-          console.log(`Awarding goal ${goal.id} (${goal.name}) to ${walletAddress}`);
+          const label = goal.isHidden ? `[HIDDEN] ${goal.name}` : goal.name;
+          console.log(`Awarding goal ${goal.id} (${label}) to ${walletAddress}`);
           const tx = await contract.awardAchievement(walletAddress, goal.id);
           const receipt = await tx.wait();
 
@@ -417,10 +534,11 @@ export const checkAndAwardAchievements = onSchedule(
             awardedAt: admin.firestore.FieldValue.serverTimestamp(),
             txHash: receipt.hash,
             source: 'auto',
+            isHidden: goal.isHidden || false,
           });
 
           totalAwarded++;
-          console.log(`Awarded: ${goal.name} to ${walletAddress} (tx: ${receipt.hash})`);
+          console.log(`Awarded: ${label} to ${walletAddress} (tx: ${receipt.hash})`);
         } catch (err) {
           console.error(`Failed to award goal ${goal.id} to ${walletAddress}:`, err);
         }
@@ -488,6 +606,7 @@ export const manualCheckAchievements = onCall(
           awardedAt: admin.firestore.FieldValue.serverTimestamp(),
           txHash: receipt.hash,
           source: 'manual',
+          isHidden: goal.isHidden || false,
         });
 
         results.push({ goalId: goal.id, name: goal.name, awarded: true });
