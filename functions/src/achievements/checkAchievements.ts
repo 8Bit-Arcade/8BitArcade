@@ -6,7 +6,7 @@
  * 2. Award achievements by calling the AchievementManager contract
  * 3. Serve achievement/goal data to the frontend
  *
- * ⚠️ SETUP:
+ * SETUP:
  * 1. Deploy NFT contracts (AchievementBadges, TradeableItems, AchievementManager)
  * 2. Update ACHIEVEMENT_MANAGER_ADDRESS in config.ts
  * 3. Set the backend wallet as an authorized verifier on AchievementManager
@@ -52,34 +52,59 @@ interface GoalDefinition {
   rewardTokenAmount: string; // in wei
 }
 
-// Goal definitions matching deploy-nft-rewards.ts seed data
+// Goal definitions matching deploy-nft-rewards.ts seed data (38 goals)
 const GOALS: GoalDefinition[] = [
+  // ── SCORE: Game-specific high scores ──
   { id: 1, name: "Space Rocks Rookie", description: "Score 5,000 in Space Rocks", category: "SCORE", threshold: 5000, gameId: "space-rocks", achievementTypeId: 1, rewardItemTypeId: 0, rewardTokenAmount: "100000000000000000000" },
   { id: 2, name: "Space Rocks Master", description: "Score 25,000 in Space Rocks", category: "SCORE", threshold: 25000, gameId: "space-rocks", achievementTypeId: 2, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
   { id: 3, name: "Alien Slayer", description: "Score 10,000 in Alien Assault", category: "SCORE", threshold: 10000, gameId: "alien-assault", achievementTypeId: 3, rewardItemTypeId: 0, rewardTokenAmount: "100000000000000000000" },
   { id: 4, name: "Brick Breaker Pro", description: "Score 15,000 in Brick Breaker", category: "SCORE", threshold: 15000, gameId: "brick-breaker", achievementTypeId: 4, rewardItemTypeId: 0, rewardTokenAmount: "100000000000000000000" },
   { id: 5, name: "Snake Charmer", description: "Score 50 in Pixel Snake", category: "SCORE", threshold: 50, gameId: "pixel-snake", achievementTypeId: 5, rewardItemTypeId: 0, rewardTokenAmount: "100000000000000000000" },
-  { id: 6, name: "First Steps", description: "Play 10 games", category: "GAMES_PLAYED", threshold: 10, gameId: "", achievementTypeId: 10, rewardItemTypeId: 0, rewardTokenAmount: "50000000000000000000" },
-  { id: 7, name: "Regular Player", description: "Play 100 games", category: "GAMES_PLAYED", threshold: 100, gameId: "", achievementTypeId: 11, rewardItemTypeId: 0, rewardTokenAmount: "250000000000000000000" },
-  { id: 8, name: "Arcade Veteran", description: "Play 500 games", category: "GAMES_PLAYED", threshold: 500, gameId: "", achievementTypeId: 12, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
-  { id: 9, name: "8-Bit Legend", description: "Play 1,000 games", category: "GAMES_PLAYED", threshold: 1000, gameId: "", achievementTypeId: 13, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
-  { id: 10, name: "First Victory", description: "Win your first tournament", category: "WINS", threshold: 1, gameId: "", achievementTypeId: 20, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
-  { id: 11, name: "Tournament Champion", description: "Win 10 tournaments", category: "WINS", threshold: 10, gameId: "", achievementTypeId: 21, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
-  { id: 12, name: "Week Warrior", description: "Play 7 days in a row", category: "STREAK", threshold: 7, gameId: "", achievementTypeId: 30, rewardItemTypeId: 0, rewardTokenAmount: "150000000000000000000" },
-  { id: 13, name: "Monthly Grinder", description: "Play 30 days in a row", category: "STREAK", threshold: 30, gameId: "", achievementTypeId: 31, rewardItemTypeId: 0, rewardTokenAmount: "750000000000000000000" },
-  { id: 14, name: "Badge Collector", description: "Earn 5 achievement badges", category: "COLLECTION", threshold: 5, gameId: "", achievementTypeId: 40, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
-  { id: 15, name: "Badge Master", description: "Earn 15 achievement badges", category: "COLLECTION", threshold: 15, gameId: "", achievementTypeId: 41, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
-  { id: 16, name: "Early Adopter", description: "Be among the first 100 players", category: "SPECIAL", threshold: 100, gameId: "", achievementTypeId: 50, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
-  { id: 17, name: "Game Explorer", description: "Play all 12 games at least once", category: "SPECIAL", threshold: 12, gameId: "", achievementTypeId: 51, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+  { id: 6, name: "Flappy Legend", description: "Score 100 in Flappy Bird", category: "SCORE", threshold: 100, gameId: "flappy-bird", achievementTypeId: 6, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
+  { id: 7, name: "Wave Rider", description: "Score 15,000 in Galaxy Fighter", category: "SCORE", threshold: 15000, gameId: "galaxy-fighter", achievementTypeId: 7, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+  { id: 8, name: "Tetris God", description: "Score 15,000 in Block Drop", category: "SCORE", threshold: 15000, gameId: "block-drop", achievementTypeId: 8, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+  { id: 9, name: "Maze Master", description: "Score 10,000 in Chomper", category: "SCORE", threshold: 10000, gameId: "chomper", achievementTypeId: 9, rewardItemTypeId: 0, rewardTokenAmount: "250000000000000000000" },
+  { id: 10, name: "City Defender", description: "Score 10,000 in Missile Command", category: "SCORE", threshold: 10000, gameId: "missile-command", achievementTypeId: 14, rewardItemTypeId: 0, rewardTokenAmount: "250000000000000000000" },
+  { id: 11, name: "Bug Slayer", description: "Score 10,000 in Bug Blaster", category: "SCORE", threshold: 10000, gameId: "bug-blaster", achievementTypeId: 15, rewardItemTypeId: 0, rewardTokenAmount: "250000000000000000000" },
+  { id: 12, name: "Shutout King", description: "Win 11-0 three times in Paddle Battle", category: "SCORE", threshold: 3, gameId: "paddle-battle", achievementTypeId: 16, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
 
-  // ─── Advanced Goals ───
-  { id: 18, name: "Iron Will", description: "Play 60 days in a row", category: "STREAK", threshold: 60, gameId: "", achievementTypeId: 32, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
-  { id: 19, name: "Century Club", description: "Play 100 days in a row", category: "STREAK", threshold: 100, gameId: "", achievementTypeId: 33, rewardItemTypeId: 0, rewardTokenAmount: "5000000000000000000000" },
-  { id: 20, name: "Prize Hoarder", description: "Earn 100,000 8BIT from tournament winnings", category: "WINS", threshold: 100000, gameId: "", achievementTypeId: 22, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
-  { id: 21, name: "Burn Baby Burn", description: "Burn 100,000 8BIT through tournament entry fees", category: "SPECIAL", threshold: 100000, gameId: "", achievementTypeId: 52, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
-  { id: 22, name: "Perfectionist", description: "Set new personal bests in 5 games in a single day", category: "SPECIAL", threshold: 5, gameId: "", achievementTypeId: 53, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
-  { id: 23, name: "OG Member", description: "Verified OG community member", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 54, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
-  { id: 24, name: "The Completionist", description: "Earn every other achievement badge", category: "COLLECTION", threshold: 23, gameId: "", achievementTypeId: 42, rewardItemTypeId: 0, rewardTokenAmount: "10000000000000000000000" },
+  // ── GAMES_PLAYED: Play count milestones ──
+  { id: 13, name: "First Steps", description: "Play 10 games", category: "GAMES_PLAYED", threshold: 10, gameId: "", achievementTypeId: 10, rewardItemTypeId: 0, rewardTokenAmount: "50000000000000000000" },
+  { id: 14, name: "Regular Player", description: "Play 100 games", category: "GAMES_PLAYED", threshold: 100, gameId: "", achievementTypeId: 11, rewardItemTypeId: 0, rewardTokenAmount: "250000000000000000000" },
+  { id: 15, name: "Arcade Veteran", description: "Play 500 games", category: "GAMES_PLAYED", threshold: 500, gameId: "", achievementTypeId: 12, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: 16, name: "8-Bit Legend", description: "Play 1,000 games", category: "GAMES_PLAYED", threshold: 1000, gameId: "", achievementTypeId: 13, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
+
+  // ── WINS: Tournament milestones ──
+  { id: 17, name: "First Victory", description: "Win your first tournament", category: "WINS", threshold: 1, gameId: "", achievementTypeId: 20, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
+  { id: 18, name: "Tournament Champion", description: "Win 10 tournaments", category: "WINS", threshold: 10, gameId: "", achievementTypeId: 21, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: 19, name: "Prize Hoarder", description: "Earn 100,000 8BIT from tournament winnings", category: "WINS", threshold: 100000, gameId: "", achievementTypeId: 22, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
+
+  // ── STREAK: Daily play streaks ──
+  { id: 20, name: "Week Warrior", description: "Play 7 days in a row", category: "STREAK", threshold: 7, gameId: "", achievementTypeId: 30, rewardItemTypeId: 0, rewardTokenAmount: "150000000000000000000" },
+  { id: 21, name: "Monthly Grinder", description: "Play 30 days in a row", category: "STREAK", threshold: 30, gameId: "", achievementTypeId: 31, rewardItemTypeId: 0, rewardTokenAmount: "750000000000000000000" },
+  { id: 22, name: "Iron Will", description: "Play 60 days in a row", category: "STREAK", threshold: 60, gameId: "", achievementTypeId: 32, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
+  { id: 23, name: "Century Club", description: "Play 100 days in a row", category: "STREAK", threshold: 100, gameId: "", achievementTypeId: 33, rewardItemTypeId: 0, rewardTokenAmount: "5000000000000000000000" },
+
+  // ── COLLECTION: Badge milestones + soulbound tier badges ──
+  { id: 24, name: "Badge Collector", description: "Earn 5 achievement badges", category: "COLLECTION", threshold: 5, gameId: "", achievementTypeId: 40, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
+  { id: 25, name: "8Bit Gamer", description: "Earn 10 achievement badges - Gamer tier unlocked", category: "COLLECTION", threshold: 10, gameId: "", achievementTypeId: 60, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
+  { id: 26, name: "Badge Master", description: "Earn 15 achievement badges", category: "COLLECTION", threshold: 15, gameId: "", achievementTypeId: 41, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: 27, name: "8Bit Prodigy", description: "Earn 20 achievement badges - Prodigy tier unlocked", category: "COLLECTION", threshold: 20, gameId: "", achievementTypeId: 61, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
+  { id: 28, name: "The Completionist", description: "Earn 30 achievement badges", category: "COLLECTION", threshold: 30, gameId: "", achievementTypeId: 42, rewardItemTypeId: 0, rewardTokenAmount: "10000000000000000000000" },
+  { id: 29, name: "8Bit God", description: "Earn 33 achievement badges - the ultimate tier", category: "COLLECTION", threshold: 33, gameId: "", achievementTypeId: 62, rewardItemTypeId: 0, rewardTokenAmount: "25000000000000000000000" },
+
+  // ── SPECIAL: Unique challenges ──
+  { id: 30, name: "Early Adopter", description: "Be among the first 100 players", category: "SPECIAL", threshold: 100, gameId: "", achievementTypeId: 50, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
+  { id: 31, name: "Game Explorer", description: "Play all 12 games at least once", category: "SPECIAL", threshold: 12, gameId: "", achievementTypeId: 51, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+  { id: 32, name: "Burn Baby Burn", description: "Burn 100,000 8BIT through tournament entry fees", category: "SPECIAL", threshold: 100000, gameId: "", achievementTypeId: 52, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
+  { id: 33, name: "Perfectionist", description: "Set new personal bests in 5 games in a single day", category: "SPECIAL", threshold: 5, gameId: "", achievementTypeId: 53, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
+  { id: 34, name: "OG Member", description: "Verified OG community member", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 54, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: 35, name: "Marathon Runner", description: "Play 50 games in a single day", category: "SPECIAL", threshold: 50, gameId: "", achievementTypeId: 55, rewardItemTypeId: 0, rewardTokenAmount: "750000000000000000000" },
+  { id: 36, name: "Top 10 Club", description: "Reach top 10 on any all-time leaderboard", category: "SPECIAL", threshold: 10, gameId: "", achievementTypeId: 56, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
+  { id: 37, name: "Untouchable", description: "Score 10,000 in Space Rocks without losing a life", category: "SPECIAL", threshold: 10000, gameId: "space-rocks", achievementTypeId: 57, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+
+  // ── RESERVED: Community-designed NFT (hardest achievement) ──
+  { id: 38, name: "Arcade Immortal", description: "Hold #1 on any all-time leaderboard for 7 consecutive days", category: "SPECIAL", threshold: 7, gameId: "", achievementTypeId: 99, rewardItemTypeId: 0, rewardTokenAmount: "50000000000000000000000" },
 ];
 
 /**
@@ -91,7 +116,14 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
 
   switch (goal.category) {
     case 'SCORE': {
-      // Get best score for the specific game
+      // Shutout King: count perfect wins (11-0) in Paddle Battle
+      if (goal.achievementTypeId === 16) {
+        const statsDoc = await db.collection('playerStats').doc(addr).get();
+        if (!statsDoc.exists) return 0;
+        return statsDoc.data()?.paddleBattleShutouts || 0;
+      }
+
+      // Default: get best score for the specific game
       const scoresSnap = await db.collection('scores')
         .where('address', '==', addr)
         .where('gameId', '==', goal.gameId)
@@ -104,7 +136,6 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
     }
 
     case 'GAMES_PLAYED': {
-      // Count total games played
       const statsDoc = await db.collection('playerStats').doc(addr).get();
       if (!statsDoc.exists) return 0;
       return statsDoc.data()?.totalGamesPlayed || 0;
@@ -125,33 +156,23 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
     }
 
     case 'STREAK': {
-      // Get current daily play streak
       const statsDoc = await db.collection('playerStats').doc(addr).get();
       if (!statsDoc.exists) return 0;
       return statsDoc.data()?.currentStreak || 0;
     }
 
     case 'COLLECTION': {
-      // Count achievement badges earned (from Firestore achievements collection)
       const achievementsSnap = await db.collection('achievements')
         .where('walletAddress', '==', addr)
         .get();
-      const badgeCount = achievementsSnap.size;
-
-      if (goal.achievementTypeId === 42) {
-        // The Completionist: must have ALL other badges (exclude self to avoid circular dep)
-        // Total goals minus The Completionist itself = 23
-        return badgeCount;
-      }
-
-      return badgeCount;
+      return achievementsSnap.size;
     }
 
     case 'SPECIAL': {
       if (goal.achievementTypeId === 50) {
         // Early Adopter: check player registration order
         const statsDoc = await db.collection('playerStats').doc(addr).get();
-        if (!statsDoc.exists) return 999; // Not eligible
+        if (!statsDoc.exists) return 999;
         return statsDoc.data()?.registrationOrder || 999;
       }
 
@@ -171,22 +192,53 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
       }
 
       if (goal.achievementTypeId === 53) {
-        // Perfectionist: check if player set 5+ personal bests today
+        // Perfectionist: 5+ personal bests in different games today
         const now = new Date();
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const pbSnap = await db.collection('personalBests')
           .where('walletAddress', '==', addr)
           .where('setAt', '>=', startOfDay)
           .get();
-        // Count unique game IDs with PBs today
         const uniqueGamesWithPB = new Set(pbSnap.docs.map(d => d.data().gameId));
         return uniqueGamesWithPB.size;
       }
 
       if (goal.achievementTypeId === 54) {
-        // OG Member: check if wallet is flagged as OG in Firestore
+        // OG Member: check ogMembers Firestore collection
         const ogDoc = await db.collection('ogMembers').doc(addr).get();
         return ogDoc.exists ? 1 : 0;
+      }
+
+      if (goal.achievementTypeId === 55) {
+        // Marathon Runner: games played today
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todaySnap = await db.collection('scores')
+          .where('address', '==', addr)
+          .where('playedAt', '>=', startOfDay)
+          .get();
+        return todaySnap.size;
+      }
+
+      if (goal.achievementTypeId === 56) {
+        // Top 10 Club: check if player is in top 10 on any all-time leaderboard
+        const statsDoc = await db.collection('playerStats').doc(addr).get();
+        if (!statsDoc.exists) return 0;
+        return statsDoc.data()?.bestLeaderboardRank || 999;
+      }
+
+      if (goal.achievementTypeId === 57) {
+        // Untouchable: highest score achieved in Space Rocks with 0 deaths
+        const statsDoc = await db.collection('playerStats').doc(addr).get();
+        if (!statsDoc.exists) return 0;
+        return statsDoc.data()?.spaceRocksNoDeath || 0;
+      }
+
+      if (goal.achievementTypeId === 99) {
+        // Arcade Immortal: consecutive days at #1 on any all-time leaderboard
+        const statsDoc = await db.collection('playerStats').doc(addr).get();
+        if (!statsDoc.exists) return 0;
+        return statsDoc.data()?.consecutiveDaysAtNumber1 || 0;
       }
 
       return 0;
@@ -203,6 +255,10 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
 function meetsThreshold(progress: number, goal: GoalDefinition): boolean {
   if (goal.category === 'SPECIAL' && goal.achievementTypeId === 50) {
     // Early Adopter: registration order must be <= threshold
+    return progress <= goal.threshold;
+  }
+  if (goal.category === 'SPECIAL' && goal.achievementTypeId === 56) {
+    // Top 10 Club: rank must be <= threshold (lower rank = better)
     return progress <= goal.threshold;
   }
   return progress >= goal.threshold;
@@ -333,7 +389,6 @@ export const checkAndAwardAchievements = onSchedule(
         try {
           const alreadyCompleted = await contract.hasCompletedGoal(walletAddress, goal.id);
           if (alreadyCompleted) {
-            // Update Firestore to match
             await db.collection('achievements').add({
               walletAddress,
               goalId: goal.id,
@@ -354,7 +409,6 @@ export const checkAndAwardAchievements = onSchedule(
           const tx = await contract.awardAchievement(walletAddress, goal.id);
           const receipt = await tx.wait();
 
-          // Record in Firestore
           await db.collection('achievements').add({
             walletAddress,
             goalId: goal.id,

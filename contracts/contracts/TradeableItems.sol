@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -16,14 +17,16 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  *
  * Minting Modes:
  *   1. Achievement-gated: Only players with specific achievement badges can mint certain items
- *   2. Direct sale: Owner/admin can mint items for marketplace listings
+ *   2. Token sale: Players pay with 8BIT tokens to mint items
  *   3. Reward drops: Backend mints to eligible players based on off-chain criteria
  *
  * Features:
  *   - ERC-2981 royalties (configurable, default 5%)
  *   - Per-item supply caps
  *   - Achievement-gated minting via AchievementBadges contract
+ *   - 8BIT ERC-20 token payments (drives demand for 8BIT token)
  *   - OpenSea/marketplace compatible metadata
+ *   - Future-proof: owner can add new item types at any time
  */
 contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Royalty, Ownable, ReentrancyGuard {
 
@@ -35,7 +38,7 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
         uint256 maxSupply;           // 0 = unlimited
         uint256 totalMinted;
         uint256 requiredAchievement; // Achievement badge type ID required (0 = no requirement)
-        uint256 priceInWei;          // Price in ETH (0 = free / reward only)
+        uint256 priceInTokens;       // Price in 8BIT tokens (0 = free / reward only)
         bool active;                 // Whether this item type is mintable
         string baseURI;              // Metadata URI for this item type
     }
@@ -68,7 +71,10 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
     /// @notice AchievementBadges contract for gating
     address public achievementBadges;
 
-    /// @notice Treasury address for ETH from sales
+    /// @notice 8BIT ERC-20 token used for payments
+    IERC20 public paymentToken;
+
+    /// @notice Treasury address for token payments from sales
     address public treasury;
 
     /// @notice Contract-level metadata URI (for OpenSea collection page)
@@ -78,11 +84,11 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
     // EVENTS
     // ═══════════════════════════════════════════════════════════
 
-    event ItemTypCreated(
+    event ItemTypeCreated(
         uint256 indexed itemTypeId,
         uint256 maxSupply,
         uint256 requiredAchievement,
-        uint256 priceInWei
+        uint256 priceInTokens
     );
 
     event ItemMinted(
@@ -93,6 +99,7 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
 
     event MinterUpdated(address indexed minter, bool authorized);
     event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+    event PaymentTokenUpdated(address indexed oldToken, address indexed newToken);
 
     // ═══════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -100,10 +107,12 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
 
     constructor(
         address _achievementBadges,
+        address _paymentToken,
         address _treasury,
         string memory _contractURI
     ) ERC721("8-Bit Arcade Items", "8BIT-ITEM") Ownable(msg.sender) {
         achievementBadges = _achievementBadges;
+        paymentToken = IERC20(_paymentToken);
         treasury = _treasury;
         contractURI = _contractURI;
         nextTokenId = 1;
@@ -118,17 +127,17 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
     // ═══════════════════════════════════════════════════════════
 
     /**
-     * @notice Create a new item type
+     * @notice Create a new item type (can be called anytime to add new NFTs)
      * @param maxSupply Maximum number that can be minted (0 = unlimited)
      * @param requiredAchievement Achievement badge type ID required to mint (0 = none)
-     * @param priceInWei ETH price per mint (0 = free/reward only)
+     * @param priceInTokens Price in 8BIT tokens (0 = free/reward only)
      * @param _perWalletCap Max per wallet (0 = unlimited)
      * @param uri Metadata URI for this item type
      */
     function createItemType(
         uint256 maxSupply,
         uint256 requiredAchievement,
-        uint256 priceInWei,
+        uint256 priceInTokens,
         uint256 _perWalletCap,
         string calldata uri
     ) external onlyOwner returns (uint256) {
@@ -138,26 +147,26 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
             maxSupply: maxSupply,
             totalMinted: 0,
             requiredAchievement: requiredAchievement,
-            priceInWei: priceInWei,
+            priceInTokens: priceInTokens,
             active: true,
             baseURI: uri
         });
 
         perWalletCap[itemTypeId] = _perWalletCap;
 
-        emit ItemTypCreated(itemTypeId, maxSupply, requiredAchievement, priceInWei);
+        emit ItemTypeCreated(itemTypeId, maxSupply, requiredAchievement, priceInTokens);
 
         return itemTypeId;
     }
 
     /**
-     * @notice Update an existing item type
+     * @notice Update an existing item type (change price, supply, requirements anytime)
      */
     function updateItemType(
         uint256 itemTypeId,
         uint256 maxSupply,
         uint256 requiredAchievement,
-        uint256 priceInWei,
+        uint256 priceInTokens,
         uint256 _perWalletCap,
         bool active,
         string calldata uri
@@ -166,7 +175,7 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
 
         itemTypes[itemTypeId].maxSupply = maxSupply;
         itemTypes[itemTypeId].requiredAchievement = requiredAchievement;
-        itemTypes[itemTypeId].priceInWei = priceInWei;
+        itemTypes[itemTypeId].priceInTokens = priceInTokens;
         itemTypes[itemTypeId].active = active;
         itemTypes[itemTypeId].baseURI = uri;
         perWalletCap[itemTypeId] = _perWalletCap;
@@ -177,15 +186,15 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
     // ═══════════════════════════════════════════════════════════
 
     /**
-     * @notice Public mint for achievement-gated items (player pays ETH)
-     * @dev Checks achievement requirement and payment amount
+     * @notice Public mint - pays with 8BIT tokens
+     * @dev Player must approve this contract to spend their 8BIT tokens first.
+     *      Checks achievement requirement and token balance.
      * @param itemTypeId The type of item to mint
      */
-    function mint(uint256 itemTypeId) external payable nonReentrant returns (uint256) {
+    function mint(uint256 itemTypeId) external nonReentrant returns (uint256) {
         ItemType storage item = itemTypes[itemTypeId];
         require(item.active, "Item type not active");
         require(item.maxSupply == 0 || item.totalMinted < item.maxSupply, "Max supply reached");
-        require(msg.value >= item.priceInWei, "Insufficient payment");
 
         // Check per-wallet cap
         if (perWalletCap[itemTypeId] > 0) {
@@ -195,22 +204,22 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
         // Check achievement requirement
         if (item.requiredAchievement > 0) {
             require(achievementBadges != address(0), "Achievement contract not set");
-            // Call hasAchievement on the AchievementBadges contract
             (bool success, bytes memory data) = achievementBadges.staticcall(
                 abi.encodeWithSignature("hasAchievement(address,uint256)", msg.sender, item.requiredAchievement)
             );
             require(success && abi.decode(data, (bool)), "Required achievement not earned");
         }
 
-        uint256 tokenId = _mintItem(msg.sender, itemTypeId);
-
-        // Send payment to treasury
-        if (msg.value > 0 && treasury != address(0)) {
-            (bool sent, ) = treasury.call{value: msg.value}("");
-            require(sent, "ETH transfer to treasury failed");
+        // Collect 8BIT token payment
+        if (item.priceInTokens > 0) {
+            require(address(paymentToken) != address(0), "Payment token not set");
+            require(
+                paymentToken.transferFrom(msg.sender, treasury, item.priceInTokens),
+                "Token payment failed"
+            );
         }
 
-        return tokenId;
+        return _mintItem(msg.sender, itemTypeId);
     }
 
     /**
@@ -280,7 +289,7 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
         uint256 maxSupply,
         uint256 totalMinted,
         uint256 requiredAchievement,
-        uint256 priceInWei,
+        uint256 priceInTokens,
         bool active,
         string memory uri
     ) {
@@ -289,7 +298,7 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
             item.maxSupply,
             item.totalMinted,
             item.requiredAchievement,
-            item.priceInWei,
+            item.priceInTokens,
             item.active,
             item.baseURI
         );
@@ -337,6 +346,12 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
         achievementBadges = _achievementBadges;
     }
 
+    function setPaymentToken(address _paymentToken) external onlyOwner {
+        address oldToken = address(paymentToken);
+        paymentToken = IERC20(_paymentToken);
+        emit PaymentTokenUpdated(oldToken, _paymentToken);
+    }
+
     function setContractURI(string calldata _contractURI) external onlyOwner {
         contractURI = _contractURI;
     }
@@ -346,6 +361,15 @@ contract TradeableItems is ERC721, ERC721URIStorage, ERC721Enumerable, ERC721Roy
      */
     function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external onlyOwner {
         _setTokenRoyalty(tokenId, receiver, feeNumerator);
+    }
+
+    /**
+     * @notice Withdraw any stuck tokens (emergency)
+     */
+    function withdrawTokens(address token) external onlyOwner {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance > 0, "No tokens to withdraw");
+        require(IERC20(token).transfer(treasury, balance), "Token transfer failed");
     }
 
     /**

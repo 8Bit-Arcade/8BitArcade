@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther } from 'viem';
 import {
   TRADEABLE_ITEMS_ADDRESS,
   TRADEABLE_ITEMS_ABI,
+  EIGHT_BIT_TOKEN_ADDRESS,
+  EIGHT_BIT_TOKEN_ABI,
 } from '@/config/contracts';
 
 export interface ItemType {
@@ -11,7 +12,7 @@ export interface ItemType {
   maxSupply: bigint;
   totalMinted: bigint;
   requiredAchievement: bigint;
-  priceInWei: bigint;
+  priceInTokens: bigint;
   active: boolean;
   uri: string;
 }
@@ -40,7 +41,9 @@ export function useTradeableNFTs() {
 
   const contractAddress = TRADEABLE_ITEMS_ADDRESS as `0x${string}`;
 
-  // Mint transaction state
+  // Approve + Mint transaction state
+  const { data: approveHash, writeContract: writeApprove, isPending: isApprovePending } = useWriteContract();
+  const { isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({ hash: approveHash });
   const { data: mintHash, writeContract: writeMint, isPending: isMintPending, error: mintError } = useWriteContract();
   const { isLoading: isMintConfirming, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintHash });
 
@@ -104,7 +107,7 @@ export function useTradeableNFTs() {
           maxSupply: BigInt(item.maxSupply),
           totalMinted: BigInt(item.totalMinted),
           requiredAchievement: BigInt(item.requiredAchievement || 0),
-          priceInWei: BigInt(item.priceInWei || 0),
+          priceInTokens: BigInt(item.priceInTokens || 0),
           active: item.active,
           uri: item.uri,
         }));
@@ -153,12 +156,33 @@ export function useTradeableNFTs() {
   }, [address, itemBalance, contractAddress]);
 
   /**
-   * Mint a tradeable item
+   * Approve 8BIT token spending for the TradeableItems contract
+   * @param amount Amount of 8BIT tokens to approve
+   */
+  const approveTokens = useCallback(
+    (amount: bigint) => {
+      const tokenAddress = EIGHT_BIT_TOKEN_ADDRESS as `0x${string}`;
+      if (tokenAddress === '0x0000000000000000000000000000000000000000') {
+        setError('Token contract not deployed');
+        return;
+      }
+
+      writeApprove({
+        address: tokenAddress,
+        abi: EIGHT_BIT_TOKEN_ABI,
+        functionName: 'approve',
+        args: [contractAddress, amount],
+      });
+    },
+    [contractAddress, writeApprove]
+  );
+
+  /**
+   * Mint a tradeable item (pays with 8BIT tokens)
    * @param itemTypeId The item type to mint
-   * @param priceInWei ETH price (pass BigInt(0) for free items)
    */
   const mintItem = useCallback(
-    (itemTypeId: number, priceInWei: bigint = BigInt(0)) => {
+    (itemTypeId: number) => {
       if (contractAddress === '0x0000000000000000000000000000000000000000') {
         setError('Contract not deployed');
         return;
@@ -169,7 +193,6 @@ export function useTradeableNFTs() {
         abi: TRADEABLE_ITEMS_ABI,
         functionName: 'mint',
         args: [BigInt(itemTypeId)],
-        value: priceInWei,
       });
     },
     [contractAddress, writeMint]
@@ -233,12 +256,15 @@ export function useTradeableNFTs() {
     totalSupply: totalSupply ? Number(totalSupply) : 0,
 
     // Actions
+    approveTokens,
     mintItem,
     checkCanMint,
     fetchAvailableItems,
     fetchOwnedItems,
 
     // Mint transaction state
+    isApprovePending,
+    isApproveConfirmed,
     isMintPending,
     isMintConfirming,
     isMintConfirmed,

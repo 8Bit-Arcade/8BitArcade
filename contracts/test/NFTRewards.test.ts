@@ -35,10 +35,11 @@ describe("NFT Rewards System", function () {
     badges = await AchievementBadges.deploy("ipfs://badges/");
     await badges.waitForDeployment();
 
-    // Deploy TradeableItems
+    // Deploy TradeableItems (with token payment support)
     const TradeableItems = await ethers.getContractFactory("TradeableItems");
     items = await TradeableItems.deploy(
       await badges.getAddress(),
+      await token.getAddress(),    // 8BIT token for payments
       treasury.address,
       "ipfs://collection.json"
     );
@@ -223,14 +224,14 @@ describe("NFT Rewards System", function () {
     describe("Item Type Management", function () {
       it("should allow owner to create item types", async function () {
         const tx = await items.createItemType(100, 0, 0, 1, "ipfs://item1.json");
-        await expect(tx).to.emit(items, "ItemTypCreated").withArgs(1, 100, 0, 0);
+        await expect(tx).to.emit(items, "ItemTypeCreated").withArgs(1, 100, 0, 0);
 
-        const [maxSupply, totalMinted, requiredAchievement, priceInWei, active, uri] =
+        const [maxSupply, totalMinted, requiredAchievement, priceInTokens, active, uri] =
           await items.getItemType(1);
         expect(maxSupply).to.equal(100);
         expect(totalMinted).to.equal(0);
         expect(requiredAchievement).to.equal(0);
-        expect(priceInWei).to.equal(0);
+        expect(priceInTokens).to.equal(0);
         expect(active).to.be.true;
         expect(uri).to.equal("ipfs://item1.json");
       });
@@ -246,10 +247,14 @@ describe("NFT Rewards System", function () {
       beforeEach(async function () {
         // Create a free item type with no achievement requirement
         await items.createItemType(100, 0, 0, 5, "ipfs://free-item.json");
-        // Create a paid item type
-        await items.createItemType(50, 0, ethers.parseEther("0.01"), 2, "ipfs://paid-item.json");
+        // Create a paid item type (costs 1000 8BIT tokens)
+        await items.createItemType(50, 0, ethers.parseEther("1000"), 2, "ipfs://paid-item.json");
         // Create an achievement-gated item type (requires achievement 1)
         await items.createItemType(25, 1, 0, 1, "ipfs://gated-item.json");
+
+        // Mint some tokens to player1 for paid item tests
+        await token.setAuthorizedMinter(owner.address, true);
+        await token.mintReward(player1.address, ethers.parseEther("5000"));
       });
 
       it("should allow public mint for free items", async function () {
@@ -259,16 +264,20 @@ describe("NFT Rewards System", function () {
         expect(await items.ownerOf(1)).to.equal(player1.address);
       });
 
-      it("should allow public mint for paid items with correct ETH", async function () {
-        const tx = await items.connect(player1).mint(2, { value: ethers.parseEther("0.01") });
+      it("should allow public mint for paid items with token approval", async function () {
+        // Approve tokens first
+        await token.connect(player1).approve(await items.getAddress(), ethers.parseEther("1000"));
+        const tx = await items.connect(player1).mint(2);
         await expect(tx).to.emit(items, "ItemMinted");
         expect(await items.ownerOf(1)).to.equal(player1.address);
+        // Treasury should receive the tokens
+        expect(await token.balanceOf(treasury.address)).to.equal(ethers.parseEther("1000"));
       });
 
-      it("should revert paid mint with insufficient ETH", async function () {
+      it("should revert paid mint without token approval", async function () {
         await expect(
-          items.connect(player1).mint(2, { value: ethers.parseEther("0.005") })
-        ).to.be.revertedWith("Insufficient payment");
+          items.connect(player1).mint(2)
+        ).to.be.reverted;
       });
 
       it("should enforce achievement requirement", async function () {
