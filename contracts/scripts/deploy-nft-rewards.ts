@@ -127,6 +127,23 @@ async function main() {
     // SPECIAL goals - One-time events
     { name: "Early Adopter", desc: "Be among the first 100 players", category: 6, threshold: 100, gameId: "", achievementType: 50, rewardItem: 0, rewardTokens: ethers.parseEther("500") },
     { name: "Game Explorer", desc: "Play all 12 games at least once", category: 6, threshold: 12, gameId: "", achievementType: 51, rewardItem: 0, rewardTokens: ethers.parseEther("300") },
+
+    // ─── NEW: Advanced Achievement Goals ───
+
+    // STREAK goals - Endurance
+    { name: "Iron Will", desc: "Play 60 days in a row", category: 3, threshold: 60, gameId: "", achievementType: 32, rewardItem: 0, rewardTokens: ethers.parseEther("2000") },
+    { name: "Century Club", desc: "Play 100 days in a row", category: 3, threshold: 100, gameId: "", achievementType: 33, rewardItem: 0, rewardTokens: ethers.parseEther("5000") },
+
+    // WINS goals - Tournament mastery
+    { name: "Prize Hoarder", desc: "Earn 100,000 8BIT from tournament winnings", category: 2, threshold: 100000, gameId: "", achievementType: 22, rewardItem: 0, rewardTokens: ethers.parseEther("2500") },
+
+    // SPECIAL goals - Unique challenges
+    { name: "Burn Baby Burn", desc: "Burn 100,000 8BIT through tournament entry fees", category: 6, threshold: 100000, gameId: "", achievementType: 52, rewardItem: 0, rewardTokens: ethers.parseEther("2000") },
+    { name: "Perfectionist", desc: "Set new personal bests in 5 games in a single day", category: 6, threshold: 5, gameId: "", achievementType: 53, rewardItem: 0, rewardTokens: ethers.parseEther("400") },
+    { name: "OG Member", desc: "Verified OG community member", category: 6, threshold: 1, gameId: "", achievementType: 54, rewardItem: 0, rewardTokens: ethers.parseEther("1000") },
+
+    // COLLECTION goal - The ultimate
+    { name: "The Completionist", desc: "Earn every other achievement badge", category: 4, threshold: 23, gameId: "", achievementType: 42, rewardItem: 0, rewardTokens: ethers.parseEther("10000") },
   ];
 
   for (const g of goalConfigs) {
@@ -143,6 +160,43 @@ async function main() {
     await tx.wait();
     console.log(`   ✅ Goal created: ${g.name}`);
   }
+  console.log();
+
+  // ─── 6. Create Tradeable Item Types (earned, not bought) ───
+  console.log("🏆 Creating tradeable item types...");
+
+  // 8Bit Gamer: Earn 5 badges, unlimited supply, free, 1 per wallet
+  tx = await items.createItemType(
+    0,                    // maxSupply (0 = unlimited)
+    40,                   // requiredAchievement = Badge Collector (achievementTypeId 40 = 5 badges)
+    0,                    // priceInWei = FREE
+    1,                    // perWalletCap = 1
+    "ipfs://YOUR_BADGE_METADATA_CID/8bit-gamer.json"
+  );
+  await tx.wait();
+  console.log("   ✅ Item Type 1: 8Bit Gamer (5 badges required, free mint)");
+
+  // 8Bit Prodigy: Earn 15 badges, max 1000, free, 1 per wallet
+  tx = await items.createItemType(
+    1000,                 // maxSupply
+    41,                   // requiredAchievement = Badge Master (achievementTypeId 41 = 15 badges)
+    0,                    // priceInWei = FREE
+    1,                    // perWalletCap = 1
+    "ipfs://YOUR_BADGE_METADATA_CID/8bit-prodigy.json"
+  );
+  await tx.wait();
+  console.log("   ✅ Item Type 2: 8Bit Prodigy (15 badges required, max 1000)");
+
+  // 8Bit God: Earn ALL badges (The Completionist), max 100, free, 1 per wallet
+  tx = await items.createItemType(
+    100,                  // maxSupply
+    42,                   // requiredAchievement = The Completionist (achievementTypeId 42)
+    0,                    // priceInWei = FREE
+    1,                    // perWalletCap = 1
+    "ipfs://YOUR_BADGE_METADATA_CID/8bit-god.json"
+  );
+  await tx.wait();
+  console.log("   ✅ Item Type 3: 8Bit God (ALL badges required, max 100)");
   console.log();
 
   // ─── Summary ───

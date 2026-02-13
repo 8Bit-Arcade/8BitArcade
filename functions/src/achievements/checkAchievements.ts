@@ -71,6 +71,15 @@ const GOALS: GoalDefinition[] = [
   { id: 15, name: "Badge Master", description: "Earn 15 achievement badges", category: "COLLECTION", threshold: 15, gameId: "", achievementTypeId: 41, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
   { id: 16, name: "Early Adopter", description: "Be among the first 100 players", category: "SPECIAL", threshold: 100, gameId: "", achievementTypeId: 50, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
   { id: 17, name: "Game Explorer", description: "Play all 12 games at least once", category: "SPECIAL", threshold: 12, gameId: "", achievementTypeId: 51, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+
+  // ─── Advanced Goals ───
+  { id: 18, name: "Iron Will", description: "Play 60 days in a row", category: "STREAK", threshold: 60, gameId: "", achievementTypeId: 32, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
+  { id: 19, name: "Century Club", description: "Play 100 days in a row", category: "STREAK", threshold: 100, gameId: "", achievementTypeId: 33, rewardItemTypeId: 0, rewardTokenAmount: "5000000000000000000000" },
+  { id: 20, name: "Prize Hoarder", description: "Earn 100,000 8BIT from tournament winnings", category: "WINS", threshold: 100000, gameId: "", achievementTypeId: 22, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
+  { id: 21, name: "Burn Baby Burn", description: "Burn 100,000 8BIT through tournament entry fees", category: "SPECIAL", threshold: 100000, gameId: "", achievementTypeId: 52, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
+  { id: 22, name: "Perfectionist", description: "Set new personal bests in 5 games in a single day", category: "SPECIAL", threshold: 5, gameId: "", achievementTypeId: 53, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
+  { id: 23, name: "OG Member", description: "Verified OG community member", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 54, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: 24, name: "The Completionist", description: "Earn every other achievement badge", category: "COLLECTION", threshold: 23, gameId: "", achievementTypeId: 42, rewardItemTypeId: 0, rewardTokenAmount: "10000000000000000000000" },
 ];
 
 /**
@@ -102,10 +111,17 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
     }
 
     case 'WINS': {
-      // Count tournament wins
       const statsDoc = await db.collection('playerStats').doc(addr).get();
       if (!statsDoc.exists) return 0;
-      return statsDoc.data()?.tournamentWins || 0;
+      const stats = statsDoc.data()!;
+
+      if (goal.achievementTypeId === 22) {
+        // Prize Hoarder: total 8BIT earned from tournament prizes
+        return stats.totalTournamentEarnings || 0;
+      }
+
+      // Default: count tournament wins
+      return stats.tournamentWins || 0;
     }
 
     case 'STREAK': {
@@ -120,7 +136,15 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
       const achievementsSnap = await db.collection('achievements')
         .where('walletAddress', '==', addr)
         .get();
-      return achievementsSnap.size;
+      const badgeCount = achievementsSnap.size;
+
+      if (goal.achievementTypeId === 42) {
+        // The Completionist: must have ALL other badges (exclude self to avoid circular dep)
+        // Total goals minus The Completionist itself = 23
+        return badgeCount;
+      }
+
+      return badgeCount;
     }
 
     case 'SPECIAL': {
@@ -137,6 +161,32 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
         if (!statsDoc.exists) return 0;
         const uniqueGames = statsDoc.data()?.uniqueGamesPlayed || [];
         return Array.isArray(uniqueGames) ? uniqueGames.length : 0;
+      }
+
+      if (goal.achievementTypeId === 52) {
+        // Burn Baby Burn: total 8BIT burned via tournament entry fees
+        const statsDoc = await db.collection('playerStats').doc(addr).get();
+        if (!statsDoc.exists) return 0;
+        return statsDoc.data()?.totalTournamentBurned || 0;
+      }
+
+      if (goal.achievementTypeId === 53) {
+        // Perfectionist: check if player set 5+ personal bests today
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const pbSnap = await db.collection('personalBests')
+          .where('walletAddress', '==', addr)
+          .where('setAt', '>=', startOfDay)
+          .get();
+        // Count unique game IDs with PBs today
+        const uniqueGamesWithPB = new Set(pbSnap.docs.map(d => d.data().gameId));
+        return uniqueGamesWithPB.size;
+      }
+
+      if (goal.achievementTypeId === 54) {
+        // OG Member: check if wallet is flagged as OG in Firestore
+        const ogDoc = await db.collection('ogMembers').doc(addr).get();
+        return ogDoc.exists ? 1 : 0;
       }
 
       return 0;
