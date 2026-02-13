@@ -155,10 +155,10 @@ export function useTradeableNFTs() {
   /**
    * Mint a tradeable item
    * @param itemTypeId The item type to mint
-   * @param priceInWei ETH price (pass 0n for free items)
+   * @param priceInWei ETH price (pass BigInt(0) for free items)
    */
   const mintItem = useCallback(
-    (itemTypeId: number, priceInWei: bigint = 0n) => {
+    (itemTypeId: number, priceInWei: bigint = BigInt(0)) => {
       if (contractAddress === '0x0000000000000000000000000000000000000000') {
         setError('Contract not deployed');
         return;
@@ -182,7 +182,7 @@ export function useTradeableNFTs() {
     address: contractAddress,
     abi: TRADEABLE_ITEMS_ABI,
     functionName: 'canMint',
-    args: address ? [address, 1n] : undefined,
+    args: address ? [address, BigInt(1)] : undefined,
     query: {
       enabled: !!address && contractAddress !== '0x0000000000000000000000000000000000000000',
     },
