@@ -57,7 +57,7 @@ interface GoalDefinition {
 const GOALS: GoalDefinition[] = [
   // ── SCORE (4) ──
   { id: 1, name: "Space Rocks Master", description: "Score 25,000 in Space Rocks", category: "SCORE", threshold: 25000, gameId: "space-rocks", achievementTypeId: 1, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
-  { id: 2, name: "Galaxy Ace", description: "Score 10,000 in Galaxy Fighter", category: "SCORE", threshold: 10000, gameId: "galaxy-fighter", achievementTypeId: 2, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
+  { id: 2, name: "Galaxy Ace", description: "Score 50,000 in Galaxy Fighter", category: "SCORE", threshold: 50000, gameId: "galaxy-fighter", achievementTypeId: 2, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
   { id: 3, name: "Tetris God", description: "Score 5,000 in Block Drop", category: "SCORE", threshold: 5000, gameId: "block-drop", achievementTypeId: 3, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
   { id: 4, name: "Shutout King", description: "Win 11-0 three times in Paddle Battle", category: "SCORE", threshold: 3, gameId: "paddle-battle", achievementTypeId: 4, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
 
