@@ -105,6 +105,22 @@ export const GAME_CONFIGS: Record<string, GameConfig> = {
     maxInputsPerSecond: 30,
     pointsPerSecondLimit: 500,
   },
+  'flappy-bird': {
+    id: 'flappy-bird',
+    name: 'Flappy Bird',
+    maxTheoreticalScore: 150, // 1 point per pipe, ~4-5 min skilled play
+    minGameDuration: 3000,
+    maxInputsPerSecond: 15,
+    pointsPerSecondLimit: 1,
+  },
+  'missile-command': {
+    id: 'missile-command',
+    name: 'Missile Command',
+    maxTheoreticalScore: 15000, // ~15-20 waves with all defenses
+    minGameDuration: 10000,
+    maxInputsPerSecond: 20,
+    pointsPerSecondLimit: 150,
+  },
 };
 
 // Daily reward tiers
