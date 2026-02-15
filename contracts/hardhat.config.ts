@@ -37,6 +37,7 @@ const config: HardhatUserConfig = {
       chainId: 421614,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       timeout: 60000,
+      gasPrice: 100000000, // 0.1 gwei - safe margin above base fee
     },
     // Arbitrum One Mainnet
     arbitrumOne: {
