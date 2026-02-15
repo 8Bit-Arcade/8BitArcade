@@ -99,7 +99,7 @@ async function main() {
   const goalConfigs = [
     // ── SCORE (4) ──
     { name: "Space Rocks Master", desc: "Score 25,000 in Space Rocks", category: 0, threshold: 25000, gameId: "space-rocks", achievementType: 1, rewardItem: 0, rewardTokens: ethers.parseEther("500") },
-    { name: "Galaxy Ace", desc: "Score 10,000 in Galaxy Fighter", category: 0, threshold: 10000, gameId: "galaxy-fighter", achievementType: 2, rewardItem: 0, rewardTokens: ethers.parseEther("200") },
+    { name: "Galaxy Ace", desc: "Score 50,000 in Galaxy Fighter", category: 0, threshold: 50000, gameId: "galaxy-fighter", achievementType: 2, rewardItem: 0, rewardTokens: ethers.parseEther("200") },
     { name: "Tetris God", desc: "Score 5,000 in Block Drop", category: 0, threshold: 5000, gameId: "block-drop", achievementType: 3, rewardItem: 0, rewardTokens: ethers.parseEther("300") },
     { name: "Shutout King", desc: "Win 11-0 three times in Paddle Battle", category: 0, threshold: 3, gameId: "paddle-battle", achievementType: 4, rewardItem: 0, rewardTokens: ethers.parseEther("400") },
 
