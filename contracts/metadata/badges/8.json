@@ -1,11 +1,9 @@
 {
   "name": "Week Warrior",
-  "description": "Play 7 days in a row. Consistency is key.",
-  "image": "ipfs://YOUR_IMAGES_CID/8.png",
+  "description": "Play 7 days in a row",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Streak" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 7 },
-    { "trait_type": "Rarity", "value": "Uncommon" },
     { "trait_type": "Reward", "value": "150 8BIT" }
   ]
 }

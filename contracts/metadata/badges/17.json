@@ -1,11 +1,9 @@
 {
   "name": "Night Owl",
-  "description": "Play a game between 3:00-3:05 AM UTC. The arcade never sleeps.",
-  "image": "ipfs://YOUR_IMAGES_CID/17.png",
+  "description": "Play a game between 3:00-3:05 AM UTC",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Hidden" },
-    { "trait_type": "Rarity", "value": "Rare" },
-    { "trait_type": "Reward", "value": "500 8BIT" },
-    { "trait_type": "Hidden", "value": "Yes" }
+    { "trait_type": "Reward", "value": "500 8BIT" }
   ]
 }

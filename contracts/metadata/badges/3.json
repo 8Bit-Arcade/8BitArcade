@@ -1,12 +1,9 @@
 {
   "name": "Tetris God",
-  "description": "Score 5,000 in Block Drop. Master of the falling blocks.",
-  "image": "ipfs://YOUR_IMAGES_CID/3.png",
+  "description": "Score 5,000 in Block Drop",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Score" },
-    { "trait_type": "Game", "value": "Block Drop" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 5000 },
-    { "trait_type": "Rarity", "value": "Uncommon" },
     { "trait_type": "Reward", "value": "300 8BIT" }
   ]
 }

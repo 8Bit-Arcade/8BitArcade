@@ -1,12 +1,9 @@
 {
   "name": "8Bit God",
-  "description": "Earn 18 achievement badges. The ultimate tier — true arcade divinity.",
-  "image": "ipfs://YOUR_IMAGES_CID/12.png",
+  "description": "Earn 18 achievement badges - the ultimate tier",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Collection" },
-    { "trait_type": "Tier", "value": "God" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 18 },
-    { "trait_type": "Rarity", "value": "Legendary" },
-    { "trait_type": "Reward", "value": "25000 8BIT" }
+    { "trait_type": "Reward", "value": "25,000 8BIT" }
   ]
 }

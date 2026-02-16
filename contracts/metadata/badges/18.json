@@ -1,11 +1,9 @@
 {
   "name": "Palindrome Master",
-  "description": "Score a palindrome number over 1000 in any game. Symmetry is beautiful.",
-  "image": "ipfs://YOUR_IMAGES_CID/18.png",
+  "description": "Score a palindrome number over 1000 in any game",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Hidden" },
-    { "trait_type": "Rarity", "value": "Epic" },
-    { "trait_type": "Reward", "value": "1000 8BIT" },
-    { "trait_type": "Hidden", "value": "Yes" }
+    { "trait_type": "Reward", "value": "1,000 8BIT" }
   ]
 }

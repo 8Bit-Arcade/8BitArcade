@@ -1,12 +1,9 @@
 {
   "name": "Space Rocks Master",
-  "description": "Score 25,000 in Space Rocks. A true asteroid annihilator.",
-  "image": "ipfs://YOUR_IMAGES_CID/1.png",
+  "description": "Score 25,000 in Space Rocks",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Score" },
-    { "trait_type": "Game", "value": "Space Rocks" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 25000 },
-    { "trait_type": "Rarity", "value": "Uncommon" },
     { "trait_type": "Reward", "value": "500 8BIT" }
   ]
 }

@@ -1,12 +1,9 @@
 {
   "name": "Galaxy Ace",
-  "description": "Score 50,000 in Galaxy Fighter. Defender of the cosmos.",
-  "image": "ipfs://YOUR_IMAGES_CID/2.png",
+  "description": "Score 50,000 in Galaxy Fighter",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Score" },
-    { "trait_type": "Game", "value": "Galaxy Fighter" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 50000 },
-    { "trait_type": "Rarity", "value": "Rare" },
     { "trait_type": "Reward", "value": "200 8BIT" }
   ]
 }

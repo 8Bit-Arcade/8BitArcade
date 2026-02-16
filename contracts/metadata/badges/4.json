@@ -1,12 +1,9 @@
 {
   "name": "Shutout King",
-  "description": "Win 11-0 three times in Paddle Battle. Total domination.",
-  "image": "ipfs://YOUR_IMAGES_CID/4.png",
+  "description": "Win 11-0 three times in Paddle Battle",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Score" },
-    { "trait_type": "Game", "value": "Paddle Battle" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 3 },
-    { "trait_type": "Rarity", "value": "Rare" },
     { "trait_type": "Reward", "value": "400 8BIT" }
   ]
 }

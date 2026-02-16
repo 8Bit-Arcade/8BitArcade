@@ -1,11 +1,9 @@
 {
   "name": "Century Club",
-  "description": "Play 100 days in a row. Unbreakable dedication.",
-  "image": "ipfs://YOUR_IMAGES_CID/9.png",
+  "description": "Play 100 days in a row",
+  "image": "ipfs://REPLACE_CID",
   "attributes": [
     { "trait_type": "Category", "value": "Streak" },
-    { "trait_type": "Threshold", "display_type": "number", "value": 100 },
-    { "trait_type": "Rarity", "value": "Legendary" },
-    { "trait_type": "Reward", "value": "5000 8BIT" }
+    { "trait_type": "Reward", "value": "5,000 8BIT" }
   ]
 }
