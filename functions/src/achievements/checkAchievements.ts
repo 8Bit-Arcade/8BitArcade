@@ -54,40 +54,45 @@ interface GoalDefinition {
 }
 
 // 20 Goals: achievementTypeId 1-20 (sequential)
+// goalId (id field) = on-chain ID assigned by AchievementManager
+// After running reset-goals.ts with 17 existing goals, new goals start at ID 18
+// If you re-run reset-goals.ts, update GOAL_ID_OFFSET to match the script output
+const GOAL_ID_OFFSET = 18; // First goalId assigned by reset-goals.ts
+
 const GOALS: GoalDefinition[] = [
   // ── SCORE (4) ──
-  { id: 1, name: "Space Rocks Master", description: "Score 25,000 in Space Rocks", category: "SCORE", threshold: 25000, gameId: "space-rocks", achievementTypeId: 1, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
-  { id: 2, name: "Galaxy Ace", description: "Score 50,000 in Galaxy Fighter", category: "SCORE", threshold: 50000, gameId: "galaxy-fighter", achievementTypeId: 2, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
-  { id: 3, name: "Tetris God", description: "Score 5,000 in Block Drop", category: "SCORE", threshold: 5000, gameId: "block-drop", achievementTypeId: 3, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
-  { id: 4, name: "Shutout King", description: "Win 11-0 three times in Paddle Battle", category: "SCORE", threshold: 3, gameId: "paddle-battle", achievementTypeId: 4, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
+  { id: GOAL_ID_OFFSET + 0, name: "Space Rocks Master", description: "Score 25,000 in Space Rocks", category: "SCORE", threshold: 25000, gameId: "space-rocks", achievementTypeId: 1, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
+  { id: GOAL_ID_OFFSET + 1, name: "Galaxy Ace", description: "Score 50,000 in Galaxy Fighter", category: "SCORE", threshold: 50000, gameId: "galaxy-fighter", achievementTypeId: 2, rewardItemTypeId: 0, rewardTokenAmount: "200000000000000000000" },
+  { id: GOAL_ID_OFFSET + 2, name: "Tetris God", description: "Score 5,000 in Block Drop", category: "SCORE", threshold: 5000, gameId: "block-drop", achievementTypeId: 3, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+  { id: GOAL_ID_OFFSET + 3, name: "Shutout King", description: "Win 11-0 three times in Paddle Battle", category: "SCORE", threshold: 3, gameId: "paddle-battle", achievementTypeId: 4, rewardItemTypeId: 0, rewardTokenAmount: "400000000000000000000" },
 
   // ── GAMES PLAYED (2) ──
-  { id: 5, name: "First Steps", description: "Play 10 games", category: "GAMES_PLAYED", threshold: 10, gameId: "", achievementTypeId: 5, rewardItemTypeId: 0, rewardTokenAmount: "50000000000000000000" },
-  { id: 6, name: "8-Bit Legend", description: "Play 1,000 games", category: "GAMES_PLAYED", threshold: 1000, gameId: "", achievementTypeId: 6, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
+  { id: GOAL_ID_OFFSET + 4, name: "First Steps", description: "Play 10 games", category: "GAMES_PLAYED", threshold: 10, gameId: "", achievementTypeId: 5, rewardItemTypeId: 0, rewardTokenAmount: "50000000000000000000" },
+  { id: GOAL_ID_OFFSET + 5, name: "8-Bit Legend", description: "Play 1,000 games", category: "GAMES_PLAYED", threshold: 1000, gameId: "", achievementTypeId: 6, rewardItemTypeId: 0, rewardTokenAmount: "2500000000000000000000" },
 
   // ── WINS (1) ──
-  { id: 7, name: "Tournament Champion", description: "Win 10 tournaments", category: "WINS", threshold: 10, gameId: "", achievementTypeId: 7, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: GOAL_ID_OFFSET + 6, name: "Tournament Champion", description: "Win 10 tournaments", category: "WINS", threshold: 10, gameId: "", achievementTypeId: 7, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
 
   // ── STREAK (2) ──
-  { id: 8, name: "Week Warrior", description: "Play 7 days in a row", category: "STREAK", threshold: 7, gameId: "", achievementTypeId: 8, rewardItemTypeId: 0, rewardTokenAmount: "150000000000000000000" },
-  { id: 9, name: "Century Club", description: "Play 100 days in a row", category: "STREAK", threshold: 100, gameId: "", achievementTypeId: 9, rewardItemTypeId: 0, rewardTokenAmount: "5000000000000000000000" },
+  { id: GOAL_ID_OFFSET + 7, name: "Week Warrior", description: "Play 7 days in a row", category: "STREAK", threshold: 7, gameId: "", achievementTypeId: 8, rewardItemTypeId: 0, rewardTokenAmount: "150000000000000000000" },
+  { id: GOAL_ID_OFFSET + 8, name: "Century Club", description: "Play 100 days in a row", category: "STREAK", threshold: 100, gameId: "", achievementTypeId: 9, rewardItemTypeId: 0, rewardTokenAmount: "5000000000000000000000" },
 
   // ── COLLECTION / TIER BADGES (3) ──
-  { id: 10, name: "8Bit Gamer", description: "Earn 10 achievement badges - Gamer tier unlocked", category: "COLLECTION", threshold: 10, gameId: "", achievementTypeId: 10, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
-  { id: 11, name: "8Bit Prodigy", description: "Earn 15 achievement badges - Prodigy tier unlocked", category: "COLLECTION", threshold: 15, gameId: "", achievementTypeId: 11, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
-  { id: 12, name: "8Bit God", description: "Earn 18 achievement badges - the ultimate tier", category: "COLLECTION", threshold: 18, gameId: "", achievementTypeId: 12, rewardItemTypeId: 0, rewardTokenAmount: "25000000000000000000000" },
+  { id: GOAL_ID_OFFSET + 9, name: "8Bit Gamer", description: "Earn 10 achievement badges - Gamer tier unlocked", category: "COLLECTION", threshold: 10, gameId: "", achievementTypeId: 10, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
+  { id: GOAL_ID_OFFSET + 10, name: "8Bit Prodigy", description: "Earn 15 achievement badges - Prodigy tier unlocked", category: "COLLECTION", threshold: 15, gameId: "", achievementTypeId: 11, rewardItemTypeId: 0, rewardTokenAmount: "2000000000000000000000" },
+  { id: GOAL_ID_OFFSET + 11, name: "8Bit God", description: "Earn 18 achievement badges - the ultimate tier", category: "COLLECTION", threshold: 18, gameId: "", achievementTypeId: 12, rewardItemTypeId: 0, rewardTokenAmount: "25000000000000000000000" },
 
   // ── SPECIAL (3) ──
-  { id: 13, name: "Early Adopter", description: "Be among the first 100 players", category: "SPECIAL", threshold: 100, gameId: "", achievementTypeId: 13, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
-  { id: 14, name: "Game Explorer", description: "Play all 12 games at least once", category: "SPECIAL", threshold: 12, gameId: "", achievementTypeId: 14, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
-  { id: 15, name: "OG Member", description: "Verified OG community member", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 15, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
+  { id: GOAL_ID_OFFSET + 12, name: "Early Adopter", description: "Be among the first 100 players", category: "SPECIAL", threshold: 100, gameId: "", achievementTypeId: 13, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000" },
+  { id: GOAL_ID_OFFSET + 13, name: "Game Explorer", description: "Play all 12 games at least once", category: "SPECIAL", threshold: 12, gameId: "", achievementTypeId: 14, rewardItemTypeId: 0, rewardTokenAmount: "300000000000000000000" },
+  { id: GOAL_ID_OFFSET + 14, name: "OG Member", description: "Verified OG community member", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 15, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000" },
 
   // ── HIDDEN (5) ──
-  { id: 16, name: "Lucky 777", description: "Score exactly 777 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 16, rewardItemTypeId: 0, rewardTokenAmount: "777000000000000000000", isHidden: true },
-  { id: 17, name: "Night Owl", description: "Play a game between 3:00-3:05 AM UTC", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 17, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000", isHidden: true },
-  { id: 18, name: "Palindrome Master", description: "Score a palindrome number over 1000 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 18, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000", isHidden: true },
-  { id: 19, name: "Double Trouble", description: "Get the exact same score in two different games", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 19, rewardItemTypeId: 0, rewardTokenAmount: "750000000000000000000", isHidden: true },
-  { id: 20, name: "The Answer", description: "Score exactly 42 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 20, rewardItemTypeId: 0, rewardTokenAmount: "420000000000000000000", isHidden: true },
+  { id: GOAL_ID_OFFSET + 15, name: "Lucky 777", description: "Score exactly 777 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 16, rewardItemTypeId: 0, rewardTokenAmount: "777000000000000000000", isHidden: true },
+  { id: GOAL_ID_OFFSET + 16, name: "Night Owl", description: "Play a game between 3:00-3:05 AM UTC", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 17, rewardItemTypeId: 0, rewardTokenAmount: "500000000000000000000", isHidden: true },
+  { id: GOAL_ID_OFFSET + 17, name: "Palindrome Master", description: "Score a palindrome number over 1000 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 18, rewardItemTypeId: 0, rewardTokenAmount: "1000000000000000000000", isHidden: true },
+  { id: GOAL_ID_OFFSET + 18, name: "Double Trouble", description: "Get the exact same score in two different games", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 19, rewardItemTypeId: 0, rewardTokenAmount: "750000000000000000000", isHidden: true },
+  { id: GOAL_ID_OFFSET + 19, name: "The Answer", description: "Score exactly 42 in any game", category: "SPECIAL", threshold: 1, gameId: "", achievementTypeId: 20, rewardItemTypeId: 0, rewardTokenAmount: "420000000000000000000", isHidden: true },
 ];
 
 /**
