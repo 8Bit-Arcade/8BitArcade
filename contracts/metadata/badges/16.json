@@ -1,0 +1,9 @@
+{
+  "name": "Lucky 777",
+  "description": "Score exactly 777 in any game",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Hidden" },
+    { "trait_type": "Reward", "value": "777 8BIT" }
+  ]
+}

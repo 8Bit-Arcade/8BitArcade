@@ -1,0 +1,9 @@
+{
+  "name": "8Bit Prodigy",
+  "description": "Earn 15 achievement badges - Prodigy tier unlocked",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Collection" },
+    { "trait_type": "Reward", "value": "2,000 8BIT" }
+  ]
+}

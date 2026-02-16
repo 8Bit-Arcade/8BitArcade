@@ -1,0 +1,9 @@
+{
+  "name": "Galaxy Ace",
+  "description": "Score 50,000 in Galaxy Fighter",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Score" },
+    { "trait_type": "Reward", "value": "200 8BIT" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "OG Member",
+  "description": "Verified OG community member of 8-Bit Arcade",
+  "image": "ipfs://bafybeibqmguxucsnfywzabxzeg7qa7yjklondmrrftl2m2blu7dhnqgz7y",
+  "attributes": [
+    { "trait_type": "Category", "value": "Special" },
+    { "trait_type": "Reward", "value": "1,000 8BIT" }
+  ]
+}

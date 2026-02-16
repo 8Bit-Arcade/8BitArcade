@@ -1,0 +1,9 @@
+{
+  "name": "8-Bit Legend",
+  "description": "Play 1,000 games",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Games Played" },
+    { "trait_type": "Reward", "value": "2,500 8BIT" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "The Answer",
+  "description": "Score exactly 42 in any game",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Hidden" },
+    { "trait_type": "Reward", "value": "420 8BIT" }
+  ]
+}

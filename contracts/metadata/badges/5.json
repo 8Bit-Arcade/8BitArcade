@@ -1,0 +1,9 @@
+{
+  "name": "First Steps",
+  "description": "Play 10 games",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Games Played" },
+    { "trait_type": "Reward", "value": "50 8BIT" }
+  ]
+}

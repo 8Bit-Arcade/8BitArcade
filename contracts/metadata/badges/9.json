@@ -1,0 +1,9 @@
+{
+  "name": "Century Club",
+  "description": "Play 100 days in a row",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Streak" },
+    { "trait_type": "Reward", "value": "5,000 8BIT" }
+  ]
+}

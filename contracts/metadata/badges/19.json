@@ -1,0 +1,9 @@
+{
+  "name": "Double Trouble",
+  "description": "Get the exact same score in two different games",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Hidden" },
+    { "trait_type": "Reward", "value": "750 8BIT" }
+  ]
+}

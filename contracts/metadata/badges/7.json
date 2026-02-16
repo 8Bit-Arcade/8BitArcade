@@ -1,0 +1,9 @@
+{
+  "name": "Tournament Champion",
+  "description": "Win 10 tournaments",
+  "image": "ipfs://REPLACE_CID",
+  "attributes": [
+    { "trait_type": "Category", "value": "Wins" },
+    { "trait_type": "Reward", "value": "1,000 8BIT" }
+  ]
+}
