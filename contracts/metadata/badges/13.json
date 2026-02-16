@@ -1,0 +1,11 @@
+{
+  "name": "Early Adopter",
+  "description": "Among the first 100 players. You were here before it was cool.",
+  "image": "ipfs://YOUR_IMAGES_CID/13.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Special" },
+    { "trait_type": "Threshold", "display_type": "number", "value": 100 },
+    { "trait_type": "Rarity", "value": "Rare" },
+    { "trait_type": "Reward", "value": "500 8BIT" }
+  ]
+}

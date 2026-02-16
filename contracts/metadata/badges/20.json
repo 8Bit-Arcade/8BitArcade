@@ -1,0 +1,11 @@
+{
+  "name": "The Answer",
+  "description": "Score exactly 42 in any game. The answer to life, the universe, and everything.",
+  "image": "ipfs://YOUR_IMAGES_CID/20.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Hidden" },
+    { "trait_type": "Rarity", "value": "Rare" },
+    { "trait_type": "Reward", "value": "420 8BIT" },
+    { "trait_type": "Hidden", "value": "Yes" }
+  ]
+}

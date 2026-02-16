@@ -1,0 +1,11 @@
+{
+  "name": "8-Bit Legend",
+  "description": "Play 1,000 games. A true arcade veteran.",
+  "image": "ipfs://YOUR_IMAGES_CID/6.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Games Played" },
+    { "trait_type": "Threshold", "display_type": "number", "value": 1000 },
+    { "trait_type": "Rarity", "value": "Epic" },
+    { "trait_type": "Reward", "value": "2500 8BIT" }
+  ]
+}

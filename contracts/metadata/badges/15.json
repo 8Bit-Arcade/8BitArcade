@@ -1,0 +1,11 @@
+{
+  "name": "OG Member",
+  "description": "Verified OG community member. Day one loyalty recognized.",
+  "image": "ipfs://YOUR_IMAGES_CID/15.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Special" },
+    { "trait_type": "Rarity", "value": "Rare" },
+    { "trait_type": "Reward", "value": "1000 8BIT" },
+    { "trait_type": "Exclusive", "value": "Yes" }
+  ]
+}

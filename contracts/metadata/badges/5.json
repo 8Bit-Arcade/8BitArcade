@@ -1,0 +1,11 @@
+{
+  "name": "First Steps",
+  "description": "Play 10 games. Every legend starts somewhere.",
+  "image": "ipfs://YOUR_IMAGES_CID/5.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Games Played" },
+    { "trait_type": "Threshold", "display_type": "number", "value": 10 },
+    { "trait_type": "Rarity", "value": "Common" },
+    { "trait_type": "Reward", "value": "50 8BIT" }
+  ]
+}

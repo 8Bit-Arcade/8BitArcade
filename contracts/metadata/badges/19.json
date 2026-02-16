@@ -1,0 +1,11 @@
+{
+  "name": "Double Trouble",
+  "description": "Get the exact same score in two different games. What are the odds?",
+  "image": "ipfs://YOUR_IMAGES_CID/19.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Hidden" },
+    { "trait_type": "Rarity", "value": "Rare" },
+    { "trait_type": "Reward", "value": "750 8BIT" },
+    { "trait_type": "Hidden", "value": "Yes" }
+  ]
+}

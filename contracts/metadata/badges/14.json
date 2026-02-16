@@ -1,0 +1,11 @@
+{
+  "name": "Game Explorer",
+  "description": "Play all 12 games at least once. Curiosity rewarded.",
+  "image": "ipfs://YOUR_IMAGES_CID/14.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Special" },
+    { "trait_type": "Threshold", "display_type": "number", "value": 12 },
+    { "trait_type": "Rarity", "value": "Uncommon" },
+    { "trait_type": "Reward", "value": "300 8BIT" }
+  ]
+}

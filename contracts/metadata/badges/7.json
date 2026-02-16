@@ -1,0 +1,11 @@
+{
+  "name": "Tournament Champion",
+  "description": "Win 10 tournaments. The undisputed champion of the arcade.",
+  "image": "ipfs://YOUR_IMAGES_CID/7.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Wins" },
+    { "trait_type": "Threshold", "display_type": "number", "value": 10 },
+    { "trait_type": "Rarity", "value": "Epic" },
+    { "trait_type": "Reward", "value": "1000 8BIT" }
+  ]
+}
