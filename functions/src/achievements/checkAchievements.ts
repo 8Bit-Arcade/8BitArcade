@@ -372,16 +372,38 @@ export const checkAndAwardAchievements = onSchedule(
 
     const db = admin.firestore();
 
-    // Get all players who have played in the last 24 hours
+    // Collect all unique wallet addresses from multiple sources
+    const walletSet = new Set<string>();
+
+    // 1. Recent players (played in last 24 hours)
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
-
     const recentPlayersSnap = await db.collection('playerStats')
       .where('lastPlayedAt', '>=', oneDayAgo)
       .get();
+    for (const doc of recentPlayersSnap.docs) {
+      walletSet.add(doc.id.toLowerCase());
+    }
 
-    if (recentPlayersSnap.empty) {
-      console.log('No recent players to check');
+    // 2. Discord-linked wallets
+    const discordLinksSnap = await db.collection('discord_links').get();
+    for (const doc of discordLinksSnap.docs) {
+      const addr = doc.data().walletAddress;
+      if (addr) walletSet.add(addr.toLowerCase());
+    }
+
+    // 3. Telegram-linked wallets
+    const telegramLinksSnap = await db.collection('telegram_links').get();
+    for (const doc of telegramLinksSnap.docs) {
+      const addr = doc.data().walletAddress;
+      if (addr) walletSet.add(addr.toLowerCase());
+    }
+
+    const allWallets = Array.from(walletSet);
+    console.log(`Checking achievements for ${allWallets.length} wallets (${recentPlayersSnap.size} recent, ${discordLinksSnap.size} discord, ${telegramLinksSnap.size} telegram)`);
+
+    if (allWallets.length === 0) {
+      console.log('No wallets to check');
       return;
     }
 
@@ -392,8 +414,7 @@ export const checkAndAwardAchievements = onSchedule(
 
     let totalAwarded = 0;
 
-    for (const playerDoc of recentPlayersSnap.docs) {
-      const walletAddress = playerDoc.id;
+    for (const walletAddress of allWallets) {
 
       // Get already completed achievements for this player
       const completedSnap = await db.collection('achievements')
