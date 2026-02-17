@@ -28,6 +28,7 @@
 * [Tournaments](earning/tournaments.md)
 * [Prize Distribution](earning/prize-distribution.md)
 * [Claiming Your Rewards](earning/claiming.md)
+* [NFT Achievement Badges](earning/nft-achievements.md)
 * [Testnet Airdrop](earning/airdrop.md)
 
 ## Tokenomics
