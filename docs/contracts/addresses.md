@@ -25,7 +25,6 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 | **Achievement Badges**   | [`0xf70C7814C44D9f93Ab35c77a73f584e114783314`](https://sepolia.arbiscan.io/address/0xf70C7814C44D9f93Ab35c77a73f584e114783314) | Soulbound ERC-721 NFT badges                          |
 | **Tradeable Items**      | [`0x3F09919fba62EAec1295F577D92fbF2555247c44`](https://sepolia.arbiscan.io/address/0x3F09919fba62EAec1295F577D92fbF2555247c44) | Future tradeable NFT items                            |
 | **Achievement Manager**  | [`0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84`](https://sepolia.arbiscan.io/address/0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84) | Goal tracking, verification & minting coordinator     |
-| **Vested Airdrop**       | TBD (pending deployment)                                                                                                       | Testnet airdrop with 3-month vesting                  |
 | **Vested Airdrop**       | [`0xC9aaa944B163eB4A580151DE852836330ECB50b1`](https://sepolia.arbiscan.io/address/0xC9aaa944B163eB4A580151DE852836330ECB50b1) | Testnet airdrop with 3-month vesting                  |
 
 ### External Tokens
