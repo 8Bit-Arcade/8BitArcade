@@ -29,9 +29,95 @@ export default function NFTPage() {
         <h1 className="font-pixel text-2xl md:text-3xl text-arcade-green mb-2">
           NFT Achievements
         </h1>
-        <p className="font-arcade text-gray-400">
-          Earn soulbound badges by completing goals. Unlock tradeable items.
+        <p className="font-arcade text-gray-400 max-w-2xl mx-auto">
+          Earn soulbound achievement badges by playing games and hitting milestones.
+          Badges are minted as NFTs on Arbitrum and live in your wallet forever.
         </p>
+      </div>
+
+      {/* How It Works */}
+      <div className="bg-arcade-dark border border-arcade-green/20 rounded-lg p-6 mb-8">
+        <h2 className="font-pixel text-sm text-arcade-cyan mb-4">How It Works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="font-pixel text-xs text-arcade-green mb-1">Automatic Minting</p>
+            <p className="font-arcade text-xs text-gray-400">
+              Badges are checked and minted automatically every hour. No claiming needed — they appear in your wallet.
+            </p>
+          </div>
+          <div>
+            <p className="font-pixel text-xs text-arcade-green mb-1">Zero Gas Fees</p>
+            <p className="font-arcade text-xs text-gray-400">
+              All minting costs are covered by 8-Bit Arcade. You never pay gas to receive a badge.
+            </p>
+          </div>
+          <div>
+            <p className="font-pixel text-xs text-arcade-green mb-1">Soulbound NFTs</p>
+            <p className="font-arcade text-xs text-gray-400">
+              Achievement badges are non-transferable. They prove what you accomplished and stay with your wallet permanently.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Achievement Categories */}
+      <div className="bg-arcade-dark border border-arcade-cyan/20 rounded-lg p-6 mb-8">
+        <h2 className="font-pixel text-sm text-arcade-cyan mb-4">Achievement Categories</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="text-center p-3 border border-arcade-green/10 rounded">
+            <p className="font-pixel text-xs text-arcade-green">Score</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">Hit high scores in specific games</p>
+          </div>
+          <div className="text-center p-3 border border-arcade-green/10 rounded">
+            <p className="font-pixel text-xs text-arcade-green">Games Played</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">Play 10 or 1,000 total games</p>
+          </div>
+          <div className="text-center p-3 border border-arcade-green/10 rounded">
+            <p className="font-pixel text-xs text-arcade-green">Streak</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">Play multiple days in a row</p>
+          </div>
+          <div className="text-center p-3 border border-arcade-green/10 rounded">
+            <p className="font-pixel text-xs text-arcade-green">Collection</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">Earn 10, 15, or 18 badges for tier ranks</p>
+          </div>
+          <div className="text-center p-3 border border-arcade-green/10 rounded">
+            <p className="font-pixel text-xs text-arcade-green">Wins</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">Win tournaments</p>
+          </div>
+          <div className="text-center p-3 border border-arcade-green/10 rounded">
+            <p className="font-pixel text-xs text-arcade-green">Special</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">OG Member, Early Adopter, Explorer</p>
+          </div>
+          <div className="text-center p-3 border border-arcade-pink/20 rounded col-span-2">
+            <p className="font-pixel text-xs text-arcade-pink">Hidden</p>
+            <p className="font-arcade text-xs text-gray-500 mt-1">5 secret achievements — discover them by playing</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tier Badges */}
+      <div className="bg-arcade-dark border border-arcade-yellow/20 rounded-lg p-6 mb-8">
+        <h2 className="font-pixel text-sm text-arcade-yellow mb-4">Tier Badges</h2>
+        <p className="font-arcade text-xs text-gray-400 mb-4">
+          Collect enough achievement badges to unlock tier ranks. Each tier earns bonus 8BIT token rewards.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 border border-arcade-green/30 rounded-lg">
+            <p className="font-pixel text-sm text-arcade-green">8Bit Gamer</p>
+            <p className="font-arcade text-xs text-gray-400 mt-1">10 badges</p>
+            <p className="font-pixel text-xs text-arcade-yellow mt-2">500 8BIT</p>
+          </div>
+          <div className="text-center p-4 border border-arcade-cyan/30 rounded-lg">
+            <p className="font-pixel text-sm text-arcade-cyan">8Bit Prodigy</p>
+            <p className="font-arcade text-xs text-gray-400 mt-1">15 badges</p>
+            <p className="font-pixel text-xs text-arcade-yellow mt-2">2,000 8BIT</p>
+          </div>
+          <div className="text-center p-4 border border-arcade-pink/30 rounded-lg">
+            <p className="font-pixel text-sm text-arcade-pink">8Bit God</p>
+            <p className="font-arcade text-xs text-gray-400 mt-1">18 badges</p>
+            <p className="font-pixel text-xs text-arcade-yellow mt-2">25,000 8BIT</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats Bar */}
@@ -52,7 +138,7 @@ export default function NFTPage() {
 
       {/* Goals List */}
       <div className="mb-8">
-        <h2 className="font-pixel text-lg text-arcade-cyan mb-4">Goals</h2>
+        <h2 className="font-pixel text-lg text-arcade-cyan mb-4">Your Goals</h2>
         {isLoading ? (
           <div className="text-center py-12">
             <p className="font-arcade text-gray-400 animate-pulse">Loading goals...</p>
@@ -62,11 +148,20 @@ export default function NFTPage() {
             {goals.map((goal: any, index: number) => (
               <div
                 key={index}
-                className="bg-arcade-dark border border-arcade-green/20 rounded-lg p-4 hover:border-arcade-green/50 transition-all"
+                className={`bg-arcade-dark border rounded-lg p-4 transition-all ${
+                  goal.completed
+                    ? 'border-arcade-green/60 bg-arcade-green/5'
+                    : 'border-arcade-green/20 hover:border-arcade-green/50'
+                }`}
               >
-                <h3 className="font-pixel text-sm text-arcade-green mb-1">
-                  {goal.name || `Goal #${index + 1}`}
-                </h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-pixel text-sm text-arcade-green">
+                    {goal.name || `Goal #${index + 1}`}
+                  </h3>
+                  {goal.completed && (
+                    <span className="font-pixel text-xs text-arcade-green">EARNED</span>
+                  )}
+                </div>
                 <p className="font-arcade text-xs text-gray-400 mb-3">
                   {goal.description || 'Complete this goal to earn a badge.'}
                 </p>
