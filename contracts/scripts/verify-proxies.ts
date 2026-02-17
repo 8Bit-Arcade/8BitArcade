@@ -1,17 +1,14 @@
-import { ethers, run } from "hardhat";
+import { ethers, upgrades, run } from "hardhat";
 
 /**
  * Verify UUPS proxy contracts on Arbiscan
  *
- * Reads the implementation address from each proxy's EIP-1967 storage slot,
+ * Uses @openzeppelin/hardhat-upgrades to read implementation addresses,
  * then verifies the implementation contract source code.
  *
  * USAGE:
  *   npx hardhat run scripts/verify-proxies.ts --network arbitrumSepolia
  */
-
-// EIP-1967 implementation slot
-const IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
 
 const PROXIES = [
   { name: "AchievementBadges", proxy: "0xf70C7814C44D9f93Ab35c77a73f584e114783314", contract: "contracts/AchievementBadges.sol:AchievementBadges" },
@@ -19,15 +16,42 @@ const PROXIES = [
   { name: "AchievementManager", proxy: "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84", contract: "contracts/AchievementManager.sol:AchievementManager" },
 ];
 
+// EIP-1967 implementation slot
+const IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+
+async function getImplAddress(proxyAddress: string): Promise<string> {
+  // Try OpenZeppelin helper first
+  try {
+    const addr = await upgrades.erc1967.getImplementationAddress(proxyAddress);
+    return addr;
+  } catch {
+    // Fallback: raw storage read
+    const raw = await ethers.provider.getStorage(proxyAddress, IMPL_SLOT);
+    console.log(`  Raw storage slot value: ${raw}`);
+    const addr = ethers.getAddress("0x" + raw.slice(26));
+    return addr;
+  }
+}
+
 async function main() {
+  // First, check if the proxies have code at all
+  for (const { name, proxy } of PROXIES) {
+    const code = await ethers.provider.getCode(proxy);
+    console.log(`${name} (${proxy}): ${code.length > 2 ? "HAS CODE" : "NO CODE"} (${code.length} bytes)`);
+  }
+  console.log();
+
   for (const { name, proxy, contract } of PROXIES) {
-    console.log(`\n═══ ${name} ═══`);
+    console.log(`═══ ${name} ═══`);
     console.log(`Proxy: ${proxy}`);
 
-    // Read implementation address from EIP-1967 slot
-    const implSlotValue = await ethers.provider.getStorage(proxy, IMPL_SLOT);
-    const implAddress = "0x" + implSlotValue.slice(26); // Extract address from 32-byte slot
+    const implAddress = await getImplAddress(proxy);
     console.log(`Implementation: ${implAddress}`);
+
+    if (implAddress === ethers.ZeroAddress) {
+      console.log(`  SKIPPED - no implementation found. Is this address correct?`);
+      continue;
+    }
 
     // Verify implementation
     try {
@@ -38,17 +62,17 @@ async function main() {
       });
       console.log(`${name} implementation verified!`);
     } catch (err: any) {
-      if (err.message.includes("Already Verified")) {
+      if (err.message.includes("Already Verified") || err.message.includes("already verified")) {
         console.log(`${name} implementation already verified.`);
       } else {
         console.error(`${name} verification failed:`, err.message);
       }
     }
+    console.log();
   }
 
-  console.log("\n═══ Done ═══");
-  console.log("If implementations verified, Arbiscan should auto-detect proxies.");
-  console.log("If not, manually mark as proxy on Arbiscan:");
+  console.log("═══ Done ═══");
+  console.log("After verification, mark each as proxy on Arbiscan:");
   console.log("  Contract > More Options > Is this a proxy? > Verify");
 }
 
