@@ -104,7 +104,15 @@ function isPalindrome(n: number): boolean {
 }
 
 /**
- * Get player's progress for a specific goal from Firestore
+ * Get player's progress for a specific goal from Firestore.
+ *
+ * Collection mapping:
+ *   scores/{wallet}     → { games: { [gameId]: { bestScore, totalPlays, lastPlayed } }, totalGames }
+ *   users/{wallet}      → { totalGamesPlayed, lastActive, createdAt }
+ *   sessions            → { player, gameId, finalScore, startedAt, completedAt }
+ *   tournaments         → { winnerId, status }
+ *   ogMembers/{wallet}  → existence check
+ *   achievements        → { walletAddress, goalId, achievementTypeId }
  */
 async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): Promise<number> {
   const db = admin.firestore();
@@ -112,41 +120,95 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
 
   switch (goal.category) {
     case 'SCORE': {
-      // Shutout King (ID 4): count perfect wins (11-0) in Paddle Battle
+      // Shutout King (achievementTypeId 4): needs game-specific tracking not yet implemented
       if (goal.achievementTypeId === 4) {
-        const statsDoc = await db.collection('playerStats').doc(addr).get();
-        if (!statsDoc.exists) return 0;
-        return statsDoc.data()?.paddleBattleShutouts || 0;
+        // Paddle Battle shutouts require game-specific event tracking
+        // For now, check if a dedicated counter exists on the user doc
+        const userDoc = await db.collection('users').doc(addr).get();
+        if (!userDoc.exists) return 0;
+        return userDoc.data()?.paddleBattleShutouts || 0;
       }
 
-      // Default: get best score for the specific game
-      const scoresSnap = await db.collection('scores')
-        .where('address', '==', addr)
-        .where('gameId', '==', goal.gameId)
-        .orderBy('score', 'desc')
-        .limit(1)
-        .get();
-
-      if (scoresSnap.empty) return 0;
-      return scoresSnap.docs[0].data().score || 0;
+      // Default: get best score for the specific game from scores/{wallet}.games.{gameId}.bestScore
+      const scoreDoc = await db.collection('scores').doc(addr).get();
+      if (!scoreDoc.exists) return 0;
+      const games = scoreDoc.data()?.games;
+      if (!games || !games[goal.gameId]) return 0;
+      return games[goal.gameId].bestScore || 0;
     }
 
     case 'GAMES_PLAYED': {
-      const statsDoc = await db.collection('playerStats').doc(addr).get();
-      if (!statsDoc.exists) return 0;
-      return statsDoc.data()?.totalGamesPlayed || 0;
+      // users/{wallet}.totalGamesPlayed tracks all games (ranked, free, tournament)
+      const userDoc = await db.collection('users').doc(addr).get();
+      if (!userDoc.exists) return 0;
+      return userDoc.data()?.totalGamesPlayed || 0;
     }
 
     case 'WINS': {
-      const statsDoc = await db.collection('playerStats').doc(addr).get();
-      if (!statsDoc.exists) return 0;
-      return statsDoc.data()?.tournamentWins || 0;
+      // Count finalized tournaments where this player won
+      const winsSnap = await db.collection('tournaments')
+        .where('winnerId', '==', addr)
+        .where('status', '==', 'finalized')
+        .get();
+      return winsSnap.size;
     }
 
     case 'STREAK': {
-      const statsDoc = await db.collection('playerStats').doc(addr).get();
-      if (!statsDoc.exists) return 0;
-      return statsDoc.data()?.currentStreak || 0;
+      // Compute consecutive play days from completed sessions
+      const sessionsSnap = await db.collection('sessions')
+        .where('player', '==', addr)
+        .where('completedAt', '!=', null)
+        .orderBy('completedAt', 'desc')
+        .limit(500)
+        .get();
+
+      if (sessionsSnap.empty) return 0;
+
+      // Extract unique UTC dates
+      const dates = new Set<string>();
+      for (const doc of sessionsSnap.docs) {
+        const completedAt = doc.data().completedAt;
+        if (completedAt && completedAt.toDate) {
+          const d = completedAt.toDate() as Date;
+          dates.add(`${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`);
+        }
+      }
+
+      // Sort dates descending and count consecutive days from today
+      const today = new Date();
+      const todayKey = `${today.getUTCFullYear()}-${today.getUTCMonth()}-${today.getUTCDate()}`;
+
+      // Build sorted date list
+      const sortedDates = Array.from(dates).sort().reverse();
+      if (sortedDates.length === 0) return 0;
+
+      // Check if the most recent play day is today or yesterday
+      const mostRecentDate = sortedDates[0];
+      const yesterday = new Date(today);
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      const yesterdayKey = `${yesterday.getUTCFullYear()}-${yesterday.getUTCMonth()}-${yesterday.getUTCDate()}`;
+
+      if (mostRecentDate !== todayKey && mostRecentDate !== yesterdayKey) {
+        return 0; // Streak is broken
+      }
+
+      // Count consecutive days backwards
+      let streak = 1;
+      for (let i = 1; i < sortedDates.length; i++) {
+        // Check if sortedDates[i] is exactly 1 day before sortedDates[i-1]
+        const prevParts = sortedDates[i - 1].split('-').map(Number);
+        const currParts = sortedDates[i].split('-').map(Number);
+        const prevDate = new Date(Date.UTC(prevParts[0], prevParts[1], prevParts[2]));
+        const currDate = new Date(Date.UTC(currParts[0], currParts[1], currParts[2]));
+        const diffDays = (prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (Math.abs(diffDays - 1) < 0.01) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
     }
 
     case 'COLLECTION': {
@@ -157,22 +219,32 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
     }
 
     case 'SPECIAL': {
-      // Early Adopter (ID 13)
+      // Early Adopter (achievementTypeId 13): be among first 100 users by createdAt
       if (goal.achievementTypeId === 13) {
-        const statsDoc = await db.collection('playerStats').doc(addr).get();
-        if (!statsDoc.exists) return 999;
-        return statsDoc.data()?.registrationOrder || 999;
+        const earlyUsersSnap = await db.collection('users')
+          .orderBy('createdAt', 'asc')
+          .limit(100)
+          .get();
+
+        let position = 999;
+        earlyUsersSnap.docs.forEach((doc, index) => {
+          if (doc.id === addr) {
+            position = index + 1; // 1-indexed
+          }
+        });
+        return position;
       }
 
-      // Game Explorer (ID 14)
+      // Game Explorer (achievementTypeId 14): play all 12 games at least once
       if (goal.achievementTypeId === 14) {
-        const statsDoc = await db.collection('playerStats').doc(addr).get();
-        if (!statsDoc.exists) return 0;
-        const uniqueGames = statsDoc.data()?.uniqueGamesPlayed || [];
-        return Array.isArray(uniqueGames) ? uniqueGames.length : 0;
+        const scoreDoc = await db.collection('scores').doc(addr).get();
+        if (!scoreDoc.exists) return 0;
+        const games = scoreDoc.data()?.games;
+        if (!games) return 0;
+        return Object.keys(games).length;
       }
 
-      // OG Member (ID 15)
+      // OG Member (achievementTypeId 15)
       if (goal.achievementTypeId === 15) {
         const ogDoc = await db.collection('ogMembers').doc(addr).get();
         return ogDoc.exists ? 1 : 0;
@@ -180,28 +252,28 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
 
       // ── HIDDEN ACHIEVEMENTS ──
 
-      // Lucky 777 (ID 16): score exactly 777
+      // Lucky 777 (achievementTypeId 16): score exactly 777
       if (goal.achievementTypeId === 16) {
-        const snap = await db.collection('scores')
-          .where('address', '==', addr)
-          .where('score', '==', 777)
+        const snap = await db.collection('sessions')
+          .where('player', '==', addr)
+          .where('finalScore', '==', 777)
           .limit(1)
           .get();
         return snap.empty ? 0 : 1;
       }
 
-      // Night Owl (ID 17): play between 3:00-3:05 AM UTC
+      // Night Owl (achievementTypeId 17): play between 3:00-3:05 AM UTC
       if (goal.achievementTypeId === 17) {
-        const scoresSnap = await db.collection('scores')
-          .where('address', '==', addr)
-          .orderBy('playedAt', 'desc')
+        const sessionsSnap = await db.collection('sessions')
+          .where('player', '==', addr)
+          .orderBy('startedAt', 'desc')
           .limit(200)
           .get();
 
-        for (const doc of scoresSnap.docs) {
-          const playedAt = doc.data().playedAt;
-          if (playedAt && playedAt.toDate) {
-            const date = playedAt.toDate() as Date;
+        for (const doc of sessionsSnap.docs) {
+          const startedAt = doc.data().startedAt;
+          if (startedAt && startedAt.toDate) {
+            const date = startedAt.toDate() as Date;
             const hour = date.getUTCHours();
             const minute = date.getUTCMinutes();
             if (hour === 3 && minute < 5) {
@@ -212,51 +284,45 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
         return 0;
       }
 
-      // Palindrome Master (ID 18): palindrome score > 1000
+      // Palindrome Master (achievementTypeId 18): palindrome score > 1000
       if (goal.achievementTypeId === 18) {
-        const scoresSnap = await db.collection('scores')
-          .where('address', '==', addr)
-          .where('score', '>', 1000)
-          .orderBy('score', 'desc')
-          .limit(500)
-          .get();
+        const scoreDoc = await db.collection('scores').doc(addr).get();
+        if (!scoreDoc.exists) return 0;
+        const games = scoreDoc.data()?.games;
+        if (!games) return 0;
 
-        for (const doc of scoresSnap.docs) {
-          const score = doc.data().score;
-          if (score > 1000 && isPalindrome(score)) {
+        for (const gameId of Object.keys(games)) {
+          const best = games[gameId].bestScore;
+          if (best > 1000 && isPalindrome(best)) {
             return 1;
           }
         }
         return 0;
       }
 
-      // Double Trouble (ID 19): same score in 2 different games
+      // Double Trouble (achievementTypeId 19): same score in 2 different games
       if (goal.achievementTypeId === 19) {
-        const scoresSnap = await db.collection('scores')
-          .where('address', '==', addr)
-          .orderBy('score', 'desc')
-          .limit(500)
-          .get();
+        const scoreDoc = await db.collection('scores').doc(addr).get();
+        if (!scoreDoc.exists) return 0;
+        const games = scoreDoc.data()?.games;
+        if (!games) return 0;
 
-        const scoreToGames = new Map<number, Set<string>>();
-        for (const doc of scoresSnap.docs) {
-          const { score, gameId } = doc.data();
-          if (!scoreToGames.has(score)) {
-            scoreToGames.set(score, new Set());
+        const seenScores = new Map<number, string>();
+        for (const gameId of Object.keys(games)) {
+          const best = games[gameId].bestScore;
+          if (best && seenScores.has(best) && seenScores.get(best) !== gameId) {
+            return 1;
           }
-          scoreToGames.get(score)!.add(gameId);
-        }
-        for (const games of scoreToGames.values()) {
-          if (games.size >= 2) return 1;
+          seenScores.set(best, gameId);
         }
         return 0;
       }
 
-      // The Answer (ID 20): score exactly 42
+      // The Answer (achievementTypeId 20): score exactly 42
       if (goal.achievementTypeId === 20) {
-        const snap = await db.collection('scores')
-          .where('address', '==', addr)
-          .where('score', '==', 42)
+        const snap = await db.collection('sessions')
+          .where('player', '==', addr)
+          .where('finalScore', '==', 42)
           .limit(1)
           .get();
         return snap.empty ? 0 : 1;
@@ -375,11 +441,11 @@ export const checkAndAwardAchievements = onSchedule(
     // Collect all unique wallet addresses from multiple sources
     const walletSet = new Set<string>();
 
-    // 1. Recent players (played in last 24 hours)
+    // 1. Recent players (active in last 24 hours) — from users collection
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
-    const recentPlayersSnap = await db.collection('playerStats')
-      .where('lastPlayedAt', '>=', oneDayAgo)
+    const recentPlayersSnap = await db.collection('users')
+      .where('lastActive', '>=', oneDayAgo)
       .get();
     for (const doc of recentPlayersSnap.docs) {
       walletSet.add(doc.id.toLowerCase());

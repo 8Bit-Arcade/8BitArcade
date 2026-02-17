@@ -15,6 +15,34 @@
       ]
     },
     {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "player",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "finalScore",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "player",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "tournaments",
       "queryScope": "COLLECTION",
       "fields": [
@@ -29,62 +57,16 @@
       ]
     },
     {
-      "collectionGroup": "scores",
+      "collectionGroup": "tournaments",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "address",
+          "fieldPath": "winnerId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "gameId",
+          "fieldPath": "status",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "score",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "scores",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "address",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "score",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "scores",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "address",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "score",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "scores",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "address",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "playedAt",
-          "order": "DESCENDING"
         }
       ]
     },
