@@ -1,15 +1,19 @@
 // Main JavaScript for 8-Bit Arcade Landing Page
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const navLinks = document.querySelector('.nav-links');
 
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
+    // Mobile menu toggle (supports multiple navbars safely)
+    const mobileMenuButtons = document.querySelectorAll('#mobileMenuBtn');
+    const navLinksList = document.querySelectorAll('.nav-links');
+
+    mobileMenuButtons.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            const nav = navLinksList[index] || navLinksList[0];
+            if (nav) {
+                nav.classList.toggle('active');
+            }
         });
-    }
+    });
 
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -48,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(el);
     });
 
-    // Add pixel trail effect on mouse move (optional fun effect)
+    // Pixel trail effect (optional)
     let mouseTrailEnabled = false;
     document.addEventListener('mousemove', (e) => {
         if (!mouseTrailEnabled) return;
@@ -63,4 +67,5 @@ document.addEventListener('DOMContentLoaded', () => {
             trail.remove();
         }, 1000);
     });
+
 });

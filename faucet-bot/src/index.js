@@ -16,8 +16,8 @@ const CONFIG = {
   },
   faucet: {
     privateKey: process.env.FAUCET_PRIVATE_KEY,
-    amount: process.env.FAUCET_AMOUNT || '0.005',
-    minBalanceThreshold: process.env.MIN_BALANCE_THRESHOLD || '0.003',
+    amount: process.env.FAUCET_AMOUNT || '0.01',
+    minBalanceThreshold: process.env.MIN_BALANCE_THRESHOLD || '0.002',
     cooldownHours: parseInt(process.env.COOLDOWN_HOURS || '24'),
   },
   network: {

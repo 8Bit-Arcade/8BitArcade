@@ -1,6 +1,6 @@
 # Contract Addresses
 
-> **Last Updated:** January 26, 2026 **Network:** Arbitrum Sepolia Testnet (Pre-Launch)
+> **Last Updated:** February 12, 2026 **Network:** Arbitrum Sepolia Testnet (Pre-Launch)
 
 ## Overview
 
@@ -26,6 +26,7 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 | **Tradeable Items**      | [`0x3F09919fba62EAec1295F577D92fbF2555247c44`](https://sepolia.arbiscan.io/address/0x3F09919fba62EAec1295F577D92fbF2555247c44) | Future tradeable NFT items                            |
 | **Achievement Manager**  | [`0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84`](https://sepolia.arbiscan.io/address/0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84) | Goal tracking, verification & minting coordinator     |
 | **Vested Airdrop**       | TBD (pending deployment)                                                                                                       | Testnet airdrop with 3-month vesting                  |
+| **Vested Airdrop**       | [`0xC9aaa944B163eB4A580151DE852836330ECB50b1`](https://sepolia.arbiscan.io/address/0xC9aaa944B163eB4A580151DE852836330ECB50b1) | Testnet airdrop with 3-month vesting                  |
 
 ### External Tokens
 
@@ -137,4 +138,4 @@ Token Decimals: 18
 
 ***
 
-**Last Updated:** January 10, 2026 **Document Version:** 1.2 **Testnet Status:** Active
+**Last Updated:** February 12, 2026 **Document Version:** 1.3 **Testnet Status:** Active

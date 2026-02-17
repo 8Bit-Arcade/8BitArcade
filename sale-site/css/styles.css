@@ -130,6 +130,40 @@ body {
     cursor: pointer;
 }
 
+/* ===== MOBILE NAV FIX ===== */
+@media (max-width: 768px) {
+
+    .mobile-menu-btn {
+        display: block; /* show hamburger */
+        z-index: 9999;
+        position: relative;
+    }
+
+    .nav-links {
+        display: none; /* hide menu by default */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        flex-direction: column;
+        background: rgba(10, 14, 39, 0.98);
+        border-top: 2px solid var(--color-pink);
+        padding: 1rem 0;
+        z-index: 9998;
+    }
+
+    .nav-links.active {
+        display: flex !important; /* show when hamburger clicked */
+    }
+
+    .nav-links a,
+    .nav-links button {
+        padding: 0.8rem 1.2rem;
+        width: 100%;
+        text-align: left;
+    }
+}
+
 /* Buttons */
 .btn {
     display: inline-block;
