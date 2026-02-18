@@ -244,10 +244,20 @@ async function getPlayerProgress(walletAddress: string, goal: GoalDefinition): P
         return Object.keys(games).length;
       }
 
-      // OG Member (achievementTypeId 15)
+      // OG Member (achievementTypeId 15): Discord user who linked wallet before OG cutoff
+      // OG cutoff: 2026-02-25 (matches discord-bot config OG_CUTOFF_DATE)
       if (goal.achievementTypeId === 15) {
-        const ogDoc = await db.collection('ogMembers').doc(addr).get();
-        return ogDoc.exists ? 1 : 0;
+        const OG_CUTOFF = new Date('2026-02-25T23:59:59Z');
+        const linkSnap = await db.collection('discord_links')
+          .where('walletAddress', '==', addr)
+          .limit(1)
+          .get();
+        if (linkSnap.empty) return 0;
+        const linkedAt = linkSnap.docs[0].data().linkedAt;
+        if (linkedAt && linkedAt.toDate && linkedAt.toDate() < OG_CUTOFF) {
+          return 1;
+        }
+        return 0;
       }
 
       // ── HIDDEN ACHIEVEMENTS ──
