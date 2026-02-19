@@ -1,7 +1,7 @@
 {
   "name": "Night Owl",
   "description": "Play a game between 3:00-3:05 AM UTC",
-  "image": "ipfs://REPLACE_CID",
+  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/17.png",
   "attributes": [
     { "trait_type": "Category", "value": "Hidden" },
     { "trait_type": "Reward", "value": "500 8BIT" }
