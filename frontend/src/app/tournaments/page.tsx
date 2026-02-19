@@ -637,7 +637,7 @@ useEffect(() => {
       );
     }
     return (
-      <span className="px-2 py-1 bg-arcade-purple/20 text-arcade-purple font-pixel text-xs rounded">
+      <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
         STANDARD
       </span>
     );
