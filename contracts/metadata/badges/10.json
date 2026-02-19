@@ -1,7 +1,7 @@
 {
   "name": "8Bit Gamer",
   "description": "Earn 10 achievement badges - Gamer tier unlocked",
-  "image": "ipfs://REPLACE_CID",
+  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/10.png",
   "attributes": [
     { "trait_type": "Category", "value": "Collection" },
     { "trait_type": "Reward", "value": "500 8BIT" }

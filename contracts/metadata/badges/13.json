@@ -1,7 +1,7 @@
 {
   "name": "Early Adopter",
   "description": "Among the first 100 players of 8-Bit Arcade",
-  "image": "ipfs://REPLACE_CID",
+  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/13.png",
   "attributes": [
     { "trait_type": "Category", "value": "Special" },
     { "trait_type": "Reward", "value": "500 8BIT" }

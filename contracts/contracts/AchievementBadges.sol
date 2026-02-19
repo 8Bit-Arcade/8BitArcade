@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URISto
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title AchievementBadges
@@ -13,6 +14,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
  * @dev UUPS upgradeable. Implements EIP-5192 "locked" pattern.
  *      Badges are minted only when a player reaches an in-game goal, verified by the backend.
  *      They cannot be traded, sold, or transferred - they are pure bragging rights.
+ *      tokenURI is computed from baseTokenURI + achievementTypeId + ".json" so that
+ *      updating baseTokenURI fixes ALL tokens (including previously minted ones).
  */
 contract AchievementBadges is
     Initializable,
@@ -172,7 +175,9 @@ contract AchievementBadges is
     function tokenURI(
         uint256 tokenId
     ) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (string memory) {
-        return super.tokenURI(tokenId);
+        _requireOwned(tokenId);
+        uint256 achievementTypeId = tokenAchievementType[tokenId];
+        return string(abi.encodePacked(baseTokenURI, Strings.toString(achievementTypeId), ".json"));
     }
 
     // ═══════════════════════════════════════════════════════════
