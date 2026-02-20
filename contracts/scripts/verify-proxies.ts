@@ -10,7 +10,7 @@ import { run } from "hardhat";
  */
 
 const CONTRACTS = [
-  { name: "AchievementBadges", address: "0xf70C7814C44D9f93Ab35c77a73f584e114783314", contract: "contracts/AchievementBadges.sol:AchievementBadges" },
+  { name: "AchievementBadges", address: "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f", contract: "contracts/AchievementBadges.sol:AchievementBadges" },
   { name: "TradeableItems", address: "0x3F09919fba62EAec1295F577D92fbF2555247c44", contract: "contracts/TradeableItems.sol:TradeableItems" },
   { name: "AchievementManager", address: "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84", contract: "contracts/AchievementManager.sol:AchievementManager" },
 ];
