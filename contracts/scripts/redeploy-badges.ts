@@ -1,21 +1,17 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 
 /**
- * Deploy a FRESH AchievementBadges contract (not a proxy - direct deploy)
- * and wire it into the existing AchievementManager.
- *
- * The new contract has a fixed tokenURI that computes from baseTokenURI,
- * so updating baseTokenURI fixes ALL tokens automatically.
+ * Deploy a FRESH AchievementBadges via UUPS proxy and wire it into
+ * the existing AchievementManager.
  *
  * WHAT THIS DOES:
- * 1. Deploys new AchievementBadges (direct, no proxy)
- * 2. Calls setAchievementBadges on AchievementManager to point to the new contract
- * 3. Authorizes AchievementManager as a minter on the new contract
- * 4. Sets baseTokenURI on the new contract
+ * 1. Deploys new AchievementBadges via UUPS proxy (upgrades.deployProxy)
+ * 2. Calls setAchievementBadges on AchievementManager to point to new contract
+ * 3. Authorizes AchievementManager as minter on new contract
+ * 4. Sets badgeMetadataBaseURI on AchievementManager
  *
  * PREREQUISITES:
  * - .env PRIVATE_KEY = deployer wallet (0x8FAF) which owns AchievementManager
- * - Update BASE_URI below with your Pinata JSON folder CID
  *
  * USAGE:
  *   npx hardhat run scripts/redeploy-badges.ts --network arbitrumSepolia
@@ -28,7 +24,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   console.log("═══════════════════════════════════════════════════");
-  console.log("  REDEPLOY AchievementBadges (Fresh Contract)");
+  console.log("  REDEPLOY AchievementBadges (UUPS Proxy)");
   console.log("═══════════════════════════════════════════════════");
   console.log();
   console.log("Deployer:", deployer.address);
@@ -52,19 +48,17 @@ async function main() {
   console.log("✓ You own the AchievementManager");
   console.log();
 
-  // ── Step 1: Deploy new AchievementBadges ──
-  console.log("Step 1: Deploying new AchievementBadges...");
+  // ── Step 1: Deploy new AchievementBadges via UUPS proxy ──
+  console.log("Step 1: Deploying new AchievementBadges (UUPS proxy)...");
   const AchievementBadges = await ethers.getContractFactory("AchievementBadges");
-  const badges = await AchievementBadges.deploy();
+  const badges = await upgrades.deployProxy(
+    AchievementBadges,
+    [BASE_URI],
+    { kind: "uups" }
+  );
   await badges.waitForDeployment();
   const badgesAddr = await badges.getAddress();
-  console.log("  Deployed to:", badgesAddr);
-
-  // Initialize it (since constructor only disables initializers)
-  console.log("  Initializing...");
-  const initTx = await badges.initialize(BASE_URI);
-  await initTx.wait();
-  console.log("  Initialized with baseTokenURI:", BASE_URI);
+  console.log("  Proxy deployed to:", badgesAddr);
   console.log();
 
   // ── Step 2: Wire into AchievementManager ──
@@ -81,7 +75,7 @@ async function main() {
   console.log("  Done:", tx.hash);
   console.log();
 
-  // ── Step 4: Update badgeMetadataBaseURI on AchievementManager too ──
+  // ── Step 4: Update badgeMetadataBaseURI on AchievementManager ──
   console.log("Step 4: Setting badgeMetadataBaseURI on AchievementManager...");
   tx = await manager.setBadgeMetadataBaseURI(BASE_URI);
   await tx.wait();
@@ -90,28 +84,21 @@ async function main() {
 
   // ── Verify ──
   console.log("── Verification ──");
-  const newBadges = new ethers.Contract(badgesAddr, [
-    "function owner() view returns (address)",
-    "function baseTokenURI() view returns (string)",
-    "function authorizedMinters(address) view returns (bool)",
-    "function nextTokenId() view returns (uint256)"
-  ], deployer);
-
-  console.log("  owner():", await newBadges.owner());
-  console.log("  baseTokenURI():", await newBadges.baseTokenURI());
-  console.log("  Manager authorized?", await newBadges.authorizedMinters(MANAGER));
-  console.log("  nextTokenId():", (await newBadges.nextTokenId()).toString());
+  console.log("  owner():", await badges.owner());
+  console.log("  baseTokenURI():", await badges.baseTokenURI());
+  console.log("  Manager authorized?", await badges.authorizedMinters(MANAGER));
+  console.log("  nextTokenId():", (await badges.nextTokenId()).toString());
   console.log();
 
   console.log("═══════════════════════════════════════════════════");
   console.log("  REDEPLOYMENT COMPLETE");
   console.log("═══════════════════════════════════════════════════");
   console.log();
-  console.log("NEW AchievementBadges:", badgesAddr);
+  console.log("NEW AchievementBadges (proxy):", badgesAddr);
   console.log("OLD AchievementBadges: 0xf70C7814C44D9f93Ab35c77a73f584e114783314 (retired)");
   console.log();
   console.log("All new badges will mint to the new contract with working images.");
-  console.log("Old badges on the retired contract remain but are superseded.");
+  console.log("tokenURI computes: baseTokenURI + achievementTypeId + '.json'");
   console.log();
   console.log("UPDATE THESE FILES with the new address:");
   console.log("  - frontend/src/config/contracts.ts");
