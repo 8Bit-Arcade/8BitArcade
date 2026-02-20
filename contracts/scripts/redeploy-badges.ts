@@ -1,17 +1,10 @@
-import { ethers, upgrades } from "hardhat";
+import { ethers } from "hardhat";
 
 /**
- * Deploy a FRESH AchievementBadges via UUPS proxy and wire it into
- * the existing AchievementManager.
+ * Deploy a FRESH AchievementBadges proxy (manual ERC1967Proxy deployment)
+ * Bypasses the hardhat-upgrades plugin entirely.
  *
- * WHAT THIS DOES:
- * 1. Deploys new AchievementBadges via UUPS proxy (upgrades.deployProxy)
- * 2. Calls setAchievementBadges on AchievementManager to point to new contract
- * 3. Authorizes AchievementManager as minter on new contract
- * 4. Sets badgeMetadataBaseURI on AchievementManager
- *
- * PREREQUISITES:
- * - .env PRIVATE_KEY = deployer wallet (0x8FAF) which owns AchievementManager
+ * Reuses the already-deployed implementation - NO new implementation deployed.
  *
  * USAGE:
  *   npx hardhat run scripts/redeploy-badges.ts --network arbitrumSepolia
@@ -20,15 +13,18 @@ import { ethers, upgrades } from "hardhat";
 const MANAGER = "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84";
 const BASE_URI = "ipfs://bafybeiawba4ueh5zpnfbzfpb2nzlk5nwgt7vou37ushiyrgsvszu6yjzha/";
 
+// Reuse already-deployed implementation (has the fixed tokenURI logic)
+const IMPL_ADDRESS = "0x340809FBB22C32a6a4D73E10102a760B7a5e4444";
+
 async function main() {
   const [deployer] = await ethers.getSigners();
 
   console.log("═══════════════════════════════════════════════════");
-  console.log("  REDEPLOY AchievementBadges (UUPS Proxy)");
+  console.log("  REDEPLOY AchievementBadges (Manual Proxy)");
   console.log("═══════════════════════════════════════════════════");
   console.log();
   console.log("Deployer:", deployer.address);
-  console.log("AchievementManager:", MANAGER);
+  console.log("Implementation:", IMPL_ADDRESS);
   console.log("Base URI:", BASE_URI);
   console.log();
 
@@ -46,24 +42,50 @@ async function main() {
     process.exit(1);
   }
   console.log("✓ You own the AchievementManager");
+
+  // Verify implementation exists on-chain
+  const implCode = await ethers.provider.getCode(IMPL_ADDRESS);
+  if (implCode === "0x") {
+    console.error("❌ ABORT: No contract at implementation address!");
+    process.exit(1);
+  }
+  console.log("✓ Implementation contract verified on-chain");
   console.log();
 
-  // ── Step 1: Deploy new AchievementBadges via UUPS proxy ──
-  console.log("Step 1: Deploying new AchievementBadges (UUPS proxy)...");
+  // ── Step 1: Deploy ERC1967Proxy pointing to existing implementation ──
+  console.log("Step 1: Deploying ERC1967Proxy...");
+
+  // Encode the initialize(BASE_URI) call
   const AchievementBadges = await ethers.getContractFactory("AchievementBadges");
-  const badges = await upgrades.deployProxy(
-    AchievementBadges,
-    [BASE_URI],
-    { kind: "uups" }
+  const initData = AchievementBadges.interface.encodeFunctionData("initialize", [BASE_URI]);
+  console.log("  initData:", initData.slice(0, 20) + "...");
+
+  // Deploy the proxy with (implementation, initData)
+  const ERC1967Proxy = await ethers.getContractFactory(
+    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
   );
-  await badges.waitForDeployment();
-  const badgesAddr = await badges.getAddress();
-  console.log("  Proxy deployed to:", badgesAddr);
+  const proxy = await ERC1967Proxy.deploy(IMPL_ADDRESS, initData);
+  await proxy.waitForDeployment();
+  const proxyAddr = await proxy.getAddress();
+  console.log("  Proxy deployed to:", proxyAddr);
+  console.log();
+
+  // Connect to the proxy with the AchievementBadges ABI
+  const badges = AchievementBadges.attach(proxyAddr);
+
+  // Quick verify initialize worked
+  const owner = await badges.owner();
+  console.log("  owner():", owner);
+  if (owner.toLowerCase() !== deployer.address.toLowerCase()) {
+    console.error("❌ Initialize may have failed - owner mismatch!");
+    process.exit(1);
+  }
+  console.log("  ✓ Initialize succeeded");
   console.log();
 
   // ── Step 2: Wire into AchievementManager ──
   console.log("Step 2: Pointing AchievementManager to new badges contract...");
-  let tx = await manager.setAchievementBadges(badgesAddr);
+  let tx = await manager.setAchievementBadges(proxyAddr);
   await tx.wait();
   console.log("  Done:", tx.hash);
   console.log();
@@ -88,16 +110,23 @@ async function main() {
   console.log("  baseTokenURI():", await badges.baseTokenURI());
   console.log("  Manager authorized?", await badges.authorizedMinters(MANAGER));
   console.log("  nextTokenId():", (await badges.nextTokenId()).toString());
+
+  // Verify ERC-1967 implementation slot is set
+  const implSlot = await ethers.provider.getStorage(
+    proxyAddr,
+    "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
+  );
+  console.log("  ERC-1967 impl slot:", "0x" + implSlot.slice(26));
   console.log();
 
   console.log("═══════════════════════════════════════════════════");
   console.log("  REDEPLOYMENT COMPLETE");
   console.log("═══════════════════════════════════════════════════");
   console.log();
-  console.log("NEW AchievementBadges (proxy):", badgesAddr);
+  console.log("NEW AchievementBadges (proxy):", proxyAddr);
+  console.log("Implementation:", IMPL_ADDRESS);
   console.log("OLD AchievementBadges: 0xf70C7814C44D9f93Ab35c77a73f584e114783314 (retired)");
   console.log();
-  console.log("All new badges will mint to the new contract with working images.");
   console.log("tokenURI computes: baseTokenURI + achievementTypeId + '.json'");
   console.log();
   console.log("UPDATE THESE FILES with the new address:");
