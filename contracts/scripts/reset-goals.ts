@@ -13,7 +13,7 @@ import { ethers } from "hardhat";
  *   npx hardhat run scripts/reset-goals.ts --network arbitrumSepolia
  */
 
-const ACHIEVEMENT_MANAGER_ADDRESS = "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84";
+const ACHIEVEMENT_MANAGER_ADDRESS = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
 
 const MANAGER_ABI = [
   "function nextGoalId() view returns (uint256)",

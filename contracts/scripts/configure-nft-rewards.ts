@@ -19,7 +19,7 @@ import { ethers } from "hardhat";
 // UPDATE THESE WITH YOUR DEPLOYED ADDRESSES
 // ═══════════════════════════════════════════════════════════
 const EIGHT_BIT_TOKEN_ADDRESS = "0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d";
-const ACHIEVEMENT_MANAGER_ADDRESS = "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84";
+const ACHIEVEMENT_MANAGER_ADDRESS = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
 
 // Backend wallet that will verify achievements and call awardAchievement()
 // Set this to your Firebase Functions / backend wallet address

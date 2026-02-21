@@ -10,7 +10,7 @@ import { ethers } from "hardhat";
  *   npx hardhat run scripts/redeploy-badges.ts --network arbitrumSepolia
  */
 
-const MANAGER = "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84";
+const MANAGER = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
 const BASE_URI = "ipfs://bafybeiawba4ueh5zpnfbzfpb2nzlk5nwgt7vou37ushiyrgsvszu6yjzha/";
 
 // Reuse already-deployed implementation (has the fixed tokenURI logic)
