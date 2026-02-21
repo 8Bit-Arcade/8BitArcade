@@ -26,8 +26,7 @@ async function main() {
 
   // ── Pre-flight: verify ownership ──
   const manager = new ethers.Contract(MANAGER_PROXY, [
-    "function owner() view returns (address)",
-    "function proxiableUUID() view returns (bytes32)"
+    "function owner() view returns (address)"
   ], deployer);
 
   const owner = await manager.owner();
@@ -38,15 +37,15 @@ async function main() {
   }
   console.log("✓ You own the AchievementManager");
 
-  // Verify it's a proper UUPS proxy
-  try {
-    const uuid = await manager.proxiableUUID();
-    console.log("✓ proxiableUUID():", uuid);
-  } catch (e: any) {
-    console.error("❌ ABORT: Not a proper UUPS proxy!");
-    console.error("   Error:", e.message?.slice(0, 200));
+  // Verify it's a proper ERC-1967 proxy by checking implementation slot
+  const ERC1967_IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+  const currentImplSlot = await ethers.provider.getStorage(MANAGER_PROXY, ERC1967_IMPL_SLOT);
+  const currentImpl = "0x" + currentImplSlot.slice(26);
+  if (currentImpl === "0x" + "0".repeat(40)) {
+    console.error("❌ ABORT: ERC-1967 implementation slot is EMPTY — not a proxy!");
     process.exit(1);
   }
+  console.log("✓ ERC-1967 proxy confirmed, current impl:", currentImpl);
 
   // ── Step 1: Deploy new implementation ──
   console.log();
