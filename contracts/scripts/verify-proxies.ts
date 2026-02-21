@@ -12,7 +12,7 @@ import { run } from "hardhat";
 const CONTRACTS = [
   { name: "AchievementBadges", address: "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f", contract: "contracts/AchievementBadges.sol:AchievementBadges" },
   { name: "TradeableItems", address: "0x3F09919fba62EAec1295F577D92fbF2555247c44", contract: "contracts/TradeableItems.sol:TradeableItems" },
-  { name: "AchievementManager", address: "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84", contract: "contracts/AchievementManager.sol:AchievementManager" },
+  { name: "AchievementManager", address: "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3", contract: "contracts/AchievementManager.sol:AchievementManager" },
 ];
 
 async function main() {

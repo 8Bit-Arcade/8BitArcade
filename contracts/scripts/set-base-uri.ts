@@ -13,7 +13,7 @@ import { ethers } from "hardhat";
  *   npx hardhat run scripts/set-base-uri.ts --network arbitrumSepolia
  */
 
-const MANAGER = "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84";
+const MANAGER = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
 const BADGES = "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f";
 
 // UPDATE THIS with your Pinata JSON folder CID after re-uploading fixed metadata
