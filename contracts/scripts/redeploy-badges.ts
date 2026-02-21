@@ -11,7 +11,7 @@ import { ethers } from "hardhat";
  */
 
 const MANAGER = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
-const BASE_URI = "ipfs://bafybeiawba4ueh5zpnfbzfpb2nzlk5nwgt7vou37ushiyrgsvszu6yjzha/";
+const BASE_URI = "ipfs://bafybeicekkmn7nz6cktpkrxb7bcbptexs3aft6p43cicmwnyz5yfhh32v4/";
 
 // Reuse already-deployed implementation (has the fixed tokenURI logic)
 const IMPL_ADDRESS = "0x340809FBB22C32a6a4D73E10102a760B7a5e4444";

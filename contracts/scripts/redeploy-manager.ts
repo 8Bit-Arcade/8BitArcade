@@ -24,7 +24,7 @@ const BADGES_PROXY = "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f";
 const TRADEABLE_ITEMS = "0x3F09919fba62EAec1295F577D92fbF2555247c44";
 const EIGHT_BIT_TOKEN = "0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d";
 const BACKEND_VERIFIER = "0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B";
-const BADGE_METADATA_BASE_URI = "ipfs://bafybeiawba4ueh5zpnfbzfpb2nzlk5nwgt7vou37ushiyrgsvszu6yjzha/";
+const BADGE_METADATA_BASE_URI = "ipfs://bafybeicekkmn7nz6cktpkrxb7bcbptexs3aft6p43cicmwnyz5yfhh32v4/";
 
 // Old manager (will be retired)
 const OLD_MANAGER = "0xcD7b55b846b5FC306ab1B4D2f30FBd3073315e84";
