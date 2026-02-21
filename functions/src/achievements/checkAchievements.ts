@@ -432,11 +432,11 @@ export const checkAchievement = onCall(async (request: any) => {
  * Scheduled function that checks all active players for achievement progress
  * and awards achievements on-chain when goals are met.
  *
- * Runs every hour.
+ * Runs every 5 minutes.
  */
 export const checkAndAwardAchievements = onSchedule(
   {
-    schedule: 'every 60 minutes',
+    schedule: 'every 5 minutes',
     timeZone: 'UTC',
     secrets: [rewardsPrivateKey],
   },
