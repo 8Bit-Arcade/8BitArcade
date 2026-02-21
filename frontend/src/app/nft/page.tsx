@@ -60,41 +60,6 @@ export default function NFTPage() {
         </div>
       </div>
 
-      {/* Achievement Categories */}
-      <div className="bg-arcade-dark border border-arcade-cyan/20 rounded-lg p-6 mb-8">
-        <h2 className="font-pixel text-sm text-arcade-cyan mb-4">Achievement Categories</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          <div className="text-center p-3 border border-arcade-green/10 rounded">
-            <p className="font-pixel text-xs text-arcade-green">Score</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">Hit high scores in specific games</p>
-          </div>
-          <div className="text-center p-3 border border-arcade-green/10 rounded">
-            <p className="font-pixel text-xs text-arcade-green">Games Played</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">Play 10 or 1,000 total games</p>
-          </div>
-          <div className="text-center p-3 border border-arcade-green/10 rounded">
-            <p className="font-pixel text-xs text-arcade-green">Streak</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">Play multiple days in a row</p>
-          </div>
-          <div className="text-center p-3 border border-arcade-green/10 rounded">
-            <p className="font-pixel text-xs text-arcade-green">Collection</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">Earn 10, 15, or 18 badges for tier ranks</p>
-          </div>
-          <div className="text-center p-3 border border-arcade-green/10 rounded">
-            <p className="font-pixel text-xs text-arcade-green">Wins</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">Win tournaments</p>
-          </div>
-          <div className="text-center p-3 border border-arcade-green/10 rounded">
-            <p className="font-pixel text-xs text-arcade-green">Special</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">OG Member, Early Adopter, Explorer</p>
-          </div>
-          <div className="text-center p-3 border border-arcade-pink/20 rounded col-span-2">
-            <p className="font-pixel text-xs text-arcade-pink">Hidden</p>
-            <p className="font-arcade text-xs text-gray-500 mt-1">5 secret achievements — discover them by playing</p>
-          </div>
-        </div>
-      </div>
-
       {/* Tier Badges */}
       <div className="bg-arcade-dark border border-arcade-yellow/20 rounded-lg p-6 mb-8">
         <h2 className="font-pixel text-sm text-arcade-yellow mb-4">Tier Badges</h2>

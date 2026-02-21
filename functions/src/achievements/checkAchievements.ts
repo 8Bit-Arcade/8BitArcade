@@ -27,11 +27,12 @@ import {
 
 const rewardsPrivateKey = defineSecret('REWARDS_PRIVATE_KEY');
 
-// AchievementManager ABI (minimal for minting)
+// AchievementManager ABI (minimal for minting + batch status check)
 const ACHIEVEMENT_MANAGER_ABI = [
   'function awardAchievement(address player, uint256 goalId) external',
   'function batchAwardAchievement(address[] calldata players, uint256 goalId) external',
   'function hasCompletedGoal(address player, uint256 goalId) view returns (bool)',
+  'function getPlayerGoalStatuses(address player, uint256[] goalIds) view returns (bool[])',
   'function getPlayerAchievementCount(address player) view returns (uint256)',
   'function nextGoalId() view returns (uint256)',
 ];
@@ -55,9 +56,8 @@ interface GoalDefinition {
 
 // 20 Goals: achievementTypeId 1-20 (sequential)
 // goalId (id field) = on-chain ID assigned by AchievementManager
-// After running reset-goals.ts with 17 existing goals, new goals start at ID 18
-// If you re-run reset-goals.ts, update GOAL_ID_OFFSET to match the script output
-const GOAL_ID_OFFSET = 18; // First goalId assigned by reset-goals.ts
+// Fresh manager deployed 2026-02-21: goals are 1-20 (nextGoalId started at 1)
+const GOAL_ID_OFFSET = 1;
 
 const GOALS: GoalDefinition[] = [
   // ── SCORE (4) ──
@@ -364,6 +364,9 @@ function meetsThreshold(progress: number, goal: GoalDefinition): boolean {
 /**
  * Get all achievements and player completion status
  * Called by the frontend useAchievements hook
+ *
+ * Uses on-chain getPlayerGoalStatuses() as the source of truth for completion
+ * status, NOT Firestore. This ensures accuracy after contract migrations.
  */
 export const getAchievements = onCall(async (request: any) => {
   const { walletAddress } = request.data;
@@ -372,17 +375,29 @@ export const getAchievements = onCall(async (request: any) => {
     throw new HttpsError('invalid-argument', 'walletAddress is required');
   }
 
-  const db = admin.firestore();
   const addr = walletAddress.toLowerCase();
 
-  // Get player's completed achievements from Firestore
-  const completedSnap = await db.collection('achievements')
-    .where('walletAddress', '==', addr)
-    .get();
-
-  const completedGoalIds = new Set(
-    completedSnap.docs.map((doc: any) => doc.data().goalId)
-  );
+  // Check on-chain completion status (source of truth)
+  let completedGoalIds = new Set<number>();
+  try {
+    const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
+    const contract = new ethers.Contract(ACHIEVEMENT_MANAGER_ADDRESS, ACHIEVEMENT_MANAGER_ABI, provider);
+    const goalIds = GOALS.map(g => g.id);
+    const statuses: boolean[] = await contract.getPlayerGoalStatuses(addr, goalIds);
+    for (let i = 0; i < GOALS.length; i++) {
+      if (statuses[i]) completedGoalIds.add(GOALS[i].id);
+    }
+  } catch (err) {
+    console.error('Error checking on-chain goal statuses, falling back to Firestore:', err);
+    // Fallback: use Firestore if on-chain check fails
+    const db = admin.firestore();
+    const completedSnap = await db.collection('achievements')
+      .where('walletAddress', '==', addr)
+      .get();
+    completedGoalIds = new Set(
+      completedSnap.docs.map((doc: any) => doc.data().goalId)
+    );
+  }
 
   // Build goals list with completion status
   // Hidden achievements show "???" unless the player has already earned them
@@ -412,16 +427,24 @@ export const checkAchievement = onCall(async (request: any) => {
     throw new HttpsError('invalid-argument', 'walletAddress and achievementTypeId are required');
   }
 
-  const db = admin.firestore();
   const addr = walletAddress.toLowerCase();
 
-  const snap = await db.collection('achievements')
-    .where('walletAddress', '==', addr)
-    .where('achievementTypeId', '==', achievementTypeId)
-    .limit(1)
-    .get();
+  // Find the goal with this achievementTypeId
+  const goal = GOALS.find(g => g.achievementTypeId === achievementTypeId);
+  if (!goal) {
+    return { hasAchievement: false };
+  }
 
-  return { hasAchievement: !snap.empty };
+  // Check on-chain (source of truth)
+  try {
+    const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
+    const contract = new ethers.Contract(ACHIEVEMENT_MANAGER_ADDRESS, ACHIEVEMENT_MANAGER_ABI, provider);
+    const hasCompleted = await contract.hasCompletedGoal(addr, goal.id);
+    return { hasAchievement: hasCompleted };
+  } catch (err) {
+    console.error('Error checking on-chain achievement:', err);
+    return { hasAchievement: false };
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -489,42 +512,28 @@ export const checkAndAwardAchievements = onSchedule(
     const contract = new ethers.Contract(ACHIEVEMENT_MANAGER_ADDRESS, ACHIEVEMENT_MANAGER_ABI, wallet);
 
     let totalAwarded = 0;
+    const goalIds = GOALS.map(g => g.id);
 
     for (const walletAddress of allWallets) {
 
-      // Get already completed achievements for this player
-      const completedSnap = await db.collection('achievements')
-        .where('walletAddress', '==', walletAddress)
-        .get();
-      const completedGoalIds = new Set(
-        completedSnap.docs.map((d: any) => d.data().goalId)
-      );
+      // Get on-chain completion status (source of truth, one RPC call per wallet)
+      let completedStatuses: boolean[];
+      try {
+        completedStatuses = await contract.getPlayerGoalStatuses(walletAddress, goalIds);
+      } catch (err) {
+        console.error(`Error fetching on-chain statuses for ${walletAddress}:`, err);
+        continue;
+      }
 
-      for (const goal of GOALS) {
-        // Skip already completed goals
-        if (completedGoalIds.has(goal.id)) continue;
+      for (let i = 0; i < GOALS.length; i++) {
+        const goal = GOALS[i];
+
+        // Skip already completed on-chain
+        if (completedStatuses[i]) continue;
 
         // Check progress
         const progress = await getPlayerProgress(walletAddress, goal);
         if (!meetsThreshold(progress, goal)) continue;
-
-        // Double-check on-chain (in case Firestore is out of sync)
-        try {
-          const alreadyCompleted = await contract.hasCompletedGoal(walletAddress, goal.id);
-          if (alreadyCompleted) {
-            await db.collection('achievements').add({
-              walletAddress,
-              goalId: goal.id,
-              achievementTypeId: goal.achievementTypeId,
-              awardedAt: admin.firestore.FieldValue.serverTimestamp(),
-              source: 'sync',
-            });
-            continue;
-          }
-        } catch (err) {
-          console.error(`Error checking on-chain status for ${walletAddress} goal ${goal.id}:`, err);
-          continue;
-        }
 
         // Award the achievement on-chain
         try {
@@ -533,6 +542,7 @@ export const checkAndAwardAchievements = onSchedule(
           const tx = await contract.awardAchievement(walletAddress, goal.id);
           const receipt = await tx.wait();
 
+          // Write to Firestore for audit trail
           await db.collection('achievements').add({
             walletAddress,
             goalId: goal.id,
@@ -575,22 +585,20 @@ export const manualCheckAchievements = onCall(
     const db = admin.firestore();
     const addr = walletAddress.toLowerCase();
 
-    // Get completed achievements
-    const completedSnap = await db.collection('achievements')
-      .where('walletAddress', '==', addr)
-      .get();
-    const completedGoalIds = new Set(
-      completedSnap.docs.map((d: any) => d.data().goalId)
-    );
-
     const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
-    const wallet = new ethers.Wallet(rewardsPrivateKey.value(), provider);
-    const contract = new ethers.Contract(ACHIEVEMENT_MANAGER_ADDRESS, ACHIEVEMENT_MANAGER_ABI, wallet);
+    const signer = new ethers.Wallet(rewardsPrivateKey.value(), provider);
+    const contract = new ethers.Contract(ACHIEVEMENT_MANAGER_ADDRESS, ACHIEVEMENT_MANAGER_ABI, signer);
+
+    // Check on-chain completion status (source of truth)
+    const goalIds = GOALS.map(g => g.id);
+    const completedStatuses: boolean[] = await contract.getPlayerGoalStatuses(addr, goalIds);
 
     const results: { goalId: number; name: string; awarded: boolean; error?: string }[] = [];
 
-    for (const goal of GOALS) {
-      if (completedGoalIds.has(goal.id)) {
+    for (let i = 0; i < GOALS.length; i++) {
+      const goal = GOALS[i];
+
+      if (completedStatuses[i]) {
         results.push({ goalId: goal.id, name: goal.name, awarded: false, error: 'Already completed' });
         continue;
       }
