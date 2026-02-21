@@ -489,6 +489,30 @@ contract AchievementManager is
         badgeMetadataBaseURI = _uri;
     }
 
+    /**
+     * @notice Reset goal completion status for players (used after badges contract migration)
+     * @dev Allows re-minting on a new badges contract. Only callable by owner.
+     * @param players Array of player addresses
+     * @param goalIds Array of goal IDs (must match players array length)
+     */
+    function resetPlayerGoalCompletions(
+        address[] calldata players,
+        uint256[] calldata goalIds
+    ) external onlyOwner {
+        require(players.length == goalIds.length, "Array length mismatch");
+        for (uint256 i = 0; i < players.length; i++) {
+            if (playerGoalCompleted[players[i]][goalIds[i]]) {
+                playerGoalCompleted[players[i]][goalIds[i]] = false;
+                if (playerTotalAchievements[players[i]] > 0) {
+                    playerTotalAchievements[players[i]]--;
+                }
+                if (totalAchievementsAwarded > 0) {
+                    totalAchievementsAwarded--;
+                }
+            }
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════
     // UUPS UPGRADE AUTHORIZATION
     // ═══════════════════════════════════════════════════════════
