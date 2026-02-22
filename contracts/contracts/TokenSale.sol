@@ -96,6 +96,11 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         uint256 amount
     );
 
+    event SaleScheduled(
+        uint256 newStartTime,
+        uint256 newEndTime
+    );
+
     // ═══════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════
@@ -325,6 +330,23 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
     ) external onlyOwner {
         minPurchaseUsdc = _minPurchaseUsdc;
         maxPurchasePerWallet = _maxPurchasePerWallet;
+    }
+
+    /**
+     * @dev Update sale start time before the sale has begun.
+     *      Use the admin dashboard datetime picker to schedule the exact launch.
+     *      Resets the end time to newStartTime + SALE_DURATION.
+     * @param newStartTime Unix timestamp for the new sale start (must be in the future)
+     */
+    function setSaleStartTime(uint256 newStartTime) external onlyOwner {
+        require(!saleFinalized, "Sale is finalized");
+        require(block.timestamp < saleStartTime, "Sale already started");
+        require(newStartTime > block.timestamp, "Start time must be in the future");
+
+        saleStartTime = newStartTime;
+        saleEndTime   = newStartTime + SALE_DURATION;
+
+        emit SaleScheduled(newStartTime, saleEndTime);
     }
 
     /**
