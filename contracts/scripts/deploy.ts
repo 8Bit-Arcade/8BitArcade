@@ -107,7 +107,7 @@ async function main() {
   const tokenSale = await TokenSale.deploy(
     tokenAddress,
     usdcAddress,
-    0 // Start immediately (0 = use block.timestamp)
+    9999999999 // Far-future placeholder — use admin panel to set the real launch date
   );
   await tokenSale.waitForDeployment();
   const tokenSaleAddress = await tokenSale.getAddress();
@@ -265,7 +265,7 @@ async function main() {
   console.log(`   npx hardhat verify --network arbitrumSepolia ${rewardsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentPaymentsAddress} ${tokenAddress} ${usdcAddress} ${wethAddress} ${swapRouterAddress}`);
-  console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 0`);
+  console.log(`   npx hardhat verify --network ${network.name} ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 9999999999`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${treasuryAddress} ${deployer.address} ${minThreshold} ${refillAmount}`);
   console.log("9. Add liquidity to DEX for 8BIT/USDC and WETH/USDC pools");
   console.log("10. Create automated tournament scheduler (Firebase Cloud Function)");
