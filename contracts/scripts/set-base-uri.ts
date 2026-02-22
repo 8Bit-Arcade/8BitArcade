@@ -17,8 +17,7 @@ const MANAGER = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
 const BADGES = "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f";
 
 // HTTPS gateway URL so explorers (Arbiscan) can fetch metadata directly
-// The JSON files still reference images as ipfs:// which explorers convert internally
-const BASE_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeighxxvehks525oq7wxcujosekuf5ptpejw7uprl7k5g274txshkcy/";
+const BASE_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeicq7qgtsrr4yl45a7waqv7wiluy6nuetjnjeddfo2pxwzljsyin7m/metadata/badges/";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
