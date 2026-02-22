@@ -126,6 +126,10 @@
         }
         .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
         .hint { color: #555; font-size: 0.65rem; margin-top: 0.3rem; }
+        /* datetime-local picker matches the rest of the form */
+        .form-group input[type="datetime-local"] {
+            color-scheme: dark;
+        }
 
         /* ── BUTTONS ────────────────────────────────────── */
         .btn {
@@ -272,10 +276,15 @@
                 <div class="stat-val" id="statStatus">--</div>
                 <div class="stat-sub" id="statStatusSub"></div>
             </div>
-            <div class="stat-card cyan">
+            <div class="stat-card cyan" id="cardTimeRemaining">
                 <h4 class="pixel-text">TIME REMAINING</h4>
                 <div class="stat-val countdown" id="statCountdown">--:--:--</div>
                 <div class="stat-sub" id="statEndDate"></div>
+            </div>
+            <div class="stat-card yellow hidden" id="cardTimeToStart">
+                <h4 class="pixel-text">STARTS IN</h4>
+                <div class="stat-val countdown" id="statStartCountdown">--:--:--</div>
+                <div class="stat-sub" id="statStartDate"></div>
             </div>
             <div class="stat-card green">
                 <h4 class="pixel-text">TOTAL RAISED</h4>
@@ -394,6 +403,22 @@
         ════════════════════════════════════ -->
         <div id="tab-controls" class="tab-content">
             <div class="panel-grid">
+
+                <!-- Schedule Sale Start -->
+                <div class="sub-panel" id="panelScheduleStart">
+                    <h3 class="pixel-text">SCHEDULE SALE START</h3>
+                    <p style="margin-bottom:1rem;">Set or change the exact launch date &amp; time. Only available before the sale has started.</p>
+                    <div class="form-group">
+                        <label>Start Date &amp; Time (your local time)</label>
+                        <input type="datetime-local" id="inputSaleStartDateTime">
+                        <div class="hint">Sale will run for 6 weeks from this date.</div>
+                    </div>
+                    <div style="background:#0a1020; border:1px solid #1e3a6e; border-radius:8px; padding:0.75rem; margin-bottom:1rem; font-size:0.65rem; color:#888;">
+                        Start: <span id="previewStartTime" style="color:#00ff88;">--</span><br>
+                        End&nbsp; (+ 6 wks): <span id="previewEndTime" style="color:#00d4ff;">--</span>
+                    </div>
+                    <button id="btnScheduleStart" class="btn btn-blue btn-full">Set Sale Start Time</button>
+                </div>
 
                 <!-- Pause / Unpause -->
                 <div class="sub-panel">

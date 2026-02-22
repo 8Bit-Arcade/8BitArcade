@@ -54,6 +54,7 @@ const TOKEN_SALE_ABI = [
     "function updateLimits(uint256 _minPurchaseUsdc, uint256 _maxPurchasePerWallet) external",
     "function pause() external",
     "function unpause() external",
+    "function setSaleStartTime(uint256 newStartTime) external",
     "function extendSale(uint256 additionalTime) external",
     "function finalizeSale() external",
     "function withdrawFunds(address payable recipient) external",
@@ -61,6 +62,7 @@ const TOKEN_SALE_ABI = [
     // Events (for log scanning if needed)
     "event TokensPurchased(address indexed buyer, uint256 amount, uint256 ethSpent, uint256 usdcSpent)",
     "event TokensDistributed(address indexed buyer, uint256 amount)",
+    "event SaleScheduled(uint256 newStartTime, uint256 newEndTime)",
     "event SaleFinalized(uint256 tokensSold, uint256 tokensBurned, uint256 ethRaised, uint256 usdcRaised)",
     "event FundsWithdrawn(address indexed recipient, uint256 ethAmount, uint256 usdcAmount)",
 ];
@@ -85,8 +87,10 @@ let usdcContract = null;
 let isAdmin      = false;
 let ethPrice     = 3000;   // Fallback ETH/USD price
 let buyerCache   = [];     // Cached full buyer list from on-chain
-let countdownInterval = null;
-let saleEndTimestamp  = 0;
+let countdownInterval      = null;
+let startCountdownInterval = null;
+let saleEndTimestamp       = 0;
+let saleStartTimestamp     = 0;
 
 // ── Init ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -118,6 +122,10 @@ function setupEventListeners() {
     document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
+    // Schedule
+    document.getElementById('btnScheduleStart').addEventListener('click', scheduleSaleStart);
+    document.getElementById('inputSaleStartDateTime').addEventListener('input', updateSchedulePreviews);
 
     // Sale controls
     document.getElementById('btnPauseSale').addEventListener('click', pauseSale);
@@ -205,7 +213,8 @@ async function switchNetwork() {
 function logout() {
     isAdmin = false; provider = null; signer = null;
     userAddress = null; saleContract = null;
-    if (countdownInterval) clearInterval(countdownInterval);
+    if (countdownInterval)      clearInterval(countdownInterval);
+    if (startCountdownInterval) clearInterval(startCountdownInterval);
     document.getElementById('adminPanel').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
 }
@@ -272,13 +281,15 @@ async function loadContractState() {
     const minPurchUsd = parseFloat(ethers.utils.formatUnits(minPurchaseUsdc, 6));
     const maxTokensF  = parseFloat(ethers.utils.formatEther(maxPurchasePerWallet));
 
-    const now       = Math.floor(Date.now() / 1000);
-    const startTs   = saleStartTime.toNumber();
-    const endTs     = saleEndTime.toNumber();
-    saleEndTimestamp = endTs;
-    const isActive  = !saleFinalized && !paused && now >= startTs && now < endTs;
-    const isEnded   = now >= endTs && !saleFinalized;
-    const buyers    = buyerCount.toNumber();
+    const now          = Math.floor(Date.now() / 1000);
+    const startTs      = saleStartTime.toNumber();
+    const endTs        = saleEndTime.toNumber();
+    saleEndTimestamp   = endTs;
+    saleStartTimestamp = startTs;
+    const isUpcoming   = !saleFinalized && now < startTs;
+    const isActive     = !saleFinalized && !paused && now >= startTs && now < endTs;
+    const isEnded      = now >= endTs && !saleFinalized;
+    const buyers       = buyerCount.toNumber();
 
     // ── Status Banner ─────────────────────────────────────────
     const banner = document.getElementById('saleBanner');
@@ -293,6 +304,9 @@ async function loadContractState() {
     } else if (isEnded) {
         banner.classList.add('banner-ended');
         bannerText.textContent = 'SALE ENDED — Finalize the sale to burn unsold tokens, then distribute.';
+    } else if (isUpcoming) {
+        banner.classList.add('banner-paused');
+        bannerText.textContent = 'SALE SCHEDULED — Starting ' + fmtDatetime(new Date(startTs * 1000)) + '. Use Sale Controls → Schedule to change the start time.';
     } else {
         banner.classList.add('banner-active');
         bannerText.textContent = 'SALE ACTIVE — Accepting purchases.';
@@ -320,13 +334,45 @@ async function loadContractState() {
     document.getElementById('statBuyers').textContent  = buyers.toString();
 
     // ── Countdown ────────────────────────────────────────────
-    if (countdownInterval) clearInterval(countdownInterval);
+    if (countdownInterval)      clearInterval(countdownInterval);
+    if (startCountdownInterval) clearInterval(startCountdownInterval);
+
     if (saleFinalized || now >= endTs) {
         document.getElementById('statCountdown').textContent = 'ENDED';
-    } else {
+    } else if (!isUpcoming) {
         startCountdown(endTs);
     }
     document.getElementById('statEndDate').textContent = new Date(endTs * 1000).toLocaleDateString();
+
+    // STARTS IN card — show only when sale is upcoming
+    const cardTimeToStart   = document.getElementById('cardTimeToStart');
+    const cardTimeRemaining = document.getElementById('cardTimeRemaining');
+    if (isUpcoming) {
+        cardTimeToStart.classList.remove('hidden');
+        cardTimeRemaining.classList.add('hidden');
+        document.getElementById('statStartDate').textContent = 'on ' + new Date(startTs * 1000).toLocaleDateString();
+        startStartCountdown(startTs);
+    } else {
+        cardTimeToStart.classList.add('hidden');
+        cardTimeRemaining.classList.remove('hidden');
+    }
+
+    // Schedule panel: hide once sale has started
+    const panelSchedule = document.getElementById('panelScheduleStart');
+    if (panelSchedule) panelSchedule.style.display = isUpcoming ? '' : 'none';
+
+    // Pre-fill datetime picker with current start time if sale not yet started
+    if (isUpcoming) {
+        const dtInput = document.getElementById('inputSaleStartDateTime');
+        if (dtInput && !dtInput.value) {
+            // Convert unix → datetime-local value (local time, no seconds)
+            const d = new Date(startTs * 1000);
+            const pad2 = n => String(n).padStart(2, '0');
+            dtInput.value = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+                          + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+            updateSchedulePreviews();
+        }
+    }
     document.getElementById('dispEndDate') && (document.getElementById('dispEndDate').textContent = new Date(endTs * 1000).toLocaleString());
 
     // ── Overview Tab ─────────────────────────────────────────
@@ -377,7 +423,7 @@ async function loadContractState() {
     }
 }
 
-// ─── Countdown timer ────────────────────────────────────────────
+// ─── Countdown to end ────────────────────────────────────────────
 function startCountdown(endTs) {
     const el = document.getElementById('statCountdown');
     const update = () => {
@@ -389,6 +435,21 @@ function startCountdown(endTs) {
     };
     update();
     countdownInterval = setInterval(update, 1000);
+}
+
+// ─── Countdown to start (for UPCOMING state) ─────────────────────
+function startStartCountdown(startTs) {
+    const el = document.getElementById('statStartCountdown');
+    const update = () => {
+        const secs = Math.max(startTs - Math.floor(Date.now() / 1000), 0);
+        el.textContent = fmtDuration(secs);
+        if (secs === 0) {
+            clearInterval(startCountdownInterval);
+            refreshData(); // reload — sale may now be active
+        }
+    };
+    update();
+    startCountdownInterval = setInterval(update, 1000);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -617,6 +678,47 @@ async function extendSale() {
         'Sale extended by ' + label + '.',
         'Error extending sale'
     );
+}
+
+// ─── Schedule Sale Start ─────────────────────────────────────────
+async function scheduleSaleStart() {
+    if (!guardAdmin()) return;
+    const dtVal = document.getElementById('inputSaleStartDateTime').value;
+    if (!dtVal) {
+        showStatus('Pick a start date and time first.', 'error');
+        return;
+    }
+    const newStartTs = Math.floor(new Date(dtVal).getTime() / 1000);
+    if (isNaN(newStartTs) || newStartTs <= Math.floor(Date.now() / 1000)) {
+        showStatus('Start time must be in the future.', 'error');
+        return;
+    }
+    const endTs   = newStartTs + 6 * 7 * 24 * 3600; // 6 weeks
+    const startStr = fmtDatetime(new Date(newStartTs * 1000));
+    const endStr   = fmtDatetime(new Date(endTs * 1000));
+    if (!confirm('Schedule sale start?\n\nStart: ' + startStr + '\nEnd:   ' + endStr + '\n\nThis replaces the current start time.')) return;
+    await sendTx(
+        () => saleContract.setSaleStartTime(newStartTs),
+        'Scheduling sale start...',
+        'Sale start time updated! Starts: ' + startStr,
+        'Error scheduling sale start'
+    );
+    document.getElementById('inputSaleStartDateTime').value = '';
+}
+
+function updateSchedulePreviews() {
+    const dtVal = document.getElementById('inputSaleStartDateTime').value;
+    const startPrev = document.getElementById('previewStartTime');
+    const endPrev   = document.getElementById('previewEndTime');
+    if (!dtVal) {
+        startPrev.textContent = '--';
+        endPrev.textContent   = '--';
+        return;
+    }
+    const startTs = Math.floor(new Date(dtVal).getTime() / 1000);
+    const endTs   = startTs + 6 * 7 * 24 * 3600;
+    startPrev.textContent = fmtDatetime(new Date(startTs * 1000));
+    endPrev.textContent   = fmtDatetime(new Date(endTs   * 1000));
 }
 
 // ─── Withdraw Funds ──────────────────────────────────────────────
