@@ -1,7 +1,7 @@
 {
   "name": "Double Trouble",
   "description": "Get the exact same score in two different games",
-  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/19.png",
+  "image": "https://ipfs.io/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/19.png",
   "attributes": [
     { "trait_type": "Category", "value": "Hidden" },
     { "trait_type": "Reward", "value": "750 8BIT" }
