@@ -37,6 +37,9 @@ const TOKEN_SALE_ABI = [
     "function withdrawFunds(address payable recipient) external",
     "function finalizeSale() external",
     "function extendSale(uint256 additionalTime) external",
+    "function distributeTokens(uint256 startIndex, uint256 count) external",
+    "function tokensClaimed(address buyer) view returns (bool)",
+    "event TokensDistributed(address indexed buyer, uint256 amount)",
 ];
 
 const ERC20_ABI = [

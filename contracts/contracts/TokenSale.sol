@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * - Duration: 4-6 weeks
  * - Payments: ETH + USDC
  * - Access: Fully public, no KYC
- * - Vesting: None (immediate unlock)
+ * - Distribution: Post-TGE, owner-triggered via distributeTokens()
  * - Unsold: Burned at sale end
  */
 contract TokenSale is Ownable, ReentrancyGuard, Pausable {
@@ -56,6 +56,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
 
     address[] public buyers;
     mapping(address => bool) private isBuyer;
+    mapping(address => bool) public tokensClaimed; // true after owner distributes tokens to buyer
 
     // Limits (optional, can be set by owner)
     uint256 public minPurchaseUsdc = 10 * 10**6; // $10 minimum
@@ -88,6 +89,11 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         address indexed recipient,
         uint256 ethAmount,
         uint256 usdcAmount
+    );
+
+    event TokensDistributed(
+        address indexed buyer,
+        uint256 amount
     );
 
     // ═══════════════════════════════════════════════════════════
@@ -207,11 +213,7 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
             isBuyer[buyer] = true;
         }
 
-        // Transfer tokens immediately (no vesting)
-        require(
-            eightBitToken.transfer(buyer, tokenAmount),
-            "Token transfer failed"
-        );
+        // Tokens are held in the contract until owner calls distributeTokens() after TGE
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -238,6 +240,37 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
         }
 
         emit SaleFinalized(tokensSold, unsoldTokens, ethRaised, usdcRaised);
+    }
+
+    /**
+     * @dev Distribute tokens to buyers after TGE (owner-only)
+     * Must be called after finalizeSale(). Process buyers in batches to avoid
+     * hitting block gas limits. Call repeatedly with increasing startIndex until
+     * all buyers have been covered (check getBuyerCount()).
+     * @param startIndex First index in the buyers array to process
+     * @param count Number of buyers to process (pass buyers.length - startIndex for all remaining)
+     */
+    function distributeTokens(uint256 startIndex, uint256 count) external onlyOwner nonReentrant {
+        require(saleFinalized, "Sale must be finalized first");
+        require(startIndex < buyers.length, "Invalid start index");
+
+        uint256 endIndex = startIndex + count;
+        if (endIndex > buyers.length) {
+            endIndex = buyers.length;
+        }
+
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            address buyer = buyers[i];
+            uint256 amount = purchasedTokens[buyer];
+            if (amount > 0 && !tokensClaimed[buyer]) {
+                tokensClaimed[buyer] = true;
+                require(
+                    eightBitToken.transfer(buyer, amount),
+                    "Token transfer failed"
+                );
+                emit TokensDistributed(buyer, amount);
+            }
+        }
     }
 
     /**
@@ -399,6 +432,8 @@ contract TokenSale is Ownable, ReentrancyGuard, Pausable {
 
     /**
      * @dev Emergency withdrawal of tokens (if needed)
+     * WARNING: Do NOT call this with the 8BIT token address before distributeTokens()
+     * has been called for all buyers, or buyer funds will be removed from the contract.
      */
     function emergencyWithdrawTokens(address token, address recipient) external onlyOwner {
         require(saleFinalized, "Can only use after sale finalized");
