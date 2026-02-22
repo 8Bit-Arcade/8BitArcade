@@ -2,13 +2,6 @@ import { ethers } from "hardhat";
 
 /**
  * Deep-dive verification: checks the entire NFT metadata chain
- *
- * 1. On-chain baseTokenURI on AchievementBadges
- * 2. On-chain badgeMetadataBaseURI on AchievementManager
- * 3. tokenAchievementType mapping for a specific token
- * 4. Computed tokenURI
- * 5. Whether the JSON resolves on IPFS
- * 6. Whether the image inside the JSON resolves
  */
 
 const BADGES = "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f";
@@ -18,7 +11,6 @@ const BADGES_ABI = [
   "function baseTokenURI() view returns (string)",
   "function tokenURI(uint256) view returns (string)",
   "function tokenAchievementType(uint256) view returns (uint256)",
-  "function totalSupply() view returns (uint256)",
   "function ownerOf(uint256) view returns (address)",
 ];
 
@@ -35,98 +27,82 @@ async function main() {
 
   console.log("=== NFT METADATA DEEP DIVE ===\n");
 
-  // 1. Check base URIs on both contracts
+  // 1. Base URIs
   const badgesBaseURI = await badges.baseTokenURI();
   const managerBaseURI = await manager.badgeMetadataBaseURI();
   console.log("1. BASE URIs:");
-  console.log("   Badges  baseTokenURI:        ", badgesBaseURI);
-  console.log("   Manager badgeMetadataBaseURI: ", managerBaseURI);
+  console.log("   Badges:  ", badgesBaseURI);
+  console.log("   Manager: ", managerBaseURI);
   console.log("   Match:", badgesBaseURI === managerBaseURI ? "YES" : "NO <<<< MISMATCH!");
   console.log();
 
-  // 2. Check total supply
-  const totalSupply = await badges.totalSupply();
-  console.log("2. TOTAL SUPPLY:", totalSupply.toString());
-  console.log();
-
-  // 3. Check goal setup on manager
-  const goalCount = await manager.goalCount();
-  console.log("3. MANAGER GOALS (", goalCount.toString(), "total ):");
-  for (let i = 1; i <= Number(goalCount); i++) {
-    try {
-      const goal = await manager.goals(i);
-      console.log(`   Goal ${i}: achievementTypeId=${goal.achievementTypeId}, active=${goal.active}, threshold=${goal.threshold}`);
-    } catch {
-      console.log(`   Goal ${i}: ERROR reading`);
+  // 2. Goal setup - show achievementTypeId for each goal
+  try {
+    const goalCount = await manager.goalCount();
+    console.log("2. GOALS (goalId -> achievementTypeId):");
+    for (let i = 1; i <= Math.min(Number(goalCount), 20); i++) {
+      try {
+        const goal = await manager.goals(i);
+        console.log(`   Goal ${i}: achievementTypeId=${goal.achievementTypeId}, active=${goal.active}`);
+      } catch { console.log(`   Goal ${i}: error`); }
     }
-  }
+  } catch (e: any) { console.log("2. Goals: error -", e.message?.slice(0, 80)); }
   console.log();
 
-  // 4. Check specific tokens
-  const tokensToCheck = [1, 73];
-  for (const tokenId of tokensToCheck) {
+  // 3. Check tokens 1-100 to find existing ones
+  console.log("3. TOKENS:");
+  const found: number[] = [];
+  for (let id = 1; id <= 100; id++) {
+    try {
+      await badges.ownerOf(id);
+      found.push(id);
+    } catch { /* doesn't exist */ }
+  }
+  console.log(`   Found ${found.length} tokens: ${found.join(", ")}`);
+  console.log();
+
+  // 4. Deep check each found token (or first 5 + token 73)
+  const toCheck = [...new Set([...found.slice(0, 5), 73])].filter(id => found.includes(id));
+  for (const tokenId of toCheck) {
     console.log(`4. TOKEN #${tokenId}:`);
     try {
       const owner = await badges.ownerOf(tokenId);
-      const achievementTypeId = await badges.tokenAchievementType(tokenId);
-      const tokenURI = await badges.tokenURI(tokenId);
+      const typeId = await badges.tokenAchievementType(tokenId);
+      const uri = await badges.tokenURI(tokenId);
 
-      console.log(`   Owner: ${owner}`);
-      console.log(`   achievementTypeId: ${achievementTypeId}`);
-      console.log(`   tokenURI: ${tokenURI}`);
-      console.log(`   Expected: ${badgesBaseURI}${achievementTypeId}.json`);
+      console.log(`   owner: ${owner}`);
+      console.log(`   achievementTypeId: ${typeId}`);
+      console.log(`   tokenURI: ${uri}`);
 
-      // Try to fetch the JSON
-      const ipfsHash = tokenURI.replace("ipfs://", "");
-      const gatewayUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
-      console.log(`   Gateway URL: ${gatewayUrl}`);
+      // Fetch JSON
+      const hash = uri.replace("ipfs://", "");
+      const url = `https://ipfs.io/ipfs/${hash}`;
+      console.log(`   gateway: ${url}`);
 
       try {
-        const response = await fetch(gatewayUrl, { signal: AbortSignal.timeout(15000) });
-        if (response.ok) {
-          const json = await response.json();
-          console.log(`   JSON fetched OK!`);
-          console.log(`   name: ${json.name}`);
-          console.log(`   image: ${json.image}`);
+        const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+        if (res.ok) {
+          const json = await res.json();
+          console.log(`   JSON OK -> name: "${json.name}", image: ${json.image}`);
 
           // Check image
-          const imageHash = json.image.replace("ipfs://", "");
-          const imageUrl = `https://ipfs.io/ipfs/${imageHash}`;
-          console.log(`   Image gateway: ${imageUrl}`);
+          const imgHash = json.image.replace("ipfs://", "");
+          const imgUrl = `https://ipfs.io/ipfs/${imgHash}`;
           try {
-            const imgResp = await fetch(imageUrl, { method: "HEAD", signal: AbortSignal.timeout(15000) });
-            console.log(`   Image status: ${imgResp.status} ${imgResp.statusText}`);
-            console.log(`   Image content-type: ${imgResp.headers.get("content-type")}`);
-          } catch (e: any) {
-            console.log(`   Image fetch FAILED: ${e.message}`);
-          }
+            const imgRes = await fetch(imgUrl, { method: "HEAD", signal: AbortSignal.timeout(20000) });
+            console.log(`   Image: ${imgRes.status} ${imgRes.statusText} (${imgRes.headers.get("content-type")})`);
+          } catch (e: any) { console.log(`   Image fetch error: ${e.message}`); }
         } else {
-          console.log(`   JSON fetch FAILED: ${response.status} ${response.statusText}`);
+          console.log(`   JSON FAILED: ${res.status} ${res.statusText} <<<< PROBLEM`);
         }
-      } catch (e: any) {
-        console.log(`   JSON fetch FAILED: ${e.message}`);
-      }
-    } catch (e: any) {
-      console.log(`   Token does not exist or error: ${e.message?.slice(0, 100)}`);
-    }
+      } catch (e: any) { console.log(`   JSON fetch error: ${e.message}`); }
+    } catch (e: any) { console.log(`   Error: ${e.message?.slice(0, 100)}`); }
     console.log();
   }
-
-  // 5. Expected URI check
-  console.log("5. EXPECTED URI PATTERN:");
-  console.log("   For achievementTypeId=1:");
-  console.log("   tokenURI should be: " + badgesBaseURI + "1.json");
-  console.log("   For that to work, this URL must resolve:");
-  const testHash = (badgesBaseURI + "1.json").replace("ipfs://", "");
-  console.log("   https://ipfs.io/ipfs/" + testHash);
-  console.log();
 
   console.log("=== DONE ===");
 }
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch((error) => { console.error(error); process.exit(1); });
