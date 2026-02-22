@@ -1,7 +1,7 @@
 {
   "name": "Shutout King",
   "description": "Win 11-0 three times in Paddle Battle",
-  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/4.png",
+  "image": "https://ipfs.io/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/4.png",
   "attributes": [
     { "trait_type": "Category", "value": "Score" },
     { "trait_type": "Reward", "value": "400 8BIT" }

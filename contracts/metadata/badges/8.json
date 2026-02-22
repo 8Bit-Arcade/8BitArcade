@@ -1,7 +1,7 @@
 {
   "name": "Week Warrior",
   "description": "Play 7 days in a row",
-  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/8.png",
+  "image": "https://ipfs.io/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/8.png",
   "attributes": [
     { "trait_type": "Category", "value": "Streak" },
     { "trait_type": "Reward", "value": "150 8BIT" }

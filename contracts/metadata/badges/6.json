@@ -1,7 +1,7 @@
 {
   "name": "8-Bit Legend",
   "description": "Play 1,000 games",
-  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/6.png",
+  "image": "https://ipfs.io/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/6.png",
   "attributes": [
     { "trait_type": "Category", "value": "Games Played" },
     { "trait_type": "Reward", "value": "2,500 8BIT" }

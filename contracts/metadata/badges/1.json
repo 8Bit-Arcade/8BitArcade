@@ -1,7 +1,7 @@
 {
   "name": "Space Rocks Master",
   "description": "Score 25,000 in Space Rocks",
-  "image": "ipfs://bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/1.png",
+  "image": "https://ipfs.io/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/1.png",
   "attributes": [
     { "trait_type": "Category", "value": "Score" },
     { "trait_type": "Reward", "value": "500 8BIT" }
