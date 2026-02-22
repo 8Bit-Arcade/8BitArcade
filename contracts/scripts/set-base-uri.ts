@@ -17,7 +17,7 @@ const MANAGER = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
 const BADGES = "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f";
 
 // UPDATE THIS with your Pinata JSON folder CID after re-uploading fixed metadata
-const BASE_URI = "ipfs://bafybeiciaqiv4e2x4yzlxswbymqfgtajtyrsxmsoh4xkswuwgek2z6kn5e/";
+const BASE_URI = "ipfs://bafybeighxxvehks525oq7wxcujosekuf5ptpejw7uprl7k5g274txshkcy/";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
