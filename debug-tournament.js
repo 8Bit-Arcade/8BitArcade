@@ -3,7 +3,7 @@ const { ethers } = require('ethers');
 const TOURNAMENT_MANAGER_ADDRESS = '0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7';
 const EIGHT_BIT_TOKEN_ADDRESS = '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d';
 const ARBITRUM_SEPOLIA_RPC = 'https://sepolia-rollup.arbitrum.io/rpc';
-const USER_WALLET = '0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8';
+const USER_WALLET = '0x80361876199e2318d6993A07e37177cFd21B64a7';
 
 const TOURNAMENT_MANAGER_ABI = [
   'function getTournament(uint256 tournamentId) view returns (uint8 tier, uint8 period, uint256 startTime, uint256 endTime, uint256 entryFee, uint256 prizePool, uint256 totalEntries, address winner, bool isActive)',
