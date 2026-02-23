@@ -86,15 +86,16 @@ async function main() {
   console.log();
 
   // Fund TournamentManager with tokens for prize pools
-  // Transfer 35M tokens to TournamentManager for prizes (7% of max supply)
+  // Transfer 20M tokens to TournamentManager for prizes (4% of max supply)
   console.log("💰 Funding TournamentManager with prize pool tokens...");
-  const prizePoolAmount = ethers.parseEther("35000000"); // 35M tokens
+  const prizePoolAmount = ethers.parseEther("20000000"); // 20M tokens
   const mintTx = await token.transfer(tournamentsAddress, prizePoolAmount);
   await mintTx.wait();
   console.log("✅ TournamentManager funded with", ethers.formatEther(prizePoolAmount), "8BIT");
   console.log();
 
   // Deploy TokenSale
+
   console.log("📝 Deploying TokenSale...");
   // USDC addresses:
   // Arbitrum Sepolia: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d
@@ -196,8 +197,8 @@ async function main() {
   const totalDistributed = tournamentBalance + saleBalance + faucetBalance + deployerBalance;
 
   console.log("TournamentManager:", ethers.formatEther(tournamentBalance), "8BIT");
-  console.log("  Expected: 35,000,000 8BIT");
-  console.log("  Status:", tournamentBalance === ethers.parseEther("35000000") ? "✅ CORRECT" : "❌ INCORRECT");
+  console.log("  Expected: 20,000,000 8BIT");
+  console.log("  Status:", tournamentBalance === ethers.parseEther("20000000") ? "✅ CORRECT" : "❌ INCORRECT");
   console.log();
 
   console.log("TokenSale:", ethers.formatEther(saleBalance), "8BIT");
@@ -214,8 +215,8 @@ async function main() {
 
   console.log("Deployer:", ethers.formatEther(deployerBalance), "8BIT");
   const expectedDeployerBalance = faucetAddress
-    ? ethers.parseEther("15000000") // Testnet: 15M remaining (300M - 200M - 35M - 50M)
-    : ethers.parseEther("65000000"); // Mainnet: 65M remaining (300M - 200M - 35M)
+    ? ethers.parseEther("30000000") // Testnet: 30M remaining (300M - 200M - 20M - 50M)
+    : ethers.parseEther("80000000"); // Mainnet: 80M remaining (300M - 200M - 20M)
   console.log("  Expected:", ethers.formatEther(expectedDeployerBalance), "8BIT");
   console.log("  Status:", deployerBalance === expectedDeployerBalance ? "✅ CORRECT" : "❌ INCORRECT");
   console.log();
