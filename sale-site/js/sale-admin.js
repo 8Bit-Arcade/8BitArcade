@@ -178,6 +178,50 @@ async function connectWallet() {
             return;
         }
 
+        // ── Firebase Auth sign-in via wallet signature ────────────────
+        // The callable functions check request.auth, so we must sign in
+        // to Firebase before calling any protected function.
+        const auth = firebase.auth();
+        const currentUser = auth.currentUser;
+        if (!currentUser || currentUser.uid.toLowerCase() !== userAddress.toLowerCase()) {
+            const nonce = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
+            const timestamp = Date.now();
+            const isoTimestamp = new Date(timestamp).toISOString();
+            const sep = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+            const message = [
+                sep,
+                '       🎮 8-BIT ARCADE 🎮',
+                sep,
+                '',
+                'Sign in to 8-Bit Arcade to access ranked games, leaderboards, and earn rewards.',
+                '',
+                'Please sign this message to verify your wallet ownership.',
+                'This action will NOT cost any gas fees.',
+                '',
+                sep,
+                '',
+                'Action: Sign In',
+                '',
+                `Address: ${userAddress}`,
+                '',
+                `Nonce: ${nonce}`,
+                '',
+                `Timestamp: ${timestamp}`,
+                `ISO-Time: ${isoTimestamp}`,
+                '',
+                sep,
+            ].join('\n');
+
+            const signature = await signer.signMessage(message);
+            const verifyWallet = functions.httpsCallable('verifyWallet');
+            const result = await verifyWallet({ address: userAddress, message, signature });
+            await auth.signInWithCustomToken(result.data.customToken);
+        }
+
         saleContract  = new ethers.Contract(CONTRACTS.TOKEN_SALE,      TOKEN_SALE_ABI, signer);
         tokenContract = new ethers.Contract(CONTRACTS.EIGHT_BIT_TOKEN, ERC20_ABI,      provider);
         usdcContract  = new ethers.Contract(CONTRACTS.USDC,            ERC20_ABI,      provider);
