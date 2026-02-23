@@ -11,6 +11,8 @@ interface ZealyVerifyResponse {
     gamesPlayed: number;
     required: number;
     wallet: string;
+    tokensPurchased?: number;
+    tokensRequired?: number;
   };
 }
 
@@ -60,7 +62,7 @@ export const zealyVerifyQuest = onRequest(
       const response: ZealyVerifyResponse = {
         success: false,
         verified: false,
-        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1',
+        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1, sale30k, sale60k',
       };
       res.status(400).json(response);
       return;
@@ -177,11 +179,42 @@ export const zealyVerifyQuest = onRequest(
           return;
         }
 
+        case 'sale30k':
+        case 'sale60k': {
+          // Tokens are stored in wei (18 decimals) as a float in sale_buyers.totalTokens
+          const requiredTokens = quest === 'sale30k' ? 30_000 : 60_000;
+          const requiredWei = requiredTokens * 1e18;
+
+          const buyerDoc = await db.collection('sale_buyers').doc(normalizedWallet).get();
+          const totalTokensWei: number = buyerDoc.exists
+            ? (buyerDoc.data()?.totalTokens || 0)
+            : 0;
+          const totalTokens = totalTokensWei / 1e18;
+          const verified = totalTokensWei >= requiredWei;
+
+          const response: ZealyVerifyResponse = {
+            success: true,
+            verified,
+            message: verified
+              ? `Quest complete! Wallet purchased ${totalTokens.toLocaleString()} 8BIT tokens.`
+              : `Not yet complete. Wallet purchased ${totalTokens.toLocaleString()}/${requiredTokens.toLocaleString()} 8BIT tokens.`,
+            data: {
+              gamesPlayed: 0,
+              required: requiredTokens,
+              wallet: normalizedWallet,
+              tokensPurchased: totalTokens,
+              tokensRequired: requiredTokens,
+            },
+          };
+          res.json(response);
+          return;
+        }
+
         default: {
           const response: ZealyVerifyResponse = {
             success: false,
             verified: false,
-            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1`,
+            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1, sale30k, sale60k`,
           };
           res.status(400).json(response);
           return;
@@ -209,6 +242,10 @@ function getRequiredCount(quest: string): number {
       return 10;
     case 'tournament1':
       return 1;
+    case 'sale30k':
+      return 30_000;
+    case 'sale60k':
+      return 60_000;
     default:
       return 0;
   }
