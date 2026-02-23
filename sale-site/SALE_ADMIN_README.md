@@ -51,7 +51,7 @@ Update these in both files:
 
 ```javascript
 const ADMIN_ADDRESSES = [
-    '0x92f5523c2329ee281e7feb8808fce4b49ab1ebf8', // 8BitToken owner wallet
+    '0x80361876199e2318d6993a07e37177cfd21b64a7', // 8BitToken owner wallet
     // Add more admin addresses here
 ];
 ```

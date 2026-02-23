@@ -1,7 +1,7 @@
 # 8-Bit Arcade — Mainnet Contract Addresses
 
 Deployed to **Arbitrum One** on 2026-02-22.
-Deployer: `0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8`
+Deployer: `0x80361876199e2318d6993A07e37177cFd21B64a7`
 
 > **Status:** Frontend still on testnet (`USE_TESTNET = true`). Flip to `false` and update sale site when ready to go live.
 
@@ -54,7 +54,7 @@ npx hardhat verify --network arbitrumOne 0xa009e23658609EC3d6b98b1e0904b77005A73
 npx hardhat verify --network arbitrumOne 0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA 0x37ee26669659758109c94862e49B492247Be26df 0xaf88d065e77c8cC2239327C5EDb3A432268e5831 9999999999
 
 # TreasuryGasManager
-npx hardhat verify --network arbitrumOne 0x2185cF31B507620C412b00cde9B1BCd1B62983d6 0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8 50000000000000000 100000000000000000
+npx hardhat verify --network arbitrumOne 0x2185cF31B507620C412b00cde9B1BCd1B62983d6 0x80361876199e2318d6993A07e37177cFd21B64a7 50000000000000000 100000000000000000
 ```
 
 > Note: The deploy script's verify output incorrectly said `--network arbitrumSepolia` for most contracts. All of the above use the correct `--network arbitrumOne`.
