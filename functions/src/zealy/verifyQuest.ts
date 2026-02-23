@@ -71,26 +71,31 @@ export const zealyVerifyQuest = onRequest(
     try {
       const normalizedWallet = wallet.toLowerCase();
 
-      // Get user document
-      const userDoc = await db.collection('users').doc(normalizedWallet).get();
+      // Sale quests check sale_buyers, not the users collection
+      const isSaleQuest = quest === 'sale30k' || quest === 'sale60k';
 
-      if (!userDoc.exists) {
-        const response: ZealyVerifyResponse = {
-          success: true,
-          verified: false,
-          message: 'Player not found - no games played yet',
-          data: {
-            gamesPlayed: 0,
-            required: getRequiredCount(quest),
-            wallet: normalizedWallet,
-          },
-        };
-        res.json(response);
-        return;
+      // Get user document (only needed for game/tournament quests)
+      let gamesPlayed = 0;
+      if (!isSaleQuest) {
+        const userDoc = await db.collection('users').doc(normalizedWallet).get();
+
+        if (!userDoc.exists) {
+          const response: ZealyVerifyResponse = {
+            success: true,
+            verified: false,
+            message: 'Player not found - no games played yet',
+            data: {
+              gamesPlayed: 0,
+              required: getRequiredCount(quest),
+              wallet: normalizedWallet,
+            },
+          };
+          res.json(response);
+          return;
+        }
+
+        gamesPlayed = userDoc.data()?.totalGamesPlayed || 0;
       }
-
-      const userData = userDoc.data();
-      const gamesPlayed = userData?.totalGamesPlayed || 0;
 
       // Handle different quest types
       switch (quest) {
