@@ -5,24 +5,14 @@
 
 ---
 
-## 1. TieredStaking ⬅️ NEXT (in progress)
+## ~~1. TieredStaking~~ ✅ DEPLOYED & VERIFIED
 
-**Status:** Deploy in progress — contract code ready, script fixed.
+**Address:** `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`
+**Arbiscan:** https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF#code
+**Funded:** 9,900,000 8BIT (of 25M total — add more later)
 
-**Deploy:**
-```cmd
-npx hardhat run scripts/deploy-tiered-staking.ts --network arbitrumOne
-```
-
-**Verify (replace `<ADDRESS>` after deploy):**
-```cmd
-npx hardhat verify --network arbitrumOne <ADDRESS> 0x37ee26669659758109c94862e49B492247Be26df 0x80361876199e2318d6993A07e37177cFd21B64a7
-```
-
-**Post-deploy:**
-- Update `MAINNET_ADDRESSES.md` with deployed address
-- Update `frontend/src/config/contracts.ts` → `TIERED_STAKING: '<ADDRESS>'`
-- Transfer remaining 8BIT to staking contract to reach 25M total (script funds ~9.9M initially)
+**Remaining:**
+- Transfer additional 8BIT to staking contract when ready to reach 25M total
 - Update staking.html with the contract address
 
 ---
@@ -140,7 +130,7 @@ npx hardhat verify --network arbitrumOne <ADDRESS> 0x37ee26669659758109c94862e49
 [DONE]  TournamentPayments
 [DONE]  TokenSale
 [DONE]  TreasuryGasManager
-[ ]     TieredStaking          ← deploy now
+[✅]    TieredStaking          0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF
 [ ]     TournamentBuyback      ← after Uniswap V3 liquidity
 [ ]     AchievementBadges  ┐
 [ ]     TradeableItems     ├── after IPFS metadata upload

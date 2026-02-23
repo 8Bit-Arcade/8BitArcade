@@ -17,7 +17,7 @@
 | TournamentPayments | `0xa009e23658609EC3d6b98b1e0904b77005A73e59` | [View](https://arbiscan.io/address/0xa009e23658609EC3d6b98b1e0904b77005A73e59#code) |
 | TokenSale | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` | [View](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA#code) |
 | TreasuryGasManager | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` | [View](https://arbiscan.io/address/0x2185cF31B507620C412b00cde9B1BCd1B62983d6#code) |
-| TieredStaking | `TBD — deploy pending` | — |
+| TieredStaking | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` | [View](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF#code) |
 
 ---
 
