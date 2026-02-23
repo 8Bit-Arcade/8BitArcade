@@ -103,13 +103,13 @@ npx hardhat verify --network arbitrumOne <MANAGER_IMPL_ADDRESS>
 ```cmd
 set MERKLE_ROOT=0x<YOUR_MERKLE_ROOT>
 set TOKEN_ADDRESS=0x37ee26669659758109c94862e49B492247Be26df
-set TREASURY_ADDRESS=0x80361876199e2318d6993A07e37177cFd21B64a7
+set TREASURY_ADDRESS=0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8
 npx hardhat run scripts/deploy-airdrop.ts --network arbitrumOne
 ```
 
 **Verify:**
 ```cmd
-npx hardhat verify --network arbitrumOne <ADDRESS> 0x37ee26669659758109c94862e49B492247Be26df <MERKLE_ROOT> 0x80361876199e2318d6993A07e37177cFd21B64a7
+npx hardhat verify --network arbitrumOne <ADDRESS> 0x37ee26669659758109c94862e49B492247Be26df <MERKLE_ROOT> 0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8
 ```
 
 **Post-deploy:**

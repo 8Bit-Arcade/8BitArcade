@@ -47,5 +47,5 @@
 
 | Role | Address |
 |---|---|
-| Deployer / Owner | `0x80361876199e2318d6993A07e37177cFd21B64a7` |
+| Deployer / Owner | `0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8` |
 | Rewards Distributor | `0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B` |

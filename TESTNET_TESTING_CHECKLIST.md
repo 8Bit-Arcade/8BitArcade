@@ -241,7 +241,7 @@ Visit Arbiscan "Read Contract" for each contract:
 
 **EightBitToken:**
 - [ ] Read `owner()`
-- [ ] **Expected:** Shows `0x80361876199e2318d6993A07e37177cFd21B64a7` (your deployer)
+- [ ] **Expected:** Shows `0x92f5523c2329eE281E7FEB8808FcE4b49ab1ebf8` (your deployer)
 
 **GameRewards:**
 - [ ] Read `owner()`
