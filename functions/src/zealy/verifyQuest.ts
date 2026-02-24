@@ -5,7 +5,7 @@ import { JsonRpcProvider, Contract } from 'ethers';
 const db = getFirestore();
 
 const ARBITRUM_SEPOLIA_RPC = 'https://sepolia-rollup.arbitrum.io/rpc';
-const TRADEABLE_ITEMS_ADDRESS = '0x3F09919fba62EAec1295F577D92fbF2555247c44';
+const ACHIEVEMENT_BADGES_ADDRESS = '0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f';
 const ERC721_BALANCE_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
 ];
@@ -26,21 +26,29 @@ interface ZealyVerifyResponse {
 /**
  * HTTP endpoint for Zealy quest verification
  *
- * Zealy calls this endpoint to verify if a user has completed a quest requirement.
+ * Zealy sends a POST request when a user claims an API task.
+ * The endpoint checks if the requirement is met and returns 200 (pass) or 400 (fail).
  *
- * Usage:
- *   GET /zealyVerifyQuest?wallet=0x123...&quest=games3
+ * Zealy POST body:
+ *   { accounts: { wallet: "0x..." }, userId, communityId, subdomain, questId, requestId }
  *
- * Query Parameters:
- *   - wallet: The player's wallet address (required)
- *   - quest: The quest type to verify (required)
- *     - "games3": Verify player has played 3+ games (main quest)
- *     - "games5": Verify player has played 5+ games
- *     - "games10": Verify player has played 10+ games
- *     - "tournament1": Verify player has entered 1+ tournament
+ * Also supports direct calls:
+ *   GET /zealyVerifyQuest?wallet=0x123...&quest=nft7
  *
- * Response:
- *   { success: true, verified: true/false, message: "...", data: {...} }
+ * Quest types:
+ *   - "games3": Played 3+ games
+ *   - "games5": Played 5+ games
+ *   - "games10": Played 10+ games
+ *   - "tournament1": Entered 1+ tournament
+ *   - "sale30k": Purchased 30,000+ 8BIT tokens
+ *   - "sale60k": Purchased 60,000+ 8BIT tokens
+ *   - "nft7": Holds 7+ Achievement Badge NFTs
+ *
+ * Configure in Zealy:
+ *   1. Create quest -> Add task -> API
+ *   2. Endpoint: https://<project>.web.app/api/zealy/verify?quest=nft7
+ *   3. User identification: Wallet address
+ *   4. Optionally set an API key for security
  */
 export const zealyVerifyQuest = onRequest(
   { cors: true },
@@ -51,27 +59,23 @@ export const zealyVerifyQuest = onRequest(
       return;
     }
 
-    // Accept GET or POST
-    const wallet = (req.query.wallet || req.body?.wallet) as string;
+    // Extract wallet: Zealy POST body (accounts.wallet) or query param / direct body
+    const wallet = (
+      req.query.wallet ||
+      req.body?.accounts?.wallet ||
+      req.body?.wallet
+    ) as string;
     const quest = (req.query.quest || req.body?.quest) as string;
 
     if (!wallet) {
-      const response: ZealyVerifyResponse = {
-        success: false,
-        verified: false,
-        message: 'Missing wallet parameter',
-      };
-      res.status(400).json(response);
+      res.status(400).json({ message: 'Missing wallet address' });
       return;
     }
 
     if (!quest) {
-      const response: ZealyVerifyResponse = {
-        success: false,
-        verified: false,
-        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1, sale30k, sale60k',
-      };
-      res.status(400).json(response);
+      res.status(400).json({
+        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1, sale30k, sale60k, nft7',
+      });
       return;
     }
 
@@ -107,94 +111,31 @@ export const zealyVerifyQuest = onRequest(
 
       // Handle different quest types
       switch (quest) {
-        case 'games3': {
-          const required = 3;
-          const verified = gamesPlayed >= required;
-          const response: ZealyVerifyResponse = {
-            success: true,
-            verified,
-            message: verified
-              ? `Quest complete! Player has played ${gamesPlayed} games.`
-              : `Not yet complete. Player has ${gamesPlayed}/${required} games.`,
-            data: {
-              gamesPlayed,
-              required,
-              wallet: normalizedWallet,
-            },
-          };
-          res.json(response);
-          return;
-        }
+        case 'nft7': {
+          // Check on-chain Achievement Badge NFT balance
+          const provider = new JsonRpcProvider(ARBITRUM_SEPOLIA_RPC);
+          const badges = new Contract(ACHIEVEMENT_BADGES_ADDRESS, ERC721_BALANCE_ABI, provider);
+          const balance: bigint = await badges.balanceOf(wallet);
+          const nftCount = Number(balance);
+          const required = 7;
+          const verified = nftCount >= required;
 
-        case 'games5': {
-          const required = 5;
-          const verified = gamesPlayed >= required;
-          const response: ZealyVerifyResponse = {
-            success: true,
-            verified,
-            message: verified
-              ? `Quest complete! Player has played ${gamesPlayed} games.`
-              : `Not yet complete. Player has ${gamesPlayed}/${required} games.`,
-            data: {
-              gamesPlayed,
-              required,
-              wallet: normalizedWallet,
-            },
-          };
-          res.json(response);
-          return;
-        }
-
-        case 'games10': {
-          const required = 10;
-          const verified = gamesPlayed >= required;
-          const response: ZealyVerifyResponse = {
-            success: true,
-            verified,
-            message: verified
-              ? `Quest complete! Player has played ${gamesPlayed} games.`
-              : `Not yet complete. Player has ${gamesPlayed}/${required} games.`,
-            data: {
-              gamesPlayed,
-              required,
-              wallet: normalizedWallet,
-            },
-          };
-          res.json(response);
-          return;
-        }
-
-        case 'tournament1': {
-          // Check tournament entries
-          const tournamentsSnapshot = await db
-            .collectionGroup('entries')
-            .where('player', '==', normalizedWallet)
-            .limit(1)
-            .get();
-
-          const tournamentEntries = tournamentsSnapshot.size;
-          const required = 1;
-          const verified = tournamentEntries >= required;
-
-          const response: ZealyVerifyResponse = {
-            success: true,
-            verified,
-            message: verified
-              ? `Quest complete! Player has entered ${tournamentEntries} tournament(s).`
-              : `Not yet complete. Player has ${tournamentEntries}/${required} tournament entries.`,
-            data: {
-              gamesPlayed: tournamentEntries,
-              required,
-              wallet: normalizedWallet,
-            },
-          };
-          res.json(response);
+          if (verified) {
+            res.status(200).json({
+              message: `Quest complete! Player holds ${nftCount} Achievement Badge NFTs.`,
+              data: { nftBalance: nftCount, required, wallet: normalizedWallet },
+            });
+          } else {
+            res.status(400).json({
+              message: `Not yet complete. Player holds ${nftCount}/${required} Achievement Badge NFTs.`,
+              data: { nftBalance: nftCount, required, wallet: normalizedWallet },
+            });
+          }
           return;
         }
 
         case 'sale30k':
         case 'sale60k': {
-          // Tokens are stored in wei (18 decimals) as a float in sale_buyers.totalTokens
           const requiredTokens = quest === 'sale30k' ? 30_000 : 60_000;
           const requiredWei = requiredTokens * 1e18;
 
@@ -223,27 +164,47 @@ export const zealyVerifyQuest = onRequest(
           return;
         }
 
-        case 'nft7': {
-          // Check if wallet holds at least 7 NFTs from the TradeableItems contract
-          const required = 7;
-          const provider = new JsonRpcProvider(ARBITRUM_SEPOLIA_RPC);
-          const contract = new Contract(TRADEABLE_ITEMS_ADDRESS, ERC721_BALANCE_ABI, provider);
-          const balance: bigint = await contract.balanceOf(normalizedWallet);
-          const nftsHeld = Number(balance);
-          const verified = nftsHeld >= required;
-          const response: ZealyVerifyResponse = {
-            success: true,
-            verified,
-            message: verified
-              ? `Quest complete! Wallet holds ${nftsHeld} 8-Bit Arcade NFTs.`
-              : `Not yet complete. Wallet holds ${nftsHeld}/${required} 8-Bit Arcade NFTs.`,
-            data: {
-              gamesPlayed: 0,
-              required,
-              wallet: normalizedWallet,
-            },
-          };
-          res.json(response);
+        case 'games3':
+        case 'games5':
+        case 'games10': {
+          const required = quest === 'games3' ? 3 : quest === 'games5' ? 5 : 10;
+          const verified = gamesPlayed >= required;
+
+          if (verified) {
+            res.status(200).json({
+              message: `Quest complete! Player has played ${gamesPlayed} games.`,
+              data: { gamesPlayed, required, wallet: normalizedWallet },
+            });
+          } else {
+            res.status(400).json({
+              message: `Not yet complete. Player has ${gamesPlayed}/${required} games.`,
+              data: { gamesPlayed, required, wallet: normalizedWallet },
+            });
+          }
+          return;
+        }
+
+        case 'tournament1': {
+          const tournamentsSnapshot = await db
+            .collectionGroup('entries')
+            .where('player', '==', normalizedWallet)
+            .limit(1)
+            .get();
+          const tournamentEntries = tournamentsSnapshot.size;
+          const required = 1;
+          const verified = tournamentEntries >= required;
+
+          if (verified) {
+            res.status(200).json({
+              message: `Quest complete! Player has entered ${tournamentEntries} tournament(s).`,
+              data: { gamesPlayed: tournamentEntries, required, wallet: normalizedWallet },
+            });
+          } else {
+            res.status(400).json({
+              message: `Not yet complete. Player has ${tournamentEntries}/${required} tournament entries.`,
+              data: { gamesPlayed: tournamentEntries, required, wallet: normalizedWallet },
+            });
+          }
           return;
         }
 
@@ -259,12 +220,7 @@ export const zealyVerifyQuest = onRequest(
       }
     } catch (error) {
       console.error('Error verifying Zealy quest:', error);
-      const response: ZealyVerifyResponse = {
-        success: false,
-        verified: false,
-        message: 'Internal error verifying quest',
-      };
-      res.status(500).json(response);
+      res.status(400).json({ message: 'Internal error verifying quest' });
     }
   }
 );
