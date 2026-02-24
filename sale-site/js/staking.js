@@ -35,7 +35,7 @@ const STAKING_ABI = [
     // Core staking functions
     'function stake(uint256 amount, uint8 lockTier) external',
     'function withdraw(uint256 stakeId) external',
-    'function claimReward(uint256 stakeId) external',
+    'function claimRewards(uint256 stakeId) external',
     'function claimAllRewards() external',
     'function emergencyWithdraw(uint256 stakeId) external',
 
@@ -867,8 +867,8 @@ async function claimReward(stakeIndex) {
 
         showTxStatus('Claiming rewards...', 'pending');
         const gasSettings = await getGasSettings();
-        const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimReward', [stakeIndex], 200000);
-        const tx = await stakingContract.claimReward(stakeIndex, { gasLimit, ...gasSettings });
+        const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimRewards', [stakeIndex], 200000);
+        const tx = await stakingContract.claimRewards(stakeIndex, { gasLimit, ...gasSettings });
         console.log('Claim TX:', tx.hash, 'Gas:', gasLimit.toString());
         await tx.wait();
         showTxStatus('Rewards claimed successfully!', 'success');
