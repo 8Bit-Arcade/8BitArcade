@@ -1,7 +1,14 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
+import { JsonRpcProvider, Contract } from 'ethers';
 
 const db = getFirestore();
+
+const ARBITRUM_SEPOLIA_RPC = 'https://sepolia-rollup.arbitrum.io/rpc';
+const TRADEABLE_ITEMS_ADDRESS = '0x3F09919fba62EAec1295F577D92fbF2555247c44';
+const ERC721_BALANCE_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+];
 
 interface ZealyVerifyResponse {
   success: boolean;
@@ -71,12 +78,13 @@ export const zealyVerifyQuest = onRequest(
     try {
       const normalizedWallet = wallet.toLowerCase();
 
-      // Sale quests check sale_buyers, not the users collection
+      // Sale/NFT quests don't use the users collection
       const isSaleQuest = quest === 'sale30k' || quest === 'sale60k';
+      const isNftQuest = quest === 'nft7';
 
       // Get user document (only needed for game/tournament quests)
       let gamesPlayed = 0;
-      if (!isSaleQuest) {
+      if (!isSaleQuest && !isNftQuest) {
         const userDoc = await db.collection('users').doc(normalizedWallet).get();
 
         if (!userDoc.exists) {
@@ -215,11 +223,35 @@ export const zealyVerifyQuest = onRequest(
           return;
         }
 
+        case 'nft7': {
+          // Check if wallet holds at least 7 NFTs from the TradeableItems contract
+          const required = 7;
+          const provider = new JsonRpcProvider(ARBITRUM_SEPOLIA_RPC);
+          const contract = new Contract(TRADEABLE_ITEMS_ADDRESS, ERC721_BALANCE_ABI, provider);
+          const balance: bigint = await contract.balanceOf(normalizedWallet);
+          const nftsHeld = Number(balance);
+          const verified = nftsHeld >= required;
+          const response: ZealyVerifyResponse = {
+            success: true,
+            verified,
+            message: verified
+              ? `Quest complete! Wallet holds ${nftsHeld} 8-Bit Arcade NFTs.`
+              : `Not yet complete. Wallet holds ${nftsHeld}/${required} 8-Bit Arcade NFTs.`,
+            data: {
+              gamesPlayed: 0,
+              required,
+              wallet: normalizedWallet,
+            },
+          };
+          res.json(response);
+          return;
+        }
+
         default: {
           const response: ZealyVerifyResponse = {
             success: false,
             verified: false,
-            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1, sale30k, sale60k`,
+            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1, sale30k, sale60k, nft7`,
           };
           res.status(400).json(response);
           return;
@@ -251,6 +283,8 @@ function getRequiredCount(quest: string): number {
       return 30_000;
     case 'sale60k':
       return 60_000;
+    case 'nft7':
+      return 7;
     default:
       return 0;
   }
