@@ -43,6 +43,7 @@ const STAKING_ABI = [
     'function getUserStakes(address account) view returns (uint256[] amounts, uint256[] unlockTimes, uint256[] rewards, uint8[] tiers)',
     'function userTotalStaked(address) view returns (uint256)',
     'function userStakeCount(address) view returns (uint256)',
+    'function userStakes(address, uint256) view returns (uint256 amount, uint256 weightedAmount, uint256 rewardPerTokenPaid, uint256 pendingRewards, uint256 stakedAt, uint256 unlockTime, uint8 tier, bool exists)',
     'function earned(address account, uint256 stakeId) view returns (uint256)',
     'function totalEarned(address account) view returns (uint256)',
 
@@ -553,6 +554,30 @@ async function loadUserStakes() {
 
         userStakesSection.style.display = 'block';
 
+        // Build mapping of compacted array index → actual contract stakeId
+        // getUserStakes() returns compacted arrays (skips withdrawn stakes),
+        // but withdraw()/claimRewards() need the original stakeId
+        const totalStakeCount = (await stakingContract.read.userStakeCount(userAddress)).toNumber();
+        const stakeIdMap = [];
+        if (totalStakeCount !== amounts.length) {
+            // Some stakes were withdrawn - probe to find real IDs
+            const probePromises = [];
+            for (let id = 0; id < totalStakeCount; id++) {
+                probePromises.push(stakingContract.read.userStakes(userAddress, id));
+            }
+            const allStakeData = await Promise.all(probePromises);
+            for (let id = 0; id < totalStakeCount; id++) {
+                if (allStakeData[id].exists && !allStakeData[id].amount.isZero()) {
+                    stakeIdMap.push(id);
+                }
+            }
+        } else {
+            // No withdrawals - compacted indices match stakeIds
+            for (let i = 0; i < amounts.length; i++) {
+                stakeIdMap.push(i);
+            }
+        }
+
         // Calculate totals
         let totalStaked = ethers.BigNumber.from(0);
         let totalRewards = ethers.BigNumber.from(0);
@@ -580,7 +605,7 @@ async function loadUserStakes() {
             const stakeEl = document.createElement('div');
             const colorIndex = i % STAKE_COLORS.length;
             stakeEl.className = `stake-item ${isUnlocked ? 'unlocked' : 'locked'} stake-color-${colorIndex}`;
-            stakeEl.dataset.stakeId = i;
+            stakeEl.dataset.stakeId = stakeIdMap[i];
             stakeEl.dataset.unlockTime = unlockTimestamp;
             stakeEl.innerHTML = `
                 <div class="stake-header">
@@ -638,10 +663,10 @@ async function loadUserStakes() {
                 </div>
                 ` : ''}
                 <div class="stake-actions" style="margin-top: 1rem;">
-                    <button class="btn btn-secondary ${isUnlocked ? '' : 'btn-disabled'}" onclick="claimReward(${i})" ${isUnlocked ? '' : 'disabled'} title="${isUnlocked ? 'Claim accumulated rewards' : 'Unlock required to claim rewards'}">
+                    <button class="btn btn-secondary ${isUnlocked ? '' : 'btn-disabled'}" onclick="claimReward(${stakeIdMap[i]})" ${isUnlocked ? '' : 'disabled'} title="${isUnlocked ? 'Claim accumulated rewards' : 'Unlock required to claim rewards'}">
                         ${isUnlocked ? 'Claim Rewards' : 'Claim (Locked)'}
                     </button>
-                    <button class="btn ${isUnlocked ? 'btn-primary' : 'btn-warning'}" onclick="withdrawStake(${i}, ${!isUnlocked})">
+                    <button class="btn ${isUnlocked ? 'btn-primary' : 'btn-warning'}" onclick="withdrawStake(${stakeIdMap[i]}, ${!isUnlocked})">
                         ${isUnlocked ? 'Withdraw' : 'Withdraw (25% Penalty)'}
                     </button>
                 </div>
@@ -849,14 +874,13 @@ async function stakeTokens() {
 }
 
 // Claim rewards for a single stake
-async function claimReward(stakeIndex) {
+async function claimReward(stakeId) {
     if (!stakingContract || !userAddress) return;
 
     try {
         // Check if stake is unlocked first to avoid wasted gas
-        const result = await stakingContract.getUserStakes(userAddress);
-        const unlockTimes = result[1];
-        const unlockTime = unlockTimes[stakeIndex]?.toNumber() || 0;
+        const stakeData = await stakingContract.read.userStakes(userAddress, stakeId);
+        const unlockTime = stakeData.unlockTime.toNumber();
         const now = Math.floor(Date.now() / 1000);
 
         if (now < unlockTime) {
@@ -867,8 +891,8 @@ async function claimReward(stakeIndex) {
 
         showTxStatus('Claiming rewards...', 'pending');
         const gasSettings = await getGasSettings();
-        const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimRewards', [stakeIndex], 200000);
-        const tx = await stakingContract.claimRewards(stakeIndex, { gasLimit, ...gasSettings });
+        const gasLimit = await estimateGasWithBuffer(stakingContract, 'claimRewards', [stakeId], 200000);
+        const tx = await stakingContract.claimRewards(stakeId, { gasLimit, ...gasSettings });
         console.log('Claim TX:', tx.hash, 'Gas:', gasLimit.toString());
         await tx.wait();
         showTxStatus('Rewards claimed successfully!', 'success');
@@ -907,7 +931,7 @@ async function claimAllRewards() {
 }
 
 // Withdraw stake
-async function withdrawStake(stakeIndex, hasEarlyPenalty) {
+async function withdrawStake(stakeId, hasEarlyPenalty) {
     if (!stakingContract || !userAddress) return;
 
     if (hasEarlyPenalty) {
@@ -918,8 +942,8 @@ async function withdrawStake(stakeIndex, hasEarlyPenalty) {
     try {
         showTxStatus('Withdrawing stake...', 'pending');
         const gasSettings = await getGasSettings();
-        const gasLimit = await estimateGasWithBuffer(stakingContract, 'withdraw', [stakeIndex], 300000);
-        const tx = await stakingContract.withdraw(stakeIndex, { gasLimit, ...gasSettings });
+        const gasLimit = await estimateGasWithBuffer(stakingContract, 'withdraw', [stakeId], 300000);
+        const tx = await stakingContract.withdraw(stakeId, { gasLimit, ...gasSettings });
         console.log('Withdraw TX:', tx.hash, 'Gas:', gasLimit.toString());
         await tx.wait();
         showTxStatus('Stake withdrawn successfully!', 'success');
