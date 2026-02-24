@@ -22,7 +22,7 @@ import { ethers, network } from "hardhat";
 // ═══════════════════════════════════════════════════════════════════
 const TOKEN_ADDRESSES: Record<string, string> = {
   arbitrumSepolia: "0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d", // Testnet 8BIT
-  arbitrumOne: "0x0000000000000000000000000000000000000000",     // TODO: Add mainnet address
+  arbitrumOne: "0x37ee26669659758109c94862e49B492247Be26df",     // Mainnet 8BIT
 };
 
 // Fund with available balance (can add more later)

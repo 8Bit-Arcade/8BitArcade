@@ -10,6 +10,19 @@ const ERC721_BALANCE_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
 ];
 
+interface ZealyVerifyResponse {
+  success: boolean;
+  verified: boolean;
+  message: string;
+  data?: {
+    gamesPlayed: number;
+    required: number;
+    wallet: string;
+    tokensPurchased?: number;
+    tokensRequired?: number;
+  };
+}
+
 /**
  * HTTP endpoint for Zealy quest verification
  *
@@ -69,6 +82,34 @@ export const zealyVerifyQuest = onRequest(
     try {
       const normalizedWallet = wallet.toLowerCase();
 
+      // Sale/NFT quests don't use the users collection
+      const isSaleQuest = quest === 'sale30k' || quest === 'sale60k';
+      const isNftQuest = quest === 'nft7';
+
+      // Get user document (only needed for game/tournament quests)
+      let gamesPlayed = 0;
+      if (!isSaleQuest && !isNftQuest) {
+        const userDoc = await db.collection('users').doc(normalizedWallet).get();
+
+        if (!userDoc.exists) {
+          const response: ZealyVerifyResponse = {
+            success: true,
+            verified: false,
+            message: 'Player not found - no games played yet',
+            data: {
+              gamesPlayed: 0,
+              required: getRequiredCount(quest),
+              wallet: normalizedWallet,
+            },
+          };
+          res.json(response);
+          return;
+        }
+
+        gamesPlayed = userDoc.data()?.totalGamesPlayed || 0;
+      }
+
+      // Handle different quest types
       switch (quest) {
         case 'nft7': {
           // Check on-chain Achievement Badge NFT balance
@@ -97,6 +138,7 @@ export const zealyVerifyQuest = onRequest(
         case 'sale60k': {
           const requiredTokens = quest === 'sale30k' ? 30_000 : 60_000;
           const requiredWei = requiredTokens * 1e18;
+
           const buyerDoc = await db.collection('sale_buyers').doc(normalizedWallet).get();
           const totalTokensWei: number = buyerDoc.exists
             ? (buyerDoc.data()?.totalTokens || 0)
@@ -104,17 +146,21 @@ export const zealyVerifyQuest = onRequest(
           const totalTokens = totalTokensWei / 1e18;
           const verified = totalTokensWei >= requiredWei;
 
-          if (verified) {
-            res.status(200).json({
-              message: `Quest complete! Wallet purchased ${totalTokens.toLocaleString()} 8BIT tokens.`,
-              data: { tokensPurchased: totalTokens, required: requiredTokens, wallet: normalizedWallet },
-            });
-          } else {
-            res.status(400).json({
-              message: `Not yet complete. Wallet purchased ${totalTokens.toLocaleString()}/${requiredTokens.toLocaleString()} 8BIT tokens.`,
-              data: { tokensPurchased: totalTokens, required: requiredTokens, wallet: normalizedWallet },
-            });
-          }
+          const response: ZealyVerifyResponse = {
+            success: true,
+            verified,
+            message: verified
+              ? `Quest complete! Wallet purchased ${totalTokens.toLocaleString()} 8BIT tokens.`
+              : `Not yet complete. Wallet purchased ${totalTokens.toLocaleString()}/${requiredTokens.toLocaleString()} 8BIT tokens.`,
+            data: {
+              gamesPlayed: 0,
+              required: requiredTokens,
+              wallet: normalizedWallet,
+              tokensPurchased: totalTokens,
+              tokensRequired: requiredTokens,
+            },
+          };
+          res.json(response);
           return;
         }
 
@@ -122,8 +168,6 @@ export const zealyVerifyQuest = onRequest(
         case 'games5':
         case 'games10': {
           const required = quest === 'games3' ? 3 : quest === 'games5' ? 5 : 10;
-          const userDoc = await db.collection('users').doc(normalizedWallet).get();
-          const gamesPlayed = userDoc.exists ? (userDoc.data()?.totalGamesPlayed || 0) : 0;
           const verified = gamesPlayed >= required;
 
           if (verified) {
@@ -164,11 +208,15 @@ export const zealyVerifyQuest = onRequest(
           return;
         }
 
-        default:
-          res.status(400).json({
+        default: {
+          const response: ZealyVerifyResponse = {
+            success: false,
+            verified: false,
             message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1, sale30k, sale60k, nft7`,
-          });
+          };
+          res.status(400).json(response);
           return;
+        }
       }
     } catch (error) {
       console.error('Error verifying Zealy quest:', error);
@@ -176,3 +224,24 @@ export const zealyVerifyQuest = onRequest(
     }
   }
 );
+
+function getRequiredCount(quest: string): number {
+  switch (quest) {
+    case 'games3':
+      return 3;
+    case 'games5':
+      return 5;
+    case 'games10':
+      return 10;
+    case 'tournament1':
+      return 1;
+    case 'sale30k':
+      return 30_000;
+    case 'sale60k':
+      return 60_000;
+    case 'nft7':
+      return 7;
+    default:
+      return 0;
+  }
+}
