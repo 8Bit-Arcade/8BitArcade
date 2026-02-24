@@ -1,12 +1,14 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { ethers } from 'ethers';
-import { ARBITRUM_RPC_URL } from '../config';
+import { JsonRpcProvider, Contract } from 'ethers';
 
 const db = getFirestore();
 
+const ARBITRUM_SEPOLIA_RPC = 'https://sepolia-rollup.arbitrum.io/rpc';
 const ACHIEVEMENT_BADGES_ADDRESS = '0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f';
-const BADGES_ABI = ['function balanceOf(address owner) view returns (uint256)'];
+const ERC721_BALANCE_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+];
 
 /**
  * HTTP endpoint for Zealy quest verification
@@ -25,6 +27,8 @@ const BADGES_ABI = ['function balanceOf(address owner) view returns (uint256)'];
  *   - "games5": Played 5+ games
  *   - "games10": Played 10+ games
  *   - "tournament1": Entered 1+ tournament
+ *   - "sale30k": Purchased 30,000+ 8BIT tokens
+ *   - "sale60k": Purchased 60,000+ 8BIT tokens
  *   - "nft7": Holds 7+ Achievement Badge NFTs
  *
  * Configure in Zealy:
@@ -57,7 +61,7 @@ export const zealyVerifyQuest = onRequest(
 
     if (!quest) {
       res.status(400).json({
-        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1, nft7',
+        message: 'Missing quest parameter. Valid options: games3, games5, games10, tournament1, sale30k, sale60k, nft7',
       });
       return;
     }
@@ -67,10 +71,10 @@ export const zealyVerifyQuest = onRequest(
 
       switch (quest) {
         case 'nft7': {
-          // Check on-chain NFT balance
-          const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
-          const badges = new ethers.Contract(ACHIEVEMENT_BADGES_ADDRESS, BADGES_ABI, provider);
-          const balance = await badges.balanceOf(wallet); // use original case for contract call
+          // Check on-chain Achievement Badge NFT balance
+          const provider = new JsonRpcProvider(ARBITRUM_SEPOLIA_RPC);
+          const badges = new Contract(ACHIEVEMENT_BADGES_ADDRESS, ERC721_BALANCE_ABI, provider);
+          const balance: bigint = await badges.balanceOf(wallet);
           const nftCount = Number(balance);
           const required = 7;
           const verified = nftCount >= required;
@@ -84,6 +88,31 @@ export const zealyVerifyQuest = onRequest(
             res.status(400).json({
               message: `Not yet complete. Player holds ${nftCount}/${required} Achievement Badge NFTs.`,
               data: { nftBalance: nftCount, required, wallet: normalizedWallet },
+            });
+          }
+          return;
+        }
+
+        case 'sale30k':
+        case 'sale60k': {
+          const requiredTokens = quest === 'sale30k' ? 30_000 : 60_000;
+          const requiredWei = requiredTokens * 1e18;
+          const buyerDoc = await db.collection('sale_buyers').doc(normalizedWallet).get();
+          const totalTokensWei: number = buyerDoc.exists
+            ? (buyerDoc.data()?.totalTokens || 0)
+            : 0;
+          const totalTokens = totalTokensWei / 1e18;
+          const verified = totalTokensWei >= requiredWei;
+
+          if (verified) {
+            res.status(200).json({
+              message: `Quest complete! Wallet purchased ${totalTokens.toLocaleString()} 8BIT tokens.`,
+              data: { tokensPurchased: totalTokens, required: requiredTokens, wallet: normalizedWallet },
+            });
+          } else {
+            res.status(400).json({
+              message: `Not yet complete. Wallet purchased ${totalTokens.toLocaleString()}/${requiredTokens.toLocaleString()} 8BIT tokens.`,
+              data: { tokensPurchased: totalTokens, required: requiredTokens, wallet: normalizedWallet },
             });
           }
           return;
@@ -137,7 +166,7 @@ export const zealyVerifyQuest = onRequest(
 
         default:
           res.status(400).json({
-            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1, nft7`,
+            message: `Unknown quest type: ${quest}. Valid options: games3, games5, games10, tournament1, sale30k, sale60k, nft7`,
           });
           return;
       }
