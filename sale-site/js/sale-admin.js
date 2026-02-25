@@ -124,6 +124,7 @@ function setupEventListeners() {
     document.getElementById('refreshBtn').addEventListener('click', refreshData);
 
     // Schedule
+    document.getElementById('btnStartNow').addEventListener('click', startSaleNow);
     document.getElementById('btnScheduleStart').addEventListener('click', scheduleSaleStart);
     document.getElementById('inputSaleStartDateTime').addEventListener('input', updateSchedulePreviews);
 
@@ -179,48 +180,60 @@ async function connectWallet() {
         }
 
         // ── Firebase Auth sign-in via wallet signature ────────────────
-        // The callable functions check request.auth, so we must sign in
-        // to Firebase before calling any protected function.
+        // Always sign in fresh to guarantee a valid token for protected
+        // callable functions (getAllPurchases etc. check request.auth).
         const auth = firebase.auth();
-        const currentUser = auth.currentUser;
-        if (!currentUser || currentUser.uid.toLowerCase() !== userAddress.toLowerCase()) {
-            const nonce = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-                const r = Math.random() * 16 | 0;
-                const v = c === 'x' ? r : (r & 0x3) | 0x8;
-                return v.toString(16);
-            });
-            const timestamp = Date.now();
-            const isoTimestamp = new Date(timestamp).toISOString();
-            const sep = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-            const message = [
-                sep,
-                '       🎮 8-BIT ARCADE 🎮',
-                sep,
-                '',
-                'Sign in to 8-Bit Arcade to access ranked games, leaderboards, and earn rewards.',
-                '',
-                'Please sign this message to verify your wallet ownership.',
-                'This action will NOT cost any gas fees.',
-                '',
-                sep,
-                '',
-                'Action: Sign In',
-                '',
-                `Address: ${userAddress}`,
-                '',
-                `Nonce: ${nonce}`,
-                '',
-                `Timestamp: ${timestamp}`,
-                `ISO-Time: ${isoTimestamp}`,
-                '',
-                sep,
-            ].join('\n');
+        // Sign out any stale session so we always obtain a fresh ID token.
+        await auth.signOut();
+        const nonce = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
+        const timestamp = Date.now();
+        const isoTimestamp = new Date(timestamp).toISOString();
+        const sep = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+        const message = [
+            sep,
+            '       🎮 8-BIT ARCADE 🎮',
+            sep,
+            '',
+            'Sign in to 8-Bit Arcade to access ranked games, leaderboards, and earn rewards.',
+            '',
+            'Please sign this message to verify your wallet ownership.',
+            'This action will NOT cost any gas fees.',
+            '',
+            sep,
+            '',
+            'Action: Sign In',
+            '',
+            `Address: ${userAddress}`,
+            '',
+            `Nonce: ${nonce}`,
+            '',
+            `Timestamp: ${timestamp}`,
+            `ISO-Time: ${isoTimestamp}`,
+            '',
+            sep,
+        ].join('\n');
 
-            const signature = await signer.signMessage(message);
-            const verifyWallet = functions.httpsCallable('verifyWallet');
-            const result = await verifyWallet({ address: userAddress, message, signature });
-            await auth.signInWithCustomToken(result.data.customToken);
-        }
+        const signature = await signer.signMessage(message);
+        const verifyWalletFn = functions.httpsCallable('verifyWallet');
+        const result = await verifyWalletFn({ address: userAddress, message, signature });
+        await auth.signInWithCustomToken(result.data.customToken);
+        // Confirm auth is active AND force-refresh the ID token so the
+        // callable SDK has a valid bearer token before hitting getAllPurchases.
+        await new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(user => {
+                unsub();
+                if (user) {
+                    // forceRefresh=true guarantees a brand-new ID token from Firebase servers
+                    user.getIdToken(true).then(resolve).catch(reject);
+                } else {
+                    reject(new Error('Firebase sign-in did not produce a user'));
+                }
+            });
+        });
 
         saleContract  = new ethers.Contract(CONTRACTS.TOKEN_SALE,      TOKEN_SALE_ABI, signer);
         tokenContract = new ethers.Contract(CONTRACTS.EIGHT_BIT_TOKEN, ERC20_ABI,      provider);
@@ -330,9 +343,10 @@ async function loadContractState() {
     const endTs        = saleEndTime.toNumber();
     saleEndTimestamp   = endTs;
     saleStartTimestamp = startTs;
-    const isUpcoming   = !saleFinalized && now < startTs;
-    const isActive     = !saleFinalized && !paused && now >= startTs && now < endTs;
-    const isEnded      = now >= endTs && !saleFinalized;
+    const notConfigured = !saleFinalized && startTs === 0; // contract deployed but never started
+    const isUpcoming   = !saleFinalized && startTs > 0 && now < startTs;
+    const isActive     = !saleFinalized && !paused && startTs > 0 && now >= startTs && now < endTs;
+    const isEnded      = !saleFinalized && startTs > 0 && now >= endTs;
     const buyers       = buyerCount.toNumber();
 
     // ── Status Banner ─────────────────────────────────────────
@@ -342,6 +356,9 @@ async function loadContractState() {
     if (saleFinalized) {
         banner.classList.add('banner-finalized');
         bannerText.textContent = 'SALE FINALIZED — Distribute tokens to buyers via the Token Distribution tab.';
+    } else if (notConfigured) {
+        banner.classList.add('banner-paused');
+        bannerText.textContent = 'SALE NOT STARTED — Go to Sale Controls and click "Start Sale NOW" to launch.';
     } else if (paused) {
         banner.classList.add('banner-paused');
         bannerText.textContent = 'SALE PAUSED — Purchases are halted. Use Sale Controls to resume.';
@@ -350,7 +367,7 @@ async function loadContractState() {
         bannerText.textContent = 'SALE ENDED — Finalize the sale to burn unsold tokens, then distribute.';
     } else if (isUpcoming) {
         banner.classList.add('banner-paused');
-        bannerText.textContent = 'SALE SCHEDULED — Starting ' + fmtDatetime(new Date(startTs * 1000)) + '. Use Sale Controls → Schedule to change the start time.';
+        bannerText.textContent = 'SALE SCHEDULED — Starting ' + fmtDatetime(new Date(startTs * 1000)) + '. Use Sale Controls to change the start time.';
     } else {
         banner.classList.add('banner-active');
         bannerText.textContent = 'SALE ACTIVE — Accepting purchases.';
@@ -358,9 +375,10 @@ async function loadContractState() {
 
     // ── Stats Cards ───────────────────────────────────────────
     const statusLabel = saleFinalized ? 'FINALIZED'
-                      : paused        ? 'PAUSED'
-                      : isEnded       ? 'ENDED'
-                      : isActive      ? 'ACTIVE' : 'UPCOMING';
+                      : notConfigured  ? 'NOT STARTED'
+                      : paused         ? 'PAUSED'
+                      : isEnded        ? 'ENDED'
+                      : isActive       ? 'ACTIVE' : 'UPCOMING';
     document.getElementById('statStatus').textContent    = statusLabel;
     document.getElementById('statStatusSub').textContent = saleFinalized
         ? 'Tokens burned & locked'
@@ -381,12 +399,15 @@ async function loadContractState() {
     if (countdownInterval)      clearInterval(countdownInterval);
     if (startCountdownInterval) clearInterval(startCountdownInterval);
 
-    if (saleFinalized || now >= endTs) {
+    if (saleFinalized || (startTs > 0 && now >= endTs)) {
         document.getElementById('statCountdown').textContent = 'ENDED';
+    } else if (notConfigured) {
+        document.getElementById('statCountdown').textContent = '--:--:--';
     } else if (!isUpcoming) {
         startCountdown(endTs);
     }
-    document.getElementById('statEndDate').textContent = new Date(endTs * 1000).toLocaleDateString();
+    document.getElementById('statEndDate').textContent =
+        endTs > 0 ? new Date(endTs * 1000).toLocaleDateString() : 'Not set';
 
     // STARTS IN card — show only when sale is upcoming
     const cardTimeToStart   = document.getElementById('cardTimeToStart');
@@ -401,9 +422,10 @@ async function loadContractState() {
         cardTimeRemaining.classList.remove('hidden');
     }
 
-    // Schedule panel: hide once sale has started
+    // Schedule panel: show whenever sale is not finalized and not currently active
+    // (covers "not yet started", "upcoming", or "ended but not finalized" states)
     const panelSchedule = document.getElementById('panelScheduleStart');
-    if (panelSchedule) panelSchedule.style.display = isUpcoming ? '' : 'none';
+    if (panelSchedule) panelSchedule.style.display = (!saleFinalized && !isActive) ? '' : 'none';
 
     // Pre-fill datetime picker with current start time if sale not yet started
     if (isUpcoming) {
@@ -721,6 +743,22 @@ async function extendSale() {
         'Extending sale...',
         'Sale extended by ' + label + '.',
         'Error extending sale'
+    );
+}
+
+// ─── Start Sale Immediately ───────────────────────────────────────
+async function startSaleNow() {
+    if (!guardAdmin()) return;
+    const newStartTs = Math.floor(Date.now() / 1000) + 60; // starts in ~60 seconds
+    const endTs      = newStartTs + 6 * 7 * 24 * 3600;    // 6 weeks duration
+    const startStr   = fmtDatetime(new Date(newStartTs * 1000));
+    const endStr     = fmtDatetime(new Date(endTs * 1000));
+    if (!confirm('Start the sale NOW?\n\nStart: ' + startStr + '\nEnd (6 wks): ' + endStr + '\n\nThe sale will become live within ~60 seconds.')) return;
+    await sendTx(
+        () => saleContract.setSaleStartTime(newStartTs),
+        'Starting sale now...',
+        'Sale started! Goes live in ~60 seconds. Start: ' + startStr,
+        'Error starting sale'
     );
 }
 
