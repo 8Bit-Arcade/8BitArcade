@@ -1,13 +1,13 @@
 // Token Sale Web3 Integration
 // Uses ethers.js v5 (loaded from CDN)
 
-// Contract addresses
+// Contract addresses — Arbitrum Mainnet
 const CONTRACTS = {
-    TOKEN_SALE: '0x057B1130dD6E8FcBc144bb34172e45293C6839fE', // Arbitrum Sepolia testnet
-    EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d', // 8BIT token on Arbitrum Sepolia
-    USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
-    CHAIN_ID: 421614, // Arbitrum Sepolia Testnet
-    CHAIN_NAME: 'Arbitrum Sepolia'
+    TOKEN_SALE: '0xTOKEN_SALE_MAINNET',       // ← replace with mainnet TokenSale address
+    EIGHT_BIT_TOKEN: '0xEIGHT_BIT_TOKEN_MAINNET',  // ← replace with mainnet 8BIT token address
+    USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum Mainnet native USDC
+    CHAIN_ID: 42161, // Arbitrum One Mainnet
+    CHAIN_NAME: 'Arbitrum One'
 };
 
 // Contract ABIs (minimal)

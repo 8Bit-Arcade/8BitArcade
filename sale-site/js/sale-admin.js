@@ -15,13 +15,13 @@ firebase.initializeApp(firebaseConfig);
 const functions = firebase.functions();
 const db = firebase.firestore();
 
-// ── Contract config ──────────────────────────────────────────────
+// ── Contract config — Arbitrum Mainnet ───────────────────────────
 const CONTRACTS = {
-    TOKEN_SALE:      '0x057B1130dD6E8FcBc144bb34172e45293C6839fE',
-    EIGHT_BIT_TOKEN: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
-    USDC:            '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
-    CHAIN_ID:        421614,
-    CHAIN_NAME:      'Arbitrum Sepolia'
+    TOKEN_SALE:      '0xTOKEN_SALE_MAINNET',       // ← replace with mainnet TokenSale address
+    EIGHT_BIT_TOKEN: '0xEIGHT_BIT_TOKEN_MAINNET',  // ← replace with mainnet 8BIT token address
+    USDC:            '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum Mainnet native USDC
+    CHAIN_ID:        42161,
+    CHAIN_NAME:      'Arbitrum One'
 };
 
 // ── Full ABI (all functions used by the admin panel) ────────────
@@ -422,10 +422,8 @@ async function loadContractState() {
         cardTimeRemaining.classList.remove('hidden');
     }
 
-    // Schedule panel: show whenever sale is not finalized and not currently active
-    // (covers "not yet started", "upcoming", or "ended but not finalized" states)
-    const panelSchedule = document.getElementById('panelScheduleStart');
-    if (panelSchedule) panelSchedule.style.display = (!saleFinalized && !isActive) ? '' : 'none';
+    // Start/schedule panel is always visible so admin can always launch/reschedule.
+    // The contract will reject the call if the state doesn't allow it.
 
     // Pre-fill datetime picker with current start time if sale not yet started
     if (isUpcoming) {
@@ -537,7 +535,7 @@ async function loadPurchaseHistory() {
             const payment = p.paymentMethod === 'ETH'
                 ? parseFloat(ethers.utils.formatEther(p.ethSpent || '0')).toFixed(4) + ' ETH'
                 : '$' + parseFloat(ethers.utils.formatUnits(p.usdcSpent || '0', 6)).toFixed(2) + ' USDC';
-            const txUrl = 'https://sepolia.arbiscan.io/tx/' + p.txHash;
+            const txUrl = 'https://arbiscan.io/tx/' + p.txHash;
             return `<tr>
                 <td>${new Date(p.timestamp).toLocaleString()}</td>
                 <td class="addr">${p.buyer.slice(0,6)}...${p.buyer.slice(-4)}</td>
@@ -596,7 +594,7 @@ async function loadBuyersOnChain() {
             <tr>
                 <td>${idx + 1}</td>
                 <td class="addr">${r.addr.slice(0,6)}...${r.addr.slice(-4)}
-                    <a href="https://sepolia.arbiscan.io/address/${r.addr}" target="_blank" style="color:#555; margin-left:4px;">&#x2197;</a>
+                    <a href="https://arbiscan.io/address/${r.addr}" target="_blank" style="color:#555; margin-left:4px;">&#x2197;</a>
                 </td>
                 <td>${fmtNum(r.tokens)} 8BIT</td>
                 <td>${r.eth.toFixed(4) === '0.0000' ? '—' : r.eth.toFixed(4) + ' ETH'}</td>
