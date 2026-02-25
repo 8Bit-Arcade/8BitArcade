@@ -195,7 +195,8 @@ export const getEthPrice = onCall(
     logger.info('getEthPrice called');
 
     try {
-      const priceData = await updatePricesCore();
+      // Always force a fresh fetch from CoinGecko on explicit calls
+      const priceData = await updatePricesCore(true);
 
       return {
         ethUsd: priceData.ethUsd,
