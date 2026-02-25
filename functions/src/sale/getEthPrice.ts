@@ -194,15 +194,28 @@ export const getEthPrice = onCall(
   async () => {
     logger.info('getEthPrice called');
 
-    const priceData = await updatePricesCore();
+    try {
+      // Always force a fresh fetch from CoinGecko on explicit calls
+      const priceData = await updatePricesCore(true);
 
-    return {
-      ethUsd: priceData.ethUsd,
-      tokensPerEth: priceData.tokensPerEth,
-      tokensPerUsdc: priceData.tokensPerUsdc,
-      source: priceData.source,
-      timestamp: priceData.updatedAt.toMillis(),
-    };
+      return {
+        ethUsd: priceData.ethUsd,
+        tokensPerEth: priceData.tokensPerEth,
+        tokensPerUsdc: priceData.tokensPerUsdc,
+        source: priceData.source,
+        timestamp: priceData.updatedAt.toMillis(),
+      };
+    } catch (error) {
+      logger.error('getEthPrice handler error:', error);
+      // Return fallback instead of 500-ing
+      return {
+        ethUsd: FALLBACK_ETH_PRICE,
+        tokensPerEth: FALLBACK_ETH_PRICE / TOKEN_PRICE_USD,
+        tokensPerUsdc: TOKENS_PER_USDC,
+        source: 'fallback',
+        timestamp: Date.now(),
+      };
+    }
   }
 );
 

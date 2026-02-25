@@ -90,15 +90,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchEthPrice() {
     try {
-        // Check local cache first (for quick page loads)
+        // Check local cache first (< 30s old = still fresh)
         const cached = localStorage.getItem(PRICE_CACHE_KEY);
         if (cached) {
             try {
                 const { price, timestamp } = JSON.parse(cached);
                 const age = Date.now() - timestamp;
-
-                // Use cached price if still valid (1 minute local cache)
-                if (age < 60000 && price > 0) {
+                if (age < 30000 && price > 0) {
                     currentEthPrice = price;
                     console.log('Using locally cached ETH price:', price);
                     return price;
@@ -108,29 +106,52 @@ async function fetchEthPrice() {
             }
         }
 
-        // Fetch from Firebase function (handles server-side caching and API fallbacks)
+        // Always fetch live from CoinGecko first (primary source)
+        try {
+            const resp = await fetch(
+                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+                { headers: { Accept: 'application/json' } }
+            );
+            if (resp.ok) {
+                const data = await resp.json();
+                const cgPrice = data?.ethereum?.usd;
+                if (cgPrice > 0) {
+                    localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+                        price: cgPrice,
+                        timestamp: Date.now()
+                    }));
+                    currentEthPrice = cgPrice;
+                    console.log(`ETH price from CoinGecko: $${cgPrice}`);
+                    return cgPrice;
+                }
+            } else {
+                console.warn('CoinGecko returned', resp.status);
+            }
+        } catch (e) {
+            console.warn('CoinGecko direct fetch failed:', e);
+        }
+
+        // CoinGecko failed — try Firebase function (may have a cached value)
         if (typeof firebase !== 'undefined' && firebase.functions) {
             try {
                 const getEthPriceFn = firebase.functions().httpsCallable('getEthPrice');
                 const result = await getEthPriceFn();
-                const { price, source } = result.data;
-
-                if (price && price > 0) {
-                    // Cache locally for quick subsequent access
+                const { ethUsd, source } = result.data;
+                if (ethUsd && ethUsd > 0) {
                     localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
-                        price: price,
+                        price: ethUsd,
                         timestamp: Date.now()
                     }));
-                    currentEthPrice = price;
-                    console.log(`ETH price from Firebase (${source}): $${price}`);
-                    return price;
+                    currentEthPrice = ethUsd;
+                    console.log(`ETH price from Firebase (${source}): $${ethUsd}`);
+                    return ethUsd;
                 }
             } catch (e) {
                 console.warn('Firebase getEthPrice failed:', e);
             }
         }
 
-        // Fallback: use any cached price (even expired)
+        // Use any expired local cache before hardcoded fallback
         if (cached) {
             try {
                 const { price: cachedPrice } = JSON.parse(cached);
@@ -142,7 +163,7 @@ async function fetchEthPrice() {
             } catch (e) { }
         }
 
-        // Final fallback - use default
+        // Last resort
         console.log('Using fallback ETH price: $3300');
         currentEthPrice = 3300;
         return 3300;
@@ -260,7 +281,7 @@ async function loadSaleData() {
         // If contracts not initialized, use read-only provider
         if (!saleContract) {
             // Use Alchemy RPC for reliable CORS-enabled access
-            const readProvider = new ethers.providers.JsonRpcProvider('https://arb-sepolia.g.alchemy.com/v2/eu4fg53KRs9jneLNPjxcd');
+            const readProvider = new ethers.providers.JsonRpcProvider('https://arb-mainnet.g.alchemy.com/v2/eu4fg53KRs9jneLNPjxcd');
             saleContract = new ethers.Contract(CONTRACTS.TOKEN_SALE, TOKEN_SALE_ABI, readProvider);
         }
 
