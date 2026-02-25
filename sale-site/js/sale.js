@@ -113,21 +113,45 @@ async function fetchEthPrice() {
             try {
                 const getEthPriceFn = firebase.functions().httpsCallable('getEthPrice');
                 const result = await getEthPriceFn();
-                const { price, source } = result.data;
+                // Firebase function returns `ethUsd` (not `price`)
+                const { ethUsd, source } = result.data;
 
-                if (price && price > 0) {
+                if (ethUsd && ethUsd > 0) {
                     // Cache locally for quick subsequent access
                     localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
-                        price: price,
+                        price: ethUsd,
                         timestamp: Date.now()
                     }));
-                    currentEthPrice = price;
-                    console.log(`ETH price from Firebase (${source}): $${price}`);
-                    return price;
+                    currentEthPrice = ethUsd;
+                    console.log(`ETH price from Firebase (${source}): $${ethUsd}`);
+                    return ethUsd;
                 }
             } catch (e) {
                 console.warn('Firebase getEthPrice failed:', e);
             }
+        }
+
+        // Fallback: fetch directly from CoinGecko (CORS allowed on free tier)
+        try {
+            const resp = await fetch(
+                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+                { headers: { Accept: 'application/json' } }
+            );
+            if (resp.ok) {
+                const data = await resp.json();
+                const cgPrice = data?.ethereum?.usd;
+                if (cgPrice > 0) {
+                    localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+                        price: cgPrice,
+                        timestamp: Date.now()
+                    }));
+                    currentEthPrice = cgPrice;
+                    console.log(`ETH price from CoinGecko (direct): $${cgPrice}`);
+                    return cgPrice;
+                }
+            }
+        } catch (e) {
+            console.warn('CoinGecko direct fetch failed:', e);
         }
 
         // Fallback: use any cached price (even expired)
@@ -260,7 +284,7 @@ async function loadSaleData() {
         // If contracts not initialized, use read-only provider
         if (!saleContract) {
             // Use Alchemy RPC for reliable CORS-enabled access
-            const readProvider = new ethers.providers.JsonRpcProvider('https://arb-sepolia.g.alchemy.com/v2/eu4fg53KRs9jneLNPjxcd');
+            const readProvider = new ethers.providers.JsonRpcProvider('https://arb-mainnet.g.alchemy.com/v2/eu4fg53KRs9jneLNPjxcd');
             saleContract = new ethers.Contract(CONTRACTS.TOKEN_SALE, TOKEN_SALE_ABI, readProvider);
         }
 
