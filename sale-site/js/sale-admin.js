@@ -15,11 +15,11 @@ firebase.initializeApp(firebaseConfig);
 const functions = firebase.functions();
 const db = firebase.firestore();
 
-// ── Contract config — Arbitrum Mainnet ───────────────────────────
+// ── Contract config — Arbitrum One Mainnet ───────────────────────
 const CONTRACTS = {
-    TOKEN_SALE:      '0xTOKEN_SALE_MAINNET',       // ← replace with mainnet TokenSale address
-    EIGHT_BIT_TOKEN: '0xEIGHT_BIT_TOKEN_MAINNET',  // ← replace with mainnet 8BIT token address
-    USDC:            '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum Mainnet native USDC
+    TOKEN_SALE:      '0x14c07e8deca1eb1415afa4590626613fe1764faa', // TokenSale (200M 8BIT held)
+    EIGHT_BIT_TOKEN: '0x37ee26669659758109c94862e49b492247be26df', // 8BIT token
+    USDC:            '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One native USDC
     CHAIN_ID:        42161,
     CHAIN_NAME:      'Arbitrum One'
 };
