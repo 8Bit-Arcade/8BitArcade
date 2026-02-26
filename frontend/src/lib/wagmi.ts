@@ -17,9 +17,10 @@ import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
  *    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
  */
 
-// Use testnet or mainnet based on config
+// When USE_TESTNET is true: both chains supported, sepolia is default
+// When USE_TESTNET is false: mainnet only
 const chains = USE_TESTNET
-  ? [arbitrumSepolia] as const
+  ? [arbitrumSepolia, arbitrum] as const
   : [arbitrum] as const;
 
 export const config = getDefaultConfig({
@@ -27,12 +28,9 @@ export const config = getDefaultConfig({
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'd1553a66d89d56748c2ec4efae456f8e',
   chains,
   transports: {
-  [chains[0].id]: http(
-    USE_TESTNET 
-      ? 'https://sepolia-rollup.arbitrum.io/rpc'  // ← Official Arbitrum RPC
-      : 'https://arb-mainnet.g.alchemy.com/v2/demo'
-  ),
-},
+    [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc'),
+    [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/demo'),
+  },
   ssr: true,
 });
 
