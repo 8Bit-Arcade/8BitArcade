@@ -59,7 +59,7 @@ const TESTNET_CONTRACTS = {
 // ────────────── MAINNET TOKEN SALE OVERRIDE ──────────────
 // Use mainnet token sale address even when USE_TESTNET is true
 //export const TOKEN_SALE_ADDRESS = MAINNET_CONTRACTS.TOKEN_SALE;
-export const TOKEN_SALE_ABI = CONTRACTS.TOKEN_SALE_ABI; // ABI stays the same
+//export const TOKEN_SALE_ABI = CONTRACTS.TOKEN_SALE_ABI; // ABI stays the same
 
 // ═══════════════════════════════════════════════════════════
 // MAINNET CONTRACT ADDRESSES (Arbitrum One)
