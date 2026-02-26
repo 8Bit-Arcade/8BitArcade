@@ -56,6 +56,11 @@ const TESTNET_CONTRACTS = {
   BLOCK_EXPLORER: 'https://sepolia.arbiscan.io',
 };
 
+// ────────────── MAINNET TOKEN SALE OVERRIDE ──────────────
+// Use mainnet token sale address even when USE_TESTNET is true
+export const TOKEN_SALE_ADDRESS = MAINNET_CONTRACTS.TOKEN_SALE;
+export const TOKEN_SALE_ABI = CONTRACTS.TOKEN_SALE_ABI; // ABI stays the same
+
 // ═══════════════════════════════════════════════════════════
 // MAINNET CONTRACT ADDRESSES (Arbitrum One)
 // ═══════════════════════════════════════════════════════════
@@ -103,7 +108,10 @@ export const TOURNAMENT_MANAGER_ADDRESS = CONTRACTS.TOURNAMENT_MANAGER;
 export const TOURNAMENT_PAYMENTS_ADDRESS = CONTRACTS.TOURNAMENT_PAYMENTS;
 export const TIERED_STAKING_ADDRESS = CONTRACTS.TIERED_STAKING;
 export const TOURNAMENT_BUYBACK_ADDRESS = CONTRACTS.TOURNAMENT_BUYBACK;
-export const TOKEN_SALE_ADDRESS = CONTRACTS.TOKEN_SALE;
+
+// OVERRIDE: Use mainnet token sale while keeping rest on testnet
+export const TOKEN_SALE_ADDRESS = MAINNET_CONTRACTS.TOKEN_SALE;
+
 export const TREASURY_GAS_MANAGER_ADDRESS = CONTRACTS.TREASURY_GAS_MANAGER;
 export const TESTNET_FAUCET_ADDRESS = CONTRACTS.TESTNET_FAUCET;
 export const VESTED_AIRDROP_ADDRESS = CONTRACTS.VESTED_AIRDROP;
@@ -115,7 +123,6 @@ export const ARBITRUM_CHAIN_ID = CONTRACTS.CHAIN_ID;
 export const ARBITRUM_CHAIN_NAME = CONTRACTS.CHAIN_NAME;
 export const ARBITRUM_RPC_URL = CONTRACTS.RPC_URL;
 export const BLOCK_EXPLORER_URL = CONTRACTS.BLOCK_EXPLORER;
-
 // ═══════════════════════════════════════════════════════════
 // REWARD DISTRIBUTION WALLET
 // ═══════════════════════════════════════════════════════════
