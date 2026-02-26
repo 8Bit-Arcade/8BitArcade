@@ -117,7 +117,7 @@ export const zealyVerifyQuest = onRequest(
           const badges = new Contract(ACHIEVEMENT_BADGES_ADDRESS, ERC721_BALANCE_ABI, provider);
           const balance: bigint = await badges.balanceOf(wallet);
           const nftCount = Number(balance);
-          const required = 7;
+          const required = 5;
           const verified = nftCount >= required;
 
           if (verified) {
