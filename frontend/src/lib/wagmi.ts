@@ -29,7 +29,7 @@ export const config = getDefaultConfig({
   chains,
   transports: {
     [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc'),
-    [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/demo'),
+    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
   },
   ssr: true,
 });
