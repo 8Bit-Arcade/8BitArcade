@@ -104,61 +104,42 @@ export function useAchievements() {
    * Fetch all goals and player completion statuses
    */
   const fetchGoals = useCallback(async () => {
-    if (!nextGoalId || contractAddress === '0x0000000000000000000000000000000000000000') return;
+    if (!address || contractAddress === '0x0000000000000000000000000000000000000000') return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const goalCount = Number(nextGoalId) - 1;
-      if (goalCount <= 0) {
-        setGoals([]);
-        return;
-      }
-
-      // Build goal IDs array
-      const goalIds = Array.from({ length: goalCount }, (_, i) => BigInt(i + 1));
-
-      // Fetch goal completion statuses for the player
-      // This will be done via the Firebase backend for off-chain data,
-      // but we can check on-chain completion status
-      const fetchedGoals: Goal[] = [];
-
-      // Note: In production, you'd batch these reads using multicall.
-      // For now, we fetch from the backend API which has cached goal data.
       const { callFunction } = await import('@/lib/firebase-functions');
 
       const result = await callFunction<{ walletAddress: string }, { goals: any[] }>(
         'getAchievements',
-        { walletAddress: address || '' }
+        { walletAddress: address }
       );
 
       if (result?.goals) {
-        for (const g of result.goals) {
-          fetchedGoals.push({
-            id: g.id,
-            name: g.name,
-            description: g.description,
-            category: g.category as GoalCategory,
-            threshold: BigInt(g.threshold),
-            gameId: g.gameId || '',
-            achievementTypeId: BigInt(g.achievementTypeId),
-            rewardItemTypeId: BigInt(g.rewardItemTypeId || 0),
-            rewardTokenAmount: BigInt(g.rewardTokenAmount || 0),
-            active: g.active,
-            completed: g.completed || false,
-          });
-        }
+        const fetchedGoals: Goal[] = result.goals.map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          description: g.description,
+          category: g.category as GoalCategory,
+          threshold: BigInt(g.threshold),
+          gameId: g.gameId || '',
+          achievementTypeId: BigInt(g.achievementTypeId),
+          rewardItemTypeId: BigInt(g.rewardItemTypeId || 0),
+          rewardTokenAmount: BigInt(g.rewardTokenAmount || 0),
+          active: g.active,
+          completed: g.completed || false,
+        }));
+        setGoals(fetchedGoals);
       }
-
-      setGoals(fetchedGoals);
     } catch (err: any) {
       console.error('Failed to fetch achievements:', err);
       setError(err.message || 'Failed to fetch achievements');
     } finally {
       setIsLoading(false);
     }
-  }, [nextGoalId, contractAddress, address]);
+  }, [contractAddress, address]);
 
   /**
    * Check if the player has a specific achievement badge
