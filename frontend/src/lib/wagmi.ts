@@ -6,8 +6,10 @@ import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
 /**
  * Wagmi Configuration for 8-Bit Arcade
  *
- * Automatically uses testnet or mainnet based on USE_TESTNET flag
- * in config/contracts.ts
+ * Supports BOTH Arbitrum Sepolia (testnet) and Arbitrum One (mainnet) so
+ * contract reads work regardless of which chain the user's wallet is on.
+ * Some features (token sale, staking) are on mainnet while others (NFT
+ * achievements) are still on testnet.
  *
  * ⚠️ IMPORTANT: Get your WalletConnect Project ID
  * 1. Visit: https://cloud.walletconnect.com
@@ -17,22 +19,19 @@ import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
  *    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
  */
 
-// Use testnet or mainnet based on config
+// Support both chains — the default chain is first in the array
 const chains = USE_TESTNET
-  ? [arbitrumSepolia] as const
-  : [arbitrum] as const;
+  ? [arbitrumSepolia, arbitrum] as const
+  : [arbitrum, arbitrumSepolia] as const;
 
 export const config = getDefaultConfig({
   appName: '8-Bit Arcade',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'd1553a66d89d56748c2ec4efae456f8e',
   chains,
   transports: {
-  [chains[0].id]: http(
-    USE_TESTNET 
-      ? 'https://sepolia-rollup.arbitrum.io/rpc'  // ← Official Arbitrum RPC
-      : 'https://arb-mainnet.g.alchemy.com/v2/demo'
-  ),
-},
+    [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc'),
+    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
+  },
   ssr: true,
 });
 

@@ -5,6 +5,7 @@ import {
   ACHIEVEMENT_MANAGER_ADDRESS,
   ACHIEVEMENT_BADGES_ABI,
   ACHIEVEMENT_MANAGER_ABI,
+  ARBITRUM_CHAIN_ID,
 } from '@/config/contracts';
 
 /**
@@ -59,10 +60,12 @@ export function useAchievements() {
   const badgesAddress = ACHIEVEMENT_BADGES_ADDRESS as `0x${string}`;
 
   // Get total number of goals
+  // chainId ensures reads go to the correct chain even if wallet is on a different network
   const { data: nextGoalId } = useReadContract({
     address: contractAddress,
     abi: ACHIEVEMENT_MANAGER_ABI,
     functionName: 'nextGoalId',
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: contractAddress !== '0x0000000000000000000000000000000000000000',
     },
@@ -74,6 +77,7 @@ export function useAchievements() {
     abi: ACHIEVEMENT_MANAGER_ABI,
     functionName: 'getPlayerAchievementCount',
     args: address ? [address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: !!address && contractAddress !== '0x0000000000000000000000000000000000000000',
     },
@@ -85,6 +89,7 @@ export function useAchievements() {
     abi: ACHIEVEMENT_BADGES_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: !!address && badgesAddress !== '0x0000000000000000000000000000000000000000',
     },
@@ -95,6 +100,7 @@ export function useAchievements() {
     address: contractAddress,
     abi: ACHIEVEMENT_MANAGER_ABI,
     functionName: 'totalAchievementsAwarded',
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: contractAddress !== '0x0000000000000000000000000000000000000000',
     },
