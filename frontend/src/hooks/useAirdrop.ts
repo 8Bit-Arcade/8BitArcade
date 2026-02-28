@@ -5,7 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { formatEther } from 'viem';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app } from '@/lib/firebase';
-import { VESTED_AIRDROP_ADDRESS, VESTED_AIRDROP_ABI } from '@/config/contracts';
+import { VESTED_AIRDROP_ADDRESS, VESTED_AIRDROP_ABI, ARBITRUM_CHAIN_ID } from '@/config/contracts';
 
 /**
  * Airdrop status from Firebase
@@ -154,10 +154,12 @@ export function useAirdrop(): UseAirdropReturn {
   const isContractReady = VESTED_AIRDROP_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
   // Read contract stats
+  // chainId ensures reads go to the correct network even if wallet is on a different chain
   const { data: contractStatsData, refetch: refetchStats } = useReadContract({
     address: isContractReady ? VESTED_AIRDROP_ADDRESS as `0x${string}` : undefined,
     abi: VESTED_AIRDROP_ABI,
     functionName: 'getStats',
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: isContractReady,
     },
@@ -169,6 +171,7 @@ export function useAirdrop(): UseAirdropReturn {
     abi: VESTED_AIRDROP_ABI,
     functionName: 'getVestingInfo',
     args: address ? [address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: isContractReady && !!address,
     },

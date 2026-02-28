@@ -10,7 +10,7 @@ import GameSelector from '@/components/leaderboard/GameSelector';
 import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { formatNumber } from '@/lib/utils';
-import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI } from '@/config/contracts';
+import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, ARBITRUM_CHAIN_ID } from '@/config/contracts';
 
 type Period = 'daily' | 'weekly' | 'allTime';
 type ViewMode = 'games' | 'tournaments' | 'ended';
@@ -56,12 +56,14 @@ export default function LeaderboardPage() {
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
   // Create dynamic tournament queries
+  // chainId ensures reads go to testnet even if wallet is on mainnet
   const tournamentQueries = tournamentIds.map(id =>
     useReadContract({
       address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'getTournament',
       args: [BigInt(id)],
+      chainId: ARBITRUM_CHAIN_ID,
     })
   );
 
