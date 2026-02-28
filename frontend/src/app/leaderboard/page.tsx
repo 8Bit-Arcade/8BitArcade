@@ -52,7 +52,7 @@ export default function LeaderboardPage() {
   );
 
   // Fetch tournaments from blockchain
-  const MAX_TOURNAMENTS = 12;
+  const MAX_TOURNAMENTS = 100;
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
   // Create dynamic tournament queries
