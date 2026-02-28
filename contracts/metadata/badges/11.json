@@ -1,7 +1,7 @@
 {
   "name": "8Bit Prodigy",
   "description": "Earn 15 achievement badges - Prodigy tier unlocked",
-  "image": "https://ipfs.io/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/11.png",
+  "image": "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/11.png",
   "attributes": [
     { "trait_type": "Category", "value": "Collection" },
     { "trait_type": "Reward", "value": "2,000 8BIT" }
