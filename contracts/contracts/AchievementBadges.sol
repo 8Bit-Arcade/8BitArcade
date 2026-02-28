@@ -115,7 +115,7 @@ contract AchievementBadges is
 
         uint256 tokenId = nextTokenId++;
 
-        _safeMint(to, tokenId);
+        _mint(to, tokenId);
         _setTokenURI(tokenId, uri);
 
         tokenAchievementType[tokenId] = achievementTypeId;
@@ -144,7 +144,7 @@ contract AchievementBadges is
 
             uint256 tokenId = nextTokenId++;
 
-            _safeMint(to, tokenId);
+            _mint(to, tokenId);
             _setTokenURI(tokenId, uris[i]);
 
             tokenAchievementType[tokenId] = achievementTypeIds[i];
