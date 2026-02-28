@@ -1,23 +1,9 @@
 import { ethers } from "hardhat";
 
 /**
- * Fix Missing Mainnet NFT Badges
+ * Fix Missing Mainnet NFT Badges — Diagnostic + Fix
  *
- * Problem: awardAchievement uses low-level calls for badge minting that
- * silently fail. The 8BIT token rewards mint fine, but the NFT badges don't.
- * This is likely because AchievementManager isn't authorized as a minter
- * on the AchievementBadges contract.
- *
- * This script:
- * 1. Diagnoses the authorization issue on AchievementBadges
- * 2. Fixes it if needed (deployer must be AchievementBadges owner)
- * 3. Resets ghost goal completions (marked complete but no NFT)
- * 4. Re-awards with proper badge minting
- *
- * NOTE: Token rewards will be skipped on re-award by setting rewardTokenAmount
- * to 0 temporarily — actually, we can't do that easily. Instead, we'll mint
- * badges directly on the AchievementBadges contract and just reset the
- * goal completions so the state is consistent.
+ * Deeply diagnoses why mintBadge reverts, then fixes the issue.
  *
  * Usage:
  *   cd contracts
@@ -27,7 +13,6 @@ import { ethers } from "hardhat";
 const WALLET = "0x96e0B627454cE3b8C55C6d36b5FCBb13849Dc297";
 
 const TESTNET_MANAGER = "0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3";
-const TESTNET_BADGES = "0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f";
 const TESTNET_RPC = "https://sepolia-rollup.arbitrum.io/rpc";
 
 const MAINNET_MANAGER = "0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f";
@@ -42,15 +27,20 @@ const MANAGER_ABI = [
   "function resetPlayerGoalCompletions(address[] players, uint256[] goalIds) external",
   "function achievementBadges() view returns (address)",
   "function eightBitToken() view returns (address)",
+  "function badgeMetadataBaseURI() view returns (string)",
+  "function goals(uint256) view returns (uint256 id, string name, string description, uint8 category, uint256 threshold, string gameId, uint256 achievementTypeId, uint256 rewardItemTypeId, uint256 rewardTokenAmount, bool active)",
+  "function nextGoalId() view returns (uint256)",
 ];
 
 const BADGES_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
   "function hasAchievement(address player, uint256 achievementTypeId) view returns (bool)",
+  "function playerAchievements(address, uint256) view returns (uint256)",
   "function authorizedMinters(address) view returns (bool)",
   "function setAuthorizedMinter(address minter, bool authorized) external",
   "function mintBadge(address to, uint256 achievementTypeId, string uri) external returns (uint256)",
   "function owner() view returns (address)",
+  "function nextTokenId() view returns (uint256)",
 ];
 
 const GOAL_NAMES: Record<number, string> = {
@@ -63,177 +53,172 @@ const GOAL_NAMES: Record<number, string> = {
   19: "Double Trouble", 20: "The Answer",
 };
 
-// achievementTypeId for each goalId (1:1 in our config)
-const GOAL_TO_ACHIEVEMENT_TYPE: Record<number, number> = {
-  1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
-  11: 11, 12: 12, 13: 13, 14: 14, 15: 15, 16: 16, 17: 17, 18: 18, 19: 19, 20: 20,
-};
-
 async function main() {
   const [deployer] = await ethers.getSigners();
   console.log();
   console.log("═══════════════════════════════════════════════════");
-  console.log("  Fix Missing Mainnet NFT Badges");
+  console.log("  DEEP DIAGNOSTIC — Mainnet NFT Badge Minting");
   console.log("═══════════════════════════════════════════════════");
   console.log();
   console.log("Wallet:", WALLET);
   console.log("Deployer:", deployer.address);
   console.log();
 
-  const goalIds = Array.from({ length: 20 }, (_, i) => i + 1);
   const mainnetManager = new ethers.Contract(MAINNET_MANAGER, MANAGER_ABI, deployer);
   const mainnetBadges = new ethers.Contract(MAINNET_BADGES, BADGES_ABI, deployer);
 
   // ═══════════════════════════════════════════════════════════
-  // STEP 1: DIAGNOSE — Check AchievementManager authorization
+  // DIAGNOSTIC 1: Contract linkage
   // ═══════════════════════════════════════════════════════════
-  console.log("Step 1: Diagnosing authorization...");
-
-  const badgesOwner = await mainnetBadges.owner();
-  console.log(`  AchievementBadges owner: ${badgesOwner}`);
-  console.log(`  Deployer is owner: ${badgesOwner.toLowerCase() === deployer.address.toLowerCase()}`);
-
-  const managerIsAuthorized = await mainnetBadges.authorizedMinters(MAINNET_MANAGER);
-  console.log(`  AchievementManager authorized on Badges: ${managerIsAuthorized}`);
-
-  // Also check if deployer is authorized (for direct minting)
-  const deployerIsAuthorized = await mainnetBadges.authorizedMinters(deployer.address);
-  console.log(`  Deployer authorized on Badges: ${deployerIsAuthorized}`);
+  console.log("── DIAGNOSTIC 1: Contract Linkage ──");
+  const linkedBadges = await mainnetManager.achievementBadges();
+  const linkedToken = await mainnetManager.eightBitToken();
+  const managerBaseURI = await mainnetManager.badgeMetadataBaseURI();
+  const nextGoalId = await mainnetManager.nextGoalId();
+  console.log(`  Manager.achievementBadges(): ${linkedBadges}`);
+  console.log(`  Expected AchievementBadges:  ${MAINNET_BADGES}`);
+  console.log(`  Match: ${linkedBadges.toLowerCase() === MAINNET_BADGES.toLowerCase()}`);
+  console.log(`  Manager.eightBitToken(): ${linkedToken}`);
+  console.log(`  Manager.badgeMetadataBaseURI(): ${managerBaseURI}`);
+  console.log(`  Manager.nextGoalId(): ${nextGoalId.toString()}`);
   console.log();
 
   // ═══════════════════════════════════════════════════════════
-  // STEP 2: FIX AUTHORIZATION if needed
+  // DIAGNOSTIC 2: Goals on mainnet
   // ═══════════════════════════════════════════════════════════
-  if (!managerIsAuthorized) {
-    console.log("Step 2: FIXING — AchievementManager is NOT authorized! Setting now...");
-    if (badgesOwner.toLowerCase() !== deployer.address.toLowerCase()) {
-      console.error("  ERROR: Deployer is not the AchievementBadges owner. Cannot fix authorization.");
-      console.error(`  Owner: ${badgesOwner}`);
-      console.error(`  Deployer: ${deployer.address}`);
-      process.exit(1);
+  console.log("── DIAGNOSTIC 2: Goal Configuration on Mainnet ──");
+  for (const goalId of [5, 13, 15]) {
+    try {
+      const goal = await mainnetManager.goals(goalId);
+      console.log(`  Goal ${goalId}: name="${goal.name}", achievementTypeId=${goal.achievementTypeId}, active=${goal.active}, rewardTokens=${ethers.formatEther(goal.rewardTokenAmount)} 8BIT`);
+    } catch (err: any) {
+      console.log(`  Goal ${goalId}: ERROR reading — ${err.message}`);
     }
-    const tx = await mainnetBadges.setAuthorizedMinter(MAINNET_MANAGER, true);
-    await tx.wait();
-    console.log("  ✓ AchievementManager authorized as minter on AchievementBadges");
-    console.log();
-  } else {
-    console.log("Step 2: Authorization OK — AchievementManager is already authorized");
-    console.log();
   }
+  console.log();
 
-  // Also authorize deployer for direct minting (needed for fallback below)
-  if (!deployerIsAuthorized) {
-    console.log("  Authorizing deployer for direct badge minting...");
+  // ═══════════════════════════════════════════════════════════
+  // DIAGNOSTIC 3: Authorization
+  // ═══════════════════════════════════════════════════════════
+  console.log("── DIAGNOSTIC 3: Authorization ──");
+  const badgesOwner = await mainnetBadges.owner();
+  const managerAuth = await mainnetBadges.authorizedMinters(MAINNET_MANAGER);
+  const deployerAuth = await mainnetBadges.authorizedMinters(deployer.address);
+  console.log(`  Badges owner: ${badgesOwner}`);
+  console.log(`  Manager authorized: ${managerAuth}`);
+  console.log(`  Deployer authorized: ${deployerAuth}`);
+
+  // Ensure deployer is authorized
+  if (!deployerAuth) {
+    console.log(`  Authorizing deployer...`);
     const tx = await mainnetBadges.setAuthorizedMinter(deployer.address, true);
     await tx.wait();
-    console.log("  ✓ Deployer authorized");
-    console.log();
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // STEP 3: Check testnet achievements
-  // ═══════════════════════════════════════════════════════════
-  console.log("Step 3: Querying testnet achievements...");
-  const testnetProvider = new ethers.JsonRpcProvider(TESTNET_RPC);
-  const testnetManager = new ethers.Contract(TESTNET_MANAGER, MANAGER_ABI, testnetProvider);
-
-  const testnetStatuses: boolean[] = await testnetManager.getPlayerGoalStatuses(WALLET, goalIds);
-
-  const testnetCompleted: number[] = [];
-  for (let i = 0; i < testnetStatuses.length; i++) {
-    if (testnetStatuses[i]) {
-      testnetCompleted.push(goalIds[i]);
-      console.log(`  ✓ Testnet Goal ${goalIds[i]}: ${GOAL_NAMES[goalIds[i]]}`);
-    }
-  }
-  console.log(`  Total on testnet: ${testnetCompleted.length}`);
-  console.log();
-
-  if (testnetCompleted.length === 0) {
-    console.log("No testnet achievements found — nothing to migrate.");
-    return;
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // STEP 4: Check mainnet state and categorize
-  // ═══════════════════════════════════════════════════════════
-  console.log("Step 4: Checking mainnet state...");
-  const mainnetStatuses: boolean[] = await mainnetManager.getPlayerGoalStatuses(WALLET, goalIds);
-  const mainnetBadgeBalance = await mainnetBadges.balanceOf(WALLET);
-  console.log(`  Mainnet NFT badge balance: ${mainnetBadgeBalance.toString()}`);
-
-  const needsMintOnly: number[] = [];      // Goal complete, no NFT → mint badge directly (skip token reward)
-  const needsFullAward: number[] = [];     // Goal not complete, no NFT → full award
-  const alreadyDone: number[] = [];        // Goal complete AND has NFT → skip
-
-  for (const goalId of testnetCompleted) {
-    const goalComplete = mainnetStatuses[goalId - 1];
-    const achievementType = GOAL_TO_ACHIEVEMENT_TYPE[goalId];
-    const hasNFT = await mainnetBadges.hasAchievement(WALLET, achievementType);
-
-    if (goalComplete && hasNFT) {
-      alreadyDone.push(goalId);
-      console.log(`  ✓ Goal ${goalId} (${GOAL_NAMES[goalId]}): complete with NFT`);
-    } else if (goalComplete && !hasNFT) {
-      needsMintOnly.push(goalId);
-      console.log(`  ⚠ Goal ${goalId} (${GOAL_NAMES[goalId]}): goal complete but NO NFT badge`);
-    } else {
-      needsFullAward.push(goalId);
-      console.log(`  ✗ Goal ${goalId} (${GOAL_NAMES[goalId]}): not on mainnet at all`);
-    }
+    console.log(`  ✓ Done`);
   }
   console.log();
 
-  if (needsMintOnly.length === 0 && needsFullAward.length === 0) {
-    console.log("All achievements already exist on mainnet with NFTs! Nothing to fix.");
-    return;
+  // ═══════════════════════════════════════════════════════════
+  // DIAGNOSTIC 4: Badge state for this wallet
+  // ═══════════════════════════════════════════════════════════
+  console.log("── DIAGNOSTIC 4: Badge State for Wallet ──");
+  const badgeBalance = await mainnetBadges.balanceOf(WALLET);
+  const nextTokenIdBadges = await mainnetBadges.nextTokenId();
+  console.log(`  balanceOf(wallet): ${badgeBalance.toString()}`);
+  console.log(`  nextTokenId: ${nextTokenIdBadges.toString()}`);
+
+  for (const achievementTypeId of [5, 13, 15]) {
+    const tokenId = await mainnetBadges.playerAchievements(WALLET, achievementTypeId);
+    const hasIt = await mainnetBadges.hasAchievement(WALLET, achievementTypeId);
+    console.log(`  playerAchievements(wallet, ${achievementTypeId}): tokenId=${tokenId.toString()}, hasAchievement=${hasIt}`);
   }
+  console.log();
 
   // ═══════════════════════════════════════════════════════════
-  // STEP 5a: Mint badges directly for ghost completions
-  // (Goal was marked complete but NFT never minted — mint badge
-  // directly without going through awardAchievement to avoid
-  // double token rewards)
+  // DIAGNOSTIC 5: Goal completion state on AchievementManager
   // ═══════════════════════════════════════════════════════════
-  if (needsMintOnly.length > 0) {
-    console.log(`Step 5a: Minting ${needsMintOnly.length} badges directly (avoiding double token rewards)...`);
-    for (const goalId of needsMintOnly) {
-      const achievementType = GOAL_TO_ACHIEVEMENT_TYPE[goalId];
-      const badgeURI = `${BADGE_METADATA_BASE_URI}${achievementType}.json`;
-      console.log(`  Minting badge for Goal ${goalId} (${GOAL_NAMES[goalId]})...`);
-      const tx = await mainnetBadges.mintBadge(WALLET, achievementType, badgeURI);
-      const receipt = await tx.wait();
-      console.log(`  ✓ TX: ${receipt!.hash}`);
+  console.log("── DIAGNOSTIC 5: AchievementManager Goal Completion ──");
+  const goalIds = Array.from({ length: 20 }, (_, i) => i + 1);
+  const statuses: boolean[] = await mainnetManager.getPlayerGoalStatuses(WALLET, goalIds);
+  for (let i = 0; i < statuses.length; i++) {
+    if (statuses[i]) {
+      console.log(`  Goal ${goalIds[i]} (${GOAL_NAMES[goalIds[i]]}): COMPLETED`);
     }
-    console.log();
   }
+  const completedCount = statuses.filter(s => s).length;
+  console.log(`  Total completed: ${completedCount}`);
+  console.log();
 
   // ═══════════════════════════════════════════════════════════
-  // STEP 5b: Full award for goals not on mainnet at all
+  // DIAGNOSTIC 6: Try mintBadge with staticCall for revert reason
   // ═══════════════════════════════════════════════════════════
-  if (needsFullAward.length > 0) {
-    console.log(`Step 5b: Awarding ${needsFullAward.length} achievements (goal + badge + tokens)...`);
-    for (const goalId of needsFullAward) {
-      console.log(`  Awarding Goal ${goalId} (${GOAL_NAMES[goalId]})...`);
-      const tx = await mainnetManager.awardAchievement(WALLET, goalId);
-      const receipt = await tx.wait();
-      console.log(`  ✓ TX: ${receipt!.hash}`);
+  console.log("── DIAGNOSTIC 6: mintBadge staticCall (revert reason) ──");
+  for (const achievementTypeId of [5, 13, 15]) {
+    const badgeURI = `${BADGE_METADATA_BASE_URI}${achievementTypeId}.json`;
+    try {
+      const result = await mainnetBadges.mintBadge.staticCall(WALLET, achievementTypeId, badgeURI);
+      console.log(`  mintBadge(wallet, ${achievementTypeId}): would succeed, tokenId=${result.toString()}`);
+    } catch (err: any) {
+      // Try to extract revert reason
+      const reason = err.reason || err.message || String(err);
+      console.log(`  mintBadge(wallet, ${achievementTypeId}): REVERTS — ${reason}`);
+
+      // Also try raw error data decoding
+      if (err.data) {
+        console.log(`  Raw error data: ${err.data}`);
+      }
     }
-    console.log();
   }
+  console.log();
 
   // ═══════════════════════════════════════════════════════════
-  // VERIFY
+  // DIAGNOSTIC 7: Try raw low-level call to badges (simulate what Manager does)
   // ═══════════════════════════════════════════════════════════
-  const finalBalance = await mainnetBadges.balanceOf(WALLET);
-  const finalCount = await mainnetManager.getPlayerAchievementCount(WALLET);
+  console.log("── DIAGNOSTIC 7: Simulating Manager's low-level call ──");
+  const iface = new ethers.Interface(BADGES_ABI);
+  for (const achievementTypeId of [5]) {
+    const badgeURI = `${BADGE_METADATA_BASE_URI}${achievementTypeId}.json`;
+    const calldata = iface.encodeFunctionData("mintBadge", [WALLET, achievementTypeId, badgeURI]);
+    console.log(`  Calldata for mintBadge(wallet, ${achievementTypeId}): ${calldata.slice(0, 74)}...`);
+
+    try {
+      const result = await deployer.call({
+        to: MAINNET_BADGES,
+        data: calldata,
+      });
+      console.log(`  Raw call result: ${result}`);
+    } catch (err: any) {
+      console.log(`  Raw call reverts: ${err.reason || err.message}`);
+      if (err.data) console.log(`  Error data: ${err.data}`);
+    }
+  }
+  console.log();
+
+  // ═══════════════════════════════════════════════════════════
+  // DIAGNOSTIC 8: Check if badges contract is a proxy pointing to valid impl
+  // ═══════════════════════════════════════════════════════════
+  console.log("── DIAGNOSTIC 8: Proxy Implementation Check ──");
+  // ERC-1967 implementation slot: keccak256("eip1967.proxy.implementation") - 1
+  const implSlot = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+  const implBytes = await ethers.provider.getStorage(MAINNET_BADGES, implSlot);
+  const implAddress = "0x" + implBytes.slice(26); // last 20 bytes
+  console.log(`  Badges proxy implementation: ${implAddress}`);
+
+  const implCode = await ethers.provider.getCode(implAddress);
+  console.log(`  Implementation has code: ${implCode.length > 2}`);
+  console.log(`  Implementation code size: ${(implCode.length - 2) / 2} bytes`);
+  console.log();
+
+  // Same for manager
+  const managerImplBytes = await ethers.provider.getStorage(MAINNET_MANAGER, implSlot);
+  const managerImplAddress = "0x" + managerImplBytes.slice(26);
+  console.log(`  Manager proxy implementation: ${managerImplAddress}`);
+  const managerImplCode = await ethers.provider.getCode(managerImplAddress);
+  console.log(`  Implementation has code: ${managerImplCode.length > 2}`);
+  console.log(`  Implementation code size: ${(managerImplCode.length - 2) / 2} bytes`);
+  console.log();
+
   console.log("═══════════════════════════════════════════════════");
-  console.log("  COMPLETE");
-  console.log("═══════════════════════════════════════════════════");
-  console.log(`  NFT badges on mainnet: ${finalBalance.toString()}`);
-  console.log(`  Achievement count: ${finalCount.toString()}`);
-  console.log(`  Badges minted directly: ${needsMintOnly.length}`);
-  console.log(`  Full awards: ${needsFullAward.length}`);
+  console.log("  DIAGNOSTIC COMPLETE — review output above");
   console.log("═══════════════════════════════════════════════════");
 }
 
