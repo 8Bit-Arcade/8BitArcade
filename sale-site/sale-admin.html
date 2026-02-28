@@ -404,10 +404,13 @@
         <div id="tab-controls" class="tab-content">
             <div class="panel-grid">
 
-                <!-- Schedule Sale Start -->
-                <div class="sub-panel" id="panelScheduleStart">
-                    <h3 class="pixel-text">SCHEDULE SALE START</h3>
-                    <p style="margin-bottom:1rem;">Set or change the exact launch date &amp; time. Only available before the sale has started.</p>
+                <!-- Start Sale Now -->
+                <div class="sub-panel" id="panelScheduleStart" style="border-color:#00ff88;">
+                    <h3 class="pixel-text" style="color:#00ff88;">START SALE</h3>
+                    <p style="margin-bottom:1rem;">Launch the sale immediately or schedule an exact start date &amp; time.</p>
+                    <button id="btnStartNow" class="btn btn-green btn-full" style="margin-bottom:1.25rem; font-size:0.8rem;">&#9654; Start Sale NOW</button>
+                    <hr style="margin:0 0 1.25rem;">
+                    <h3 class="pixel-text" style="font-size:0.65rem; color:#888; margin-bottom:0.75rem;">— OR SCHEDULE —</h3>
                     <div class="form-group">
                         <label>Start Date &amp; Time (your local time)</label>
                         <input type="datetime-local" id="inputSaleStartDateTime">
