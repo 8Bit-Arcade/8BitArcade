@@ -6,8 +6,10 @@ import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
 /**
  * Wagmi Configuration for 8-Bit Arcade
  *
- * Automatically uses testnet or mainnet based on USE_TESTNET flag
- * in config/contracts.ts
+ * Supports BOTH Arbitrum Sepolia (testnet) and Arbitrum One (mainnet) so
+ * contract reads work regardless of which chain the user's wallet is on.
+ * Some features (token sale, staking) are on mainnet while others (NFT
+ * achievements) are still on testnet.
  *
  * ⚠️ IMPORTANT: Get your WalletConnect Project ID
  * 1. Visit: https://cloud.walletconnect.com
@@ -17,11 +19,10 @@ import { USE_TESTNET, CONTRACTS } from '@/config/contracts';
  *    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
  */
 
-// When USE_TESTNET is true: both chains supported, sepolia is default
-// When USE_TESTNET is false: mainnet only
+// Support both chains — the default chain is first in the array
 const chains = USE_TESTNET
   ? [arbitrumSepolia, arbitrum] as const
-  : [arbitrum] as const;
+  : [arbitrum, arbitrumSepolia] as const;
 
 export const config = getDefaultConfig({
   appName: '8-Bit Arcade',
