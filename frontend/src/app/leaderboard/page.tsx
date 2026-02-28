@@ -52,7 +52,7 @@ export default function LeaderboardPage() {
   );
 
   // Fetch tournaments from blockchain
-  const MAX_TOURNAMENTS = 12;
+  const MAX_TOURNAMENTS = 100;
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
   // Create dynamic tournament queries
@@ -132,8 +132,38 @@ export default function LeaderboardPage() {
       });
     });
 
-    console.log(`🏁 [Ranks] Total tournaments found: ${formattedTournaments.length}`);
-    setTournaments(formattedTournaments);
+    // DEDUPLICATION: Match tournament page display logic
+    // Weekly: keep 2 most recent per tier, Monthly: keep 1 per tier
+    const activeTournaments = formattedTournaments.filter(t => t.status === 'active');
+    const endedTournaments = formattedTournaments.filter(t => t.status === 'ended');
+
+    const weeklyByTier = new Map<string, TournamentInfo[]>();
+    const monthlyByTier = new Map<string, TournamentInfo>();
+
+    for (const t of activeTournaments) {
+      if (t.period === 'Weekly') {
+        if (!weeklyByTier.has(t.tier)) {
+          weeklyByTier.set(t.tier, []);
+        }
+        weeklyByTier.get(t.tier)!.push(t);
+      } else {
+        const existing = monthlyByTier.get(t.tier);
+        if (!existing || t.id > existing.id) {
+          monthlyByTier.set(t.tier, t);
+        }
+      }
+    }
+
+    // Keep only 2 most recent weekly per tier (by highest ID)
+    const dedupedWeekly: TournamentInfo[] = [];
+    for (const tournaments of weeklyByTier.values()) {
+      tournaments.sort((a, b) => b.id - a.id);
+      dedupedWeekly.push(...tournaments.slice(0, 2));
+    }
+
+    const dedupedTournaments = [...dedupedWeekly, ...Array.from(monthlyByTier.values()), ...endedTournaments];
+    console.log(`🏁 [Ranks] Total tournaments after dedup: ${dedupedTournaments.length}`);
+    setTournaments(dedupedTournaments);
     setLoadingTournaments(anyLoading);
   }, [
     ...tournamentQueries.map(q => q.data),
