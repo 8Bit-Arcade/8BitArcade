@@ -14,7 +14,11 @@ import {
   EIGHT_BIT_TOKEN_ADDRESS,
   USDC_ADDRESS,
   USDC_ABI,
+  MAINNET_CONTRACTS,
 } from '@/config/contracts';
+
+// Token sale is always on mainnet regardless of USE_TESTNET
+const MAINNET_CHAIN_ID = MAINNET_CONTRACTS.CHAIN_ID;
 
 type PaymentMethod = 'eth' | 'usdc';
 
@@ -44,35 +48,40 @@ export default function BuyEightBitPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Read sale data
+  // Read sale data — chainId ensures reads go to mainnet (where token sale lives)
   const { data: tokensForSale } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'TOKENS_FOR_SALE',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: tokensSold } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'tokensSold',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: ethRaised } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'ethRaised',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: usdcRaised } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'usdcRaised',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: saleEndTime } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'saleEndTime',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const calculateTokens = () => {
@@ -93,6 +102,7 @@ export default function BuyEightBitPage() {
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'isSaleActive',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: userPurchased } = useReadContract({
@@ -100,6 +110,7 @@ export default function BuyEightBitPage() {
     abi: TOKEN_SALE_ABI,
     functionName: 'purchasedTokens',
     args: address ? [address] : undefined,
+    chainId: MAINNET_CHAIN_ID,
   });
 
   // Check USDC allowance
@@ -108,6 +119,7 @@ export default function BuyEightBitPage() {
     abi: USDC_ABI,
     functionName: 'allowance',
     args: address ? [address, TOKEN_SALE_ADDRESS] : undefined,
+    chainId: MAINNET_CHAIN_ID,
   });
 
   // Get USDC balance
@@ -116,11 +128,13 @@ export default function BuyEightBitPage() {
     abi: USDC_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    chainId: MAINNET_CHAIN_ID,
   });
 
-  // Get ETH balance
+  // Get ETH balance on mainnet (where token sale lives)
   const { data: ethBalance } = useBalance({
     address: address,
+    chainId: MAINNET_CHAIN_ID,
   });
 
   // Approve USDC

@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { formatNumber, formatTimeRemaining } from '@/lib/utils';
 import { callFunction } from '@/lib/firebase-functions';
-import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI } from '@/config/contracts';
+import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, EIGHT_BIT_TOKEN_ABI, ARBITRUM_CHAIN_ID } from '@/config/contracts';
 import { parseUnits } from 'ethers';
 
 type Tier = 'Standard' | 'High Roller';
@@ -55,12 +55,14 @@ export default function TournamentsPage() {
   const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
   //  dynamic tournament queries
+  // chainId ensures reads go to testnet even if wallet is on mainnet
   const tournamentQueries = tournamentIds.map(id =>
     useReadContract({
       address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'getTournament',
       args: [BigInt(id)],
+      chainId: ARBITRUM_CHAIN_ID,
     })
   );
 
@@ -71,6 +73,7 @@ export default function TournamentsPage() {
       abi: TOURNAMENT_MANAGER_ABI,
       functionName: 'hasPlayerEntered',
       args: address ? [BigInt(id), address] : undefined,
+      chainId: ARBITRUM_CHAIN_ID,
       query: {
         enabled: !!address, // Only fetch when wallet is connected
       },
@@ -83,6 +86,7 @@ export default function TournamentsPage() {
     abi: EIGHT_BIT_TOKEN_ABI,
     functionName: 'allowance',
     args: address ? [address, TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
   });
 
   // Check token balance
@@ -91,6 +95,7 @@ export default function TournamentsPage() {
     abi: EIGHT_BIT_TOKEN_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
   });
 
   // Approve tokens

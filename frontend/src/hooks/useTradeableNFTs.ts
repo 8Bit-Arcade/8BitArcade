@@ -5,6 +5,7 @@ import {
   TRADEABLE_ITEMS_ABI,
   EIGHT_BIT_TOKEN_ADDRESS,
   EIGHT_BIT_TOKEN_ABI,
+  ARBITRUM_CHAIN_ID,
 } from '@/config/contracts';
 
 export interface ItemType {
@@ -48,10 +49,12 @@ export function useTradeableNFTs() {
   const { isLoading: isMintConfirming, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintHash });
 
   // Get total number of item types
+  // chainId ensures reads go to the correct network even if wallet is on a different chain
   const { data: nextItemTypeId } = useReadContract({
     address: contractAddress,
     abi: TRADEABLE_ITEMS_ABI,
     functionName: 'nextItemTypeId',
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: contractAddress !== '0x0000000000000000000000000000000000000000',
     },
@@ -63,6 +66,7 @@ export function useTradeableNFTs() {
     abi: TRADEABLE_ITEMS_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: !!address && contractAddress !== '0x0000000000000000000000000000000000000000',
     },
@@ -73,6 +77,7 @@ export function useTradeableNFTs() {
     address: contractAddress,
     abi: TRADEABLE_ITEMS_ABI,
     functionName: 'totalSupply',
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: contractAddress !== '0x0000000000000000000000000000000000000000',
     },
@@ -206,6 +211,7 @@ export function useTradeableNFTs() {
     abi: TRADEABLE_ITEMS_ABI,
     functionName: 'canMint',
     args: address ? [address, BigInt(1)] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: !!address && contractAddress !== '0x0000000000000000000000000000000000000000',
     },
