@@ -464,11 +464,6 @@ export const checkAndAwardAchievements = onSchedule(
     secrets: [rewardsPrivateKey],
   },
   async () => {
-    if (ACHIEVEMENT_MANAGER_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      console.log('AchievementManager not deployed yet, skipping');
-      return;
-    }
-
     const db = admin.firestore();
 
     // Collect all unique wallet addresses from multiple sources
@@ -576,10 +571,6 @@ export const manualCheckAchievements = onCall(
 
     if (!walletAddress) {
       throw new HttpsError('invalid-argument', 'walletAddress is required');
-    }
-
-    if (ACHIEVEMENT_MANAGER_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      throw new HttpsError('failed-precondition', 'AchievementManager not deployed');
     }
 
     const db = admin.firestore();
