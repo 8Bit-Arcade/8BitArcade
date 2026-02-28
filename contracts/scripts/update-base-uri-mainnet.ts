@@ -15,8 +15,8 @@ const BADGES  = "0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c";
 const MANAGER = "0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f";
 
 // ── UPDATE THIS after re-uploading to Pinata ──
-const NEW_CID = "PASTE_NEW_CID_HERE";
-const BASE_URI = `https://orange-encouraging-perch-476.mypinata.cloud/ipfs/${NEW_CID}/metadata/badges/`;
+const NEW_CID = "bafybeicq2vgfk3uk3jq7hw5kxkxjvp25xf6qicpnaxc3hdhqlnd5nwwipm";
+const BASE_URI = `https://orange-encouraging-perch-476.mypinata.cloud/ipfs/${NEW_CID}/badges/`;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
