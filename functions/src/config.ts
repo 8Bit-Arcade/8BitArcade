@@ -29,7 +29,7 @@ export const STAKING_BONUS_ADDRESS = USE_TESTNET
 // NFT Rewards contracts
 export const ACHIEVEMENT_MANAGER_ADDRESS = USE_TESTNET
   ? '0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3' // Arbitrum Sepolia (redeployed proxy)
-  : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy to mainnet
+  : '0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f'; // Arbitrum One (deployed mainnet proxy)
 
 // RPC URLs
 export const ARBITRUM_RPC_URL = USE_TESTNET
