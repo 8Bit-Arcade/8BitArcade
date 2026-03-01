@@ -140,26 +140,16 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
 
     // Handle tournament scores - auto-update ALL active tournaments the player has entered
     // This allows a single game to count toward multiple tournaments (weekly + monthly)
+    // Tournament scores ALSO update game/global leaderboards (fall through to ranked logic below)
     if (sessionData.mode === 'tournament') {
       console.log(`🎮 TOURNAMENT MODE - Session tournamentId: ${sessionData.tournamentId}`);
       console.log(`🎮 Player: ${playerAddress}, Game: ${gameId}, Score: ${verifiedScore}`);
 
       // Auto-update all applicable tournament entries
       await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
-
-      // Update user stats (for Zealy verification and airdrop eligibility)
-      await updateUserGamesPlayed(playerAddress, now);
-
-      return {
-        success: true,
-        verified: true,
-        score: verifiedScore,
-        newBest: true, // Tournament scores are always considered "new" for display
-        flags: analysis.flags.length > 0 ? analysis.flags : undefined,
-      };
     }
 
-    // Only save ranked scores to regular leaderboards (skip free play)
+    // Only save ranked/tournament scores to regular leaderboards (skip free play)
     if (sessionData.mode === 'free') {
       // Still update user stats for Zealy verification and airdrop eligibility
       await updateUserGamesPlayed(playerAddress, now);
