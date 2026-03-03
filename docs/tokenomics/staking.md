@@ -2,20 +2,21 @@
 
 ## Earn Passive Income by Holding 8BIT
 
-Staking allows you to lock your 8BIT tokens and earn passive rewards over time. Staking is now **LIVE on testnet**!
+Staking allows you to lock your 8BIT tokens and earn passive rewards over time. Staking is **LIVE on both testnet and mainnet**!
 
 ## Staking Overview
 
 | Detail                       | Information                         |
 | ---------------------------- | ----------------------------------- |
-| **Status**                   | LIVE on Arbitrum Sepolia            |
+| **Status**                   | LIVE on Arbitrum One (Mainnet) & Arbitrum Sepolia (Testnet) |
 | **Staking Pool**             | 50,000,000 8BIT (10% of supply)     |
 | **Distribution Period**      | 5 years                             |
 | **Estimated APY**            | 10-60% (based on tier & TVL)        |
 | **Lock Periods**             | 7 days, 1 month, 3 months, 6 months |
 | **Early Withdrawal Penalty** | 25% of staked amount                |
 | **Rewards**                  | Paid in 8BIT (minted)               |
-| **Contract**                 | [View on Arbiscan](https://sepolia.arbiscan.io/address/0xC193451f59De0df09EC8359D091F8890A80F20c4) |
+| **Mainnet Contract**         | [`0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF) (9.9M 8BIT funded) |
+| **Testnet Contract**         | [`0xC193451f59De0df09EC8359D091F8890A80F20c4`](https://sepolia.arbiscan.io/address/0xC193451f59De0df09EC8359D091F8890A80F20c4) |
 
 ## Why Staking?
 
@@ -221,29 +222,29 @@ Approve the staking contract and confirm transaction in MetaMask.
 
 ## Current Status
 
-### Testnet (NOW)
+### Mainnet (LIVE)
 
-* ✅ Staking contract deployed on Arbitrum Sepolia
+* ✅ TieredStaking contract deployed & verified on Arbitrum One
+* ✅ 9,900,000 8BIT funded (of 25M total — more to be added later)
 * ✅ All 4 lock tiers working (7d, 1m, 3m, 6m)
 * ✅ Real-time reward accrual
 * ✅ Staking bonus multipliers for leaderboard rewards
+
+### Testnet
+
+* ✅ Staking contract deployed on Arbitrum Sepolia
+* ✅ All 4 lock tiers working (7d, 1m, 3m, 6m)
 * ✅ Live countdown timers and progress bars
-
-### Mainnet (Coming Soon)
-
-* Deploy staking contract to Arbitrum One
-* Enable 50M token staking pool
-* Full production launch
 
 ## Stay Updated
 
 * [**Join Discord**](../community/social.md) for announcements
 * [**Follow Twitter**](../community/social.md) for updates
-* [**Start Staking**](https://8bitarcade.games/staking.html) now on testnet!
+* [**Start Staking**](https://8bitarcade.games/staking.html) now on mainnet!
 
 ## Frequently Asked Questions
 
-**Q: Is staking live?** A: Yes! Staking is live on Arbitrum Sepolia testnet. Mainnet launch coming soon.
+**Q: Is staking live?** A: Yes! Staking is live on both Arbitrum One mainnet and Arbitrum Sepolia testnet.
 
 **Q: Can I stake presale tokens?** A: Yes! Any 8BIT tokens can be staked.
 

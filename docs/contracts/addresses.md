@@ -1,6 +1,6 @@
 # Contract Addresses
 
-> **Last Updated:** February 12, 2026 **Network:** Arbitrum Sepolia Testnet (Pre-Launch)
+> **Last Updated:** March 3, 2026 **Networks:** Arbitrum One (Mainnet) & Arbitrum Sepolia (Testnet)
 
 ## Overview
 
@@ -47,26 +47,41 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- | ------- |
 | **Game Rewards Wallet** | [`0x193A7E1a8e840b514AdeD9a1D69a94002d87D678`](https://sepolia.arbiscan.io/address/0x193A7E1a8e840b514AdeD9a1D69a94002d87D678) | Daily reward distributions      | Active  |
 | **Liquidity Pool**      | [`0x1727B058B993eB9392fcE863Ec93C86e7BD725F4`](https://sepolia.arbiscan.io/address/0x1727B058B993eB9392fcE863Ec93C86e7BD725F4) | DEX liquidity (locked 3+ years) | Pending |
-| **Deployer Wallet**     | TBD                                                                                                                            | Contract deployment & ownership | TBD     |
-| **Treasury Wallet**     | TBD                                                                                                                            | Protocol fees & revenue         | TBD     |
+| **Deployer / Owner**    | [`0x80361876199e2318d6993A07e37177cFd21B64a7`](https://arbiscan.io/address/0x80361876199e2318d6993A07e37177cFd21B64a7)          | Contract deployment & ownership | Active  |
+| **Rewards Distributor** | [`0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B`](https://arbiscan.io/address/0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B)          | Backend reward distributions    | Active  |
 
-## Arbitrum One Mainnet (Post-Launch)
+## Arbitrum One Mainnet (LIVE)
 
-> **⚠️ NOT YET DEPLOYED**
->
-> Mainnet addresses will be added here after public token sale and launch.
+> **✅ DEPLOYED & VERIFIED** — Mainnet contracts are live on Arbitrum One. Token sale is active.
 
-### Planned Contracts
+### Core Contracts
 
-* 8BIT Token
-* Game Rewards
-* Tournament Manager
-* Tournament Buyback
-* Tiered Staking
-* Staking Bonus
-* Token Sale
-* Treasury Gas Manager
-* Vested Airdrop (for mainnet airdrop)
+| Contract                 | Address                                                                                                              | Purpose                                               |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **8BIT Token**           | [`0x37ee26669659758109c94862e49B492247Be26df`](https://arbiscan.io/address/0x37ee26669659758109c94862e49B492247Be26df) | ERC-20 governance & reward token                      |
+| **Game Rewards**         | [`0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e`](https://arbiscan.io/address/0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e) | Distributes daily rewards to top players              |
+| **Tournament Manager**   | [`0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e`](https://arbiscan.io/address/0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e) | Manages tournament entries & prizes (8BIT entry fees) |
+| **Tournament Payments**  | [`0xa009e23658609EC3d6b98b1e0904b77005A73e59`](https://arbiscan.io/address/0xa009e23658609EC3d6b98b1e0904b77005A73e59) | USDC/ETH payment processing                          |
+| **Token Sale**           | [`0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA`](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA) | Public token sale ($100K raise) — LIVE                |
+| **Treasury Gas Manager** | [`0x2185cF31B507620C412b00cde9B1BCd1B62983d6`](https://arbiscan.io/address/0x2185cF31B507620C412b00cde9B1BCd1B62983d6) | Automates gas wallet refills                          |
+| **Tiered Staking**       | [`0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF) | Staking with lock tiers (7d-6mo) — 9.9M 8BIT funded  |
+| **Achievement Badges**   | [`0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c`](https://arbiscan.io/address/0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c) | Soulbound ERC-721 NFT badges (UUPS Proxy)             |
+| **Tradeable Items**      | [`0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad`](https://arbiscan.io/address/0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad) | Future tradeable NFT items (UUPS Proxy)               |
+| **Achievement Manager**  | [`0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f`](https://arbiscan.io/address/0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f) | Goal tracking, verification & minting coordinator (UUPS Proxy) |
+
+### Pending Mainnet Contracts
+
+| Contract               | Blocker                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| **Tournament Buyback** | Requires Uniswap V3 8BIT/USDC liquidity pool to exist first |
+| **Vested Airdrop**     | Requires Merkle root from testnet participant snapshot      |
+
+### External Tokens
+
+| Token    | Address                                                                                                              | Purpose            |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| **USDC** | [`0xaf88d065e77c8cC2239327C5EDb3A432268e5831`](https://arbiscan.io/address/0xaf88d065e77c8cC2239327C5EDb3A432268e5831) | Native USDC        |
+| **WETH** | [`0x82aF49447D8a07e3bd95BD0d56f35241523fBab1`](https://arbiscan.io/address/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1) | Wrapped ETH        |
 
 ### Network Information
 
@@ -75,7 +90,6 @@ This page contains all official smart contract addresses for 8-Bit Arcade. **Ver
 * **RPC Endpoint:** https://arb1.arbitrum.io/rpc
 * **Block Explorer:** https://arbiscan.io
 * **Currency Symbol:** ETH
-* **USDC Address:** `0xaf88d065e77c8cC2239327C5EDb3A432268e5831`
 
 ## How to Verify Contracts
 
@@ -105,12 +119,22 @@ Currency Symbol: ETH
 Block Explorer: https://sepolia.arbiscan.io
 ```
 
-### Add 8BIT Token
+### Add 8BIT Token (Mainnet)
+
+```
+Token Contract Address: 0x37ee26669659758109c94862e49B492247Be26df
+Token Symbol: 8BIT
+Token Decimals: 18
+Network: Arbitrum One
+```
+
+### Add 8BIT Token (Testnet)
 
 ```
 Token Contract Address: 0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d
 Token Symbol: 8BIT
 Token Decimals: 18
+Network: Arbitrum Sepolia
 ```
 
 ## Security Warnings
@@ -137,4 +161,4 @@ Token Decimals: 18
 
 ***
 
-**Last Updated:** February 12, 2026 **Document Version:** 1.3 **Testnet Status:** Active
+**Last Updated:** March 3, 2026 **Document Version:** 2.0 **Mainnet Status:** Live | **Testnet Status:** Active

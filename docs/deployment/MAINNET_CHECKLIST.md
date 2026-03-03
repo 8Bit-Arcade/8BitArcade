@@ -309,21 +309,26 @@ Complete checklist for deploying 8-Bit Arcade to Arbitrum One mainnet.
 
 ---
 
-## Contract Address Summary (Fill After Deployment)
+## Contract Address Summary
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| EightBitToken (8BIT) | | ☐ |
-| GameRewards | | ☐ |
-| TournamentManager | | ☐ |
-| TournamentPayments | | ☐ |
-| TournamentBuyback | | ☐ |
-| TokenSale | | ☐ |
-| TreasuryGasManager | | ☐ |
-| Uniswap V3 Pool | | N/A |
-| LP Lock | | N/A |
+| EightBitToken (8BIT) | `0x37ee26669659758109c94862e49B492247Be26df` | ✅ |
+| GameRewards | `0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e` | ✅ |
+| TournamentManager | `0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e` | ✅ |
+| TournamentPayments | `0xa009e23658609EC3d6b98b1e0904b77005A73e59` | ✅ |
+| TournamentBuyback | Pending — requires Uniswap V3 pool | ☐ |
+| TokenSale | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` | ✅ |
+| TreasuryGasManager | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` | ✅ |
+| TieredStaking | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` | ✅ |
+| AchievementBadges | `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` | ✅ (UUPS) |
+| TradeableItems | `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` | ✅ (UUPS) |
+| AchievementManager | `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` | ✅ (UUPS) |
+| VestedAirdrop | Pending — requires Merkle root | ☐ |
+| Uniswap V3 Pool | Pending | N/A |
+| LP Lock | Pending | N/A |
 
 ---
 
-*Last Updated: December 2024*
-*Version: 1.0*
+*Last Updated: March 2026*
+*Version: 2.0*

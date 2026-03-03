@@ -48,46 +48,16 @@ npx hardhat verify --network arbitrumOne <ADDRESS> 0x37ee26669659758109c94862e49
 
 ---
 
-## 3. AchievementBadges + TradeableItems + AchievementManager (UUPS Proxies)
+## ~~3. AchievementBadges + TradeableItems + AchievementManager (UUPS Proxies)~~ ✅ DEPLOYED
 
-**Status:** BLOCKED — requires badge metadata uploaded to IPFS first.
+**AchievementBadges:** `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` (UUPS Proxy)
+**TradeableItems:** `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` (UUPS Proxy)
+**AchievementManager:** `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` (UUPS Proxy)
 
-**Prerequisite:**
-1. Upload `contracts/metadata/badges/` folder (1.json – 20.json) to IPFS
-2. Note the folder CID (e.g. `QmXXXXX`)
-3. Upload a collection metadata JSON for TradeableItems and note its CID
-
-**After IPFS upload, edit `scripts/deploy-nft-rewards.ts`:**
-```ts
-const EIGHT_BIT_TOKEN_ADDRESS = "0x37ee26669659758109c94862e49B492247Be26df"; // Mainnet 8BIT
-const BADGE_METADATA_BASE_URI = "ipfs://<YOUR_BADGE_FOLDER_CID>/";
-const ITEM_CONTRACT_URI = "ipfs://<YOUR_COLLECTION_METADATA_CID>/collection.json";
-```
-
-**Deploy (all 3 in one script):**
-```cmd
-npx hardhat run scripts/deploy-nft-rewards.ts --network arbitrumOne
-```
-
-**Verify (3 separate commands — use implementation addresses from Hardhat output):**
-```cmd
-npx hardhat verify --network arbitrumOne <BADGES_IMPL_ADDRESS>
-npx hardhat verify --network arbitrumOne <ITEMS_IMPL_ADDRESS>
-npx hardhat verify --network arbitrumOne <MANAGER_IMPL_ADDRESS>
-```
-
-**Post-deploy:**
-- Authorize AchievementManager as minter on EightBitToken:
-  `token.setAuthorizedMinter("<MANAGER_ADDRESS>", true)`
-- Set backend wallet as authorized verifier:
-  `manager.setAuthorizedVerifier("<BACKEND_WALLET>", true)`
-- Update `frontend/src/config/contracts.ts`:
-  ```ts
-  ACHIEVEMENT_BADGES: '<BADGES_PROXY_ADDRESS>',
-  TRADEABLE_ITEMS: '<ITEMS_PROXY_ADDRESS>',
-  ACHIEVEMENT_MANAGER: '<MANAGER_PROXY_ADDRESS>',
-  ```
-- Update `MAINNET_ADDRESSES.md`
+**Remaining:**
+- Authorize AchievementManager as minter on EightBitToken
+- Set backend wallet as authorized verifier
+- Upload badge metadata to IPFS and configure URIs
 
 ---
 
@@ -124,16 +94,16 @@ npx hardhat verify --network arbitrumOne <ADDRESS> 0x37ee26669659758109c94862e49
 ## Deployment Order Summary
 
 ```
-[DONE]  EightBitToken
-[DONE]  GameRewards
-[DONE]  TournamentManager
-[DONE]  TournamentPayments
-[DONE]  TokenSale
-[DONE]  TreasuryGasManager
-[✅]    TieredStaking          0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF
-[ ]     TournamentBuyback      ← after Uniswap V3 liquidity
-[ ]     AchievementBadges  ┐
-[ ]     TradeableItems     ├── after IPFS metadata upload
-[ ]     AchievementManager ┘
-[ ]     VestedAirdrop          ← after triggerAirdropSnapshot
+[✅]  EightBitToken          0x37ee26669659758109c94862e49B492247Be26df
+[✅]  GameRewards            0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e
+[✅]  TournamentManager      0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e
+[✅]  TournamentPayments     0xa009e23658609EC3d6b98b1e0904b77005A73e59
+[✅]  TokenSale              0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA
+[✅]  TreasuryGasManager     0x2185cF31B507620C412b00cde9B1BCd1B62983d6
+[✅]  TieredStaking          0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF
+[✅]  AchievementBadges      0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c
+[✅]  TradeableItems         0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad
+[✅]  AchievementManager     0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f
+[ ]   TournamentBuyback      ← after Uniswap V3 liquidity
+[ ]   VestedAirdrop          ← after triggerAirdropSnapshot
 ```

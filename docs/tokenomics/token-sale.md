@@ -4,9 +4,11 @@
 
 How to participate in the 8-Bit Arcade token presale and become an early investor.
 
-> **🚀 COMING SOON TO MAINNET**
+> **🟢 TOKEN SALE IS LIVE ON MAINNET**
 >
-> The 8BIT Token Sale will go live once we deploy to Arbitrum Mainnet. The sale interface is currently in preview mode. Stay tuned for launch announcements!
+> The 8BIT Token Sale is now live on Arbitrum One! Visit [sale.8bitarcade.games](https://sale.8bitarcade.games) to participate.
+>
+> **Token Sale Contract:** [`0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA`](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA)
 
 ## Sale Overview
 
@@ -25,7 +27,7 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 
 ### Phase 1: Presale
 
-- **Status:** Coming Soon (pending mainnet deployment)
+- **Status:** LIVE on Arbitrum One
 - **Duration:** 6 weeks from launch
 - **Price:** $0.0005 (locked, no price increases)
 - **Payment:** USDC or ETH on Arbitrum
@@ -86,7 +88,7 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 ### Step 5: Add Token to Wallet
 
 ```
-Token Contract: [Will be announced]
+Token Contract: 0x37ee26669659758109c94862e49B492247Be26df
 Symbol: 8BIT
 Decimals: 18
 Network: Arbitrum One

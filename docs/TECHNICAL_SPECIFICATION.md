@@ -1,8 +1,8 @@
 # 8-Bit Arcade - Technical Specification
 
-> Version: 2.0.0
-> Last Updated: January 2026
-> Status: Testnet Live (Arbitrum Sepolia)
+> Version: 3.0.0
+> Last Updated: March 2026
+> Status: Mainnet Live (Arbitrum One) | Token Sale Live | Staking Live | NFT Achievements Live
 
 ---
 
@@ -244,17 +244,21 @@ Breakdown:
 
 ### 4.1 Contract Overview
 
-| Contract | Purpose | Testnet Address |
-|----------|---------|-----------------|
-| EightBitToken | ERC-20 token | `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d` |
-| GameRewards | Daily reward distribution | `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E` |
-| TournamentManager | Tournament lifecycle | `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7` |
-| TournamentPayments | USDC processing (legacy) | `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec` |
-| TournamentBuyback | Buyback & burn | `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6` |
-| TokenSale | Public sale | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` |
-| TreasuryGasManager | Automated gas refills | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` |
-| TestnetFaucet | Free test tokens | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` |
-| VestedAirdrop | Testnet airdrop claims | TBD (pending deployment) |
+| Contract | Purpose | Mainnet Address | Testnet Address |
+|----------|---------|-----------------|-----------------|
+| EightBitToken | ERC-20 token | `0x37ee26669659758109c94862e49B492247Be26df` | `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d` |
+| GameRewards | Daily reward distribution | `0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e` | `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E` |
+| TournamentManager | Tournament lifecycle | `0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e` | `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7` |
+| TournamentPayments | USDC/ETH processing | `0xa009e23658609EC3d6b98b1e0904b77005A73e59` | `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec` |
+| TournamentBuyback | Buyback & burn | Pending (needs DEX pool) | `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6` |
+| TokenSale | Public sale (LIVE) | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` |
+| TreasuryGasManager | Automated gas refills | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` |
+| TieredStaking | Staking with lock tiers | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` | `0xC193451f59De0df09EC8359D091F8890A80F20c4` |
+| AchievementBadges | Soulbound NFT badges | `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` | `0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f` |
+| TradeableItems | Tradeable NFT items | `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` | `0x3F09919fba62EAec1295F577D92fbF2555247c44` |
+| AchievementManager | Goal tracking & minting | `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` | `0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3` |
+| TestnetFaucet | Free test tokens | N/A | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` |
+| VestedAirdrop | Testnet airdrop claims | Pending (needs Merkle root) | `0xC9aaa944B163eB4A580151DE852836330ECB50b1` |
 
 ### 4.2 EightBitToken.sol
 
@@ -734,19 +738,24 @@ All games feature:
 - [x] Phase 7: Testnet deployment (Arbitrum Sepolia)
 - [x] Phase 8: Tournament system (8BIT entry fees)
 - [x] Phase 9: Testnet airdrop system (10M tokens)
+- [x] Phase 10: Community testing & feedback
+- [x] Phase 11: Token sale infrastructure
+- [x] Phase 12: Mainnet deployment (Feb 22, 2026)
+- [x] Phase 13: Public token sale (LIVE)
+- [x] Phase 14: Tiered staking launch (9.9M 8BIT funded)
+- [x] Phase 15: NFT achievement badges launch
 
 ### In Progress
 
-- [ ] Phase 10: Community testing & feedback
-- [ ] Phase 11: Token sale infrastructure
+- [ ] Phase 16: DEX liquidity (Uniswap V3 pool)
+- [ ] Phase 17: Testnet airdrop distribution
+- [ ] Phase 18: Marketing & growth
 
 ### Upcoming
 
-- [ ] Phase 12: Public token sale
-- [ ] Phase 13: Mainnet deployment
-- [ ] Phase 14: Marketing & growth
-- [ ] Phase 15: DAO governance
-- [ ] Phase 16: Staking system
+- [ ] Phase 19: Tournament buyback & burn (after DEX pool)
+- [ ] Phase 20: DAO governance
+- [ ] Phase 21: Cross-chain support
 
 ---
 
@@ -821,6 +830,7 @@ Launch:
 
 ---
 
-*Document Version: 2.0.0*
-*Last Updated: January 2026*
+*Document Version: 3.0.0*
+*Last Updated: March 2026*
+*Status: Mainnet Live*
 *Status: Testnet Live*
