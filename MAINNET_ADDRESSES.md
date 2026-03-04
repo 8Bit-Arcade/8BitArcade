@@ -18,6 +18,9 @@
 | TokenSale | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` | [View](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA#code) |
 | TreasuryGasManager | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` | [View](https://arbiscan.io/address/0x2185cF31B507620C412b00cde9B1BCd1B62983d6#code) |
 | TieredStaking | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` | [View](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF#code) |
+| AchievementBadges (UUPS Proxy) | `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` | [View](https://arbiscan.io/address/0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c#code) |
+| TradeableItems (UUPS Proxy) | `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` | [View](https://arbiscan.io/address/0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad#code) |
+| AchievementManager (UUPS Proxy) | `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` | [View](https://arbiscan.io/address/0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f#code) |
 
 ---
 
@@ -27,9 +30,6 @@
 |---|---|
 | TournamentBuyback | Requires Uniswap V3 8BIT/USDC liquidity pool to exist first |
 | VestedAirdrop | Requires Merkle root (run `triggerAirdropSnapshot` Cloud Function first) |
-| AchievementBadges | Requires badge metadata uploaded to IPFS |
-| TradeableItems | Requires badge metadata uploaded to IPFS (same deploy as Badges) |
-| AchievementManager | Requires badge metadata uploaded to IPFS (same deploy as Badges) |
 
 ---
 

@@ -196,15 +196,15 @@ Top 10 players in each game earn daily rewards:
    - Influence reward pool adjustments
    - Community-driven development
 
-4. **NFT Badges (Future)**
-   - Unlock exclusive achievement NFTs
-   - Rare badges for top performers
-   - Tradeable on secondary markets
+4. **NFT Achievement Badges (LIVE)**
+   - Soulbound ERC-721 badges for milestones
+   - Auto-minted when you qualify (zero gas)
+   - 20 achievements across multiple categories
 
-5. **Staking Rewards (Future)**
-   - Stake 8BIT to earn passive income
-   - Boosted rewards for stakers
-   - Long-term holder incentives
+5. **Staking Rewards (LIVE)**
+   - Stake 8BIT to earn passive income (7d, 1mo, 3mo, 6mo locks)
+   - Boosted game rewards for stakers (10-50% bonus)
+   - 9.9M 8BIT funded on mainnet
 
 ---
 
@@ -246,7 +246,7 @@ Higher lock = higher share of rewards (weighted system):
 - More conservative emissions = healthier tokenomics
 - 25% early withdrawal penalty discourages farming
 
-**Note:** Staking launches in Phase 3 (Months 7-12)
+**Staking is LIVE on Arbitrum One!** Contract: [`0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF)
 
 ---
 
@@ -287,41 +287,46 @@ Higher lock = higher share of rewards (weighted system):
 ✅ **Transparent** - All transactions on-chain
 ✅ **Immutable** - Cannot be changed after deployment
 
-### Contract Addresses
+### Contract Addresses (Arbitrum One Mainnet)
 
-*Will be updated after mainnet deployment*
+All contracts deployed, verified, and live on Arbitrum One:
 
-- **8BIT Token:** `TBD`
-- **Token Sale:** `TBD`
-- **Game Rewards:** `TBD`
-- **Tournament Manager:** `TBD`
+- **8BIT Token:** [`0x37ee26669659758109c94862e49B492247Be26df`](https://arbiscan.io/address/0x37ee26669659758109c94862e49B492247Be26df)
+- **Token Sale:** [`0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA`](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA) (LIVE)
+- **Game Rewards:** [`0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e`](https://arbiscan.io/address/0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e)
+- **Tournament Manager:** [`0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e`](https://arbiscan.io/address/0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e)
+- **Tournament Payments:** [`0xa009e23658609EC3d6b98b1e0904b77005A73e59`](https://arbiscan.io/address/0xa009e23658609EC3d6b98b1e0904b77005A73e59)
+- **Treasury Gas Manager:** [`0x2185cF31B507620C412b00cde9B1BCd1B62983d6`](https://arbiscan.io/address/0x2185cF31B507620C412b00cde9B1BCd1B62983d6)
+- **Tiered Staking:** [`0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF)
+- **Achievement Badges:** [`0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c`](https://arbiscan.io/address/0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c)
+- **Achievement Manager:** [`0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f`](https://arbiscan.io/address/0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f)
 
 ---
 
 ## 🚀 Growth Strategy
 
-### Phase 1: Launch (Months 1-3)
-- Token presale
-- Launch 12+ games
-- Daily reward distribution
-- Build initial player base
+### Phase 1: Foundation (Q4 2025) ✅
+- 12 retro games developed
+- Smart contracts deployed to testnet
+- Community testing
 
-### Phase 2: Expansion (Months 4-6)
-- List on DEX (Uniswap, SushiSwap)
-- Launch tournament system
-- Add more games
+### Phase 2: Mainnet Launch (Q1 2026) ✅
+- Mainnet deployment (Feb 22, 2026)
+- Token sale LIVE
+- Tiered staking launched (9.9M 8BIT funded)
+- NFT achievement badges launched
+- Tournament system active
+
+### Phase 3: Growth (Q2 2026) 🚧
+- DEX liquidity provision (Uniswap V3)
+- Testnet airdrop distribution
 - Marketing push
+- Additional games
 
-### Phase 3: Scale (Months 7-12)
-- CEX listing targets
-- Implement staking
-- NFT badge system
-- Mobile app development
-
-### Phase 4: Ecosystem (Year 2+)
+### Phase 4: Ecosystem (Q3 2026+) 📋
 - DAO governance
-- Third-party game integration
 - Cross-chain expansion
+- Mobile app (PWA)
 - Esports partnerships
 
 ---
@@ -438,10 +443,10 @@ Even at conservative market caps:
 
 - **Website:** https://8bitarcade.games
 - **Game App:** https://play.8bitarcade.games
-- **Token Sale:** https://8bitarcade.games/sale.html
-- **Twitter:** [Coming Soon]
-- **Discord:** [Coming Soon]
-- **Telegram:** [Coming Soon]
+- **Token Sale:** https://sale.8bitarcade.games
+- **Twitter:** https://x.com/8_Bit_Arcade_
+- **Discord:** https://discord.gg/AKrdPvHz4P
+- **Telegram:** https://t.me/eight_bit_arcade
 
 ---
 
@@ -457,5 +462,5 @@ This document is for informational purposes only and does not constitute financi
 
 ---
 
-*Last Updated: January 2026*
-*Version: 1.0*
+*Last Updated: March 2026*
+*Version: 2.0*

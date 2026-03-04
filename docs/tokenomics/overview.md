@@ -16,7 +16,9 @@ Complete breakdown of the 8-Bit Arcade token economy, designed to reward players
 | **Decimals** | 18 |
 | **Presale Price** | $0.0005 USD |
 | **Presale Cap** | $100,000 USD |
-| **Token Sale Start** | Coming Soon (pending mainnet deployment) |
+| **Token Sale Start** | LIVE on Arbitrum One |
+| **Token Contract** | [`0x37ee26669659758109c94862e49B492247Be26df`](https://arbiscan.io/address/0x37ee26669659758109c94862e49B492247Be26df) |
+| **Sale Contract** | [`0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA`](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA) |
 | **Sale Duration** | 6 weeks |
 
 ### Why Arbitrum?
@@ -99,9 +101,9 @@ Unlike typical projects that distribute rewards over 20-30 years, 8-Bit Arcade u
 
 1. **Tournament Entry Fees** - Pay-to-enter competitive tournaments
 2. **Prize Payouts** - Win 8BIT tokens for top rankings
-3. **Staking Rewards** (Future) - Stake to earn passive income
-4. **Governance** (Future) - Vote on game additions and parameters
-5. **NFT Badges** (Future) - Unlock exclusive achievement NFTs
+3. **Staking Rewards** (LIVE) - Stake to earn passive income with tiered lock periods
+4. **NFT Achievement Badges** (LIVE) - Earn soulbound NFT badges for milestones
+5. **Governance** (Future) - Vote on game additions and parameters
 
 ### Value Drivers
 

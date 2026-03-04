@@ -19,7 +19,8 @@ const WALLET = "0x96e0B627454cE3b8C55C6d36b5FCBb13849Dc297";
 
 const MAINNET_BADGES = "0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c";
 
-const BADGE_METADATA_BASE_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeicq7qgtsrr4yl45a7waqv7wiluy6nuetjnjeddfo2pxwzljsyin7m/metadata/badges/";
+// NOTE: CID bafybeicq7qg... (original) returns HTTP 403 — use bafybeicq2vg... (re-uploaded)
+const BADGE_METADATA_BASE_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeicq2vgfk3uk3jq7hw5kxkxjvp25xf6qicpnaxc3hdhqlnd5nwwipm/badges/";
 
 const BADGES_ABI = [
   "function balanceOf(address owner) view returns (uint256)",

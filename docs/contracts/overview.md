@@ -75,12 +75,26 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 - TestnetFaucet: `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`
 - VestedAirdrop: TBD (pending deployment)
 
-### Mainnet Contracts (Arbitrum One)
+### Mainnet Contracts (Arbitrum One) — LIVE
 
-> 🚧 **Contracts not yet deployed.** Addresses will be announced before presale launch.
+**Deployed & Verified:**
+- EightBitToken (8BIT): `0x37ee26669659758109c94862e49B492247Be26df`
+- GameRewards: `0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e`
+- TournamentManager: `0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e`
+- TournamentPayments: `0xa009e23658609EC3d6b98b1e0904b77005A73e59`
+- TokenSale: `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` (LIVE)
+- TreasuryGasManager: `0x2185cF31B507620C412b00cde9B1BCd1B62983d6`
+- TieredStaking: `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` (9.9M 8BIT funded)
+- AchievementBadges: `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` (UUPS Proxy)
+- TradeableItems: `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` (UUPS Proxy)
+- AchievementManager: `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` (UUPS Proxy)
+
+**Pending:**
+- TournamentBuyback: Blocked — requires Uniswap V3 8BIT/USDC pool
+- VestedAirdrop: Blocked — requires Merkle root from snapshot
 
 **Verification:**
-- All contracts verified on Arbiscan
+- All deployed contracts verified on Arbiscan
 - Source code publicly viewable
 - Readable by anyone
 - No hidden code
@@ -126,13 +140,13 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
    - Instant settlement
 ```
 
-**Future (Staking):**
+**Staking (LIVE):**
 ```
 1. Approve 8BIT spend
 2. Call stake() function
-3. Lock tokens for period
+3. Lock tokens for period (7d, 1mo, 3mo, 6mo)
 4. Earn rewards automatically
-5. Withdraw after lock expires
+5. Withdraw after lock expires (25% penalty for early withdrawal)
 ```
 
 ## Security Model

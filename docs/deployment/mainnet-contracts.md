@@ -15,6 +15,10 @@ Deployer: `0x80361876199e2318d6993A07e37177cFd21B64a7`
 | TournamentPayments | `0xa009e23658609EC3d6b98b1e0904b77005A73e59` |
 | TokenSale | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` |
 | TreasuryGasManager | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` |
+| TieredStaking | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` |
+| AchievementBadges | `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` (UUPS Proxy) |
+| TradeableItems | `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` (UUPS Proxy) |
+| AchievementManager | `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` (UUPS Proxy) |
 
 ## Token Distribution (verified at deployment)
 

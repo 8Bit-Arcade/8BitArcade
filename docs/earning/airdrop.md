@@ -210,7 +210,7 @@ No! We removed all caps. Every game you play and every message you send counts t
 | Network | Address |
 |---------|---------|
 | Arbitrum Sepolia (Testnet) | [`0xC9aaa944B163eB4A580151DE852836330ECB50b1`](https://sepolia.arbiscan.io/address/0xC9aaa944B163eB4A580151DE852836330ECB50b1) |
-| Arbitrum One (Mainnet) | TBD |
+| Arbitrum One (Mainnet) | Pending deployment — requires Merkle root from snapshot |
 
 ## Technical Details
 
@@ -218,4 +218,4 @@ The airdrop uses a Merkle tree for gas-efficient verification. See [VestedAirdro
 
 ---
 
-*Snapshot not yet taken. Contract deployed and ready - keep playing and participating to maximize your allocation!*
+*Snapshot not yet taken. Mainnet contracts are deployed and the airdrop contract will be deployed once the snapshot is triggered. Keep playing and participating to maximize your allocation!*

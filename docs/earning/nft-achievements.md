@@ -1,6 +1,6 @@
 # NFT Achievement Badges
 
-> **Status:** Live on Arbitrum Sepolia Testnet
+> **Status:** Live on Arbitrum One (Mainnet) & Arbitrum Sepolia (Testnet)
 
 ## Overview
 
@@ -57,7 +57,17 @@ Achievement badges are **soulbound** — they cannot be transferred or sold. The
 
 ## Smart Contracts
 
-The achievement system uses three smart contracts on Arbitrum:
+The achievement system uses three smart contracts on Arbitrum, deployed as UUPS proxies:
+
+### Arbitrum One (Mainnet)
+
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| **AchievementBadges** | [`0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c`](https://arbiscan.io/address/0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c) | Soulbound ERC-721 badge NFTs (UUPS Proxy) |
+| **TradeableItems** | [`0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad`](https://arbiscan.io/address/0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad) | Future tradeable NFT items (UUPS Proxy) |
+| **AchievementManager** | [`0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f`](https://arbiscan.io/address/0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f) | Goal tracking, verification, and minting coordinator (UUPS Proxy) |
+
+### Arbitrum Sepolia (Testnet)
 
 | Contract | Address | Purpose |
 |----------|---------|---------|
