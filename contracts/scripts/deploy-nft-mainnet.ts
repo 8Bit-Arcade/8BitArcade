@@ -30,8 +30,11 @@ const EIGHT_BIT_TOKEN_ADDRESS = "0x37ee26669659758109c94862e49B492247Be26df";
 // Backend verifier wallet (Firebase Functions)
 const BACKEND_VERIFIER = "0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B";
 
-// Metadata base URI on Pinata (chain-agnostic — same IPFS content)
-const BADGE_METADATA_BASE_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeicq7qgtsrr4yl45a7waqv7wiluy6nuetjnjeddfo2pxwzljsyin7m/metadata/badges/";
+// Metadata base URI on Pinata
+// NOTE: CID bafybeicq7qg... (original upload) returns HTTP 403 — do NOT use
+// CID bafybeicq2vg... (re-uploaded badges) returns HTTP 200 — use this one
+const BADGE_METADATA_BASE_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeicq2vgfk3uk3jq7hw5kxkxjvp25xf6qicpnaxc3hdhqlnd5nwwipm/badges/";
+// TODO: Upload collection.json to Pinata and update this CID (not present in current upload)
 const ITEM_CONTRACT_URI = "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeicq7qgtsrr4yl45a7waqv7wiluy6nuetjnjeddfo2pxwzljsyin7m/metadata/collection.json";
 
 // Testnet contract address (for querying migration data)
