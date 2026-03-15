@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { callFunction } from '@/lib/firebase-functions';
@@ -16,7 +16,10 @@ function formatDate(ts: any): string {
 }
 
 export default function BracketTournamentPage() {
-  const { id } = useParams<{ id: string }>();
+  const [id, setId] = useState<string>('');
+  useEffect(() => {
+    setId(new URLSearchParams(window.location.search).get('id') ?? '');
+  }, []);
   const { address } = useAccount();
   const [tournament, setTournament] = useState<BracketTournament | null>(null);
   const [participants, setParticipants] = useState<BracketParticipant[]>([]);

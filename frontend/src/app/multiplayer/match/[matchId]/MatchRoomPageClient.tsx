@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { callFunction } from '@/lib/firebase-functions';
@@ -11,7 +11,10 @@ import { PvpMatch, PvpRound, GAME_INFO } from '@/types/pvp';
 import { useDisplayName } from '@/stores/authStore';
 
 export default function MatchRoomPage() {
-  const { matchId } = useParams<{ matchId: string }>();
+  const [matchId, setMatchId] = useState<string>('');
+  useEffect(() => {
+    setMatchId(new URLSearchParams(window.location.search).get('id') ?? '');
+  }, []);
   const router = useRouter();
   const { address } = useAccount();
 
@@ -64,7 +67,7 @@ export default function MatchRoomPage() {
   // Redirect to results when match completes
   useEffect(() => {
     if (match?.status === 'completed') {
-      setTimeout(() => router.push(`/multiplayer/results/${matchId}`), 3000);
+      setTimeout(() => router.push(`/multiplayer/results?id=${matchId}`), 3000);
     }
     if (match?.status === 'cancelled') {
       setTimeout(() => router.push('/multiplayer'), 2000);

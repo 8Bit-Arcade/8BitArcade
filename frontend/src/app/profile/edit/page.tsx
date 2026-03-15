@@ -104,7 +104,7 @@ export default function EditProfilePage() {
       });
       setSaved(true);
       setTimeout(() => {
-        router.push(`/profile/${address.toLowerCase()}`);
+        router.push(`/profile?address=${address.toLowerCase()}`);
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Failed to save profile');
@@ -132,7 +132,7 @@ export default function EditProfilePage() {
         <div className="flex items-center justify-between">
           <h1 className="font-pixel text-arcade-green text-lg">✏️ EDIT PROFILE</h1>
           <Link
-            href={`/profile/${address?.toLowerCase()}`}
+            href={`/profile?address=${address?.toLowerCase()}`}
             className="font-pixel text-xs text-gray-500 hover:text-arcade-green"
           >← VIEW PROFILE</Link>
         </div>
@@ -293,7 +293,7 @@ export default function EditProfilePage() {
 
         <div className="flex gap-3">
           <Link
-            href={`/profile/${address?.toLowerCase()}`}
+            href={`/profile?address=${address?.toLowerCase()}`}
             className="flex-1 text-center font-pixel text-xs py-2.5 border border-gray-600 text-gray-400
                        rounded hover:border-gray-400 transition-colors"
           >CANCEL</Link>
