@@ -50,8 +50,7 @@ const TESTNET_CONTRACTS = {
   TRADEABLE_ITEMS: '0x3F09919fba62EAec1295F577D92fbF2555247c44',   // Deployed UUPS proxy
   ACHIEVEMENT_MANAGER: '0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3', // Redeployed UUPS proxy (proper ERC-1967)
   USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia USDC
-  // ⚠️ UPDATE AFTER DEPLOYING PvPEscrow.sol TO TESTNET ⚠️
-  PVP_ESCROW: '0x0000000000000000000000000000000000000000',
+  PVP_ESCROW: '0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e', // Deployed & verified — Arbitrum Sepolia
   CHAIN_ID: 421614, // Arbitrum Sepolia
   CHAIN_NAME: 'Arbitrum Sepolia',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
