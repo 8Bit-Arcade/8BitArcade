@@ -20,8 +20,6 @@ export default function Header() {
     { href: '/', label: 'Games' },
     { href: '/leaderboard', label: 'Ranks' },
     { href: '/tournaments', label: 'Tourneys' },
-    { href: '/multiplayer', label: '⚔️ PvP' },
-    { href: '/tournaments/brackets', label: '🏆 Brackets' },
     { href: '/nft', label: 'NFT' },
     { href: 'https://8bitarcade.games/sale.html', label: 'Token Sale' },
     { href: '/airdrop', label: 'Airdrop' },
