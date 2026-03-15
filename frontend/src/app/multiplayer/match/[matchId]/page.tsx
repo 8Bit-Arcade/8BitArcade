@@ -83,11 +83,11 @@ export default function MatchRoomPage() {
   const bothFinished = myRoundFinished && oppRoundFinished;
 
   // Reveal scores only when both players finish the round
-  const myRoundScore = bothFinished
-    ? (isCreator ? round?.creatorScore : round?.challengerScore)
+  const myRoundScore: number | null = bothFinished
+    ? (isCreator ? round?.creatorScore ?? null : round?.challengerScore ?? null)
     : (myRoundFinished ? myScore : null);
-  const oppRoundScore = bothFinished
-    ? (isCreator ? round?.challengerScore : round?.creatorScore)
+  const oppRoundScore: number | null = bothFinished
+    ? (isCreator ? round?.challengerScore ?? null : round?.creatorScore ?? null)
     : null; // always hidden until both done
 
   const submitScore = async (score: number) => {
