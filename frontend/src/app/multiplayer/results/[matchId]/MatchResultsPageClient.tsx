@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { callFunction } from '@/lib/firebase-functions';
 import { PvpMatch, GAME_INFO } from '@/types/pvp';
 
 export default function MatchResultsPage() {
-  const { matchId } = useParams<{ matchId: string }>();
+  const [matchId, setMatchId] = useState<string>('');
+  useEffect(() => {
+    setMatchId(new URLSearchParams(window.location.search).get('id') ?? '');
+  }, []);
   const router = useRouter();
   const { address } = useAccount();
   const [match, setMatch] = useState<PvpMatch | null>(null);
@@ -167,7 +170,7 @@ export default function MatchResultsPage() {
           >← LOBBY</Link>
           {opponent && (
             <Link
-              href={`/profile/${opponent}`}
+              href={`/profile?address=${opponent}`}
               className="flex-1 text-center font-pixel text-xs py-2 border border-arcade-cyan/50
                          text-arcade-cyan rounded hover:bg-arcade-cyan/10 transition-colors"
             >👤 VIEW OPPONENT</Link>

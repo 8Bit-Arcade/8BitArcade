@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { callFunction } from '@/lib/firebase-functions';
@@ -19,7 +19,10 @@ const FRAME_STYLES = [
 ];
 
 export default function PlayerProfilePage() {
-  const { address: profileAddress } = useParams<{ address: string }>();
+  const [profileAddress, setProfileAddress] = useState<string>('');
+  useEffect(() => {
+    setProfileAddress(new URLSearchParams(window.location.search).get('address') ?? '');
+  }, []);
   const { address: myAddress } = useAccount();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -230,7 +233,7 @@ function StatCard({ label, value, color }: { label: string; value: any; color: s
 function MatchHistoryRow({ match }: { match: any }) {
   const won = match.result === 'win';
   return (
-    <Link href={`/multiplayer/results/${match.matchId}`}>
+    <Link href={`/multiplayer/results?id=${match.matchId}`}>
       <div className={`flex items-center gap-3 p-3 rounded border transition-all cursor-pointer
         ${won ? 'border-arcade-green/20 bg-arcade-green/5 hover:border-arcade-green/40' :
                 'border-red-500/20 bg-red-900/5 hover:border-red-500/40'}`}

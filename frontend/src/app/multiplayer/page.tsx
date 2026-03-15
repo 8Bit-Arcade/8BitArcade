@@ -102,7 +102,7 @@ export default function MultiplayerLobbyPage() {
 
     try {
       await callFunction('joinPvpMatch', { matchId: match.id });
-      router.push(`/multiplayer/match/${match.id}`);
+      router.push(`/multiplayer/match?id=${match.id}`);
     } catch (err: any) {
       setError(err.message || 'Failed to join match');
     } finally {
@@ -240,8 +240,8 @@ export default function MultiplayerLobbyPage() {
                     userBalance={userBalance}
                     isJoining={joiningMatchId === match.id}
                     onJoin={() => handleJoin(match)}
-                    onView={() => router.push(`/multiplayer/match/${match.id}`)}
-                    onResults={() => router.push(`/multiplayer/results/${match.id}`)}
+                    onView={() => router.push(`/multiplayer/match?id=${match.id}`)}
+                    onResults={() => router.push(`/multiplayer/results?id=${match.id}`)}
                   />
                 ))}
               </div>
@@ -261,7 +261,7 @@ export default function MultiplayerLobbyPage() {
           onClose={() => setShowCreateModal(false)}
           onCreated={(matchId) => {
             setShowCreateModal(false);
-            router.push(`/multiplayer/match/${matchId}`);
+            router.push(`/multiplayer/match?id=${matchId}`);
           }}
           userBalance={userBalance}
         />
