@@ -8,7 +8,7 @@ import { BracketTournament, GAME_INFO, ALL_GAME_IDS, VALID_BRACKET_SIZES, Bracke
 
 type AdminTab = 'overview' | 'brackets' | 'pvp' | 'users' | 'system';
 
-const DEFAULT_PRIZE_STRUCTURE = { 1: 60, 2: 25, 3: 10, 4: 5 };
+const DEFAULT_PRIZE_STRUCTURE: Record<number, number> = { 1: 60, 2: 25, 3: 10, 4: 5 };
 
 function toast(msg: string, type: 'ok' | 'err' = 'ok') {
   // Simple console fallback; replace with actual toast lib if needed
