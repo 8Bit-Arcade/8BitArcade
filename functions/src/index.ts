@@ -106,5 +106,34 @@ export { distributeDailyRewards, manualDistributeRewards, testCheckLeaderboard }
 // Achievement / NFT rewards
 export { getAchievements, checkAchievement, checkAndAwardAchievements, manualCheckAchievements } from './achievements/checkAchievements';
 
+// ─── PvP Multiplayer ───────────────────────────────────────────────────────
+export { createPvpMatch } from './pvp/createPvpMatch';
+export { joinPvpMatch } from './pvp/joinPvpMatch';
+export { submitPvpScore } from './pvp/submitPvpScore';
+export { getPvpMatches, getPvpMatch, cancelPvpMatch, cancelExpiredPvpMatches } from './pvp/getPvpMatches';
+
+// ─── Bracket Tournaments ──────────────────────────────────────────────────
+export {
+  createBracketTournament,
+  joinBracketTournament,
+  startBracketTournament,
+  adminBracketControl,
+  submitBracketScore,
+  getBracketTournament,
+  getBracketTournaments,
+} from './brackets/bracketTournaments';
+
+// ─── Chat ─────────────────────────────────────────────────────────────────
+export {
+  sendChatMessage,
+  addReaction,
+  deleteMessage,
+  pinMessage,
+  getChatMessages,
+} from './chat/chatFunctions';
+
+// ─── Profiles ─────────────────────────────────────────────────────────────
+export { updateUserProfile, getUserProfile } from './profiles/profileFunctions';
+
 // Re-export types for use in frontend
 export type { GameInput, GameData, ValidationResult } from './types';
