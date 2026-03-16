@@ -15,7 +15,7 @@ const VALID_GAME_IDS = [
  * Token escrow (for paid matches) is handled on-chain before calling this.
  * For free matches (betAmount == 0), no on-chain interaction needed.
  */
-export const createPvpMatch = onCall(async (request) => {
+export const createPvpMatch = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { betAmount, gameIds, numGames, onChainMatchId, txHashCreate } = request.data;

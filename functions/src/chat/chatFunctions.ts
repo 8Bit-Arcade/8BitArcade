@@ -11,7 +11,7 @@ const RATE_LIMIT_MS = 2000; // 2 sec between messages per user
 /**
  * sendChatMessage — posts a message to global arena chat or match chat.
  */
-export const sendChatMessage = onCall(async (request) => {
+export const sendChatMessage = onCall({ memory: '128MiB', maxInstances: 20 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { text, chatType, matchId, replyToId, gifUrl } = request.data;
@@ -94,7 +94,7 @@ export const sendChatMessage = onCall(async (request) => {
 /**
  * addReaction — toggle an emoji reaction on a message.
  */
-export const addReaction = onCall(async (request) => {
+export const addReaction = onCall({ memory: '128MiB', maxInstances: 20 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { messageId, emoji, chatType, matchId } = request.data;
@@ -139,7 +139,7 @@ export const addReaction = onCall(async (request) => {
 /**
  * deleteMessage — admin or message author can delete.
  */
-export const deleteMessage = onCall(async (request) => {
+export const deleteMessage = onCall({ memory: '128MiB', maxInstances: 5 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { messageId, chatType, matchId } = request.data;
@@ -164,7 +164,7 @@ export const deleteMessage = onCall(async (request) => {
 /**
  * pinMessage — admin only.
  */
-export const pinMessage = onCall(async (request) => {
+export const pinMessage = onCall({ memory: '128MiB', maxInstances: 3 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { messageId, pinned } = request.data;
@@ -176,7 +176,7 @@ export const pinMessage = onCall(async (request) => {
 /**
  * getChatMessages — returns recent messages, newest last.
  */
-export const getChatMessages = onCall(async (request) => {
+export const getChatMessages = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   const { chatType, matchId, limit: rawLimit } = request.data || {};
   const pageLimit = Math.min(rawLimit || 50, 100);
 
