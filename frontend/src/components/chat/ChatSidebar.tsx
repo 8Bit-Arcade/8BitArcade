@@ -30,39 +30,36 @@ export default function ChatSidebar({ chatType = 'arena', matchId, className = '
 
   const collectionPath = chatType === 'match' ? `pvpMatches/${matchId}/chat` : 'pvpChat';
 
-  // ── Polling fetch (replaces onSnapshot to avoid per-reconnect collection re-reads) ──
+  const fetchMessages = useCallback(async () => {
+    try {
+      const db = await getFirestoreInstance();
+      const { collection: col, query, orderBy, limit, getDocs, where } = await import('firebase/firestore');
+
+      const q = query(
+        col(db, collectionPath),
+        where('isDeleted', '==', false),
+        orderBy('timestamp', 'desc'),
+        limit(25)
+      );
+
+      const snap = await getDocs(q);
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse() as ChatMessage[];
+      setMessages(msgs);
+      setPinnedMessages(msgs.filter(m => m.isPinned));
+      setLoading(false);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (err) {
+      console.error('Chat fetch error:', err);
+      setLoading(false);
+    }
+  }, [collectionPath]);
+
+  // ── Poll every 30s; also called immediately after send ─────────────────
   useEffect(() => {
-    let cancelled = false;
-
-    const fetchMessages = async () => {
-      try {
-        const db = await getFirestoreInstance();
-        const { collection: col, query, orderBy, limit, getDocs, where } = await import('firebase/firestore');
-
-        const q = query(
-          col(db, collectionPath),
-          where('isDeleted', '==', false),
-          orderBy('timestamp', 'desc'),
-          limit(25)
-        );
-
-        const snap = await getDocs(q);
-        if (cancelled) return;
-        const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse() as ChatMessage[];
-        setMessages(msgs);
-        setPinnedMessages(msgs.filter(m => m.isPinned));
-        setLoading(false);
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-      } catch (err) {
-        console.error('Chat fetch error:', err);
-        setLoading(false);
-      }
-    };
-
     fetchMessages();
     const timer = setInterval(fetchMessages, 30000);
-    return () => { cancelled = true; clearInterval(timer); };
-  }, [collectionPath]);
+    return () => clearInterval(timer);
+  }, [fetchMessages]);
 
   const send = async () => {
     if (!input.trim() || !isConnected || sending) return;
@@ -80,6 +77,7 @@ export default function ChatSidebar({ chatType = 'arena', matchId, className = '
         matchId: matchId || null,
         replyToId: replyTarget?.id || null,
       });
+      fetchMessages(); // refresh immediately so the sent message appears
     } catch (err: any) {
       console.error('Send error:', err);
       setInput(text); // restore on failure

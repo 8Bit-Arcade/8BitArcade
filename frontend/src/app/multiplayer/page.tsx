@@ -19,10 +19,18 @@ function truncateAddress(addr: string) {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
 
+// Firestore Timestamps are serialized by the Admin SDK as {_seconds, _nanoseconds}
+function parseTs(ts: any): Date {
+  if (!ts) return new Date(0);
+  if (typeof ts.toDate === 'function') return ts.toDate();
+  const secs = ts._seconds ?? ts.seconds;
+  if (secs !== undefined) return new Date(secs * 1000);
+  return new Date(Number(ts) * 1000);
+}
+
 function timeAgo(ts: any): string {
   if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts * 1000);
-  const diff = Date.now() - d.getTime();
+  const diff = Date.now() - parseTs(ts).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
@@ -31,8 +39,7 @@ function timeAgo(ts: any): string {
 
 function timeLeft(ts: any): string {
   if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts * 1000);
-  const remaining = d.getTime() - Date.now();
+  const remaining = parseTs(ts).getTime() - Date.now();
   if (remaining <= 0) return 'Expired';
   const mins = Math.floor(remaining / 60000);
   if (mins < 60) return `${mins}m left`;
