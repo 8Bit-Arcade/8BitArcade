@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 
 const db = admin.firestore();
@@ -11,36 +11,36 @@ const db = admin.firestore();
  * Once both finish, the round winner is determined and totals updated.
  * After the final round, the overall match winner is determined.
  */
-export const submitPvpScore = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const submitPvpScore = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { matchId, roundIndex, score } = data;
-  const player = context.auth.uid.toLowerCase();
+  const { matchId, roundIndex, score } = request.data;
+  const player = request.auth.uid.toLowerCase();
 
   if (!matchId || typeof roundIndex !== 'number' || typeof score !== 'number' || score < 0) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid parameters');
+    throw new HttpsError('invalid-argument', 'Invalid parameters');
   }
 
   const matchRef = db.collection('pvpMatches').doc(matchId);
 
   const updateResult = await db.runTransaction(async (txn) => {
     const snap = await txn.get(matchRef);
-    if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Match not found');
+    if (!snap.exists) throw new HttpsError('not-found', 'Match not found');
 
     const match = snap.data()!;
     if (match.status !== 'active') {
-      throw new functions.https.HttpsError('failed-precondition', 'Match not active');
+      throw new HttpsError('failed-precondition', 'Match not active');
     }
 
     const isCreator = match.creator === player;
     const isChallenger = match.challenger === player;
 
     if (!isCreator && !isChallenger) {
-      throw new functions.https.HttpsError('permission-denied', 'Not a participant');
+      throw new HttpsError('permission-denied', 'Not a participant');
     }
 
     if (roundIndex < 0 || roundIndex >= match.rounds.length) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid round index');
+      throw new HttpsError('invalid-argument', 'Invalid round index');
     }
 
     const rounds = [...match.rounds];
@@ -48,10 +48,10 @@ export const submitPvpScore = functions.https.onCall(async (data, context) => {
 
     // Prevent double submission
     if (isCreator && round.creatorFinished) {
-      throw new functions.https.HttpsError('already-exists', 'Already submitted score for this round');
+      throw new HttpsError('already-exists', 'Already submitted score for this round');
     }
     if (isChallenger && round.challengerFinished) {
-      throw new functions.https.HttpsError('already-exists', 'Already submitted score for this round');
+      throw new HttpsError('already-exists', 'Already submitted score for this round');
     }
 
     // Record score
@@ -83,11 +83,11 @@ export const submitPvpScore = functions.https.onCall(async (data, context) => {
     rounds[roundIndex] = round;
 
     // Recompute totals from all completed rounds
-    const creatorTotal = rounds.reduce((sum, r) => sum + (r.creatorScore ?? 0), 0);
-    const challengerTotal = rounds.reduce((sum, r) => sum + (r.challengerScore ?? 0), 0);
+    const creatorTotal = rounds.reduce((sum: number, r: any) => sum + (r.creatorScore ?? 0), 0);
+    const challengerTotal = rounds.reduce((sum: number, r: any) => sum + (r.challengerScore ?? 0), 0);
 
     // Check if all rounds complete
-    const allRoundsComplete = rounds.every(r => r.creatorFinished && r.challengerFinished);
+    const allRoundsComplete = rounds.every((r: any) => r.creatorFinished && r.challengerFinished);
     let matchWinner: string | null = null;
     let matchStatus = match.status;
 

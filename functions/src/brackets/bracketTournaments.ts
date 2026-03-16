@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import {
   BracketTournament, BracketSize, PrizeStructure,
@@ -19,15 +19,15 @@ const VALID_GAME_IDS = [
 
 // ─── Admin: Create Bracket Tournament ─────────────────────────────────────
 
-export const createBracketTournament = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const createBracketTournament = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const {
     name, description, format, gameIds, gameScope,
     maxParticipants, entryFee, prizePool, prizeStructure,
     burnPercentage, registrationStart, registrationEnd,
     startTime, endTime, roundDurationMinutes, seeding, visibility,
-  } = data;
+  } = request.data;
 
   // ── Assign display number ───────────────────────────────────────────────
   const counterRef = db.collection('config').doc('bracketCounter');
@@ -51,7 +51,7 @@ export const createBracketTournament = functions.https.onCall(async (data, conte
   const structure: PrizeStructure = prizeStructure || PRIZE_STRUCTURES.standard;
   const pctSum = Object.values(structure).reduce((a: number, b: unknown) => a + (b as number), 0);
   if (Math.abs(pctSum - 100) > 0.01) {
-    throw new functions.https.HttpsError('invalid-argument', 'Prize structure must sum to 100%');
+    throw new HttpsError('invalid-argument', 'Prize structure must sum to 100%');
   }
 
   const validatedGameIds: string[] = gameScope === 'all'
@@ -59,7 +59,7 @@ export const createBracketTournament = functions.https.onCall(async (data, conte
     : (gameIds || []).filter((g: string) => VALID_GAME_IDS.includes(g));
 
   if (validatedGameIds.length === 0) {
-    throw new functions.https.HttpsError('invalid-argument', 'At least one valid game required');
+    throw new HttpsError('invalid-argument', 'At least one valid game required');
   }
 
   const tournament: BracketTournament = {
@@ -90,7 +90,7 @@ export const createBracketTournament = functions.https.onCall(async (data, conte
     visibility: visibility || 'public',
     createdAt: now,
     updatedAt: now,
-    createdBy: context.auth.uid.toLowerCase(),
+    createdBy: request.auth.uid.toLowerCase(),
     completedAt: null,
     winnerId: null,
     rounds: [], // generated on startBracketTournament
@@ -103,36 +103,36 @@ export const createBracketTournament = functions.https.onCall(async (data, conte
 
 // ─── Player: Join Bracket Tournament ──────────────────────────────────────
 
-export const joinBracketTournament = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const joinBracketTournament = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { tournamentId } = data;
-  const player = context.auth.uid.toLowerCase();
+  const { tournamentId } = request.data;
+  const player = request.auth.uid.toLowerCase();
 
   const ref = db.collection('bracketTournaments').doc(tournamentId);
 
   await db.runTransaction(async (txn) => {
     const snap = await txn.get(ref);
-    if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Tournament not found');
+    if (!snap.exists) throw new HttpsError('not-found', 'Tournament not found');
 
     const t = snap.data() as BracketTournament;
 
     if (t.status !== 'registration') {
-      throw new functions.https.HttpsError('failed-precondition', 'Registration is closed');
+      throw new HttpsError('failed-precondition', 'Registration is closed');
     }
 
     const now = admin.firestore.Timestamp.now();
     if (now.toMillis() < t.registrationStart.toMillis()) {
-      throw new functions.https.HttpsError('failed-precondition', 'Registration not open yet');
+      throw new HttpsError('failed-precondition', 'Registration not open yet');
     }
     if (now.toMillis() > t.registrationEnd.toMillis()) {
-      throw new functions.https.HttpsError('failed-precondition', 'Registration has closed');
+      throw new HttpsError('failed-precondition', 'Registration has closed');
     }
     if (t.participants.includes(player)) {
-      throw new functions.https.HttpsError('already-exists', 'Already registered');
+      throw new HttpsError('already-exists', 'Already registered');
     }
     if (t.participants.length >= t.maxParticipants) {
-      throw new functions.https.HttpsError('resource-exhausted', 'Tournament is full');
+      throw new HttpsError('resource-exhausted', 'Tournament is full');
     }
 
     // Write participant sub-doc
@@ -160,29 +160,28 @@ export const joinBracketTournament = functions.https.onCall(async (data, context
 
 // ─── Admin: Start Tournament (generate bracket) ────────────────────────────
 
-export const startBracketTournament = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const startBracketTournament = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { tournamentId } = data;
+  const { tournamentId } = request.data;
   const ref = db.collection('bracketTournaments').doc(tournamentId);
   const snap = await ref.get();
-  if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Tournament not found');
+  if (!snap.exists) throw new HttpsError('not-found', 'Tournament not found');
 
   const t = snap.data() as BracketTournament;
   if (t.status !== 'registration') {
-    throw new functions.https.HttpsError('failed-precondition', `Cannot start: status is ${t.status}`);
+    throw new HttpsError('failed-precondition', `Cannot start: status is ${t.status}`);
   }
 
   let participants = [...t.participants];
   if (participants.length < 2) {
-    throw new functions.https.HttpsError('failed-precondition', 'Need at least 2 participants to start');
+    throw new HttpsError('failed-precondition', 'Need at least 2 participants to start');
   }
 
   // Seed participants
   if (t.seeding === 'random') {
     participants = participants.sort(() => Math.random() - 0.5);
   }
-  // 'rank' seeding would use global leaderboard rankings (simplified here)
 
   const bracketSize = nextBracketSize(participants.length);
   const rounds = generateSingleEliminationBracket(
@@ -212,25 +211,25 @@ export const startBracketTournament = functions.https.onCall(async (data, contex
 
 // ─── Admin: Full Control Panel ─────────────────────────────────────────────
 
-export const adminBracketControl = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const adminBracketControl = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { tournamentId, action, updates } = data;
+  const { tournamentId, action, updates } = request.data;
   const ref = db.collection('bracketTournaments').doc(tournamentId);
   const snap = await ref.get();
-  if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Tournament not found');
+  if (!snap.exists) throw new HttpsError('not-found', 'Tournament not found');
 
   const t = snap.data() as BracketTournament;
   const now = admin.firestore.Timestamp.now();
 
   switch (action) {
     case 'pause':
-      if (t.status !== 'active') throw new functions.https.HttpsError('failed-precondition', 'Not active');
+      if (t.status !== 'active') throw new HttpsError('failed-precondition', 'Not active');
       await ref.update({ status: 'paused', updatedAt: now });
       break;
 
     case 'resume':
-      if (t.status !== 'paused') throw new functions.https.HttpsError('failed-precondition', 'Not paused');
+      if (t.status !== 'paused') throw new HttpsError('failed-precondition', 'Not paused');
       await ref.update({ status: 'active', updatedAt: now });
       break;
 
@@ -239,7 +238,7 @@ export const adminBracketControl = functions.https.onCall(async (data, context) 
       await ref.update({ status: 'cancelled', completedAt: now, updatedAt: now });
       break;
 
-    case 'reset':
+    case 'reset': {
       await ref.update({
         status: 'registration',
         rounds: [],
@@ -249,18 +248,17 @@ export const adminBracketControl = functions.https.onCall(async (data, context) 
         completedAt: null,
         updatedAt: now,
       });
-      // Clear participant sub-docs
       const pSnap = await ref.collection('participants').get();
       const batch = db.batch();
       pSnap.docs.forEach(d => batch.delete(d.ref));
       await batch.commit();
       break;
+    }
 
-    case 'update':
+    case 'update': {
       if (!updates || typeof updates !== 'object') {
-        throw new functions.https.HttpsError('invalid-argument', 'updates object required');
+        throw new HttpsError('invalid-argument', 'updates object required');
       }
-      // Allowed fields to update
       const allowed = [
         'name', 'description', 'entryFee', 'prizePool', 'prizeStructure',
         'registrationStart', 'registrationEnd', 'startTime', 'endTime',
@@ -269,7 +267,6 @@ export const adminBracketControl = functions.https.onCall(async (data, context) 
       const safeUpdates: any = { updatedAt: now };
       for (const key of allowed) {
         if (key in updates) {
-          // Convert timestamps
           if (['registrationStart', 'registrationEnd', 'startTime', 'endTime'].includes(key) && updates[key]) {
             safeUpdates[key] = admin.firestore.Timestamp.fromMillis(updates[key]);
           } else {
@@ -279,55 +276,59 @@ export const adminBracketControl = functions.https.onCall(async (data, context) 
       }
       await ref.update(safeUpdates);
       break;
+    }
 
-    case 'extend_deadline':
+    case 'extend_deadline': {
       const { newEndTime } = updates || {};
-      if (!newEndTime) throw new functions.https.HttpsError('invalid-argument', 'newEndTime required');
+      if (!newEndTime) throw new HttpsError('invalid-argument', 'newEndTime required');
       await ref.update({
         endTime: admin.firestore.Timestamp.fromMillis(newEndTime),
         updatedAt: now,
       });
       break;
+    }
 
-    case 'force_advance_match':
-      // Admin forces a match result (e.g., no-show)
+    case 'force_advance_match': {
       const { roundIndex, matchIndex, winner: forceWinner } = updates || {};
       if (roundIndex == null || matchIndex == null || !forceWinner) {
-        throw new functions.https.HttpsError('invalid-argument', 'roundIndex, matchIndex, winner required');
+        throw new HttpsError('invalid-argument', 'roundIndex, matchIndex, winner required');
       }
       await resolveMatchInBracket(tournamentId, roundIndex, matchIndex, forceWinner, true);
       break;
+    }
 
-    case 'remove_participant':
+    case 'remove_participant': {
       const { address: removeAddr } = updates || {};
-      if (!removeAddr) throw new functions.https.HttpsError('invalid-argument', 'address required');
+      if (!removeAddr) throw new HttpsError('invalid-argument', 'address required');
       if (t.status !== 'registration') {
-        throw new functions.https.HttpsError('failed-precondition', 'Can only remove during registration');
+        throw new HttpsError('failed-precondition', 'Can only remove during registration');
       }
       await ref.update({
         participants: admin.firestore.FieldValue.arrayRemove(removeAddr),
         updatedAt: now,
       });
       break;
+    }
 
-    case 'add_wildcard':
+    case 'add_wildcard': {
       const { address: addAddr } = updates || {};
-      if (!addAddr) throw new functions.https.HttpsError('invalid-argument', 'address required');
+      if (!addAddr) throw new HttpsError('invalid-argument', 'address required');
       if (t.status !== 'registration') {
-        throw new functions.https.HttpsError('failed-precondition', 'Can only add during registration');
+        throw new HttpsError('failed-precondition', 'Can only add during registration');
       }
       await ref.update({
         participants: admin.firestore.FieldValue.arrayUnion(addAddr),
         updatedAt: now,
       });
       break;
+    }
 
     case 'finalize':
       await finalizeBracketTournament(tournamentId);
       break;
 
     default:
-      throw new functions.https.HttpsError('invalid-argument', `Unknown action: ${action}`);
+      throw new HttpsError('invalid-argument', `Unknown action: ${action}`);
   }
 
   return { success: true, action };
@@ -335,46 +336,45 @@ export const adminBracketControl = functions.https.onCall(async (data, context) 
 
 // ─── Submit Match Score (bracket round) ───────────────────────────────────
 
-export const submitBracketScore = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const submitBracketScore = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { tournamentId, roundIndex, matchIndex, scores } = data;
-  // scores: number[] — one per game in this match
-  const player = context.auth.uid.toLowerCase();
+  const { tournamentId, roundIndex, matchIndex, scores } = request.data;
+  const player = request.auth.uid.toLowerCase();
 
   const ref = db.collection('bracketTournaments').doc(tournamentId);
 
   await db.runTransaction(async (txn) => {
     const snap = await txn.get(ref);
-    if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Tournament not found');
+    if (!snap.exists) throw new HttpsError('not-found', 'Tournament not found');
 
     const t = snap.data() as BracketTournament;
     if (t.status !== 'active') {
-      throw new functions.https.HttpsError('failed-precondition', 'Tournament not active');
+      throw new HttpsError('failed-precondition', 'Tournament not active');
     }
 
     const rounds = [...t.rounds];
     const round = rounds[roundIndex];
-    if (!round) throw new functions.https.HttpsError('not-found', 'Round not found');
+    if (!round) throw new HttpsError('not-found', 'Round not found');
 
     const match = { ...round.matches[matchIndex] } as BracketMatch;
-    if (!match) throw new functions.https.HttpsError('not-found', 'Match not found');
+    if (!match) throw new HttpsError('not-found', 'Match not found');
     if (match.status === 'complete' || match.status === 'bye') {
-      throw new functions.https.HttpsError('failed-precondition', 'Match already complete');
+      throw new HttpsError('failed-precondition', 'Match already complete');
     }
 
     const totalScore = Array.isArray(scores) ? scores.reduce((a: number, b: number) => a + b, 0) : (scores as number);
     const isP1 = match.player1 === player;
     const isP2 = match.player2 === player;
 
-    if (!isP1 && !isP2) throw new functions.https.HttpsError('permission-denied', 'Not in this match');
+    if (!isP1 && !isP2) throw new HttpsError('permission-denied', 'Not in this match');
 
     if (isP1) {
-      if (match.player1Finished) throw new functions.https.HttpsError('already-exists', 'Already submitted');
+      if (match.player1Finished) throw new HttpsError('already-exists', 'Already submitted');
       match.player1Score = totalScore;
       match.player1Finished = true;
     } else {
-      if (match.player2Finished) throw new functions.https.HttpsError('already-exists', 'Already submitted');
+      if (match.player2Finished) throw new HttpsError('already-exists', 'Already submitted');
       match.player2Score = totalScore;
       match.player2Finished = true;
     }
@@ -423,10 +423,8 @@ async function resolveMatchInBracket(
     const t = snap.data() as BracketTournament;
     let rounds = t.rounds;
 
-    // Propagate winner to next round
     rounds = propagateWinner(rounds, roundIndex, matchIndex, winner);
 
-    // Check all rounds complete (tournament done)
     const finalRound = rounds[rounds.length - 1];
     const allDone = finalRound?.matches.every(m => m.status === 'complete' || m.status === 'bye');
 
@@ -442,7 +440,6 @@ async function resolveMatchInBracket(
     txn.update(ref, updates);
   });
 
-  // Update participant history
   await updateParticipantHistory(tournamentId, roundIndex, matchIndex, winner);
 }
 
@@ -454,7 +451,6 @@ async function finalizeBracketTournament(tournamentId: string) {
   const t = snap.data() as BracketTournament;
   const now = admin.firestore.Timestamp.now();
 
-  // Determine winner from final round
   const finalRound = t.rounds[t.rounds.length - 1];
   const winner = finalRound?.matches[0]?.winner;
 
@@ -484,7 +480,6 @@ async function updateParticipantHistory(
     const now = admin.firestore.Timestamp.now();
     const batch = db.batch();
 
-    // Mark loser as eliminated
     const loserRef = ref.collection('participants').doc(match.loser);
     batch.set(loserRef, {
       isEliminated: true,
@@ -492,7 +487,6 @@ async function updateParticipantHistory(
       updatedAt: now,
     }, { merge: true });
 
-    // Check if winner earns prize (final round)
     const isFinalRound = roundIndex === t.rounds.length - 1;
     if (isFinalRound) {
       const winnerPrize = computePrize(1, t.prizePool, t.prizeStructure);
@@ -511,7 +505,6 @@ async function updateParticipantHistory(
         }, { merge: true });
       }
 
-      // Update global profile
       const winnerProfileRef = db.collection('userProfiles').doc(winner);
       batch.set(winnerProfileRef, {
         tournamentWins: admin.firestore.FieldValue.increment(1),
@@ -528,9 +521,9 @@ async function updateParticipantHistory(
 
 // ─── Get Bracket Data ──────────────────────────────────────────────────────
 
-export const getBracketTournament = functions.https.onCall(async (data, _context) => {
-  const { tournamentId } = data;
-  if (!tournamentId) throw new functions.https.HttpsError('invalid-argument', 'tournamentId required');
+export const getBracketTournament = onCall(async (request) => {
+  const { tournamentId } = request.data;
+  if (!tournamentId) throw new HttpsError('invalid-argument', 'tournamentId required');
 
   const ref = db.collection('bracketTournaments').doc(tournamentId);
   const [snap, participantsSnap] = await Promise.all([
@@ -538,7 +531,7 @@ export const getBracketTournament = functions.https.onCall(async (data, _context
     ref.collection('participants').get(),
   ]);
 
-  if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Tournament not found');
+  if (!snap.exists) throw new HttpsError('not-found', 'Tournament not found');
 
   const t = snap.data();
   const participants = participantsSnap.docs.map(d => d.data());
@@ -546,8 +539,8 @@ export const getBracketTournament = functions.https.onCall(async (data, _context
   return { tournament: t, participants };
 });
 
-export const getBracketTournaments = functions.https.onCall(async (data, _context) => {
-  const { status, limit: rawLimit } = data || {};
+export const getBracketTournaments = onCall(async (request) => {
+  const { status, limit: rawLimit } = request.data || {};
   const pageLimit = Math.min(rawLimit || 20, 50);
 
   let query: admin.firestore.Query = db.collection('bracketTournaments');

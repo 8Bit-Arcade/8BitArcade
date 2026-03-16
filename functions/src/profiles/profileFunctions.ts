@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { UserProfile } from '../pvp/pvpTypes';
 
@@ -10,12 +10,12 @@ const VALID_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7];
 /**
  * updateUserProfile — create or update a player's public profile.
  */
-export const updateUserProfile = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const updateUserProfile = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const player = context.auth.uid.toLowerCase();
+  const player = request.auth.uid.toLowerCase();
   const { bio, avatarUrl, avatarFrame, socialTwitter, socialDiscord,
-          displayName, privacyShowWinRate, privacyShowEarnings } = data;
+          displayName, privacyShowWinRate, privacyShowEarnings } = request.data;
 
   const updates: Partial<UserProfile & { updatedAt: any }> = {
     address: player,
@@ -23,20 +23,20 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
   };
 
   if (bio !== undefined) {
-    if (typeof bio !== 'string') throw new functions.https.HttpsError('invalid-argument', 'bio must be string');
-    if (bio.length > MAX_BIO_LENGTH) throw new functions.https.HttpsError('invalid-argument', `Bio max ${MAX_BIO_LENGTH} chars`);
+    if (typeof bio !== 'string') throw new HttpsError('invalid-argument', 'bio must be string');
+    if (bio.length > MAX_BIO_LENGTH) throw new HttpsError('invalid-argument', `Bio max ${MAX_BIO_LENGTH} chars`);
     updates.bio = bio.trim();
   }
   if (avatarUrl !== undefined) {
     // Basic URL validation - must be Firebase Storage URL or empty
     if (avatarUrl && !avatarUrl.startsWith('https://firebasestorage.googleapis.com')) {
-      throw new functions.https.HttpsError('invalid-argument', 'avatarUrl must be a Firebase Storage URL');
+      throw new HttpsError('invalid-argument', 'avatarUrl must be a Firebase Storage URL');
     }
     updates.avatarUrl = avatarUrl || null;
   }
   if (avatarFrame !== undefined) {
     if (!VALID_FRAMES.includes(avatarFrame)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Invalid avatar frame');
+      throw new HttpsError('invalid-argument', 'Invalid avatar frame');
     }
     updates.avatarFrame = avatarFrame;
   }
@@ -48,7 +48,7 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
   }
   if (displayName !== undefined) {
     if (typeof displayName !== 'string' || displayName.length > 30) {
-      throw new functions.https.HttpsError('invalid-argument', 'displayName max 30 chars');
+      throw new HttpsError('invalid-argument', 'displayName max 30 chars');
     }
     updates.displayName = displayName.trim();
   }
@@ -89,14 +89,14 @@ export const updateUserProfile = functions.https.onCall(async (data, context) =>
 /**
  * getUserProfile — returns a player's public profile + computed stats.
  */
-export const getUserProfile = functions.https.onCall(async (data, context) => {
-  const { address } = data;
+export const getUserProfile = onCall(async (request) => {
+  const { address } = request.data;
   if (!address || typeof address !== 'string') {
-    throw new functions.https.HttpsError('invalid-argument', 'address required');
+    throw new HttpsError('invalid-argument', 'address required');
   }
 
   const normalizedAddress = address.toLowerCase();
-  const requestingPlayer = context.auth?.uid?.toLowerCase() || null;
+  const requestingPlayer = request.auth?.uid?.toLowerCase() || null;
   const isOwnProfile = requestingPlayer === normalizedAddress;
 
   const [profileSnap, userSnap] = await Promise.all([

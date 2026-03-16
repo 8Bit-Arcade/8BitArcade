@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { PvpMatch, PvpRound } from './pvpTypes';
 
@@ -15,22 +15,22 @@ const VALID_GAME_IDS = [
  * Token escrow (for paid matches) is handled on-chain before calling this.
  * For free matches (betAmount == 0), no on-chain interaction needed.
  */
-export const createPvpMatch = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const createPvpMatch = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { betAmount, gameIds, numGames, onChainMatchId, txHashCreate } = data;
-  const creator = context.auth.uid.toLowerCase();
+  const { betAmount, gameIds, numGames, onChainMatchId, txHashCreate } = request.data;
+  const creator = request.auth.uid.toLowerCase();
 
   // ── Validation ─────────────────────────────────────────────────────────
   if (typeof betAmount !== 'number' || betAmount < 0) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid betAmount');
+    throw new HttpsError('invalid-argument', 'Invalid betAmount');
   }
   if (!Array.isArray(gameIds) || gameIds.length === 0) {
-    throw new functions.https.HttpsError('invalid-argument', 'At least one game required');
+    throw new HttpsError('invalid-argument', 'At least one game required');
   }
   for (const gid of gameIds) {
     if (!VALID_GAME_IDS.includes(gid)) {
-      throw new functions.https.HttpsError('invalid-argument', `Invalid gameId: ${gid}`);
+      throw new HttpsError('invalid-argument', `Invalid gameId: ${gid}`);
     }
   }
   const resolvedNumGames = typeof numGames === 'number' && numGames >= 1 ? numGames : gameIds.length;
@@ -38,7 +38,7 @@ export const createPvpMatch = functions.https.onCall(async (data, context) => {
   // ── Check user is not banned ────────────────────────────────────────────
   const userDoc = await db.collection('users').doc(creator).get();
   if (userDoc.exists && userDoc.data()?.isBanned) {
-    throw new functions.https.HttpsError('permission-denied', 'Account is banned');
+    throw new HttpsError('permission-denied', 'Account is banned');
   }
 
   // ── Assign sequential display number ───────────────────────────────────
