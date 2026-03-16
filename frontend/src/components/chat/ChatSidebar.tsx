@@ -28,7 +28,7 @@ export default function ChatSidebar({ chatType = 'arena', matchId, className = '
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
+  const collectionPath = chatType === 'match' ? `pvpMatches/${matchId}/chat` : 'pvpChat';
 
   // ── Real-time listener ─────────────────────────────────────────────────
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function ChatSidebar({ chatType = 'arena', matchId, className = '
         const { collection: col, query, orderBy, limit, onSnapshot, where } = await import('firebase/firestore');
 
         const q = query(
-          col(db, collection),
+          col(db, collectionPath),
           where('isDeleted', '==', false),
           orderBy('timestamp', 'asc'),
           limit(100)
@@ -63,7 +63,7 @@ export default function ChatSidebar({ chatType = 'arena', matchId, className = '
 
     setup();
     return () => { unsubscribe?.(); };
-  }, [collection]);
+  }, [collectionPath]);
 
   const send = async () => {
     if (!input.trim() || !isConnected || sending) return;
