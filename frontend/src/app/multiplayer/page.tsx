@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccount, useReadContract } from 'wagmi';
 import Link from 'next/link';
@@ -45,6 +45,8 @@ export default function MultiplayerLobbyPage() {
   const displayName = useDisplayName(address);
 
   const [tab, setTab] = useState<LobbyTab>('open');
+  const tabRef = useRef<LobbyTab>('open');
+  useEffect(() => { tabRef.current = tab; }, [tab]);
   const [openMatches, setOpenMatches] = useState<PvpMatch[]>([]);
   const [activeMatches, setActiveMatches] = useState<PvpMatch[]>([]);
   const [recentMatches, setRecentMatches] = useState<PvpMatch[]>([]);
@@ -67,16 +69,27 @@ export default function MultiplayerLobbyPage() {
     ? Math.floor(Number(balanceData) / 1e18)
     : 0;
 
-  const fetchMatches = useCallback(async () => {
+  // On initial load fetch all three tabs at once.
+  // On interval, only refresh the currently visible tab to avoid triple reads every cycle.
+  const fetchMatches = useCallback(async (initialLoad = false) => {
     try {
-      const [openRes, activeRes, recentRes] = await Promise.all([
-        callFunction<any, any>('getPvpMatches', { status: 'open', limit: 30 }),
-        callFunction<any, any>('getPvpMatches', { status: 'active', limit: 20 }),
-        callFunction<any, any>('getPvpMatches', { status: 'completed', limit: 20 }),
-      ]);
-      setOpenMatches(openRes.matches || []);
-      setActiveMatches(activeRes.matches || []);
-      setRecentMatches(recentRes.matches || []);
+      if (initialLoad) {
+        const [openRes, activeRes, recentRes] = await Promise.all([
+          callFunction<any, any>('getPvpMatches', { status: 'open', limit: 30 }),
+          callFunction<any, any>('getPvpMatches', { status: 'active', limit: 20 }),
+          callFunction<any, any>('getPvpMatches', { status: 'completed', limit: 20 }),
+        ]);
+        setOpenMatches(openRes.matches || []);
+        setActiveMatches(activeRes.matches || []);
+        setRecentMatches(recentRes.matches || []);
+      } else {
+        const currentTab = tabRef.current;
+        const status = currentTab === 'open' ? 'open' : currentTab === 'active' ? 'active' : 'completed';
+        const res = await callFunction<any, any>('getPvpMatches', { status, limit: 30 });
+        if (currentTab === 'open') setOpenMatches(res.matches || []);
+        else if (currentTab === 'active') setActiveMatches(res.matches || []);
+        else setRecentMatches(res.matches || []);
+      }
     } catch (err) {
       console.error('Failed to fetch matches:', err);
     } finally {
@@ -85,8 +98,9 @@ export default function MultiplayerLobbyPage() {
   }, []);
 
   useEffect(() => {
-    fetchMatches();
-    const interval = setInterval(fetchMatches, 15000);
+    fetchMatches(true);
+    // Poll every 60s (was 15s × 3 tabs = 12 Cloud Function calls/min; now 1/min)
+    const interval = setInterval(() => fetchMatches(false), 60000);
     return () => clearInterval(interval);
   }, [fetchMatches]);
 

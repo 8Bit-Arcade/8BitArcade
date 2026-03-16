@@ -105,12 +105,8 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime', user
     }
   }, [gameId, period, userAddress]);
 
-  // Initial fetch
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
-
-  // Real-time updates
+  // Real-time updates via onSnapshot — fires immediately with current data on mount,
+  // so no separate initial getDoc fetch is needed.
   useEffect(() => {
     if (typeof window === 'undefined' || !isFirebaseConfigured()) return;
 
@@ -150,13 +146,16 @@ export function useLeaderboard(gameId?: string, period: Period = 'allTime', user
                 userScore,
               }));
             }
+            setIsLoading(false);
           },
           (err) => {
             console.error('Leaderboard subscription error:', err);
+            setIsLoading(false);
           }
         );
       } catch (err) {
         console.error('Failed to setup leaderboard subscription:', err);
+        setIsLoading(false);
       }
     })();
 
