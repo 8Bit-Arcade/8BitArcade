@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { ChatMessage } from '../pvp/pvpTypes';
 
@@ -11,25 +11,25 @@ const RATE_LIMIT_MS = 2000; // 2 sec between messages per user
 /**
  * sendChatMessage — posts a message to global arena chat or match chat.
  */
-export const sendChatMessage = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const sendChatMessage = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { text, chatType, matchId, replyToId, gifUrl } = data;
-  const author = context.auth.uid.toLowerCase();
+  const { text, chatType, matchId, replyToId, gifUrl } = request.data;
+  const author = request.auth.uid.toLowerCase();
 
   // ── Validation ──────────────────────────────────────────────────────────
-  if (!text && !gifUrl) throw new functions.https.HttpsError('invalid-argument', 'Text or GIF required');
+  if (!text && !gifUrl) throw new HttpsError('invalid-argument', 'Text or GIF required');
   if (text && text.length > MAX_MESSAGE_LENGTH) {
-    throw new functions.https.HttpsError('invalid-argument', `Max ${MAX_MESSAGE_LENGTH} characters`);
+    throw new HttpsError('invalid-argument', `Max ${MAX_MESSAGE_LENGTH} characters`);
   }
   if (chatType === 'match' && !matchId) {
-    throw new functions.https.HttpsError('invalid-argument', 'matchId required for match chat');
+    throw new HttpsError('invalid-argument', 'matchId required for match chat');
   }
 
   // ── Ban check ───────────────────────────────────────────────────────────
   const userDoc = await db.collection('users').doc(author).get();
   if (userDoc.exists && userDoc.data()?.isBanned) {
-    throw new functions.https.HttpsError('permission-denied', 'Account is banned');
+    throw new HttpsError('permission-denied', 'Account is banned');
   }
 
   // ── Rate limiting ────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ export const sendChatMessage = functions.https.onCall(async (data, context) => {
   if (rateSnap.exists) {
     const lastSent = rateSnap.data()?.lastSent || 0;
     if (now - lastSent < RATE_LIMIT_MS) {
-      throw new functions.https.HttpsError('resource-exhausted', 'Sending too fast, slow down!');
+      throw new HttpsError('resource-exhausted', 'Sending too fast, slow down!');
     }
   }
   await rateRef.set({ lastSent: now }, { merge: true });
@@ -92,17 +92,17 @@ export const sendChatMessage = functions.https.onCall(async (data, context) => {
 /**
  * addReaction — toggle an emoji reaction on a message.
  */
-export const addReaction = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const addReaction = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { messageId, emoji, chatType, matchId } = data;
-  const player = context.auth.uid.toLowerCase();
+  const { messageId, emoji, chatType, matchId } = request.data;
+  const player = request.auth.uid.toLowerCase();
 
   if (!messageId || !emoji) {
-    throw new functions.https.HttpsError('invalid-argument', 'messageId and emoji required');
+    throw new HttpsError('invalid-argument', 'messageId and emoji required');
   }
   if (!SUPPORTED_REACTIONS.includes(emoji)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Unsupported reaction emoji');
+    throw new HttpsError('invalid-argument', 'Unsupported reaction emoji');
   }
 
   const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
@@ -110,14 +110,14 @@ export const addReaction = functions.https.onCall(async (data, context) => {
 
   await db.runTransaction(async (txn) => {
     const snap = await txn.get(msgRef);
-    if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Message not found');
+    if (!snap.exists) throw new HttpsError('not-found', 'Message not found');
 
     const reactions = snap.data()?.reactions || {};
     const emojiReactors: string[] = reactions[emoji] || [];
 
     // Toggle: add if not there, remove if already reacted
     if (emojiReactors.includes(player)) {
-      const updated = emojiReactors.filter(a => a !== player);
+      const updated = emojiReactors.filter((a: string) => a !== player);
       if (updated.length === 0) {
         delete reactions[emoji];
       } else {
@@ -136,21 +136,21 @@ export const addReaction = functions.https.onCall(async (data, context) => {
 /**
  * deleteMessage — admin or message author can delete.
  */
-export const deleteMessage = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const deleteMessage = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { messageId, chatType, matchId } = data;
-  const player = context.auth.uid.toLowerCase();
+  const { messageId, chatType, matchId } = request.data;
+  const player = request.auth.uid.toLowerCase();
 
   const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
   const msgRef = db.collection(collection).doc(messageId);
   const snap = await msgRef.get();
 
-  if (!snap.exists) throw new functions.https.HttpsError('not-found', 'Message not found');
+  if (!snap.exists) throw new HttpsError('not-found', 'Message not found');
 
   const msg = snap.data()!;
   if (msg.author !== player) {
-    throw new functions.https.HttpsError('permission-denied', 'Can only delete your own messages');
+    throw new HttpsError('permission-denied', 'Can only delete your own messages');
   }
 
   await msgRef.update({ isDeleted: true, text: '[deleted]', gifUrl: null });
@@ -160,10 +160,10 @@ export const deleteMessage = functions.https.onCall(async (data, context) => {
 /**
  * pinMessage — admin only.
  */
-export const pinMessage = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be signed in');
+export const pinMessage = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
-  const { messageId, pinned } = data;
+  const { messageId, pinned } = request.data;
   const collection = 'pvpChat';
   await db.collection(collection).doc(messageId).update({ isPinned: !!pinned });
   return { success: true };
@@ -172,8 +172,8 @@ export const pinMessage = functions.https.onCall(async (data, context) => {
 /**
  * getChatMessages — returns recent messages, newest last.
  */
-export const getChatMessages = functions.https.onCall(async (data, _context) => {
-  const { chatType, matchId, limit: rawLimit } = data || {};
+export const getChatMessages = onCall(async (request) => {
+  const { chatType, matchId, limit: rawLimit } = request.data || {};
   const pageLimit = Math.min(rawLimit || 50, 100);
 
   const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
