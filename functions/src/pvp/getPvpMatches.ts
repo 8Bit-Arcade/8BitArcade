@@ -8,7 +8,7 @@ const db = admin.firestore();
  * getPvpMatches — returns open/active/recent matches for the lobby.
  * Scores are HIDDEN in open/active matches (opponent cannot see them).
  */
-export const getPvpMatches = onCall(async (request) => {
+export const getPvpMatches = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   const { status, limit: rawLimit } = request.data || {};
   const requestingPlayer = request.auth?.uid?.toLowerCase() || null;
   const pageLimit = Math.min(rawLimit || 50, 100);
@@ -55,7 +55,7 @@ export const getPvpMatches = onCall(async (request) => {
 /**
  * getPvpMatch — returns a single match by ID (with score reveal rules).
  */
-export const getPvpMatch = onCall(async (request) => {
+export const getPvpMatch = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   const { matchId } = request.data;
   if (!matchId) throw new HttpsError('invalid-argument', 'matchId required');
 
@@ -83,7 +83,7 @@ export const getPvpMatch = onCall(async (request) => {
 /**
  * cancelPvpMatch — creator cancels their open match.
  */
-export const cancelPvpMatch = onCall(async (request) => {
+export const cancelPvpMatch = onCall({ memory: '128MiB', maxInstances: 5 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { matchId } = request.data;
@@ -115,7 +115,7 @@ export const cancelPvpMatch = onCall(async (request) => {
 /**
  * cancelExpiredPvpMatches — scheduled function that cancels matches older than 1hr with no challenger.
  */
-export const cancelExpiredPvpMatches = onSchedule('every 15 minutes', async () => {
+export const cancelExpiredPvpMatches = onSchedule({ schedule: 'every 15 minutes', memory: '128MiB' }, async () => {
   const cutoff = admin.firestore.Timestamp.fromMillis(Date.now() - 60 * 60 * 1000);
   const snap = await db.collection('pvpMatches')
     .where('status', '==', 'open')

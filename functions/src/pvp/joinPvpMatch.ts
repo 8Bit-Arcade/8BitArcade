@@ -8,7 +8,7 @@ const db = admin.firestore();
  * For paid matches, the on-chain escrow joinMatch() tx MUST be submitted
  * and confirmed before calling this. Pass the txHash to record it.
  */
-export const joinPvpMatch = onCall(async (request) => {
+export const joinPvpMatch = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { matchId, txHashJoin } = request.data;

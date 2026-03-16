@@ -19,7 +19,7 @@ const VALID_GAME_IDS = [
 
 // ─── Admin: Create Bracket Tournament ─────────────────────────────────────
 
-export const createBracketTournament = onCall(async (request) => {
+export const createBracketTournament = onCall({ memory: '128MiB', maxInstances: 5 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const {
@@ -103,7 +103,7 @@ export const createBracketTournament = onCall(async (request) => {
 
 // ─── Player: Join Bracket Tournament ──────────────────────────────────────
 
-export const joinBracketTournament = onCall(async (request) => {
+export const joinBracketTournament = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { tournamentId } = request.data;
@@ -160,7 +160,7 @@ export const joinBracketTournament = onCall(async (request) => {
 
 // ─── Admin: Start Tournament (generate bracket) ────────────────────────────
 
-export const startBracketTournament = onCall(async (request) => {
+export const startBracketTournament = onCall({ memory: '128MiB', maxInstances: 5 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { tournamentId } = request.data;
@@ -211,7 +211,7 @@ export const startBracketTournament = onCall(async (request) => {
 
 // ─── Admin: Full Control Panel ─────────────────────────────────────────────
 
-export const adminBracketControl = onCall(async (request) => {
+export const adminBracketControl = onCall({ memory: '128MiB', maxInstances: 3 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { tournamentId, action, updates } = request.data;
@@ -336,7 +336,7 @@ export const adminBracketControl = onCall(async (request) => {
 
 // ─── Submit Match Score (bracket round) ───────────────────────────────────
 
-export const submitBracketScore = onCall(async (request) => {
+export const submitBracketScore = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { tournamentId, roundIndex, matchIndex, scores } = request.data;
@@ -521,7 +521,7 @@ async function updateParticipantHistory(
 
 // ─── Get Bracket Data ──────────────────────────────────────────────────────
 
-export const getBracketTournament = onCall(async (request) => {
+export const getBracketTournament = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   const { tournamentId } = request.data;
   if (!tournamentId) throw new HttpsError('invalid-argument', 'tournamentId required');
 
@@ -539,7 +539,7 @@ export const getBracketTournament = onCall(async (request) => {
   return { tournament: t, participants };
 });
 
-export const getBracketTournaments = onCall(async (request) => {
+export const getBracketTournaments = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   const { status, limit: rawLimit } = request.data || {};
   const pageLimit = Math.min(rawLimit || 20, 50);
 

@@ -11,7 +11,7 @@ const db = admin.firestore();
  * Once both finish, the round winner is determined and totals updated.
  * After the final round, the overall match winner is determined.
  */
-export const submitPvpScore = onCall(async (request) => {
+export const submitPvpScore = onCall({ memory: '128MiB', maxInstances: 10 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
 
   const { matchId, roundIndex, score } = request.data;
