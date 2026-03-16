@@ -92,10 +92,9 @@ service cloud.firestore {
       }
     }
 
-    // ─── Per-Match Chat (dynamic collection per matchId) ───────────────
-    // Pattern: pvpMatchChat_{matchId}/{messageId}
-    // Firestore wildcard handles any collection starting with pvpMatchChat_
-    match /pvpMatchChat_{matchId}/{messageId} {
+    // ─── Per-Match Chat (subcollection under pvpMatches) ──────────────
+    // Pattern: pvpMatches/{matchId}/chat/{messageId}
+    match /pvpMatches/{matchId}/chat/{messageId} {
       allow read: if isAuthenticated();
       allow write: if false;
     }

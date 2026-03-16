@@ -54,8 +54,9 @@ export const sendChatMessage = onCall(async (request) => {
   let replyToText: string | null = null;
   let replyToAuthor: string | null = null;
   if (replyToId) {
-    const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
-    const replySnap = await db.collection(collection).doc(replyToId).get();
+    const replySnap = await (chatType === 'match'
+      ? db.collection('pvpMatches').doc(matchId).collection('chat').doc(replyToId).get()
+      : db.collection('pvpChat').doc(replyToId).get());
     if (replySnap.exists) {
       replyToText = replySnap.data()?.text?.slice(0, 80) || null;
       replyToAuthor = replySnap.data()?.displayName || null;
@@ -63,8 +64,9 @@ export const sendChatMessage = onCall(async (request) => {
   }
 
   // ── Write message ───────────────────────────────────────────────────────
-  const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
-  const msgRef = db.collection(collection).doc();
+  const msgRef = chatType === 'match'
+    ? db.collection('pvpMatches').doc(matchId).collection('chat').doc()
+    : db.collection('pvpChat').doc();
 
   const message: ChatMessage = {
     id: msgRef.id,
@@ -105,8 +107,9 @@ export const addReaction = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'Unsupported reaction emoji');
   }
 
-  const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
-  const msgRef = db.collection(collection).doc(messageId);
+  const msgRef = chatType === 'match'
+    ? db.collection('pvpMatches').doc(matchId).collection('chat').doc(messageId)
+    : db.collection('pvpChat').doc(messageId);
 
   await db.runTransaction(async (txn) => {
     const snap = await txn.get(msgRef);
@@ -142,8 +145,9 @@ export const deleteMessage = onCall(async (request) => {
   const { messageId, chatType, matchId } = request.data;
   const player = request.auth.uid.toLowerCase();
 
-  const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
-  const msgRef = db.collection(collection).doc(messageId);
+  const msgRef = chatType === 'match'
+    ? db.collection('pvpMatches').doc(matchId).collection('chat').doc(messageId)
+    : db.collection('pvpChat').doc(messageId);
   const snap = await msgRef.get();
 
   if (!snap.exists) throw new HttpsError('not-found', 'Message not found');
@@ -176,9 +180,11 @@ export const getChatMessages = onCall(async (request) => {
   const { chatType, matchId, limit: rawLimit } = request.data || {};
   const pageLimit = Math.min(rawLimit || 50, 100);
 
-  const collection = chatType === 'match' ? `pvpMatchChat_${matchId}` : 'pvpChat';
+  const colRef = chatType === 'match'
+    ? db.collection('pvpMatches').doc(matchId).collection('chat')
+    : db.collection('pvpChat');
 
-  const snap = await db.collection(collection)
+  const snap = await colRef
     .where('isDeleted', '==', false)
     .orderBy('timestamp', 'desc')
     .limit(pageLimit)
