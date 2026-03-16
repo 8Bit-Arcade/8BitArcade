@@ -30,39 +30,38 @@ export default function ChatSidebar({ chatType = 'arena', matchId, className = '
 
   const collectionPath = chatType === 'match' ? `pvpMatches/${matchId}/chat` : 'pvpChat';
 
-  // ── Real-time listener ─────────────────────────────────────────────────
+  // ── Polling fetch (replaces onSnapshot to avoid per-reconnect collection re-reads) ──
   useEffect(() => {
-    let unsubscribe: (() => void) | null = null;
+    let cancelled = false;
 
-    const setup = async () => {
-      setLoading(true);
+    const fetchMessages = async () => {
       try {
         const db = await getFirestoreInstance();
-        const { collection: col, query, orderBy, limit, onSnapshot, where } = await import('firebase/firestore');
+        const { collection: col, query, orderBy, limit, getDocs, where } = await import('firebase/firestore');
 
         const q = query(
           col(db, collectionPath),
           where('isDeleted', '==', false),
-          orderBy('timestamp', 'asc'),
-          limit(100)
+          orderBy('timestamp', 'desc'),
+          limit(25)
         );
 
-        unsubscribe = onSnapshot(q, (snap) => {
-          const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })) as ChatMessage[];
-          setMessages(msgs);
-          setPinnedMessages(msgs.filter(m => m.isPinned));
-          setLoading(false);
-          // Auto-scroll
-          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-        });
+        const snap = await getDocs(q);
+        if (cancelled) return;
+        const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse() as ChatMessage[];
+        setMessages(msgs);
+        setPinnedMessages(msgs.filter(m => m.isPinned));
+        setLoading(false);
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       } catch (err) {
-        console.error('Chat setup error:', err);
+        console.error('Chat fetch error:', err);
         setLoading(false);
       }
     };
 
-    setup();
-    return () => { unsubscribe?.(); };
+    fetchMessages();
+    const timer = setInterval(fetchMessages, 30000);
+    return () => { cancelled = true; clearInterval(timer); };
   }, [collectionPath]);
 
   const send = async () => {
