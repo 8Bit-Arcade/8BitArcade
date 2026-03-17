@@ -19,21 +19,21 @@ const navItems: NavItem[] = [
   { href: '/', label: 'Games' },
   { href: '/leaderboard', label: 'Ranks' },
   {
-    href: '/tournaments',
+    href: '/blitz',
     label: 'Blitz',
     children: [
-      { href: '/tournaments?mode=weekly',    label: 'Weekly Blitz',   icon: '⚡' },
-      { href: '/tournaments?mode=monthly',   label: 'Monthly Blitz',  icon: '📅' },
-      { href: '/tournaments?tier=standard',  label: 'Normal Blitz',   icon: '🎮' },
-      { href: '/tournaments?tier=highroller',label: 'High Roller',    icon: '💎' },
+      { href: '/blitz?mode=weekly',    label: 'Weekly Blitz',   icon: '⚡' },
+      { href: '/blitz?mode=monthly',   label: 'Monthly Blitz',  icon: '📅' },
+      { href: '/blitz?tier=standard',  label: 'Normal Blitz',   icon: '🎮' },
+      { href: '/blitz?tier=highroller',label: 'High Roller',    icon: '💎' },
     ],
   },
   {
     href: '/multiplayer',
     label: 'PVP',
     children: [
-      { href: '/multiplayer',            label: 'Arena 1v1',  icon: '⚔️' },
-      { href: '/tournaments/brackets',   label: 'Brackets',   icon: '🏆' },
+      { href: '/multiplayer',        label: 'Arena 1v1',  icon: '⚔️' },
+      { href: '/blitz/brackets',     label: 'Brackets',   icon: '🏆' },
     ],
   },
   { href: '/nft', label: 'NFT' },

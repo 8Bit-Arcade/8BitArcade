@@ -105,7 +105,7 @@ function TournamentCard({ tournament: t }: { tournament: BracketTournament }) {
   const fillPct = Math.round((t.participants.length / t.maxParticipants) * 100);
 
   return (
-    <Link href={`/tournaments/brackets/view?id=${t.id}`}>
+    <Link href={`/blitz/brackets/view?id=${t.id}`}>
       <div className={`border rounded-lg p-4 transition-all hover:border-arcade-green/50 cursor-pointer
         ${t.status === 'active' ? 'border-arcade-green/40 bg-arcade-green/5' :
           t.status === 'registration' ? 'border-arcade-cyan/30 bg-arcade-cyan/5 hover:border-arcade-cyan/60' :
