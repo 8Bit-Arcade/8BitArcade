@@ -694,7 +694,7 @@ useEffect(() => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-pixel text-2xl md:text-3xl text-arcade-pink glow-pink mb-2">
-            TOURNAMENTS
+            BLITZ MODE
           </h1>
           <p className="font-arcade text-gray-400 mb-4">
             Two-Tier Competition System - Standard & High Roller

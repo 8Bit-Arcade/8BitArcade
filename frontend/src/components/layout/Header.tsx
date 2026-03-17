@@ -18,22 +18,13 @@ type NavItem =
 const navItems: NavItem[] = [
   { href: '/', label: 'Games' },
   { href: '/leaderboard', label: 'Ranks' },
-  {
-    href: '/blitz',
-    label: 'Blitz',
-    children: [
-      { href: '/blitz?mode=weekly',    label: 'Weekly Blitz',   icon: '⚡' },
-      { href: '/blitz?mode=monthly',   label: 'Monthly Blitz',  icon: '📅' },
-      { href: '/blitz?tier=standard',  label: 'Normal Blitz',   icon: '🎮' },
-      { href: '/blitz?tier=highroller',label: 'High Roller',    icon: '💎' },
-    ],
-  },
+  { href: '/blitz', label: 'Blitz' },
   {
     href: '/multiplayer',
     label: 'PVP',
     children: [
-      { href: '/multiplayer',        label: 'Arena 1v1',  icon: '⚔️' },
-      { href: '/blitz/brackets',     label: 'Brackets',   icon: '🏆' },
+      { href: '/multiplayer',    label: 'Arena 1v1',  icon: '⚔️' },
+      { href: '/blitz/brackets', label: 'Tourneys',   icon: '🏆' },
     ],
   },
   { href: '/nft', label: 'NFT' },
