@@ -89,7 +89,7 @@ export default function BracketTournamentPage() {
       <div className="min-h-screen bg-arcade-dark flex items-center justify-center">
         <div className="text-center space-y-2">
           <div className="font-pixel text-red-400">TOURNAMENT NOT FOUND</div>
-          <Link href="/tournaments/brackets" className="font-pixel text-xs text-arcade-green hover:underline">
+          <Link href="/blitz/brackets" className="font-pixel text-xs text-arcade-green hover:underline">
             ← Back to Tournaments
           </Link>
         </div>
@@ -104,7 +104,7 @@ export default function BracketTournamentPage() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 font-pixel text-xs text-gray-600">
-          <Link href="/tournaments/brackets" className="hover:text-arcade-green transition-colors">Tournaments</Link>
+          <Link href="/blitz/brackets" className="hover:text-arcade-green transition-colors">Tournaments</Link>
           <span>›</span>
           <span className="text-gray-400">{tournament.name}</span>
         </div>

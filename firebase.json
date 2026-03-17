@@ -24,6 +24,23 @@
         ]
       }
     ],
+    "redirects": [
+      {
+        "source": "/tournaments/brackets/view",
+        "destination": "/blitz/brackets/view",
+        "type": 301
+      },
+      {
+        "source": "/tournaments/brackets",
+        "destination": "/blitz/brackets",
+        "type": 301
+      },
+      {
+        "source": "/tournaments",
+        "destination": "/blitz",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
         "source": "/api/zealy/**",

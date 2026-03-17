@@ -452,7 +452,7 @@ export default function HomePage() {
                     {ACTIVE_TOURNAMENT.endsIn}
                   </span>
                 </div>
-                <Link href="/tournaments">
+                <Link href="/blitz">
                   <Button variant="secondary" size="sm">
                     View Tournament
                   </Button>
