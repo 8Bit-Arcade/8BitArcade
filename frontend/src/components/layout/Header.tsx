@@ -24,7 +24,7 @@ const navItems: NavItem[] = [
     label: 'PVP',
     children: [
       { href: '/multiplayer',    label: 'Arena 1v1',  icon: '⚔️' },
-      { href: '/blitz/brackets', label: 'Tourneys',   icon: '🏆' },
+      { href: '/tournaments/brackets', label: 'Tourneys',   icon: '🏆' },
     ],
   },
   { href: '/nft', label: 'NFT' },

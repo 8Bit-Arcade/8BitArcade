@@ -15,7 +15,9 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 function formatDate(ts: any): string {
   if (!ts) return '—';
-  const d = ts.toDate ? ts.toDate() : new Date(ts.seconds * 1000);
+  let d: Date;
+  if (typeof ts.toDate === 'function') d = ts.toDate();
+  else { const s = ts._seconds ?? ts.seconds; d = new Date(s * 1000); }
   return d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
@@ -105,7 +107,7 @@ function TournamentCard({ tournament: t }: { tournament: BracketTournament }) {
   const fillPct = Math.round((t.participants.length / t.maxParticipants) * 100);
 
   return (
-    <Link href={`/blitz/brackets/view?id=${t.id}`}>
+    <Link href={`/tournaments/brackets/view?id=${t.id}`}>
       <div className={`border rounded-lg p-4 transition-all hover:border-arcade-green/50 cursor-pointer
         ${t.status === 'active' ? 'border-arcade-green/40 bg-arcade-green/5' :
           t.status === 'registration' ? 'border-arcade-cyan/30 bg-arcade-cyan/5 hover:border-arcade-cyan/60' :

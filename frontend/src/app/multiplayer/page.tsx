@@ -196,7 +196,7 @@ export default function MultiplayerLobbyPage() {
               🎲 JOIN RANDOM
             </button>
             <Link
-              href="/blitz/brackets"
+              href="/tournaments/brackets"
               className="font-pixel text-xs px-4 py-2 border border-yellow-500/50 text-yellow-400
                          rounded hover:bg-yellow-500/10 transition-all"
             >
