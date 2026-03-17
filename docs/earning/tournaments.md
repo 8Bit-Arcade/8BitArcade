@@ -1,14 +1,16 @@
-# Tournaments
+# Blitz Mode
 
 ## Compete for Life-Changing Prizes
 
-While daily rewards are free, tournaments offer **much larger prize pools** for players willing to pay an entry fee. Win big or go home!
+While daily rewards are free, **Blitz Mode** offers **much larger prize pools** for players willing to pay an entry fee. Win big or go home!
 
-## Tournament Overview
+> **Navigation:** Find Blitz Mode at **`/blitz`** in the top nav bar. The old `/tournaments` URL redirects there automatically.
 
-### What Are Tournaments?
+## Blitz Mode Overview
 
-**Tournaments** are time-limited competitions with:
+### What Is Blitz Mode?
+
+**Blitz** tournaments are time-limited competitions with:
 - 💰 **Entry fees** (paid in 8BIT tokens)
 - 🏆 **Large prize pools** (paid in 8BIT)
 - ⏰ **Set duration** (hours to weeks)
@@ -19,11 +21,11 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 - Daily rewards = FREE, smaller prizes
 - Tournaments = Paid entry, MUCH larger prizes
 
-## Tournament Types
+## Blitz Types
 
-### Standard Tournaments
+### Normal Blitz
 
-#### Standard Weekly
+#### Weekly Blitz (Standard)
 **Entry Fee:** 2,000 8BIT
 **Prize Pool:** 50,000 8BIT
 **Duration:** 7 days
@@ -35,7 +37,7 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 | 3rd | 7,500 8BIT |
 | 4th-10th | Split remaining |
 
-#### Standard Monthly
+#### Monthly Blitz (Standard)
 **Entry Fee:** 10,000 8BIT
 **Prize Pool:** 100,000 8BIT
 **Duration:** 30 days
@@ -48,9 +50,9 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 
 ---
 
-### High Roller Tournaments
+### High Roller Blitz
 
-#### High Roller Weekly
+#### High Roller Weekly Blitz
 **Entry Fee:** 10,000 8BIT
 **Prize Pool:** 150,000 8BIT
 **Duration:** 7 days
@@ -62,7 +64,7 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 | 3rd | 22,500 8BIT |
 | 4th-10th | 15,000 total |
 
-#### High Roller Monthly
+#### High Roller Monthly Blitz
 **Entry Fee:** 50,000 8BIT
 **Prize Pool:** 500,000 8BIT
 **Duration:** 30 days
@@ -102,12 +104,12 @@ While daily rewards are free, tournaments offer **much larger prize pools** for 
 - Special occasion players
 - Maximum prize potential
 
-## How Tournaments Work
+## How Blitz Mode Works
 
-### Entering a Tournament
+### Entering a Blitz Tournament
 
-1. **Browse Tournaments**
-   - Visit **[play.8bitarcade.games/tournaments](https://play.8bitarcade.games/tournaments)**
+1. **Browse Blitz Tournaments**
+   - Visit **[play.8bitarcade.games/blitz](https://play.8bitarcade.games/blitz)**
    - See all active and upcoming tournaments
    - Filter by entry fee, game, prize pool
 
@@ -216,12 +218,12 @@ Some tournaments have **guaranteed minimums:**
 
 Tournaments are automatically scheduled with a rotating game focus:
 
-| Tournament Type | Entry Fee | Prize Pool | Frequency |
-|-----------------|-----------|------------|-----------|
-| Standard Weekly | 2,000 8BIT | 50,000 8BIT | Weekly |
-| Standard Monthly | 10,000 8BIT | 100,000 8BIT | Monthly |
-| High Roller Weekly | 10,000 8BIT | 150,000 8BIT | Weekly |
-| High Roller Monthly | 50,000 8BIT | 500,000 8BIT | Monthly |
+| Blitz Type | Entry Fee | Prize Pool | Frequency |
+|------------|-----------|------------|-----------|
+| Weekly Blitz (Standard) | 2,000 8BIT | 50,000 8BIT | Weekly |
+| Monthly Blitz (Standard) | 10,000 8BIT | 100,000 8BIT | Monthly |
+| High Roller Weekly Blitz | 10,000 8BIT | 150,000 8BIT | Weekly |
+| High Roller Monthly Blitz | 50,000 8BIT | 500,000 8BIT | Monthly |
 
 ### Tournament Types
 
@@ -229,7 +231,7 @@ Tournaments are automatically scheduled with a rotating game focus:
 
 **Single-Game Tournaments:** Focus on one specific game (rotates weekly/monthly).
 
-*Calendar varies. Check the [Tournaments page](https://play.8bitarcade.games/tournaments) for current schedule.*
+*Calendar varies. Check the [Blitz Mode page](https://play.8bitarcade.games/blitz) for current schedule.*
 
 ## Entry Fees & Payment
 
@@ -429,11 +431,11 @@ See platform-wide data:
 - Split prizes among team
 - Social competitive experience
 
-**Bracket Tournaments (Phase 4):**
-- Head-to-head elimination
+**PVP Bracket Tourneys (Live — Phase 4):**
+- Head-to-head elimination brackets
 - Single or double elimination
-- Esports-style competition
-- Stream-friendly format
+- Accessible via **PVP → Tourneys** in the nav (or `/blitz/brackets`)
+- Esports-style, stream-friendly format
 
 **Sponsored Tournaments (Ongoing):**
 - Partner brands sponsor prizes
@@ -477,7 +479,7 @@ Ready to compete for big prizes?
 
 1. **[Connect Your Wallet](../getting-started/connect-wallet.md)**
 2. **[Practice Your Skills](../games/game-library.md)**
-3. **[Browse Tournaments](https://play.8bitarcade.games/tournaments)**
+3. **[Browse Blitz Tournaments](https://play.8bitarcade.games/blitz)**
 4. **Enter and Win!**
 
 ---

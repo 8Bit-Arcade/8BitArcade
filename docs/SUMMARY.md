@@ -25,7 +25,8 @@
 ## Earning Crypto
 
 * [Daily Free Rewards](earning/daily-rewards.md)
-* [Tournaments](earning/tournaments.md)
+* [Blitz Mode](earning/tournaments.md)
+* [PVP Tournaments (Brackets)](earning/pvp-tournaments.md)
 * [Prize Distribution](earning/prize-distribution.md)
 * [Claiming Your Rewards](earning/claiming.md)
 * [NFT Achievement Badges](earning/nft-achievements.md)
