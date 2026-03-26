@@ -10,6 +10,8 @@ import { useGameStore } from '@/stores/gameStore';
 import { useAudioStore } from '@/stores/audioStore';
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { useTournamentStatus } from '@/hooks/useTournamentStatus';
+import { useActiveTournaments } from '@/hooks/useActiveTournaments';
 import { formatNumber, isTouchDevice } from '@/lib/utils';
 import type { GameMode } from '@/types';
 
@@ -65,6 +67,8 @@ export default function GameWrapper({
   const { soundEnabled, soundVolume } = useAudioStore();
   const { createSession, submitScore: submitScoreToBackend } = useScoreSubmission();
   const { signInWithWallet, isFirebaseAuthenticated, isAuthenticating } = useWalletAuth();
+  const { tournamentsForGame, loading: tournamentsLoading } = useTournamentStatus(gameId);
+  const { activeTournaments } = useActiveTournaments();
 
   const [showModeSelect, setShowModeSelect] = useState(true);
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
@@ -211,11 +215,45 @@ export default function GameWrapper({
       setSelectedMode(mode);
       setShowModeSelect(false);
 
-      // Create session for ranked/tournament modes
-      if (mode !== 'free') {
+      // Create session for ranked or tournament mode
+      if (mode === 'ranked' || mode === 'tournament') {
         try {
-          console.log('Creating session for game:', gameId, 'mode:', mode);
-          const session = await createSession(gameId, mode as 'ranked' | 'tournament');
+          // For tournament mode, find an active tournament to associate with
+          let tournamentId: string | undefined;
+          if (mode === 'tournament') {
+            const now = Date.now();
+
+            // First, check tournaments player has already joined
+            if (tournamentsForGame.length > 0) {
+              const joinedTournament = tournamentsForGame.find(t => t.endsAt > now);
+              if (joinedTournament) {
+                tournamentId = joinedTournament.id;
+                console.log('Found joined tournament:', tournamentId);
+              }
+            }
+
+            // If not joined any, find ANY active tournament for this game (will auto-enroll)
+            if (!tournamentId && activeTournaments.length > 0) {
+              const availableTournament = activeTournaments.find(t => {
+                // Check if tournament applies to this game (null gameId = all games)
+                const appliesToGame = !t.gameId || t.gameId === null || t.gameId === gameId;
+                // Check if tournament is still active
+                const endTime = t.endTime?._seconds ? t.endTime._seconds * 1000 : 0;
+                return appliesToGame && endTime > now;
+              });
+              if (availableTournament) {
+                tournamentId = availableTournament.id;
+                console.log('Found available tournament (will auto-enroll):', tournamentId);
+              }
+            }
+
+            if (!tournamentId) {
+              console.warn('No active tournament found for game:', gameId);
+            }
+          }
+
+          console.log('Creating session for game:', gameId, 'mode:', mode, 'tournamentId:', tournamentId);
+          const session = await createSession(gameId, mode, tournamentId);
           console.log('Session created:', session);
           if (session) {
             sessionIdRef.current = session.sessionId;
@@ -235,14 +273,16 @@ export default function GameWrapper({
         startGame(gameId, mode);
       }
     },
-    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession]
+    [gameId, isConnected, isFirebaseAuthenticated, signInWithWallet, startGame, createSession, tournamentsForGame, activeTournaments]
   );
 
-  // Scroll game into view when it becomes visible (mobile centering)
+  // Scroll game into view and focus when it becomes visible
   useEffect(() => {
     if (!showModeSelect && containerRef.current) {
       setTimeout(() => {
         containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Focus the game container to capture keyboard input immediately
+        containerRef.current?.focus();
       }, 100);
     }
   }, [showModeSelect]);
@@ -395,6 +435,17 @@ export default function GameWrapper({
     }
   }, [gameMode]);
 
+  // Prevent page scrolling for game keys (always active when component mounted)
+  useEffect(() => {
+    const preventScroll = (e: KeyboardEvent) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', preventScroll);
+    return () => window.removeEventListener('keydown', preventScroll);
+  }, []);
+
   // Keyboard controls
   useEffect(() => {
     if (!isPlaying || isPaused) return;
@@ -509,9 +560,10 @@ export default function GameWrapper({
       gameRef.current.destroy(true);
       gameRef.current = null;
     }
+    resetGameState();
     setSelectedMode(null);
     setShowModeSelect(true);
-  }, []);
+  }, [resetGameState]);
 
   // Back to games
   const handleBackToGames = useCallback(() => {
@@ -532,7 +584,26 @@ export default function GameWrapper({
         >
           ← BACK
         </button>
-        <h1 className="font-pixel text-arcade-green text-xs md:text-sm">{gameName}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-pixel text-arcade-green text-xs md:text-sm">{gameName}</h1>
+          {/* Tournament Badges - Show independently for WEEKLY and MONTHLY */}
+          {isConnected && tournamentsForGame.length > 0 && (
+            <div className="flex gap-1">
+              {tournamentsForGame.some(t => t.period.toLowerCase() === 'weekly') && (
+                <div className="px-1.5 py-0.5 bg-arcade-pink/90 rounded flex items-center gap-0.5 animate-pulse">
+                  <span className="text-white text-[10px]">🏆</span>
+                  <span className="font-pixel text-[10px] text-white">WEEKLY</span>
+                </div>
+              )}
+              {tournamentsForGame.some(t => t.period.toLowerCase() === 'monthly') && (
+                <div className="px-1.5 py-0.5 bg-arcade-purple/90 rounded flex items-center gap-0.5 animate-pulse">
+                  <span className="text-white text-[10px]">🏆</span>
+                  <span className="font-pixel text-[10px] text-white">MONTHLY</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="font-pixel text-arcade-cyan text-xs">
           HI: {formatNumber(highScore)}
         </div>
@@ -540,12 +611,20 @@ export default function GameWrapper({
 
       {/* Score Display */}
       {isPlaying && (
-        <div className="flex items-center justify-between px-2 py-0.5 md:py-2 bg-arcade-dark/50">
+        <div className={`flex items-center justify-between px-2 py-0.5 md:py-2 ${
+          gameMode === 'tournament' ? 'bg-arcade-pink/20' :
+          gameMode === 'ranked' ? 'bg-arcade-cyan/20' : 'bg-arcade-dark/50'
+        }`}>
           <span className="font-pixel text-arcade-yellow text-xs md:text-sm">
             SCORE: {formatNumber(score)}
           </span>
-          <span className="font-arcade text-gray-400 text-xs uppercase hidden sm:block">
-            {gameMode} Mode
+          <span className={`font-pixel text-xs uppercase hidden sm:flex items-center gap-1 ${
+            gameMode === 'tournament' ? 'text-arcade-pink' :
+            gameMode === 'ranked' ? 'text-arcade-cyan' : 'text-gray-400'
+          }`}>
+            {gameMode === 'tournament' && '🏆'}
+            {gameMode === 'ranked' && '⭐'}
+            {gameMode.toUpperCase()}
           </span>
           <button
             onClick={togglePause}
@@ -561,8 +640,82 @@ export default function GameWrapper({
         {/* Mode Selection */}
         {showModeSelect && !isGameOver && (
           <div className="card-arcade text-center max-w-sm">
-            <h2 className="font-pixel text-arcade-green text-lg mb-6">{gameName}</h2>
-            <div className="space-y-3">
+            <h2 className="font-pixel text-arcade-green text-lg mb-4">{gameName}</h2>
+
+            {/* Tournament Play Section - Only shows if enrolled in tournaments */}
+            {isConnected && tournamentsForGame.length > 0 && (() => {
+              const hasWeekly = tournamentsForGame.some(t => t.period.toLowerCase() === 'weekly');
+              const hasMonthly = tournamentsForGame.some(t => t.period.toLowerCase() === 'monthly');
+
+              return (
+                <div className="mb-4 p-4 bg-arcade-pink/10 border-2 border-arcade-pink/60 rounded-lg">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-arcade-pink text-lg">🏆</span>
+                    <span className="font-pixel text-arcade-pink text-sm">TOURNAMENT MODE</span>
+                  </div>
+                  {/* Show individual tournament badges */}
+                  <div className="flex justify-center gap-2 mb-3">
+                    {hasWeekly && (
+                      <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1 animate-pulse">
+                        <span className="text-white text-xs">🏆</span>
+                        <span className="font-pixel text-xs text-white">WEEKLY</span>
+                      </div>
+                    )}
+                    {hasMonthly && (
+                      <div className="px-2 py-1 bg-arcade-purple/90 rounded flex items-center gap-1 animate-pulse">
+                        <span className="text-white text-xs">🏆</span>
+                        <span className="font-pixel text-xs text-white">MONTHLY</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="font-arcade text-gray-300 text-xs mb-3 text-center">
+                    {hasWeekly && hasMonthly
+                      ? 'You are entered in both Weekly & Monthly tournaments!'
+                      : hasWeekly
+                        ? 'You are entered in the Weekly tournament!'
+                        : 'You are entered in the Monthly tournament!'
+                    }
+                  </p>
+                  <Button
+                    variant="primary"
+                    className="w-full bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink"
+                    onClick={() => handleStartGame('tournament')}
+                  >
+                    🏆 Play Tournament
+                  </Button>
+                  <p className="font-arcade text-arcade-pink/80 text-xs mt-2 text-center">
+                    Score counts toward {hasWeekly && hasMonthly ? 'both' : 'your'} tournament{hasWeekly && hasMonthly ? 's' : ''}!
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* Ranked Play Section */}
+            <div className="mb-4 p-4 bg-arcade-cyan/10 border-2 border-arcade-cyan/60 rounded-lg">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-arcade-cyan text-lg">⭐</span>
+                <span className="font-pixel text-arcade-cyan text-sm">RANKED MODE</span>
+              </div>
+              <p className="font-arcade text-gray-300 text-xs mb-3 text-center">
+                Compete on daily leaderboards for token rewards
+              </p>
+              <Button
+                variant="primary"
+                className="w-full bg-arcade-cyan hover:bg-arcade-cyan/80 border-arcade-cyan text-black"
+                onClick={() => handleStartGame('ranked')}
+                disabled={!isConnected}
+              >
+                {isConnected ? '⭐ Play Ranked' : 'Connect Wallet'}
+              </Button>
+              {isConnected && (
+                <p className="font-arcade text-arcade-cyan/80 text-xs mt-2 text-center">
+                  Top 100 daily players earn 8BIT tokens!
+                </p>
+              )}
+            </div>
+
+            {/* Free Play Section */}
+            <div className="p-3 bg-arcade-dark/50 border border-arcade-green/30 rounded-lg">
               <Button
                 variant="secondary"
                 className="w-full"
@@ -570,18 +723,10 @@ export default function GameWrapper({
               >
                 Free Play
               </Button>
-              <Button
-                variant="primary"
-                className="w-full"
-                onClick={() => handleStartGame('ranked')}
-                disabled={!isConnected}
-              >
-                {isConnected ? 'Ranked Play' : 'Connect Wallet'}
-              </Button>
+              <p className="font-arcade text-gray-500 text-xs mt-2 text-center">
+                Practice mode - scores not recorded
+              </p>
             </div>
-            <p className="font-arcade text-gray-500 text-xs mt-4">
-              Ranked mode: Earn 8BIT tokens
-            </p>
           </div>
         )}
 
@@ -589,7 +734,8 @@ export default function GameWrapper({
         {!showModeSelect && !isGameOver && (
           <div
             ref={containerRef}
-            className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto"
+            tabIndex={0}
+            className="game-container bg-arcade-black rounded-lg overflow-hidden border-2 border-arcade-green/30 w-full max-w-4xl mx-auto outline-none"
             style={{
               // 72vh to prevent overflow and auto-center on mobile
               height: '72vh',

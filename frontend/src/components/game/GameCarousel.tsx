@@ -21,11 +21,21 @@ interface Game {
   playable: boolean;
 }
 
+interface PlayerTournament {
+  id: string;
+  name: string;
+  tier: string;
+  period: string;
+  gameId?: string | null;
+}
+
 interface GameCarouselProps {
   games: Game[];
   selectedIndex: number;
   onSelectGame: (index: number) => void;
   leaderboards: { [gameId: string]: TopPlayer[] };
+  gamesWithTournaments?: Set<string>;
+  playerTournaments?: PlayerTournament[];
 }
 
 // Helper to get display name for a user (similar to LeaderboardTable)
@@ -57,7 +67,25 @@ export default function GameCarousel({
   selectedIndex,
   onSelectGame,
   leaderboards,
+  gamesWithTournaments = new Set(),
+  playerTournaments = [],
 }: GameCarouselProps) {
+  // Check if a game has an active tournament (for non-logged in users)
+  const hasActiveTournament = (gameId: string) => {
+    return gamesWithTournaments.has('__all__') || gamesWithTournaments.has(gameId);
+  };
+
+  // Get player's tournaments for a specific game
+  const getPlayerTournamentsForGame = (gameId: string) => {
+    const filtered = playerTournaments.filter(
+      (t) => !t.gameId || t.gameId === null || t.gameId === gameId
+    );
+    if (playerTournaments.length > 0) {
+      console.log('🎮 Carousel - playerTournaments:', playerTournaments);
+      console.log('🎮 Carousel - filtered for', gameId, ':', filtered);
+    }
+    return filtered;
+  };
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -196,6 +224,44 @@ export default function GameCarousel({
                     </div>
                   )}
 
+                  {/* Player Tournament Badges - Shows WEEKLY/MONTHLY based on what player joined */}
+                  {(() => {
+                    const gameTournaments = getPlayerTournamentsForGame(game.id);
+                    const hasWeekly = gameTournaments.some(t => t.period.toLowerCase() === 'weekly');
+                    const hasMonthly = gameTournaments.some(t => t.period.toLowerCase() === 'monthly');
+
+                    if (hasWeekly || hasMonthly) {
+                      return (
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          {hasWeekly && (
+                            <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1 animate-pulse">
+                              <span className="text-white text-xs">🏆</span>
+                              <span className="font-pixel text-xs text-white">WEEKLY</span>
+                            </div>
+                          )}
+                          {hasMonthly && (
+                            <div className="px-2 py-1 bg-arcade-purple/90 rounded flex items-center gap-1 animate-pulse">
+                              <span className="text-white text-xs">🏆</span>
+                              <span className="font-pixel text-xs text-white">MONTHLY</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Fallback: Show generic LIVE badge if there's an active tournament but player isn't enrolled
+                    if (hasActiveTournament(game.id)) {
+                      return (
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-arcade-pink/50 rounded flex items-center gap-1">
+                          <span className="text-white text-xs">🏆</span>
+                          <span className="font-pixel text-xs text-white/70">LIVE</span>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
+
                   {/* Coming Soon Badge */}
                   {!game.playable && isCenter && (
                     <div className="absolute top-2 right-2 px-2 py-1 bg-arcade-yellow/90 rounded">
@@ -241,9 +307,14 @@ export default function GameCarousel({
                               <span className={`font-pixel ${rankColors[playerIndex]} text-xs lg:text-sm flex-shrink-0`}>
                                 {playerIndex === 0 ? '1st' : playerIndex === 1 ? '2nd' : '3rd'}
                               </span>
-                              <span className="font-arcade text-white truncate">
-                                {getPlayerDisplayName(player)}
-                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-arcade text-white truncate">
+                                  {getPlayerDisplayName(player)}
+                                </p>
+                                <p className="font-mono text-gray-500 text-xs">
+                                  {player.odedId.slice(0, 6)}...{player.odedId.slice(-4)}
+                                </p>
+                              </div>
                             </div>
                             <span className="font-arcade text-arcade-cyan flex-shrink-0">
                               {player.score.toLocaleString()}

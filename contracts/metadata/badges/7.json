@@ -1,0 +1,9 @@
+{
+  "name": "Tournament Champion",
+  "description": "Win 10 tournaments",
+  "image": "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/7.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Wins" },
+    { "trait_type": "Reward", "value": "1,000 8BIT" }
+  ]
+}

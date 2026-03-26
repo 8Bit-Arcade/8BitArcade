@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F8S6MFN276"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-F8S6MFN276');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -15,14 +24,14 @@
     <meta property="og:url" content="https://8bitarcade.games/">
     <meta property="og:title" content="8-Bit Arcade | Play to Earn Retro Crypto Games">
     <meta property="og:description" content="Play classic arcade games and earn cryptocurrency. Free Web3 gaming with daily rewards, tournaments & real prizes. Start earning 8BIT tokens today!">
-    <meta property="og:image" content="https://8bitarcade.games/images/og-image.png">
+    <meta property="og:image" content="https://8bitarcade.games/images/8bit-logo.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://8bitarcade.games/">
     <meta property="twitter:title" content="8-Bit Arcade | Play to Earn Retro Crypto Games">
     <meta property="twitter:description" content="Play classic arcade games and earn cryptocurrency. Free Web3 gaming with daily rewards, tournaments & real prizes.">
-    <meta property="twitter:image" content="https://8bitarcade.games/images/twitter-card.png">
+    <meta property="twitter:image" content="https://8bitarcade.games/images/8bit-logo.png">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://8bitarcade.games/">
@@ -68,10 +77,10 @@
                 </div>
                 <div class="nav-links">
                     <a href="#about">About</a>
+                    <a href="#airdrop" style="color: #ff00ff; font-weight: bold;">Airdrop</a>
                     <a href="tokenomics.html">Tokenomics</a>
-                    <a href="#roadmap">Roadmap</a>
-                    <a href="#faq">FAQ</a>
-                    <a href="https://docs.8bitarcade.games" target="_blank">Docs</a>
+                    <a href="staking.html" style="color: #00ff88; font-weight: bold;">Staking</a>
+                    <button id="connectWalletBtn" class="btn btn-secondary" onclick="connectWallet()">Connect Wallet</button>
                     <a href="sale.html" class="btn btn-primary">Token Sale</a>
                     <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-play">Play Now</a>
                 </div>
@@ -112,6 +121,109 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- AIRDROP BANNER - Prominent Display -->
+    <section id="airdrop" class="section" style="background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%); border-top: 4px solid #ff00ff; border-bottom: 4px solid #ff00ff; padding: 4rem 0;">
+        <div class="container">
+            <!-- Animated Banner -->
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <span style="font-size: 3rem; animation: pulse 2s infinite;">🪂</span>
+            </div>
+
+            <h2 class="section-title pixel-text glow-pink" style="font-size: 2.5rem; margin-bottom: 0.5rem; animation: glow 2s ease-in-out infinite alternate;">
+                10 MILLION 8BIT AIRDROP
+            </h2>
+            <p style="text-align: center; font-size: 1.3rem; color: #ff00ff; margin-bottom: 2rem; font-weight: bold;">
+                FREE TOKENS FOR TESTNET PLAYERS!
+            </p>
+
+            <!-- Main Airdrop Info Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <!-- Gaming Points Card -->
+                <div style="background: linear-gradient(135deg, rgba(255,0,255,0.2) 0%, rgba(139,92,246,0.2) 100%); border: 3px solid #ff00ff; padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎮</div>
+                    <h3 class="pixel-text" style="color: #ff00ff; font-size: 1rem; margin-bottom: 1rem;">GAMING POINTS</h3>
+                    <div style="color: #fff; font-size: 0.9rem; line-height: 2;">
+                        <p>Games Played: <strong style="color: #00ff88;">1 pt each</strong></p>
+                        <p>Tournament Entry: <strong style="color: #00ff88;">25 pts</strong></p>
+                        <p>Top 10 Finish: <strong style="color: #00ff88;">100 pts</strong></p>
+                        <p style="color: #ffd700; font-weight: bold;">First 100 users: 2x BONUS!</p>
+                    </div>
+                </div>
+
+                <!-- Community Points Card -->
+                <div style="background: linear-gradient(135deg, rgba(88,101,242,0.2) 0%, rgba(0,136,204,0.2) 100%); border: 3px solid #5865f2; padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
+                    <h3 class="pixel-text" style="color: #5865f2; font-size: 1rem; margin-bottom: 1rem;">COMMUNITY POINTS</h3>
+                    <div style="color: #fff; font-size: 0.9rem; line-height: 2;">
+                        <p><strong style="color: #5865f2;">Discord:</strong> Up to <strong style="color: #00ff88;">100 pts</strong></p>
+                        <p><strong style="color: #0088cc;">Telegram:</strong> Up to <strong style="color: #00ff88;">100 pts</strong></p>
+                        <p><strong style="color: #ffd700;">OG Role:</strong> <strong style="color: #00ff88;">150 pts</strong></p>
+                        <p style="color: #888; font-size: 0.85rem;">Link wallet with /link command</p>
+                    </div>
+                </div>
+
+                <!-- Staking Points Card -->
+                <div style="background: linear-gradient(135deg, rgba(0,212,255,0.2) 0%, rgba(0,255,136,0.2) 100%); border: 3px solid #00d4ff; padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">💎</div>
+                    <h3 class="pixel-text" style="color: #00d4ff; font-size: 1rem; margin-bottom: 1rem;">STAKING BONUS</h3>
+                    <div style="color: #fff; font-size: 0.9rem; line-height: 2;">
+                        <p>10K+ staked: <strong style="color: #00ff88;">25 pts</strong></p>
+                        <p>100K+ staked: <strong style="color: #00ff88;">50 pts</strong></p>
+                        <p>1M+ staked: <strong style="color: #00ff88;">150 pts</strong></p>
+                        <p style="color: #888; font-size: 0.85rem;">+ lock duration bonuses</p>
+                    </div>
+                </div>
+
+                <!-- Reward Tiers Card -->
+                <div style="background: linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,102,0,0.2) 100%); border: 3px solid #ffd700; padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🏆</div>
+                    <h3 class="pixel-text" style="color: #ffd700; font-size: 1rem; margin-bottom: 1rem;">REWARD TIERS</h3>
+                    <div style="color: #fff; font-size: 0.9rem; line-height: 2;">
+                        <p><span style="color: #ffd700; font-weight: bold;">LEGENDARY</span> Top 1% → 2M 8BIT</p>
+                        <p><span style="color: #a855f7; font-weight: bold;">EPIC</span> Top 5% → 2.5M 8BIT</p>
+                        <p><span style="color: #3b82f6; font-weight: bold;">RARE</span> Top 20% → 3.5M 8BIT</p>
+                        <p><span style="color: #22c55e; font-weight: bold;">COMMON</span> Everyone → 2M 8BIT</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vesting Info -->
+            <div style="background: rgba(0,0,0,0.4); border: 2px solid #8b5cf6; padding: 1.5rem 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                <h4 class="pixel-text" style="color: #8b5cf6; text-align: center; margin-bottom: 1rem; font-size: 0.9rem;">📅 VESTING SCHEDULE</h4>
+                <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; text-align: center; color: #fff;">
+                    <div>
+                        <div style="font-size: 1.5rem; color: #00ff88; font-weight: bold;">33%</div>
+                        <div style="font-size: 0.85rem; color: #aaa;">Upon Claim</div>
+                    </div>
+                    <div style="color: #555;">→</div>
+                    <div>
+                        <div style="font-size: 1.5rem; color: #00ff88; font-weight: bold;">33%</div>
+                        <div style="font-size: 0.85rem; color: #aaa;">+30 Days</div>
+                    </div>
+                    <div style="color: #555;">→</div>
+                    <div>
+                        <div style="font-size: 1.5rem; color: #00ff88; font-weight: bold;">34%</div>
+                        <div style="font-size: 0.85rem; color: #aaa;">+60 Days</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div style="text-align: center;">
+                <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-large" style="background: linear-gradient(135deg, #ff00ff 0%, #8b5cf6 100%); color: white; border: none; font-size: 1rem; padding: 1rem 2rem; margin: 0.5rem; display: inline-block; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    🎮 Play Now to Qualify
+                </a>
+                <a href="https://play.8bitarcade.games/airdrop" target="_blank" class="btn btn-large" style="background: transparent; color: #ff00ff; border: 2px solid #ff00ff; font-size: 1rem; padding: 1rem 2rem; margin: 0.5rem; display: inline-block; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    🪂 Check Your Eligibility
+                </a>
+            </div>
+
+            <p style="text-align: center; margin-top: 2rem; color: #888; font-size: 0.9rem;">
+                Snapshot before mainnet launch • 90-day claim window • Same wallet required
+            </p>
         </div>
     </section>
 
@@ -257,34 +369,34 @@
                     <div class="tier-card">
                         <div class="tier-badge">STANDARD</div>
                         <div class="tier-price">
-                            <div class="pixel-text glow-green">$1 / $5</div>
-                            <div class="tier-period">Weekly / Monthly</div>
+                            <div class="pixel-text glow-green">2K / 10K 8BIT</div>
+                            <div class="tier-period">Weekly / Monthly Entry</div>
                         </div>
                         <div class="tier-prizes">
                             <div class="prize-item">
                                 <span>Weekly Prize:</span>
-                                <span class="pixel-text">5K 8BIT</span>
+                                <span class="pixel-text">50K 8BIT</span>
                             </div>
                             <div class="prize-item">
                                 <span>Monthly Prize:</span>
-                                <span class="pixel-text">10K 8BIT</span>
+                                <span class="pixel-text">100K 8BIT</span>
                             </div>
                         </div>
                     </div>
                     <div class="tier-card tier-premium">
                         <div class="tier-badge">HIGH ROLLER ⭐</div>
                         <div class="tier-price">
-                            <div class="pixel-text glow-pink">$5 / $25</div>
-                            <div class="tier-period">Weekly / Monthly</div>
+                            <div class="pixel-text glow-pink">10K / 50K 8BIT</div>
+                            <div class="tier-period">Weekly / Monthly Entry</div>
                         </div>
                         <div class="tier-prizes">
                             <div class="prize-item">
                                 <span>Weekly Prize:</span>
-                                <span class="pixel-text">15K 8BIT</span>
+                                <span class="pixel-text">150K 8BIT</span>
                             </div>
                             <div class="prize-item">
                                 <span>Monthly Prize:</span>
-                                <span class="pixel-text">50K 8BIT</span>
+                                <span class="pixel-text">500K 8BIT</span>
                             </div>
                         </div>
                     </div>
@@ -309,10 +421,10 @@
                     </ul>
                 </div>
                 <div class="roadmap-item active">
-                    <div class="roadmap-status">🚧 IN PROGRESS</div>
+                    <div class="roadmap-status">🚧 STARTS FEB 25, 2025</div>
                     <h3 class="pixel-text">Phase 2: Token Launch</h3>
                     <ul>
-                        <li>Public token sale ($50K raise)</li>
+                        <li>Public token sale (6-week duration)</li>
                         <li>Arbitrum mainnet deployment</li>
                         <li>DEX liquidity provision</li>
                         <li>Tournament system activation</li>
@@ -322,10 +434,10 @@
                     <div class="roadmap-status">📋 PLANNED</div>
                     <h3 class="pixel-text">Phase 3: Growth</h3>
                     <ul>
-                        <li>Mobile app launch (iOS + Android)</li>
                         <li>Leaderboard NFT badges</li>
                         <li>Community governance</li>
                         <li>Partnership integrations</li>
+                        <li>Additional game modes</li>
                     </ul>
                 </div>
                 <div class="roadmap-item">
@@ -375,6 +487,10 @@
                     <h3 class="pixel-text">Can I play on mobile?</h3>
                     <p>Our games are optimized for desktop/laptop play with keyboard controls. Mobile support is not currently available. For the best experience, please use a computer.</p>
                 </div>
+                <div class="faq-item" style="background: linear-gradient(135deg, rgba(255,0,255,0.1) 0%, rgba(139,92,246,0.1) 100%); border: 2px solid #ff00ff;">
+                    <h3 class="pixel-text" style="color: #ff00ff;">How do I qualify for the airdrop?</h3>
+                    <p>Multiple ways to earn points: Play games, enter tournaments, be active on Discord/Telegram (link wallet with /link), and stake tokens. Points stack across all activities. First 100 users get 2x multiplier! 10 million 8BIT distributed across 4 tiers.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -402,9 +518,12 @@
                 <div class="footer-section">
                     <h4 class="pixel-text">Links</h4>
                     <a href="https://play.8bitarcade.games" target="_blank">Play Games</a>
+                    <a href="#airdrop" style="color: #ff00ff;">Airdrop</a>
                     <a href="sale.html">Token Sale</a>
-                    <a href="https://docs.8bitarcade.games" target="_blank">Documentation</a>
                     <a href="#roadmap">Roadmap</a>
+                    <a href="#faq">FAQ</a>
+                    <a href="whitepaper.html">Whitepaper</a>
+                    <a href="https://docs.8bitarcade.games" target="_blank">Docs</a>
                 </div>
                 <div class="footer-section">
                     <h4 class="pixel-text">Community</h4>
@@ -428,5 +547,78 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script>
+        // Simple wallet connection for main page
+        const ARBITRUM_SEPOLIA = {
+            chainId: '0x66eee',
+            chainName: 'Arbitrum Sepolia',
+            rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+            blockExplorerUrls: ['https://sepolia.arbiscan.io'],
+            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+        };
+
+        async function connectWallet() {
+            const btn = document.getElementById('connectWalletBtn');
+
+            if (!window.ethereum) {
+                alert('Please install MetaMask or another Web3 wallet to connect.');
+                return;
+            }
+
+            try {
+                btn.textContent = 'Connecting...';
+
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                // Switch to Arbitrum Sepolia
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: ARBITRUM_SEPOLIA.chainId }]
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [ARBITRUM_SEPOLIA]
+                        });
+                    }
+                }
+
+                // Update button with address
+                const addr = accounts[0];
+                btn.textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
+                btn.classList.add('connected');
+
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', (accs) => {
+                    if (accs.length === 0) {
+                        btn.textContent = 'Connect Wallet';
+                        btn.classList.remove('connected');
+                    } else {
+                        btn.textContent = accs[0].slice(0, 6) + '...' + accs[0].slice(-4);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                btn.textContent = 'Connect Wallet';
+                alert('Failed to connect wallet: ' + error.message);
+            }
+        }
+
+        // Check if already connected on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    const btn = document.getElementById('connectWalletBtn');
+                    btn.textContent = accounts[0].slice(0, 6) + '...' + accounts[0].slice(-4);
+                    btn.classList.add('connected');
+                }
+            }
+        });
+    </script>
 </body>
 </html>

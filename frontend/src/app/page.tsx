@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button';
 import GameCarousel from '@/components/game/GameCarousel';
 import GameGrid, { GameCategory } from '@/components/game/GameGrid';
 import LeaderboardModal from '@/components/leaderboard/LeaderboardModal';
+import { useActiveTournaments } from '@/hooks/useActiveTournaments';
+import { useTournamentStatus } from '@/hooks/useTournamentStatus';
 import { formatNumber } from '@/lib/utils';
 import { getFirestoreInstance, isFirebaseConfigured } from '@/lib/firebase-client';
 
@@ -143,6 +145,8 @@ export default function HomePage() {
   const [gameLeaderboards, setGameLeaderboards] = useState<{ [gameId: string]: { rank: number; username: string; score: number; odedId: string }[] }>({});
   const [topPlayers, setTopPlayers] = useState<{ rank: number; username: string; score: number }[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const { gamesWithTournaments } = useActiveTournaments();
+  const { activeTournaments: playerTournaments } = useTournamentStatus();
 
   // Log version info on mount
   useEffect(() => {
@@ -240,6 +244,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* Navigation */}
+      <div className="pt-4 pb-2">
+        <div className="flex justify-center gap-3 flex-wrap">
+          <a
+            href="https://8bitarcade.games/sale.html"
+            className="px-3 py-1.5 font-arcade text-sm text-black bg-arcade-yellow hover:bg-arcade-yellow/90 border-2 border-arcade-yellow rounded font-bold transition-colors animate-pulse"
+          >
+            💰 TOKEN SALE 💰
+          </a>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative py-2 md:py-3 overflow-hidden">
         {/* Background Grid */}
@@ -271,6 +287,8 @@ export default function HomePage() {
               selectedIndex={selectedGame}
               onSelectGame={setSelectedGame}
               leaderboards={gameLeaderboards}
+              gamesWithTournaments={gamesWithTournaments}
+              playerTournaments={playerTournaments}
             />
 
             {/* Selected Game Actions */}
@@ -294,9 +312,23 @@ export default function HomePage() {
                         <Button variant="secondary" size="md" className="min-w-[140px]">Free Play</Button>
                       </Link>
                       {isConnected ? (
-                        <Link href={`/games/${FEATURED_GAMES[selectedGame].id}`}>
-                          <Button variant="primary" size="md" className="min-w-[140px]">Play Ranked</Button>
-                        </Link>
+                        <>
+                          <Link href={`/games/${FEATURED_GAMES[selectedGame].id}`}>
+                            <Button variant="primary" size="md" className="min-w-[140px]">Play Ranked</Button>
+                          </Link>
+                          {/* Play Tournament button - only shows if user has enrolled in a tournament for this game */}
+                          {playerTournaments.filter(t => !t.gameId || t.gameId === null || t.gameId === FEATURED_GAMES[selectedGame].id).length > 0 && (
+                            <Link href={`/games/${FEATURED_GAMES[selectedGame].id}?mode=tournament`}>
+                              <Button
+                                variant="primary"
+                                size="md"
+                                className="min-w-[140px] bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink animate-pulse"
+                              >
+                                🏆 Play Tournament
+                              </Button>
+                            </Link>
+                          )}
+                        </>
                       ) : (
                         <Button variant="primary" size="md" disabled className="whitespace-nowrap">
                           Connect to Play Ranked
@@ -335,7 +367,7 @@ export default function HomePage() {
           <h2 className="font-pixel text-arcade-green text-sm mb-6 text-center">
             ALL GAMES
           </h2>
-          <GameGrid games={GAMES} onSelectGame={handleGridSelect} />
+          <GameGrid games={GAMES} onSelectGame={handleGridSelect} gamesWithTournaments={gamesWithTournaments} playerTournaments={playerTournaments} />
         </div>
       </section>
 
@@ -420,7 +452,7 @@ export default function HomePage() {
                     {ACTIVE_TOURNAMENT.endsIn}
                   </span>
                 </div>
-                <Link href="/tournaments">
+                <Link href="/blitz">
                   <Button variant="secondary" size="sm">
                     View Tournament
                   </Button>
@@ -521,6 +553,50 @@ export default function HomePage() {
                 <p className="font-arcade text-gray-400">{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Legend */}
+      <section className="py-8 border-t border-arcade-green/20">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="font-pixel text-arcade-green text-xs text-center mb-6">
+            GAME BADGES
+          </h2>
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-pink/90 rounded flex items-center gap-1 animate-pulse">
+                <span className="text-white text-xs">🏆</span>
+                <span className="font-pixel text-xs text-white">WEEKLY</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Your Weekly Tournament</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-purple/90 rounded flex items-center gap-1 animate-pulse">
+                <span className="text-white text-xs">🏆</span>
+                <span className="font-pixel text-xs text-white">MONTHLY</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Your Monthly Tournament</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-pink/50 rounded flex items-center gap-1">
+                <span className="text-white text-xs">🏆</span>
+                <span className="font-pixel text-xs text-white/70">LIVE</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Tournament Available</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-yellow/90 rounded">
+                <span className="font-pixel text-xs text-black">SOON</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Coming Soon</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-1 bg-arcade-green/20 border border-arcade-green/30 rounded">
+                <span className="font-pixel text-xs text-arcade-green">EASY</span>
+              </div>
+              <span className="font-arcade text-gray-400 text-sm">Difficulty Level</span>
+            </div>
           </div>
         </div>
       </section>

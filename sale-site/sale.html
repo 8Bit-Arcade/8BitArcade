@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F8S6MFN276"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-F8S6MFN276');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -15,14 +24,14 @@
     <meta property="og:url" content="https://8bitarcade.games/sale.html">
     <meta property="og:title" content="8BIT Token Sale | Buy P2E Gaming Crypto">
     <meta property="og:description" content="Join the 8BIT token presale. $0.0005 per token. Invest in the future of play-to-earn gaming.">
-    <meta property="og:image" content="https://8bitarcade.games/images/sale-og.png">
+    <meta property="og:image" content="https://8bitarcade.games/images/8bit-logo.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://8bitarcade.games/sale.html">
     <meta property="twitter:title" content="8BIT Token Sale | Buy P2E Gaming Crypto">
     <meta property="twitter:description" content="Join the 8BIT token presale. $0.0005 per token on Arbitrum L2.">
-    <meta property="twitter:image" content="https://8bitarcade.games/images/sale-twitter.png">
+    <meta property="twitter:image" content="https://8bitarcade.games/images/8bit-logo.png">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://8bitarcade.games/sale.html">
@@ -69,11 +78,11 @@
                 </div>
                 <div class="nav-links">
                     <a href="index.html#about">About</a>
+                    <a href="index.html#airdrop" style="color: #ff00ff; font-weight: bold;">Airdrop</a>
                     <a href="tokenomics.html">Tokenomics</a>
-                    <a href="index.html#roadmap">Roadmap</a>
-                    <a href="index.html#faq">FAQ</a>
-                    <a href="https://docs.8bitarcade.games" target="_blank">Docs</a>
+                    <a href="staking.html" style="color: #00ff88; font-weight: bold;">Staking</a>
                     <button id="connectWalletBtn" class="btn btn-primary">Connect Wallet</button>
+                    <a href="https://play.8bitarcade.games" target="_blank" class="btn btn-play">Play Now</a>
                 </div>
             </div>
         </div>
@@ -110,7 +119,7 @@
                 <div class="stat-card">
                     <div class="stat-label">Time Remaining</div>
                     <div class="stat-value pixel-text glow-pink" id="timeRemaining">--</div>
-                    <div class="stat-sublabel">4 Week Sale</div>
+                    <div class="stat-sublabel">6 Week Sale • Starts Feb 25</div>
                 </div>
             </div>
 
@@ -175,6 +184,11 @@
 
                     <!-- Transaction Status -->
                     <div id="txStatus" class="tx-status" style="display: none;"></div>
+
+                    <!-- Add Token to Wallet Button -->
+                    <button onclick="addTokenToWallet()" class="btn btn-secondary" style="margin-top: 1rem; width: 100%;">
+                        ➕ Add 8BIT to Wallet
+                    </button>
                 </div>
 
                 <!-- Info Card -->
@@ -272,6 +286,7 @@
                     <h4 class="pixel-text">Links</h4>
                     <a href="https://play.8bitarcade.games" target="_blank">Play Games</a>
                     <a href="sale.html">Token Sale</a>
+                    <a href="whitepaper.html">Whitepaper</a>
                     <a href="tokenomics.html">Tokenomics</a>
                     <a href="https://docs.8bitarcade.games" target="_blank">Documentation</a>
                     <a href="index.html#roadmap">Roadmap</a>
@@ -296,6 +311,23 @@
             </div>
         </div>
     </footer>
+
+    <!-- Load Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+
+    <!-- Initialize Firebase -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqFKw6v6RB0P1HHup9jO10Cziqfnuiig4",
+            authDomain: "bitarcade-679b7.firebaseapp.com",
+            projectId: "bitarcade-679b7",
+            storageBucket: "bitarcade-679b7.firebasestorage.app",
+            messagingSenderId: "163469341654",
+            appId: "1:163469341654:web:f5e231834fa4426a396a77"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 
     <!-- Load ethers.js from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>

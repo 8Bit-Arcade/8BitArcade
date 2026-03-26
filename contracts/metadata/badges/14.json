@@ -1,0 +1,9 @@
+{
+  "name": "Game Explorer",
+  "description": "Play all 12 games at least once",
+  "image": "https://orange-encouraging-perch-476.mypinata.cloud/ipfs/bafybeice4hezlujn5nwi7lfs3zngtc6fzvgnecwalw3ete53d5sjkwaxxm/14.png",
+  "attributes": [
+    { "trait_type": "Category", "value": "Special" },
+    { "trait_type": "Reward", "value": "300 8BIT" }
+  ]
+}

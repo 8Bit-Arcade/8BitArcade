@@ -6,69 +6,103 @@ import { formatEther, parseEther, parseUnits } from 'viem';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { formatNumber } from '@/lib/utils';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import {
   TOKEN_SALE_ADDRESS,
   TOKEN_SALE_ABI,
   EIGHT_BIT_TOKEN_ADDRESS,
   USDC_ADDRESS,
   USDC_ABI,
+  MAINNET_CONTRACTS,
 } from '@/config/contracts';
+
+// Token sale is always on mainnet regardless of USE_TESTNET
+const MAINNET_CHAIN_ID = MAINNET_CONTRACTS.CHAIN_ID;
 
 type PaymentMethod = 'eth' | 'usdc';
 
-export default function TokenSalePage() {
+export default function BuyEightBitPage() {
   const { address, isConnected } = useAccount();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('eth');
   const [amount, setAmount] = useState('');
   const [needsApproval, setNeedsApproval] = useState(false);
 
-  // Read sale data
+  //move updates off chain
+  const [tokensPerEthValue, setTokensPerEthValue] = useState<number>(0);
+  const [tokensPerUsdcValue, setTokensPerUsdcValue] = useState<number>(0);
+
+  useEffect(() => {
+    async function fetchPrices() {
+      const snap = await getDoc(doc(db, 'system/prices'));
+      if (snap.exists()) {
+        const data = snap.data();
+        setTokensPerEthValue(data.tokensPerEth ?? 0);
+        setTokensPerUsdcValue(data.tokensPerUsdc ?? 0);
+      }
+    }
+
+    fetchPrices();
+    // Optional: auto-refresh every 10s for instant ETH/USDC price updates
+    const interval = setInterval(fetchPrices, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Read sale data — chainId ensures reads go to mainnet (where token sale lives)
   const { data: tokensForSale } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'TOKENS_FOR_SALE',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: tokensSold } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'tokensSold',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: ethRaised } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'ethRaised',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: usdcRaised } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'usdcRaised',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: saleEndTime } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'saleEndTime',
+    chainId: MAINNET_CHAIN_ID,
   });
 
-  const { data: tokensPerEth } = useReadContract({
-    address: TOKEN_SALE_ADDRESS as `0x${string}`,
-    abi: TOKEN_SALE_ABI,
-    functionName: 'tokensPerEth',
-  });
+  const calculateTokens = () => {
+  if (!amount || isNaN(parseFloat(amount))) return 0;
 
-  const { data: tokensPerUsdc } = useReadContract({
-    address: TOKEN_SALE_ADDRESS as `0x${string}`,
-    abi: TOKEN_SALE_ABI,
-    functionName: 'tokensPerUsdc',
-  });
+  if (paymentMethod === 'eth') {
+    return Number(amount) * tokensPerEthValue;
+  }
+
+  if (paymentMethod === 'usdc') {
+    return Number(amount) * tokensPerUsdcValue;
+  }
+
+  return 0;
+};
 
   const { data: isSaleActive } = useReadContract({
     address: TOKEN_SALE_ADDRESS as `0x${string}`,
     abi: TOKEN_SALE_ABI,
     functionName: 'isSaleActive',
+    chainId: MAINNET_CHAIN_ID,
   });
 
   const { data: userPurchased } = useReadContract({
@@ -76,6 +110,7 @@ export default function TokenSalePage() {
     abi: TOKEN_SALE_ABI,
     functionName: 'purchasedTokens',
     args: address ? [address] : undefined,
+    chainId: MAINNET_CHAIN_ID,
   });
 
   // Check USDC allowance
@@ -84,6 +119,7 @@ export default function TokenSalePage() {
     abi: USDC_ABI,
     functionName: 'allowance',
     args: address ? [address, TOKEN_SALE_ADDRESS] : undefined,
+    chainId: MAINNET_CHAIN_ID,
   });
 
   // Get USDC balance
@@ -92,11 +128,13 @@ export default function TokenSalePage() {
     abi: USDC_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    chainId: MAINNET_CHAIN_ID,
   });
 
-  // Get ETH balance
+  // Get ETH balance on mainnet (where token sale lives)
   const { data: ethBalance } = useBalance({
     address: address,
+    chainId: MAINNET_CHAIN_ID,
   });
 
   // Approve USDC
@@ -123,29 +161,8 @@ export default function TokenSalePage() {
   const ethRaisedValue = ethRaised as bigint | undefined;
   const usdcRaisedValue = usdcRaised as bigint | undefined;
   const saleEndTimeValue = saleEndTime as bigint | undefined;
-  const tokensPerEthValue = tokensPerEth as bigint | undefined;
-  const tokensPerUsdcValue = tokensPerUsdc as bigint | undefined;
   const usdcBalanceValue = usdcBalance as bigint | undefined;
   const userPurchasedValue = userPurchased as bigint | undefined;
-
-  // Calculate tokens based on input
-  const calculateTokens = () => {
-    if (!amount || isNaN(parseFloat(amount))) return 0;
-
-    if (paymentMethod === 'eth' && tokensPerEthValue) {
-      const ethAmount = parseEther(amount);
-      const tokens = (ethAmount * tokensPerEthValue) / parseEther('1');
-      return Number(formatEther(tokens));
-    }
-
-    if (paymentMethod === 'usdc' && tokensPerUsdcValue) {
-      const usdcAmount = parseUnits(amount, 6); // USDC has 6 decimals
-      const tokens = (usdcAmount * tokensPerUsdcValue) / BigInt(10 ** 6);
-      return Number(formatEther(tokens));
-    }
-
-    return 0;
-  };
 
   // Check if USDC approval is needed
   useEffect(() => {
@@ -232,24 +249,11 @@ export default function TokenSalePage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-pixel text-2xl md:text-3xl text-arcade-yellow glow-yellow mb-2">
-            8BIT TOKEN SALE
+            BUY 8BIT
           </h1>
           <p className="font-arcade text-gray-400 mb-4">
             Join the future of blockchain gaming
           </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-arcade-dark border border-arcade-green/30 rounded">
-            {isSaleActive ? (
-              <>
-                <span className="w-2 h-2 bg-arcade-green rounded-full animate-pulse"></span>
-                <span className="font-pixel text-arcade-green text-sm">SALE LIVE</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
-                <span className="font-pixel text-gray-500 text-sm">SALE ENDED</span>
-              </>
-            )}
-          </div>
         </div>
 
         {/* Sale Stats */}
@@ -280,12 +284,12 @@ export default function TokenSalePage() {
 
           <Card>
             <div className="text-center">
-              <p className="font-arcade text-xs text-gray-500 mb-1">Time Remaining</p>
-              <p className="font-pixel text-arcade-pink text-lg">
-                {timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : 'ENDED'}
+              <p className="font-arcade text-xs text-gray-500 mb-1">Sale Status</p>
+              <p className={`font-pixel text-lg ${isSaleActive ? 'text-arcade-green' : 'text-arcade-red'}`}>
+                {isSaleActive ? 'LIVE' : 'ENDED'}
               </p>
               <p className="font-arcade text-xs text-gray-400">
-                4 Week Sale
+                {timeRemaining > 0 ? `Ends in ${formatTimeRemaining(timeRemaining)}` : 'Sale has ended'}
               </p>
             </div>
           </Card>
@@ -294,7 +298,7 @@ export default function TokenSalePage() {
         {/* Progress Bar */}
         <Card className="mb-8">
           <div className="mb-2 flex justify-between items-center">
-            <span className="font-pixel text-xs text-arcade-cyan">Sale Progress</span>
+            <span className="font-pixel text-xs text-arcade-cyan">Purchase Progress</span>
             <span className="font-pixel text-xs text-arcade-yellow">{saleProgress}%</span>
           </div>
           <div className="w-full bg-arcade-dark rounded-full h-4 overflow-hidden border border-arcade-cyan/30">
@@ -361,10 +365,11 @@ export default function TokenSalePage() {
             <div className="mb-6 p-3 bg-arcade-dark/50 rounded border border-arcade-yellow/30">
               <p className="font-arcade text-xs text-gray-400 mb-1">Current Price</p>
               <p className="font-pixel text-arcade-yellow">
-                {paymentMethod === 'eth'
-                  ? `1 ETH = ${formatNumber(Number(formatEther(tokensPerEthValue ?? BigInt(0))))} 8BIT`
-                  : `1 USDC = ${formatNumber(Number(formatEther(tokensPerUsdcValue ?? BigInt(0))))} 8BIT`}
-              </p>
+  {paymentMethod === 'eth'
+    ? `1 ETH = ${formatNumber(tokensPerEthValue ?? 0)} 8BIT`
+    : `1 USDC = ${formatNumber(tokensPerUsdcValue ?? 0)} 8BIT`}
+</p>
+
               <p className="font-arcade text-xs text-gray-400 mt-1">
                 ($0.0005 per token)
               </p>
@@ -372,22 +377,12 @@ export default function TokenSalePage() {
 
             {/* Buy Button */}
             {!isConnected ? (
-              <Button variant="secondary" size="lg" className="w-full" disabled>
-                Connect Wallet to Buy
-              </Button>
-            ) : !isSaleActive ? (
-              <Button variant="secondary" size="lg" className="w-full" disabled>
-                Sale Ended
-              </Button>
+              <p className="font-arcade text-center text-gray-400 py-4">
+                Connect your wallet to buy tokens
+              </p>
             ) : needsApproval ? (
-              <Button
-                variant="secondary"
-                size="lg"
-                className="w-full"
-                onClick={handleApprove}
-                disabled={!!approveHash}
-              >
-                {approveHash ? 'Approving USDC...' : 'Approve USDC'}
+              <Button variant="secondary" size="lg" className="w-full" onClick={handleApprove}>
+                Approve USDC
               </Button>
             ) : (
               <Button
@@ -395,9 +390,9 @@ export default function TokenSalePage() {
                 size="lg"
                 className="w-full"
                 onClick={handleBuy}
-                disabled={!amount || !!buyEthHash || !!buyUsdcHash}
+                disabled={!amount || !isSaleActive}
               >
-                {buyEthHash || buyUsdcHash ? 'Processing...' : 'Buy Tokens'}
+                {isSaleActive ? `Buy ${formatNumber(calculateTokens())} 8BIT` : 'Sale Not Active'}
               </Button>
             )}
 
@@ -414,7 +409,7 @@ export default function TokenSalePage() {
 
           {/* Info Card */}
           <Card>
-            <h2 className="font-pixel text-arcade-green mb-4">SALE DETAILS</h2>
+            <h2 className="font-pixel text-arcade-green mb-4">8BIT DETAILS</h2>
 
             <div className="space-y-3 font-arcade text-sm">
               <div className="flex justify-between">
@@ -426,7 +421,7 @@ export default function TokenSalePage() {
                 <span className="text-white">500 Million</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">For Sale:</span>
+                <span className="text-gray-400">Available:</span>
                 <span className="text-white">200M (40%)</span>
               </div>
               <div className="flex justify-between">

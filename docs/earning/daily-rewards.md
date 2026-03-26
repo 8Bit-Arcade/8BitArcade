@@ -54,13 +54,20 @@ Based on different market cap scenarios:
 
 ### 🎮 Per-Game Leaderboards
 
-**Each game has its own separate leaderboard:**
+**Each of our 12+ games has its own separate leaderboard:**
 
-- Space Rocks → Top 10 earn rewards
 - Chomper → Top 10 earn rewards
-- Block Drop → Top 10 earn rewards
 - Brick Breaker → Top 10 earn rewards
-- ... and all other games
+- Pixel Snake → Top 10 earn rewards
+- Block Drop → Top 10 earn rewards
+- Space Rocks → Top 10 earn rewards
+- Flappy Bird → Top 10 earn rewards
+- Alien Assault → Top 10 earn rewards
+- Bug Blaster → Top 10 earn rewards
+- Road Hopper → Top 10 earn rewards
+- Galaxy Fighter → Top 10 earn rewards
+- Missile Command → Top 10 earn rewards
+- Paddle Battle → Top 10 earn rewards
 
 **Play multiple games = multiple chances to earn!**
 
@@ -70,6 +77,22 @@ Based on different market cap scenarios:
 - Previous day's rewards distributed automatically
 - New competition begins immediately
 - Fresh opportunity to rank every single day
+
+## Staking Bonus Multipliers
+
+**Stakers earn BONUS rewards on top of base earnings!**
+
+| Staking Tier | Tokens Required | Reward Bonus |
+|--------------|-----------------|--------------|
+| **Tier 1**   | 100,000 8BIT    | +10%         |
+| **Tier 2**   | 500,000 8BIT    | +25%         |
+| **Tier 3**   | 1,000,000 8BIT  | +50%         |
+
+**Example:**
+- Rank #1 base reward: 12,500 8BIT
+- With 1M tokens staked (Tier 3): 12,500 + 6,250 = **18,750 8BIT**
+
+Bonuses are paid automatically - no claiming needed! See [Staking Guide](../tokenomics/staking.md) for details.
 
 ## Distribution Details
 
@@ -140,9 +163,9 @@ At $1M market cap = **$1,218/month** just from one game!
 
 | Feature | Daily Rewards | Tournaments |
 |---------|---------------|-------------|
-| **Entry Fee** | FREE | $1-$25 USDC |
+| **Entry Fee** | FREE | 2,000-50,000 8BIT |
 | **Frequency** | Every day | Weekly/Monthly |
-| **Prize Pool** | 50,000 8BIT/day | 25K-500K 8BIT |
+| **Prize Pool** | 50,000 8BIT/day | 50K-500K 8BIT |
 | **Competition** | All players | Tournament entrants only |
 | **Risk** | Zero | Entry fee at risk |
 | **Skill Ceiling** | Moderate | High |

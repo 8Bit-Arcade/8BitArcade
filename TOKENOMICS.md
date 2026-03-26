@@ -24,13 +24,13 @@
 Total Supply: 500,000,000 8BIT (100%)
 
 ├─ 200,000,000 (40%) - Token Sale
-├─ 200,000,000 (40%) - Rewards & Ecosystem
+├─ 175,000,000 (35%) - Rewards & Ecosystem
 │  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
-│  └─ 50,000,000 (10%) - Staking Rewards
-└─ 100,000,000 (20%) - Initial Distribution
+│  └─ 25,000,000 (5%) - Staking Rewards
+└─ 125,000,000 (25%) - Initial Distribution
    ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
-   ├─ 20,000,000 (4%) - Tournament Prize Pools
-   ├─ 15,000,000 (3%) - Marketing & Partnerships
+   ├─ 35,000,000 (7%) - Tournament Prize Pools
+   ├─ 25,000,000 (5%) - Marketing & Partnerships
    └─ 5,000,000 (1%) - Team (vested 2-3 years)
 ```
 
@@ -40,10 +40,10 @@ Total Supply: 500,000,000 8BIT (100%)
 |------------|--------|---|---------|
 | **Token Sale** | 200,000,000 | 40% | Public presale at $0.0005 |
 | **Rewards Pool** | 150,000,000 | 30% | Player rewards, tournaments (distributed over 5 years) |
-| **Staking Pool** | 50,000,000 | 10% | Long-term holder incentives |
+| **Staking Pool** | 25,000,000 | 5% | Long-term holder incentives (tiered lock periods) |
 | **DEX Liquidity** | 60,000,000 | 12% | Uniswap V3 locked liquidity (locked 3+ years) |
-| **Tournament Prizes** | 20,000,000 | 4% | Tournament prize pools |
-| **Marketing** | 15,000,000 | 3% | Partnerships, listings, growth |
+| **Tournament Prizes** | 35,000,000 | 7% | Tournament prize pools (bigger prizes!) |
+| **Marketing** | 25,000,000 | 5% | Partnerships, listings, growth |
 | **Team** | 5,000,000 | 1% | Team allocation (vested 2-3 years) |
 
 **Presale Cap:** $100,000 USD (if all 200M tokens sold)
@@ -59,6 +59,8 @@ Total Supply: 500,000,000 8BIT (100%)
 - **Hard Cap:** $100,000 USD
 - **Payment Methods:** ETH, USDC
 - **Network:** Arbitrum One (low fees!)
+- **Launch Date:** February 25, 2025
+- **Sale Duration:** 6 weeks (ends April 8, 2025)
 - **Vesting:** None - tokens available immediately after purchase
 
 ### Why Arbitrum?
@@ -116,12 +118,12 @@ Top 10 players in each game earn daily rewards:
 ### Tournament Structure
 
 #### Standard Tier
-- **Weekly Entry:** $1 USDC → Prize Pool: **25,000 8BIT**
-- **Monthly Entry:** $5 USDC → Prize Pool: **80,000 8BIT**
+- **Weekly Entry:** 2,000 8BIT → Prize Pool: **25,000 8BIT**
+- **Monthly Entry:** 10,000 8BIT → Prize Pool: **80,000 8BIT**
 
-#### High Roller Tier ⭐
-- **Weekly Entry:** $5 USDC → Prize Pool: **80,000 8BIT**
-- **Monthly Entry:** $25 USDC → Prize Pool: **500,000 8BIT** 🚀
+#### High Roller Tier
+- **Weekly Entry:** 10,000 8BIT → Prize Pool: **80,000 8BIT**
+- **Monthly Entry:** 50,000 8BIT → Prize Pool: **500,000 8BIT**
 
 ### Prize Distribution (Top 3)
 1. **1st Place:** 50% of pool
@@ -135,15 +137,15 @@ Top 10 players in each game earn daily rewards:
 ### Token Burn (50% of Tournament Fees)
 
 **How it works:**
-- Tournament entry fees collected in USDC
+- Tournament entry fees collected in 8BIT tokens
 - 50% permanently burned (removed from supply)
 - 50% funds prize pools
 - Creates deflationary pressure as adoption grows
 
 **Example:**
-- High Roller Monthly: $25 entry
-- $12.50 → Burned (buy back 8BIT and burn)
-- $12.50 → Prize pool funding
+- High Roller Monthly: 50,000 8BIT entry
+- 25,000 8BIT → Burned permanently
+- 25,000 8BIT → Prize pool funding
 
 **Long-term effect:** As more players compete, more tokens are permanently removed from circulation, reducing supply and potentially increasing value for holders.
 
@@ -194,15 +196,15 @@ Top 10 players in each game earn daily rewards:
    - Influence reward pool adjustments
    - Community-driven development
 
-4. **NFT Badges (Future)**
-   - Unlock exclusive achievement NFTs
-   - Rare badges for top performers
-   - Tradeable on secondary markets
+4. **NFT Achievement Badges (LIVE)**
+   - Soulbound ERC-721 badges for milestones
+   - Auto-minted when you qualify (zero gas)
+   - 20 achievements across multiple categories
 
-5. **Staking Rewards (Future)**
-   - Stake 8BIT to earn passive income
-   - Boosted rewards for stakers
-   - Long-term holder incentives
+5. **Staking Rewards (LIVE)**
+   - Stake 8BIT to earn passive income (7d, 1mo, 3mo, 6mo locks)
+   - Boosted game rewards for stakers (10-50% bonus)
+   - 9.9M 8BIT funded on mainnet
 
 ---
 
@@ -212,28 +214,39 @@ Top 10 players in each game earn daily rewards:
 
 | Parameter | Value |
 |-----------|-------|
-| **Total Staking Pool** | 50,000,000 8BIT |
-| **% of Max Supply** | 10% |
-| **Distribution Rate** | 1.67% per month (833,333 tokens) |
+| **Total Staking Pool** | 25,000,000 8BIT |
+| **% of Max Supply** | 5% |
+| **Distribution Rate** | ~417,000 tokens/month |
 | **Pool Runway** | 60 months (5 years) |
+
+### Tiered Lock Periods
+
+Higher lock = higher share of rewards (weighted system):
+
+| Lock Period | Weight | Effective APY Boost |
+|-------------|--------|---------------------|
+| **7 Days** | 1.0x | Base rate |
+| **1 Month** | 1.5x | +50% vs base |
+| **3 Months** | 2.0x | +100% vs base |
+| **6 Months** | 3.0x | +200% vs base |
 
 ### Projected APY Scenarios
 
-*APY varies based on total tokens staked*
+*APY varies based on total tokens staked and lock tier*
 
-| Total Staked | Monthly Rewards | Annual Rewards | APY |
-|--------------|-----------------|----------------|-----|
-| **10M (2% supply)** | 833,333 | 10,000,000 | 100% |
-| **25M (5% supply)** | 833,333 | 10,000,000 | 40% |
-| **50M (10% supply)** | 833,333 | 10,000,000 | 20% |
+| Total Staked | 7 Days | 1 Month | 3 Months | 6 Months |
+|--------------|--------|---------|----------|----------|
+| **10M** | ~50% | ~75% | ~100% | ~150% |
+| **25M** | ~20% | ~30% | ~40% | ~60% |
+| **50M** | ~10% | ~15% | ~20% | ~30% |
 
 **Key Benefits:**
+- Tiered rewards incentivize longer locks
 - Reduces circulating supply and sell pressure
-- Rewards long-term holders
-- 5 year sustainability (matches rewards schedule)
-- Flexible APY based on participation
+- More conservative emissions = healthier tokenomics
+- 25% early withdrawal penalty discourages farming
 
-**Note:** Staking launches in Phase 3 (Months 7-12)
+**Staking is LIVE on Arbitrum One!** Contract: [`0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF)
 
 ---
 
@@ -274,41 +287,46 @@ Top 10 players in each game earn daily rewards:
 ✅ **Transparent** - All transactions on-chain
 ✅ **Immutable** - Cannot be changed after deployment
 
-### Contract Addresses
+### Contract Addresses (Arbitrum One Mainnet)
 
-*Will be updated after mainnet deployment*
+All contracts deployed, verified, and live on Arbitrum One:
 
-- **8BIT Token:** `TBD`
-- **Token Sale:** `TBD`
-- **Game Rewards:** `TBD`
-- **Tournament Manager:** `TBD`
+- **8BIT Token:** [`0x37ee26669659758109c94862e49B492247Be26df`](https://arbiscan.io/address/0x37ee26669659758109c94862e49B492247Be26df)
+- **Token Sale:** [`0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA`](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA) (LIVE)
+- **Game Rewards:** [`0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e`](https://arbiscan.io/address/0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e)
+- **Tournament Manager:** [`0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e`](https://arbiscan.io/address/0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e)
+- **Tournament Payments:** [`0xa009e23658609EC3d6b98b1e0904b77005A73e59`](https://arbiscan.io/address/0xa009e23658609EC3d6b98b1e0904b77005A73e59)
+- **Treasury Gas Manager:** [`0x2185cF31B507620C412b00cde9B1BCd1B62983d6`](https://arbiscan.io/address/0x2185cF31B507620C412b00cde9B1BCd1B62983d6)
+- **Tiered Staking:** [`0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF`](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF)
+- **Achievement Badges:** [`0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c`](https://arbiscan.io/address/0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c)
+- **Achievement Manager:** [`0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f`](https://arbiscan.io/address/0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f)
 
 ---
 
 ## 🚀 Growth Strategy
 
-### Phase 1: Launch (Months 1-3)
-- Token presale
-- Launch 12+ games
-- Daily reward distribution
-- Build initial player base
+### Phase 1: Foundation (Q4 2025) ✅
+- 12 retro games developed
+- Smart contracts deployed to testnet
+- Community testing
 
-### Phase 2: Expansion (Months 4-6)
-- List on DEX (Uniswap, SushiSwap)
-- Launch tournament system
-- Add more games
+### Phase 2: Mainnet Launch (Q1 2026) ✅
+- Mainnet deployment (Feb 22, 2026)
+- Token sale LIVE
+- Tiered staking launched (9.9M 8BIT funded)
+- NFT achievement badges launched
+- Tournament system active
+
+### Phase 3: Growth (Q2 2026) 🚧
+- DEX liquidity provision (Uniswap V3)
+- Testnet airdrop distribution
 - Marketing push
+- Additional games
 
-### Phase 3: Scale (Months 7-12)
-- CEX listing targets
-- Implement staking
-- NFT badge system
-- Mobile app development
-
-### Phase 4: Ecosystem (Year 2+)
+### Phase 4: Ecosystem (Q3 2026+) 📋
 - DAO governance
-- Third-party game integration
 - Cross-chain expansion
+- Mobile app (PWA)
 - Esports partnerships
 
 ---
@@ -395,7 +413,7 @@ Even at conservative market caps:
 
 5. **Professional Launch**
    - $100K presale for proper liquidity
-   - $30K locked DEX liquidity (60M tokens = 12% of supply)
+   - $75K locked DEX liquidity (60M tokens = 12% of supply)
    - Deep liquidity pool minimizes slippage
    - Early adopter advantage
 
@@ -425,10 +443,10 @@ Even at conservative market caps:
 
 - **Website:** https://8bitarcade.games
 - **Game App:** https://play.8bitarcade.games
-- **Token Sale:** https://8bitarcade.games/sale.html
-- **Twitter:** [Coming Soon]
-- **Discord:** [Coming Soon]
-- **Telegram:** [Coming Soon]
+- **Token Sale:** https://sale.8bitarcade.games
+- **Twitter:** https://x.com/8_Bit_Arcade_
+- **Discord:** https://discord.gg/AKrdPvHz4P
+- **Telegram:** https://t.me/eight_bit_arcade
 
 ---
 
@@ -444,5 +462,5 @@ This document is for informational purposes only and does not constitute financi
 
 ---
 
-*Last Updated: December 2025*
-*Version: 1.0*
+*Last Updated: March 2026*
+*Version: 2.0*

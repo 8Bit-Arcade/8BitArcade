@@ -2,12 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Helper function to check if user owns the document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -22,7 +20,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Games collection - read only (admin managed via Functions)
+    // Games collection - read only
     match /games/{gameId} {
       allow read: if true;
       allow write: if false;
@@ -32,19 +30,19 @@ service cloud.firestore {
     match /sessions/{sessionId} {
       allow read: if isAuthenticated()
                   && resource.data.player == request.auth.uid;
-      allow write: if false; // Created via Cloud Functions only
+      allow write: if false;
     }
 
     // Scores collection - read public, write via Functions
     match /scores/{odedId} {
       allow read: if true;
-      allow write: if false; // Updated via Cloud Functions only
+      allow write: if false;
     }
 
     // Leaderboards collection - read public, write via Functions
     match /leaderboards/{gameId} {
       allow read: if true;
-      allow write: if false; // Updated via Cloud Functions only
+      allow write: if false;
     }
 
     // Global leaderboard - read public
@@ -56,13 +54,79 @@ service cloud.firestore {
     // Tournaments collection - read public, write via Functions
     match /tournaments/{tournamentId} {
       allow read: if true;
-      allow write: if false; // Admin only via Functions
+      allow write: if false;
+
+      match /entries/{odedId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // ─── Bracket Tournaments ────────────────────────────────────────────
+    match /bracketTournaments/{tournamentId} {
+      allow read: if true;
+      allow write: if false; // Admin via Cloud Functions only
+
+      match /participants/{address} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // ─── PvP Matches ────────────────────────────────────────────────────
+    match /pvpMatches/{matchId} {
+      // Public read, but score data is sanitized by Cloud Functions
+      allow read: if true;
+      allow write: if false; // All writes via Cloud Functions
+    }
+
+    // ─── Global Arena Chat ──────────────────────────────────────────────
+    match /pvpChat/{messageId} {
+      // Public read for chat
+      allow read: if true;
+      allow write: if false; // Via sendChatMessage Cloud Function
+
+      match /reactions/{reactionId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // ─── Per-Match Chat (subcollection under pvpMatches) ──────────────
+    // Pattern: pvpMatches/{matchId}/chat/{messageId}
+    match /pvpMatches/{matchId}/chat/{messageId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // ─── User Profiles ──────────────────────────────────────────────────
+    match /userProfiles/{address} {
+      allow read: if true; // Public profiles
+      allow write: if false; // Via updateUserProfile Cloud Function
+    }
+
+    // ─── Chat Rate Limits (internal) ────────────────────────────────────
+    match /chatRateLimits/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    // Config collection - read public
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // System collection - read public
+    match /system/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // Rewards collection - read own only
     match /rewards/{odedId} {
       allow read: if isOwner(odedId);
-      allow write: if false; // Updated via Cloud Functions only
+      allow write: if false;
     }
 
     // Deny all other access by default

@@ -10,6 +10,25 @@ interface EnterTournamentRequest {
 }
 
 /**
+ * Helper to convert time field to milliseconds
+ * Handles both Firebase Timestamps and Unix timestamp numbers
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  if (typeof value === 'string') {
+    const t = new Date(value).getTime();
+    return isNaN(t) ? null : t;
+  }
+  return null;
+}
+
+/**
  * Enter a tournament after paying entry fee
  * Verifies transaction and creates tournament entry
  */
@@ -33,19 +52,21 @@ export const enterTournament = onCall<EnterTournamentRequest>(async (request) =>
 
     const tournament = tournamentDoc.data() as TournamentDocument;
 
-    // Verify tournament is in correct state
+    // Verify tournament is active or upcoming
     if (tournament.status !== 'active' && tournament.status !== 'upcoming') {
       throw new HttpsError('failed-precondition', 'Tournament is not accepting entries');
     }
 
     const now = Timestamp.now();
+    const nowMillis = now.toMillis();
 
-    // Check if tournament has started (if active, must be before end time)
-    if (tournament.status === 'active' && tournament.endTime.toMillis() < now.toMillis()) {
+    // Make sure tournament has not ended (handle both Timestamp and number formats)
+    const endTimeMillis = toMillis(tournament.endTime);
+    if (tournament.status === 'active' && endTimeMillis && endTimeMillis < nowMillis) {
       throw new HttpsError('failed-precondition', 'Tournament has ended');
     }
 
-    // Check if player already entered
+    // Check for existing entry
     const entryRef = tournamentRef.collection('entries').doc(playerAddress);
     const existingEntry = await entryRef.get();
 
@@ -53,37 +74,53 @@ export const enterTournament = onCall<EnterTournamentRequest>(async (request) =>
       throw new HttpsError('already-exists', 'Already entered this tournament');
     }
 
-    // TODO: Verify transaction on-chain (check txHash is valid and amount matches)
-    // For now, we trust the frontend verification
+    // TODO: Verify transaction on-chain (optional)
 
-    // Create tournament entry
+    // Construct entry (supports both legacy bestScore and new bestScores)
     const entry: TournamentEntryDocument = {
       tournamentId,
       player: playerAddress,
       enteredAt: now,
-      bestScore: 0,
+      bestScore: 0, // Legacy field for backward compatibility
+      bestScores: {}, // NEW: per-game best scores
       lastPlayedAt: null,
       totalPlays: 0,
       paid: true,
       txHash,
     };
 
-    // Use batch write to ensure atomicity
+    // Batch write to keep atomic
     const batch = db.batch();
 
-    // Create entry document
+    // 1️⃣ Create entry in entries subcollection
     batch.set(entryRef, entry);
 
-    // Add player to tournament participants array
+    // 2️⃣ Add participant to parent doc
     batch.update(tournamentRef, {
       participants: FieldValue.arrayUnion(playerAddress),
+      totalEntries: FieldValue.increment(1),
+      updatedAt: now,
     });
+
+    // 3️⃣ Initialize leaderboard record for this player
+    const leaderboardRef = tournamentRef.collection('leaderboard').doc(playerAddress);
+    batch.set(
+      leaderboardRef,
+      {
+        address: playerAddress,
+        score: 0,
+        joinedAt: now,
+        hasPaid: true,
+        lastUpdated: now,
+      },
+      { merge: true }
+    );
 
     await batch.commit();
 
     return {
       success: true,
-      message: 'Successfully entered tournament',
+      message: 'Successfully entered tournament and added to leaderboard',
       entry,
     };
   } catch (error) {

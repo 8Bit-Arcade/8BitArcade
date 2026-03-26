@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import LeaderboardTable from '@/components/leaderboard/LeaderboardTable';
@@ -10,10 +10,11 @@ import GameSelector from '@/components/leaderboard/GameSelector';
 import TournamentLeaderboard from '@/components/tournament/TournamentLeaderboard';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { formatNumber } from '@/lib/utils';
-import { callFunction } from '@/lib/firebase-functions';
+import { TESTNET_CONTRACTS, TOURNAMENT_MANAGER_ABI, ARBITRUM_CHAIN_ID } from '@/config/contracts';
 
 type Period = 'daily' | 'weekly' | 'allTime';
-type ViewMode = 'games' | 'tournaments';
+type ViewMode = 'games' | 'tournaments' | 'ended';
+type TournamentStatus = 'upcoming' | 'active' | 'ended';
 
 interface TournamentInfo {
   id: number;
@@ -21,6 +22,7 @@ interface TournamentInfo {
   tier: string;
   period: string;
   isActive: boolean;
+  status: TournamentStatus;
   endTime: number;
 }
 
@@ -33,7 +35,7 @@ export default function LeaderboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('allTime');
   const [selectedGame, setSelectedGame] = useState(gameParam || 'all');
   const [tournaments, setTournaments] = useState<TournamentInfo[]>([]);
-  const [loadingTournaments, setLoadingTournaments] = useState(false);
+  const [loadingTournaments, setLoadingTournaments] = useState(true);
 
   // Update selected game when query param changes
   useEffect(() => {
@@ -42,43 +44,153 @@ export default function LeaderboardPage() {
     }
   }, [gameParam]);
 
-  // Fetch leaderboard data
+  // Fetch leaderboard data (pass user address to get their rank)
   const { data, isLoading, error } = useLeaderboard(
     selectedGame === 'all' ? undefined : selectedGame,
-    selectedPeriod
+    selectedPeriod,
+    address
   );
 
-  // TEMP DISABLED - Tournament data coming from on-chain
-  useEffect(() => {
-    if (viewMode === 'tournaments') {
-      console.log('🏆 Tournament view - on-chain data loading...');
-      setTournaments([]); // Show empty state until on-chain integration
-    }
-  }, [viewMode]);
+  // Fetch tournaments from blockchain
+  const MAX_TOURNAMENTS = 100;
+  const tournamentIds = Array.from({ length: MAX_TOURNAMENTS }, (_, i) => i + 1);
 
-  const fetchTournaments = async () => {
-  setLoadingTournaments(true);
-  try {
-    // TEMP DISABLE - Use on-chain data instead of Firebase
-    console.log('⏸️ getActiveTournaments DISABLED - using on-chain data');
-    setTournaments([]); // Empty for now
-  } catch (err) {
-    console.error('Error fetching tournaments:', err);
-  } finally {
-    setLoadingTournaments(false);
-  }
-};
+  // Create dynamic tournament queries
+  // chainId ensures reads go to testnet even if wallet is on mainnet
+  const tournamentQueries = tournamentIds.map(id =>
+    useReadContract({
+      address: TESTNET_CONTRACTS.TOURNAMENT_MANAGER as `0x${string}`,
+      abi: TOURNAMENT_MANAGER_ABI,
+      functionName: 'getTournament',
+      args: [BigInt(id)],
+      chainId: ARBITRUM_CHAIN_ID,
+    })
+  );
+
+  // Process tournament data from blockchain
+  useEffect(() => {
+    console.log('🏆 [Ranks] Processing tournament data...');
+    const formattedTournaments: TournamentInfo[] = [];
+    let anyLoading = false;
+
+    tournamentQueries.forEach((tQuery, index) => {
+      if (tQuery.isLoading) {
+        anyLoading = true;
+        return;
+      }
+
+      const tournamentData = tQuery.data;
+      if (!tournamentData || tQuery.error) {
+        if (tQuery.error) {
+          console.log(`⚠️ [Ranks] Tournament ${tournamentIds[index]} error:`, tQuery.error);
+        }
+        return;
+      }
+
+      const data = tournamentData as any;
+      if (!data || typeof data !== 'object') return;
+
+      const fields = Object.values(data) as any[];
+      if (fields.length < 9) return;
+
+      const [tier, period, startTime, endTime, entryFee, prizePool, totalEntries, winner, isActive] = fields;
+
+      // Skip inactive tournaments
+      if (!isActive) {
+        console.log(`⏸️ [Ranks] Tournament ${tournamentIds[index]} is inactive`);
+        return;
+      }
+
+      // Determine status
+      const now = Math.floor(Date.now() / 1000);
+      const status: TournamentStatus =
+        now < Number(startTime) ? 'upcoming' : now < Number(endTime) ? 'active' : 'ended';
+
+      // Only show active and ended tournaments in leaderboard view
+      if (status === 'upcoming') {
+        console.log(`⏭️ [Ranks] Tournament ${tournamentIds[index]} is upcoming, skipping`);
+        return;
+      }
+
+      const tierName = Number(tier) === 0 ? 'Standard' : 'High Roller';
+      const periodName = Number(period) === 0 ? 'Weekly' : 'Monthly';
+
+      console.log(`✅ [Ranks] Tournament ${tournamentIds[index]} added:`, {
+        name: `${tierName} ${periodName}`,
+        status,
+        entries: Number(totalEntries)
+      });
+
+      formattedTournaments.push({
+        id: tournamentIds[index],
+        name: `${tierName} ${periodName}`,
+        tier: tierName,
+        period: periodName,
+        isActive: status === 'active',
+        status,
+        endTime: Number(endTime),
+      });
+    });
+
+    // DEDUPLICATION: Match tournament page display logic
+    // Weekly: keep 2 most recent per tier, Monthly: keep 1 per tier
+    const activeTournaments = formattedTournaments.filter(t => t.status === 'active');
+    const endedTournaments = formattedTournaments.filter(t => t.status === 'ended');
+
+    const weeklyByTier = new Map<string, TournamentInfo[]>();
+    const monthlyByTier = new Map<string, TournamentInfo>();
+
+    for (const t of activeTournaments) {
+      if (t.period === 'Weekly') {
+        if (!weeklyByTier.has(t.tier)) {
+          weeklyByTier.set(t.tier, []);
+        }
+        weeklyByTier.get(t.tier)!.push(t);
+      } else {
+        const existing = monthlyByTier.get(t.tier);
+        if (!existing || t.id > existing.id) {
+          monthlyByTier.set(t.tier, t);
+        }
+      }
+    }
+
+    // Keep only 2 most recent weekly per tier (by highest ID)
+    const dedupedWeekly: TournamentInfo[] = [];
+    for (const tournaments of weeklyByTier.values()) {
+      tournaments.sort((a, b) => b.id - a.id);
+      dedupedWeekly.push(...tournaments.slice(0, 2));
+    }
+
+    const dedupedTournaments = [...dedupedWeekly, ...Array.from(monthlyByTier.values()), ...endedTournaments];
+    console.log(`🏁 [Ranks] Total tournaments after dedup: ${dedupedTournaments.length}`);
+    setTournaments(dedupedTournaments);
+    setLoadingTournaments(anyLoading);
+  }, [
+    ...tournamentQueries.map(q => q.data),
+    ...tournamentQueries.map(q => q.isLoading),
+    ...tournamentQueries.map(q => q.error),
+  ]);
 
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4">
+        {/* Navigation */}
+        <div className="flex justify-center gap-3 mb-6 flex-wrap">
+          <a
+            href="/sale"
+            className="px-3 py-1.5 font-arcade text-sm text-black bg-arcade-yellow hover:bg-arcade-yellow/90 border-2 border-arcade-yellow rounded font-bold transition-colors animate-pulse"
+          >
+            💰 TOKEN SALE 💰
+          </a>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-pixel text-2xl md:text-3xl text-arcade-green glow-green mb-2">
             RANKINGS
           </h1>
           <p className="font-arcade text-gray-400">
-            {viewMode === 'games' ? 'Top players ranked by score' : 'Tournament leaderboards'}
+            {viewMode === 'games' ? 'Top players ranked by score' : viewMode === 'tournaments' ? 'Active tournament leaderboards' : 'Completed tournament results'}
           </p>
         </div>
 
@@ -98,13 +210,20 @@ export default function LeaderboardPage() {
           >
             Tournaments
           </Button>
+          <Button
+            variant={viewMode === 'ended' ? 'primary' : 'ghost'}
+            size="md"
+            onClick={() => setViewMode('ended')}
+          >
+            Ended
+          </Button>
         </div>
 
         {/* Game Leaderboard View */}
         {viewMode === 'games' && (
           <>
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center">
               {/* Period Filter */}
               <LeaderboardTabs
                 activePeriod={selectedPeriod}
@@ -190,14 +309,14 @@ export default function LeaderboardPage() {
           </>
         )}
 
-        {/* Tournament Leaderboard View */}
+        {/* Tournament Leaderboard View - Active tournaments only */}
         {viewMode === 'tournaments' && (
           <>
             {loadingTournaments ? (
               <div className="card-arcade text-center py-8">
                 <p className="font-arcade text-gray-400">Loading tournaments...</p>
               </div>
-            ) : tournaments.length === 0 ? (
+            ) : tournaments.filter(t => t.status === 'active').length === 0 ? (
               <div className="card-arcade text-center py-8">
                 <p className="font-pixel text-gray-400 mb-2">No active tournaments</p>
                 <p className="font-arcade text-gray-500 text-sm">
@@ -206,7 +325,7 @@ export default function LeaderboardPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {tournaments.map((tournament) => (
+                {tournaments.filter(t => t.status === 'active').map((tournament) => (
                   <div key={tournament.id} className="card-arcade">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-arcade-green/20">
                       <div>
@@ -217,20 +336,57 @@ export default function LeaderboardPage() {
                           {tournament.tier} • {tournament.period}
                         </p>
                       </div>
-                      {tournament.isActive ? (
-                        <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
-                          LIVE
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-gray-500/20 text-gray-500 font-pixel text-xs rounded">
-                          ENDED
-                        </span>
-                      )}
+                      <span className="px-2 py-1 bg-arcade-green/20 text-arcade-green font-pixel text-xs rounded">
+                        LIVE
+                      </span>
                     </div>
                     <TournamentLeaderboard
                       tournamentId={tournament.id}
                       tournamentName={tournament.name}
-                      isActive={tournament.isActive}
+                      isActive={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Ended Tournaments View */}
+        {viewMode === 'ended' && (
+          <>
+            {loadingTournaments ? (
+              <div className="card-arcade text-center py-8">
+                <p className="font-arcade text-gray-400">Loading tournaments...</p>
+              </div>
+            ) : tournaments.filter(t => t.status === 'ended').length === 0 ? (
+              <div className="card-arcade text-center py-8">
+                <p className="font-pixel text-gray-400 mb-2">No ended tournaments</p>
+                <p className="font-arcade text-gray-500 text-sm">
+                  Completed tournaments will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {tournaments.filter(t => t.status === 'ended').map((tournament) => (
+                  <div key={tournament.id} className="card-arcade">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-arcade-green/20">
+                      <div>
+                        <h3 className="font-pixel text-arcade-cyan text-sm">
+                          {tournament.name}
+                        </h3>
+                        <p className="font-arcade text-gray-400 text-xs">
+                          {tournament.tier} • {tournament.period}
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 bg-gray-500/20 text-gray-400 font-pixel text-xs rounded">
+                        ENDED
+                      </span>
+                    </div>
+                    <TournamentLeaderboard
+                      tournamentId={tournament.id}
+                      tournamentName={tournament.name}
+                      isActive={false}
                     />
                   </div>
                 ))}

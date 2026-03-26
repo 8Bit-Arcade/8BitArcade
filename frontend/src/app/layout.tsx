@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import Providers from '@/components/Providers';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -7,7 +8,10 @@ import DisplayPreferenceModal from '@/components/wallet/DisplayPreferenceModal';
 import ToastContainer from '@/components/ui/Toast';
 import '@/styles/globals.css';
 
+const GA_MEASUREMENT_ID = 'G-F8S6MFN276';
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://8bitarcade.games'),
   title: '8-Bit Arcade | Play Retro Games, Earn Crypto',
   description:
     'Play classic arcade games, compete on leaderboards, and earn 8BIT tokens. Powered by Arbitrum.',
@@ -26,11 +30,22 @@ export const metadata: Metadata = {
     description: 'Play retro games, earn crypto rewards',
     type: 'website',
     locale: 'en_US',
+    url: 'https://8bitarcade.games',
+    siteName: '8-Bit Arcade',
+    images: [
+      {
+        url: '/images/8bit-logo.png',
+        width: 1536,
+        height: 1024,
+        alt: '8-Bit Arcade - Play Retro Games, Earn Crypto',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '8-Bit Arcade',
     description: 'Play retro games, earn crypto rewards',
+    images: ['/images/8bit-logo.png'],
   },
   manifest: '/manifest.json',
   icons: {
@@ -63,6 +78,19 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-arcade-black text-white antialiased">
+        {/* Google Analytics */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <Providers>
           {/* CRT Scanline Effect */}
           <div className="crt-overlay" aria-hidden="true" />

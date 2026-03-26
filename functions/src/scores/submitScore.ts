@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { collections, Timestamp, FieldValue } from '../config/firebase';
+import { collections, db, Timestamp, FieldValue } from '../config/firebase';
 import { GAME_CONFIGS } from '../config/games';
-import { GameData } from '../types';
+import { GameData, TournamentDocument } from '../types';
 import { analyzeGameplay, verifyChecksum } from '../anticheat/statisticalAnalysis';
 import { flagAccount as flagAccountDetailed, isAccountBanned } from '../anticheat/flagging';
 // Replay validation disabled - too many false positives
@@ -24,6 +24,7 @@ interface SubmitScoreResponse {
 }
 
 export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreResponse>>(
+  { cors: true },
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -137,46 +138,22 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       verified: true,
     });
 
-    // Handle tournament scores separately
+    // Handle tournament scores - auto-update ALL active tournaments the player has entered
+    // This allows a single game to count toward multiple tournaments (weekly + monthly)
+    // Tournament scores ALSO update game/global leaderboards (fall through to ranked logic below)
     if (sessionData.mode === 'tournament') {
-      if (!sessionData.tournamentId) {
-        throw new HttpsError('invalid-argument', 'Tournament ID missing for tournament session');
-      }
+      console.log(`🎮 TOURNAMENT MODE - Session tournamentId: ${sessionData.tournamentId}`);
+      console.log(`🎮 Player: ${playerAddress}, Game: ${gameId}, Score: ${verifiedScore}`);
 
-      // Update tournament entry
-      const tournamentEntryRef = collections.tournaments
-        .doc(sessionData.tournamentId)
-        .collection('entries')
-        .doc(playerAddress);
-
-      const entryDoc = await tournamentEntryRef.get();
-
-      if (!entryDoc.exists) {
-        throw new HttpsError('not-found', 'Tournament entry not found. Must enter tournament first.');
-      }
-
-      const entryData = entryDoc.data();
-      const currentBest = entryData?.bestScore || 0;
-      const newBest = verifiedScore > currentBest;
-
-      // Update tournament entry
-      await tournamentEntryRef.update({
-        bestScore: newBest ? verifiedScore : currentBest,
-        lastPlayedAt: now,
-        totalPlays: FieldValue.increment(1),
-      });
-
-      return {
-        success: true,
-        verified: true,
-        score: verifiedScore,
-        newBest,
-        flags: analysis.flags.length > 0 ? analysis.flags : undefined,
-      };
+      // Auto-update all applicable tournament entries
+      await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
     }
 
-    // Only save ranked scores to regular leaderboards (skip free play)
+    // Only save ranked/tournament scores to regular leaderboards (skip free play)
     if (sessionData.mode === 'free') {
+      // Still update user stats for Zealy verification and airdrop eligibility
+      await updateUserGamesPlayed(playerAddress, now);
+
       return {
         success: true,
         verified: true,
@@ -230,6 +207,10 @@ export const submitScore = onCall<SubmitScoreRequest, Promise<SubmitScoreRespons
       const newTotalScore = updatedScoreDoc.data()?.totalScore || 0;
       await updateGlobalLeaderboard(playerAddress, username, newTotalScore);
     }
+
+    // AUTO-UPDATE TOURNAMENT ENTRIES
+    // Any ranked game automatically counts toward active tournaments the player has entered
+    await updateActiveTournamentEntries(playerAddress, gameId, verifiedScore, now);
 
     // Update user stats
     // First, ensure user document exists with complete schema
@@ -382,5 +363,210 @@ async function updateGlobalLeaderboard(
       lastUpdated: now,
       entries: updateList(data.entries || []),
     });
+  }
+}
+
+/**
+ * Auto-update tournament entries for active tournaments
+ * When a player plays a ranked game, their score automatically counts toward
+ * any active tournaments they've entered (no special tournament mode needed)
+ */
+async function updateActiveTournamentEntries(
+  playerAddress: string,
+  gameId: string,
+  score: number,
+  now: FirebaseFirestore.Timestamp
+): Promise<void> {
+  try {
+    const tournamentIds = new Set<string>();
+    const tournamentsToProcess: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+
+    // Query 1: Get tournaments with status='active'
+    const activeByStatus = await db
+      .collection('tournaments')
+      .where('status', '==', 'active')
+      .get();
+
+    for (const doc of activeByStatus.docs) {
+      if (!tournamentIds.has(doc.id)) {
+        tournamentIds.add(doc.id);
+        tournamentsToProcess.push(doc);
+      }
+    }
+
+    // Query 2: Get tournaments with status='upcoming' that should be active by time
+    // This catches tournaments where the status update hasn't run yet
+    try {
+      const upcomingSnapshot = await db
+        .collection('tournaments')
+        .where('status', '==', 'upcoming')
+        .get();
+
+      const nowMillis = now.toMillis();
+      for (const doc of upcomingSnapshot.docs) {
+        if (tournamentIds.has(doc.id)) continue;
+
+        const data = doc.data();
+        // Check if the tournament should be active by time
+        const startTimeMillis = toMillisHelper(data.startTime);
+        const endTimeMillis = toMillisHelper(data.endTime);
+
+        if (startTimeMillis && endTimeMillis &&
+            startTimeMillis <= nowMillis && nowMillis < endTimeMillis) {
+          tournamentIds.add(doc.id);
+          tournamentsToProcess.push(doc);
+          console.log(`📋 Tournament ${doc.id} is status='upcoming' but time-active, including in score sync`);
+        }
+      }
+    } catch (upcomingError) {
+      console.log(`⚠️ Error checking upcoming tournaments:`, upcomingError);
+    }
+
+    if (tournamentsToProcess.length > 0) {
+      console.log(`📋 Found ${tournamentsToProcess.length} tournaments for score sync (player: ${playerAddress})`);
+      await processEntriesFromDocs(tournamentsToProcess, playerAddress, gameId, score, now);
+    } else {
+      console.log(`📋 No active tournaments found for score sync (player: ${playerAddress}, game: ${gameId})`);
+    }
+  } catch (error) {
+    // Don't fail the score submission if tournament update fails
+    console.error('❌ Error updating tournament entries:', error);
+  }
+}
+
+/**
+ * Helper to convert timestamp to milliseconds
+ */
+function toMillisHelper(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  return null;
+}
+
+/**
+ * Process tournament entries and update scores from document array
+ */
+async function processEntriesFromDocs(
+  tournamentDocs: FirebaseFirestore.QueryDocumentSnapshot[],
+  playerAddress: string,
+  gameId: string,
+  score: number,
+  now: FirebaseFirestore.Timestamp
+): Promise<void> {
+  try {
+    // Check each tournament for player's entry
+    for (const tournamentDoc of tournamentDocs) {
+      const tournament = tournamentDoc.data() as TournamentDocument;
+      const tournamentId = tournamentDoc.id;
+
+      // Check if this is a single-game tournament that doesn't match our game
+      if (tournament.gameId && tournament.gameId !== gameId) {
+        continue; // Skip - this tournament is for a different game
+      }
+
+      // Check if player has an entry in this tournament
+      const entryRef = db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('entries')
+        .doc(playerAddress);
+
+      const entryDoc = await entryRef.get();
+
+      if (!entryDoc.exists) {
+        console.log(`⏭️ Player ${playerAddress} has no entry in tournament ${tournamentId}`);
+        continue; // Player hasn't entered this tournament
+      }
+
+      // Update the entry with the new score
+      const entryData = entryDoc.data();
+      const currentBestScores = entryData?.bestScores || {};
+      const currentGameBest = currentBestScores[gameId] || 0;
+
+      if (score <= currentGameBest) {
+        console.log(`⏭️ Score ${score} not better than current best ${currentGameBest} for ${gameId} in tournament ${tournamentId}`);
+        continue; // Not a new best for this game
+      }
+
+      // Calculate updated scores
+      const updatedBestScores = {
+        ...currentBestScores,
+        [gameId]: score,
+      };
+      const totalScore = Object.values(updatedBestScores).reduce(
+        (sum: number, s) => sum + (s as number),
+        0
+      );
+
+      // Legacy: also track single bestScore (highest across any game)
+      const legacyBest = entryData?.bestScore || 0;
+      const newLegacyBest = Math.max(legacyBest, score);
+
+      // Update tournament entry
+      await entryRef.update({
+        bestScore: newLegacyBest,
+        bestScores: updatedBestScores,
+        totalScore,
+        lastPlayedAt: now,
+        totalPlays: FieldValue.increment(1),
+      });
+
+      console.log(
+        `🏆 Tournament ${tournamentId} updated for ${playerAddress}: ${gameId} = ${score} (total: ${totalScore})`
+      );
+    }
+  } catch (error) {
+    // Don't fail the score submission if tournament update fails
+    console.error('❌ Error updating tournament entries:', error);
+  }
+}
+
+/**
+ * Update user's totalGamesPlayed counter (for Zealy verification and airdrop eligibility)
+ * This is called for ALL game modes (ranked, tournament, free)
+ */
+async function updateUserGamesPlayed(
+  playerAddress: string,
+  now: FirebaseFirestore.Timestamp
+): Promise<void> {
+  try {
+    const userRef = collections.users.doc(playerAddress);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      // Create user document if it doesn't exist
+      console.log('Creating user document for games tracking:', playerAddress);
+      await userRef.set({
+        address: playerAddress,
+        username: null,
+        createdAt: now,
+        lastActive: now,
+        totalGamesPlayed: 1,
+        totalScore: 0,
+        isBanned: false,
+        banReason: null,
+        bannedAt: null,
+        displayPreference: 'address',
+        flags: {
+          count: 0,
+          lastFlagged: null,
+          reasons: [],
+        },
+      });
+    } else {
+      // Increment games played
+      await userRef.update({
+        totalGamesPlayed: FieldValue.increment(1),
+        lastActive: now,
+      });
+    }
+  } catch (error) {
+    // Don't fail the score submission if user update fails
+    console.error('❌ Error updating user games played:', error);
   }
 }

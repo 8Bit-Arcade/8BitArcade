@@ -6,6 +6,40 @@
 
 A blockchain-powered retro gaming platform where players compete in skill-based tournaments and earn cryptocurrency rewards. Built on Arbitrum for ultra-low gas fees and fast transactions.
 
+---
+
+## 🪂 TESTNET AIRDROP - 10 Million 8BIT Tokens!
+
+### All Players Are Eligible!
+
+If you're playing on testnet, you're already earning your airdrop allocation. No special requirements - just play games and rack up scores!
+
+| Your Activity | Your Reward |
+|---------------|-------------|
+| **More Games Played** | More tokens |
+| **Higher Scores** | Bigger allocation |
+| **Tournament Entries** | Bonus points |
+
+### Reward Tiers
+
+| Tier | Who Qualifies | Token Pool |
+|------|---------------|------------|
+| **Legendary** | Top 1% of players | 2,000,000 8BIT |
+| **Epic** | Top 5% of players | 2,500,000 8BIT |
+| **Rare** | Top 20% of players | 3,500,000 8BIT |
+| **Common** | All other players | 2,000,000 8BIT |
+
+### Vesting Schedule
+
+Your airdrop tokens vest over 3 months:
+- **33%** available immediately upon claim
+- **33%** unlocks after 30 days
+- **34%** unlocks after 60 days
+
+**[Learn More About the Airdrop →](earning/airdrop.md)**
+
+---
+
 ### 💰 Play-to-Earn Gaming Done Right
 
 8-Bit Arcade is a **free-to-play Web3 gaming platform** that rewards skilled players with daily crypto distributions. No NFT purchases or upfront investment required to start earning.
@@ -70,6 +104,7 @@ Players can compete in multiple games to maximize earning potential.
 - **Monthly Distribution:** 1,500,000 8BIT (~$48,750 at projected $10M market cap)
 - **Total Supply:** 500,000,000 8BIT (fixed max supply)
 - **Presale Price:** $0.0005 per token
+- **Token Sale:** Coming Soon (pending mainnet deployment)
 - **Network:** Arbitrum One (ultra-low fees ~$0.10 per transaction)
 - **Games Available:** 12+ classic arcade games
 
@@ -109,18 +144,22 @@ The platform is designed to be accessible worldwide:
 
 For players seeking higher stakes competition, paid tournaments offer larger prize pools:
 
-- **Standard Tournaments:** $1-5 entry, 25K-45K 8BIT prize pools
-- **High Roller Weekly:** $10-15 entry, up to 80K 8BIT prizes (~$2,600 at projected $10M market cap)
-- **High Roller Monthly:** $25 entry, up to 500K 8BIT prizes (~$16,250 at projected $10M market cap)
+| Tournament Type | Entry Fee | Prize Pool |
+|-----------------|-----------|------------|
+| Standard Weekly | 2,000 8BIT | 50,000 8BIT |
+| Standard Monthly | 10,000 8BIT | 100,000 8BIT |
+| High Roller Weekly | 10,000 8BIT | 150,000 8BIT |
+| High Roller Monthly | 50,000 8BIT | 500,000 8BIT |
 
-Tournament winnings are in addition to daily free rewards.
+Tournament winnings are in addition to daily free rewards. All entry fees are paid in 8BIT tokens.
 
 ### 🎯 Get Started
 
 1. **[🎮 Play Now](https://play.8bitarcade.games)** - Connect wallet and start competing
-2. **[💰 Token Sale](tokenomics/token-sale.md)** - Join the presale at $0.0005
-3. **[📖 How to Play](getting-started/how-to-play.md)** - Learn the games and strategy
-4. **[💎 Tokenomics](tokenomics/overview.md)** - Explore the reward economics
+2. **[🪂 Testnet Airdrop](earning/airdrop.md)** - Play now to earn your share of 10M tokens!
+3. **[💰 Token Sale](tokenomics/token-sale.md)** - Join the presale at $0.0005
+4. **[📖 How to Play](getting-started/how-to-play.md)** - Learn the games and strategy
+5. **[💎 Tokenomics](tokenomics/overview.md)** - Explore the reward economics
 
 ### 🌐 Join the Community
 

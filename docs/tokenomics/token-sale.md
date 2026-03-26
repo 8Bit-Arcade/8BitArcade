@@ -4,6 +4,12 @@
 
 How to participate in the 8-Bit Arcade token presale and become an early investor.
 
+> **🟢 TOKEN SALE IS LIVE ON MAINNET**
+>
+> The 8BIT Token Sale is now live on Arbitrum One! Visit [sale.8bitarcade.games](https://sale.8bitarcade.games) to participate.
+>
+> **Token Sale Contract:** [`0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA`](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA)
+
 ## Sale Overview
 
 | Parameter | Details |
@@ -15,15 +21,14 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 | **Total for Sale** | 200,000,000 8BIT (40% of supply) |
 | **Hard Cap** | $100,000 USD |
 | **Payment Methods** | USDC, ETH |
-| **Minimum Purchase** | $100 USD |
 | **Maximum Purchase** | No limit (until sold out) |
 
 ## Sale Timeline
 
-### Phase 1: Presale (Current)
+### Phase 1: Presale
 
-- **Status:** Open
-- **Duration:** Until $100K raised or time limit
+- **Status:** LIVE on Arbitrum One
+- **Duration:** 6 weeks from launch
 - **Price:** $0.0005 (locked, no price increases)
 - **Payment:** USDC or ETH on Arbitrum
 - **Claim:** Immediate upon purchase
@@ -83,7 +88,7 @@ How to participate in the 8-Bit Arcade token presale and become an early investo
 ### Step 5: Add Token to Wallet
 
 ```
-Token Contract: [Will be announced]
+Token Contract: 0x37ee26669659758109c94862e49B492247Be26df
 Symbol: 8BIT
 Decimals: 18
 Network: Arbitrum One
@@ -93,7 +98,7 @@ Click "Add Token" in MetaMask and paste contract address to view your balance.
 
 ## Investment Examples
 
-### $100 Investment (Minimum)
+### $100 Investment
 
 - **Tokens Received:** 200,000 8BIT
 - **At $1M Market Cap:** Worth $650
@@ -279,7 +284,7 @@ A: No, it's a public sale. First come, first served.
 A: Yes, the contract accepts ETH and auto-converts to USDC at market rate.
 
 **Q: What's the minimum/maximum investment?**
-A: Minimum $100, no maximum (until sold out).
+A: No minimum, no maximum (until sold out).
 
 **Q: Are there any bonuses for large purchases?**
 A: No, everyone pays the same price ($0.0005 per token).

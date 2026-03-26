@@ -1,20 +1,35 @@
 /**
  * Contract Configuration
  *
- * UPDATE THESE ADDRESSES AFTER DEPLOYMENT
+ * Contract addresses for Arbitrum Sepolia testnet
  */
 
 // Network configuration
 export const USE_TESTNET = true; // Set to false for mainnet
 
-// Contract addresses - UPDATE AFTER DEPLOYMENT
+// Contract addresses
 export const GAME_REWARDS_ADDRESS = USE_TESTNET
-  ? '0x0000000000000000000000000000000000000000' // UPDATE: Deploy GameRewards to testnet
+  ? '0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E' // Arbitrum Sepolia
   : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy GameRewards to mainnet
 
 export const EIGHT_BIT_TOKEN_ADDRESS = USE_TESTNET
-  ? '0x0000000000000000000000000000000000000000' // UPDATE: Deploy 8BIT token to testnet
+  ? '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d' // Arbitrum Sepolia
   : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy 8BIT token to mainnet
+
+export const STAKING_ADDRESS = USE_TESTNET
+  ? '0xC193451f59De0df09EC8359D091F8890A80F20c4' // Arbitrum Sepolia (TieredStaking)
+  : '0x0000000000000000000000000000000000000000'; // UPDATE: Deploy to mainnet
+
+// StakingBonus contract - for reward multipliers based on staked amount
+// Set to empty string to disable staking bonuses
+export const STAKING_BONUS_ADDRESS = USE_TESTNET
+  ? '0x04c02F24F930500B8b7c0808c9A8d5093BE8fD3f' // UPDATE: Deploy StakingBonus and add address here
+  : ''; // UPDATE: Deploy to mainnet
+
+// NFT Rewards contracts
+export const ACHIEVEMENT_MANAGER_ADDRESS = USE_TESTNET
+  ? '0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3' // Arbitrum Sepolia (redeployed proxy)
+  : '0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f'; // Arbitrum One (deployed mainnet proxy)
 
 // RPC URLs
 export const ARBITRUM_RPC_URL = USE_TESTNET

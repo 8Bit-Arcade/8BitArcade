@@ -95,6 +95,7 @@ async function main() {
   console.log();
 
   // Deploy TokenSale
+
   console.log("📝 Deploying TokenSale...");
   // USDC addresses:
   // Arbitrum Sepolia: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d
@@ -107,7 +108,7 @@ async function main() {
   const tokenSale = await TokenSale.deploy(
     tokenAddress,
     usdcAddress,
-    0 // Start immediately (0 = use block.timestamp)
+    9999999999 // Far-future placeholder — use admin panel to set the real launch date
   );
   await tokenSale.waitForDeployment();
   const tokenSaleAddress = await tokenSale.getAddress();
@@ -214,8 +215,8 @@ async function main() {
 
   console.log("Deployer:", ethers.formatEther(deployerBalance), "8BIT");
   const expectedDeployerBalance = faucetAddress
-    ? ethers.parseEther("30000000") // Testnet: 30M remaining
-    : ethers.parseEther("80000000"); // Mainnet: 80M remaining (no faucet)
+    ? ethers.parseEther("30000000") // Testnet: 30M remaining (300M - 200M - 20M - 50M)
+    : ethers.parseEther("80000000"); // Mainnet: 80M remaining (300M - 200M - 20M)
   console.log("  Expected:", ethers.formatEther(expectedDeployerBalance), "8BIT");
   console.log("  Status:", deployerBalance === expectedDeployerBalance ? "✅ CORRECT" : "❌ INCORRECT");
   console.log();
@@ -227,7 +228,7 @@ async function main() {
 
   // Check if all balances are correct
   const balancesCorrect =
-    tournamentBalance === ethers.parseEther("20000000") &&
+    tournamentBalance === ethers.parseEther("35000000") &&
     saleBalance === ethers.parseEther("200000000") &&
     (!faucetAddress || faucetBalance === ethers.parseEther("50000000")) &&
     deployerBalance === expectedDeployerBalance &&
@@ -265,7 +266,7 @@ async function main() {
   console.log(`   npx hardhat verify --network arbitrumSepolia ${rewardsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentsAddress} ${tokenAddress}`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${tournamentPaymentsAddress} ${tokenAddress} ${usdcAddress} ${wethAddress} ${swapRouterAddress}`);
-  console.log(`   npx hardhat verify --network arbitrumSepolia ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 0`);
+  console.log(`   npx hardhat verify --network ${network.name} ${tokenSaleAddress} ${tokenAddress} ${usdcAddress} 9999999999`);
   console.log(`   npx hardhat verify --network arbitrumSepolia ${treasuryAddress} ${deployer.address} ${minThreshold} ${refillAmount}`);
   console.log("9. Add liquidity to DEX for 8BIT/USDC and WETH/USDC pools");
   console.log("10. Create automated tournament scheduler (Firebase Cloud Function)");

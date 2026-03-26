@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { USE_TESTNET } from '@/config/contracts';
 
 export default function Footer() {
   return (
@@ -24,13 +25,22 @@ export default function Footer() {
             >
               About
             </Link>
-            <Link
+            <a
               href="https://docs.8bitarcade.games/"
               target="_blank"
+              rel="noopener noreferrer"
               className="font-arcade text-sm text-gray-400 hover:text-arcade-green transition-colors"
             >
               Docs
-            </Link>
+            </a>
+            <a
+              href="https://docs.8bitarcade.games/support/contact"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-arcade text-sm text-gray-400 hover:text-arcade-green transition-colors"
+            >
+              FAQ
+            </a>
             <a
               href="https://x.com/8_Bit_Arcade_"
               target="_blank"
@@ -47,6 +57,14 @@ export default function Footer() {
             >
               Discord
             </a>
+            {USE_TESTNET && (
+              <Link
+                href="/faucet"
+                className="font-arcade text-sm text-gray-400 hover:text-arcade-yellow transition-colors"
+              >
+                Faucet
+              </Link>
+            )}
           </div>
 
           {/* Network Status */}
@@ -54,6 +72,17 @@ export default function Footer() {
             <span className="w-2 h-2 bg-arcade-green rounded-full animate-pulse" />
             <span className="font-arcade text-xs text-gray-500">
               Arbitrum One
+            </span>
+            <span className="font-arcade text-xs text-gray-500">
+              Powered by{' '}
+              <a
+                href="https://www.coingecko.com/en/api/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-arcade-pink transition-colors"
+              >
+                CoinGecko API
+              </a>
             </span>
           </div>
         </div>

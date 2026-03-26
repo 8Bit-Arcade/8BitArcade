@@ -6,19 +6,16 @@ Complete breakdown of where every token goes and when you can access them.
 
 ## Distribution Overview
 
-```
-Total Supply: 500,000,000 8BIT (100%)
-
-├─ 200,000,000 (40%) - Token Sale
-├─ 200,000,000 (40%) - Rewards & Ecosystem
-│  ├─ 150,000,000 (30%) - Daily Rewards + Tournaments (5 YEAR DISTRIBUTION)
-│  └─ 50,000,000 (10%) - Staking Rewards
-└─ 100,000,000 (20%) - Initial Distribution
-   ├─ 60,000,000 (12%) - DEX Liquidity (locked 3+ years)
-   ├─ 20,000,000 (4%) - Tournament Prize Pools
-   ├─ 15,000,000 (3%) - Marketing & Partnerships
-   └─ 5,000,000 (1%) - Team (vested 2-3 years)
-```
+| Allocation | Amount | Percentage |
+|------------|--------|------------|
+| 🎯 Token Sale | 200,000,000 | 40% |
+| 🏆 Daily Rewards + Tournaments | 150,000,000 | 30% |
+| 💎 Staking Rewards | 50,000,000 | 10% |
+| 💧 DEX Liquidity | 60,000,000 | 12% |
+| 🏆 Tournament Prize Pools | 20,000,000 | 4% |
+| 📢 Marketing & Partnerships | 15,000,000 | 3% |
+| 👥 Team | 5,000,000 | 1% |
+| **TOTAL** | **500,000,000** | **100%** |
 
 ## Detailed Breakdown
 
@@ -31,9 +28,9 @@ Total Supply: 500,000,000 8BIT (100%)
 | **Amount** | 200,000,000 8BIT |
 | **Price** | $0.0005 per token |
 | **Max Raise** | $100,000 USD |
-| **Minimum Buy** | $100 USD (200,000 8BIT) |
 | **Vesting** | None - tokens available immediately |
 | **Network** | Arbitrum One |
+| **Status** | Coming Soon (pending mainnet) |
 
 **Where Funds Go:**
 - 75% → DEX Liquidity ($75,000)
@@ -82,26 +79,27 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ### 💎 Staking Pool - 50,000,000 (10%)
 
-**Purpose:** Long-term holder incentives and passive income
+**Purpose:** Long-term holder incentives with tiered lock periods
 
 | Detail | Information |
 |--------|-------------|
 | **Amount** | 50,000,000 8BIT |
 | **Distribution Period** | 5 years |
-| **Launch Timeline** | Phase 3 (Months 7-12) |
+| **Launch Timeline** | LIVE on Testnet |
 | **Lock/Vest** | Smart contract controlled |
 
-**Staking Benefits (Planned):**
-- Earn passive 8BIT rewards
-- Access exclusive tournaments
-- Boosted daily rewards
-- Governance voting power
-- NFT badge eligibility
+**Tiered Lock Periods:**
+| Lock Period | Weight | Effective APY Boost |
+|-------------|--------|---------------------|
+| 7 Days | 1.0x | Base rate |
+| 1 Month | 1.5x | +50% |
+| 3 Months | 2.0x | +100% |
+| 6 Months | 3.0x | +200% |
 
-**Conservative Emissions:**
-- Much slower than rewards pool
-- Rewards long-term believers
-- Adds utility beyond gaming
+**Key Features:**
+- Weighted shares reward longer commitments
+- 25% early withdrawal penalty
+- Conservative emissions = healthier tokenomics
 - Reduces sell pressure
 
 ---
@@ -157,9 +155,8 @@ Total Supply: 500,000,000 8BIT (100%)
 - Social media campaigns
 - Partnership integrations
 
-**Why Only 3%:**
-- Small allocation = investor friendly
-- $15K cash from presale for marketing too
+**Why 3%:**
+- Lean marketing allocation
 - Performance-based spending only
 - No dumping on holders
 - Tokens used strategically, not sold
@@ -168,7 +165,7 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ### 🏆 Tournament Prize Pools - 20,000,000 (4%)
 
-**Purpose:** Initial tournament prize pool funding
+**Purpose:** Initial tournament prize pools for bigger competitions
 
 | Detail | Information |
 |--------|-------------|
@@ -180,14 +177,13 @@ Total Supply: 500,000,000 8BIT (100%)
 **Purpose:**
 - Funds initial tournament prize pools
 - Ensures tournaments can run immediately at launch
-- Provides runway while GameRewards emissions ramp up
 - Attracts competitive players from day one
 
 **Tournament Structure:**
-- **Standard Weekly:** $1 entry, $25 prize pool
-- **Standard Monthly:** $5 entry, $50 prize pool
-- **High Roller Weekly:** $5 entry, $75 prize pool
-- **High Roller Monthly:** $25 entry, $250 prize pool
+- **Standard Weekly:** 2,000 8BIT entry, 50,000 8BIT prize pool
+- **Standard Monthly:** 10,000 8BIT entry, 100,000 8BIT prize pool
+- **High Roller Weekly:** 10,000 8BIT entry, 150,000 8BIT prize pool
+- **High Roller Monthly:** 50,000 8BIT entry, 500,000 8BIT prize pool
 
 **Note:** After these initial prizes are distributed, ongoing tournament prizes come from the GameRewards 150M emissions pool over 5 years.
 
@@ -252,8 +248,8 @@ Total Supply: 500,000,000 8BIT (100%)
 |------------|--------|--------|
 | Initial Circulation | 200M | Circulating |
 | Rewards Distributed | 150M | ✅ Earned by players |
-| Staking Distributed | ~20M | Estimated |
-| **Total Circulating** | **~370M** | **74%** |
+| Staking Distributed | ~40M | Estimated |
+| **Total Circulating** | **~390M** | **78%** |
 
 **Note:** Actual circulating supply will be lower due to:
 - Buyback and burn (deflationary)
@@ -262,18 +258,17 @@ Total Supply: 500,000,000 8BIT (100%)
 
 ## Comparison to Other Projects
 
-| Project | Token Sale | Rewards | Liquidity | Tournaments | Team | Marketing |
-|---------|-----------|---------|-----------|-------------|------|-----------|
-| **8-Bit Arcade** | **40%** | **40%** | **12%** | **4%** | **1%** | **3%** |
-| Typical GameFi | 30% | 30% | 10% | 0% | 15% | 15% |
-| Axie Infinity | 29% | 29% | 8% | 0% | 21% | 13% |
-| DeFi Kingdoms | 25% | 40% | 5% | 0% | 20% | 10% |
+| Project | Token Sale | Rewards | Staking | Liquidity | Tournaments | Team | Marketing |
+|---------|-----------|---------|---------|-----------|-------------|------|-----------|
+| **8-Bit Arcade** | **40%** | **30%** | **10%** | **12%** | **4%** | **1%** | **3%** |
+| Typical GameFi | 30% | 30% | 5% | 10% | 0% | 15% | 10% |
+| Axie Infinity | 29% | 29% | 0% | 8% | 0% | 21% | 13% |
+| DeFi Kingdoms | 25% | 40% | 5% | 5% | 0% | 20% | 5% |
 
 **8-Bit Arcade Advantages:**
 - ✅ Strong liquidity allocation (12% vs typical 5-10%)
 - ✅ Ultra-low team allocation (1% vs typical 15-20%)
-- ✅ Lowest marketing allocation (3% vs typical 10-15%)
-- ✅ Dedicated tournament prize pool (4% upfront funding)
+- ✅ Generous staking pool (10% for passive income)
 - ✅ Front-loaded rewards (5 years vs 20-30 years)
 - ✅ More tokens to players and investors
 

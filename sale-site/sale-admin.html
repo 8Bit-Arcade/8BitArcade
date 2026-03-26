@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Admin Panel | 8-Bit Arcade</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body { background: #0a0a1a; min-height: 100vh; }
+
+        /* ── LOGIN ─────────────────────────────────────── */
+        .login-wrap {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 1rem;
+        }
+        .login-box {
+            background: #1a1a2e; border: 2px solid #00ff88;
+            border-radius: 16px; padding: 3rem 2.5rem;
+            max-width: 480px; width: 100%; text-align: center;
+        }
+        .login-box h1 { color: #00ff88; font-size: 1.2rem; margin-bottom: 0.75rem; }
+        .login-box p  { color: #888; font-size: 0.75rem; margin-bottom: 2rem; }
+
+        /* ── GLOBAL LAYOUT ─────────────────────────────── */
+        .admin-wrap { max-width: 1500px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+        /* ── TOP BAR ────────────────────────────────────── */
+        .top-bar {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border: 2px solid #00ff88; border-radius: 12px;
+            padding: 1.25rem 2rem; margin-bottom: 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 1rem;
+        }
+        .top-bar-left h1 { color: #00ff88; font-size: 1rem; margin-bottom: 0.3rem; }
+        .top-bar-left p  { color: #888; font-size: 0.7rem; }
+        .top-bar-right   { display: flex; gap: 0.75rem; align-items: center; }
+
+        /* ── STATUS BANNER ──────────────────────────────── */
+        #saleBanner {
+            border-radius: 10px; padding: 0.75rem 1.5rem;
+            margin-bottom: 1.5rem; font-size: 0.8rem; text-align: center;
+            display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+        }
+        #saleBanner.banner-active   { background: rgba(0,255,136,.12); border: 2px solid #00ff88; color: #00ff88; }
+        #saleBanner.banner-paused   { background: rgba(255,204,0,.12);  border: 2px solid #ffcc00; color: #ffcc00; }
+        #saleBanner.banner-ended    { background: rgba(255,120,0,.12);  border: 2px solid #ff7800; color: #ff7800; }
+        #saleBanner.banner-finalized{ background: rgba(255,68,68,.12);  border: 2px solid #ff4444; color: #ff4444; }
+
+        /* ── STATS GRID ─────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: #1a1a2e; border: 2px solid #16213e;
+            border-radius: 10px; padding: 1.1rem 1rem;
+        }
+        .stat-card h4  { color: #888; font-size: 0.6rem; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+        .stat-val      { color: #fff; font-size: 1.5rem; font-weight: 700; line-height: 1; margin-bottom: 0.3rem; }
+        .stat-sub      { color: #555; font-size: 0.65rem; }
+        .stat-card.green { border-color: #00ff88; }
+        .stat-card.yellow{ border-color: #ffcc00; }
+        .stat-card.cyan  { border-color: #00d4ff; }
+        .stat-card.red   { border-color: #ff4444; }
+
+        /* ── PROGRESS BAR ───────────────────────────────── */
+        .prog-bar-wrap { background: #0f3460; border-radius: 20px; height: 8px; margin-top: 0.5rem; overflow: hidden; }
+        .prog-bar      { height: 100%; border-radius: 20px; background: linear-gradient(90deg,#00ff88,#00d4ff); transition: width .4s; }
+
+        /* ── TABS ───────────────────────────────────────── */
+        .tabs {
+            display: flex; flex-wrap: wrap; gap: 0.5rem;
+            margin-bottom: 1.5rem; border-bottom: 2px solid #16213e; padding-bottom: 0;
+        }
+        .tab {
+            padding: 0.75rem 1.25rem; background: transparent; border: none;
+            color: #666; cursor: pointer; font-size: 0.7rem;
+            border-bottom: 3px solid transparent; margin-bottom: -2px;
+            transition: all 0.2s; font-family: 'Press Start 2P', monospace;
+        }
+        .tab:hover { color: #aaa; }
+        .tab.active { color: #00ff88; border-bottom-color: #00ff88; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── PANELS ─────────────────────────────────────── */
+        .panel {
+            background: #1a1a2e; border: 2px solid #16213e;
+            border-radius: 12px; padding: 1.75rem; margin-bottom: 1.5rem;
+        }
+        .panel h2 { color: #00ff88; font-size: 0.85rem; margin-bottom: 1.25rem; }
+        .panel h3 { color: #00d4ff; font-size: 0.75rem; margin-bottom: 1rem; }
+        .panel p  { color: #888; font-size: 0.72rem; line-height: 1.7; }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+        .sub-panel {
+            background: #111128; border: 1px solid #1e2240;
+            border-radius: 10px; padding: 1.25rem;
+        }
+        .sub-panel h3 { margin-bottom: 0.75rem; }
+
+        /* ── FORMS ──────────────────────────────────────── */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; color: #00ff88; font-size: 0.65rem; margin-bottom: 0.4rem; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.65rem 0.85rem;
+            background: #0f3460; border: 2px solid #1e3a6e;
+            border-radius: 8px; color: #fff; font-size: 0.85rem;
+            font-family: inherit; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: #00ff88;
+        }
+        .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .hint { color: #555; font-size: 0.65rem; margin-top: 0.3rem; }
+        /* datetime-local picker matches the rest of the form */
+        .form-group input[type="datetime-local"] {
+            color-scheme: dark;
+        }
+
+        /* ── BUTTONS ────────────────────────────────────── */
+        .btn {
+            padding: 0.65rem 1.25rem; border: none; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; font-family: 'Press Start 2P', monospace;
+            display: inline-block;
+        }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+        .btn-green  { background: #00ff88; color: #000; }
+        .btn-green:hover:not(:disabled)  { background: #00cc6a; transform: translateY(-2px); }
+        .btn-yellow { background: #ffcc00; color: #000; }
+        .btn-yellow:hover:not(:disabled) { background: #e6b800; transform: translateY(-2px); }
+        .btn-red    { background: #ff4444; color: #fff; }
+        .btn-red:hover:not(:disabled)    { background: #cc0000; transform: translateY(-2px); }
+        .btn-blue   { background: #0078ff; color: #fff; }
+        .btn-blue:hover:not(:disabled)   { background: #005fd6; transform: translateY(-2px); }
+        .btn-ghost  { background: transparent; color: #aaa; border: 2px solid #333; }
+        .btn-ghost:hover:not(:disabled)  { border-color: #00ff88; color: #00ff88; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.6rem; }
+        .btn-lg { padding: 0.9rem 1.75rem; font-size: 0.8rem; }
+        .btn-full { width: 100%; text-align: center; }
+
+        /* ── STATUS MESSAGES ────────────────────────────── */
+        #globalStatus {
+            border-radius: 8px; padding: 0.9rem 1.25rem;
+            margin-bottom: 1.25rem; font-size: 0.72rem;
+            display: none; align-items: center; gap: 0.75rem;
+        }
+        .status-success  { background: rgba(0,255,136,.1);  border: 2px solid #00ff88; color: #00ff88; display: flex !important; }
+        .status-error    { background: rgba(255,68,68,.1);   border: 2px solid #ff4444; color: #ff4444; display: flex !important; }
+        .status-warning  { background: rgba(255,204,0,.1);   border: 2px solid #ffcc00; color: #ffcc00; display: flex !important; }
+        .status-info     { background: rgba(0,212,255,.1);   border: 2px solid #00d4ff; color: #00d4ff; display: flex !important; }
+
+        /* ── TABLES ─────────────────────────────────────── */
+        .tbl-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        thead th {
+            background: #0f3460; color: #00ff88; padding: 0.85rem 1rem;
+            text-align: left; white-space: nowrap;
+        }
+        tbody td {
+            padding: 0.8rem 1rem; border-bottom: 1px solid #16213e; color: #ccc;
+        }
+        tbody tr:hover { background: rgba(0,255,136,.04); }
+        .addr { font-family: monospace; color: #00d4ff; }
+        .badge {
+            display: inline-block; padding: 0.2rem 0.55rem;
+            border-radius: 20px; font-size: 0.6rem; font-weight: 700;
+        }
+        .badge-green  { background: rgba(0,255,136,.15); color: #00ff88; }
+        .badge-yellow { background: rgba(255,204,0,.15);  color: #ffcc00; }
+        .badge-red    { background: rgba(255,68,68,.15);  color: #ff4444; }
+        .badge-grey   { background: rgba(150,150,150,.15);color: #888; }
+
+        /* ── DISTRIBUTION ───────────────────────────────── */
+        .dist-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .dist-card {
+            background: #111128; border: 1px solid #1e2240;
+            border-radius: 10px; padding: 1rem; text-align: center;
+        }
+        .dist-card .num  { font-size: 2rem; font-weight: 700; color: #fff; }
+        .dist-card .lbl  { font-size: 0.6rem; color: #888; margin-top: 0.3rem; }
+
+        /* ── COUNTDOWN ──────────────────────────────────── */
+        .countdown {
+            font-size: 1.2rem; color: #fff; font-weight: 700; letter-spacing: 0.05em;
+        }
+        .countdown.urgent { color: #ff4444; }
+
+        /* ── SEPARATOR ──────────────────────────────────── */
+        hr { border: none; border-top: 1px solid #1e2240; margin: 1.25rem 0; }
+
+        /* ── HIDDEN ─────────────────────────────────────── */
+        .hidden { display: none !important; }
+
+        /* ── SPINNER ─────────────────────────────────────── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid #333; border-top-color: #00ff88;
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+            vertical-align: middle; margin-right: 0.4rem;
+        }
+
+        /* ── RESPONSIVE ─────────────────────────────────── */
+        @media (max-width: 600px) {
+            .top-bar { flex-direction: column; align-items: flex-start; }
+            .tab { font-size: 0.55rem; padding: 0.6rem 0.75rem; }
+            .stat-val { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════════════ -->
+<div id="loginScreen" class="login-wrap">
+    <div class="login-box">
+        <h1 class="pixel-text">SALE ADMIN PANEL</h1>
+        <p>Connect your authorized owner wallet to access the control panel.</p>
+        <button id="connectWalletBtn" class="btn btn-green btn-lg btn-full">Connect Wallet</button>
+        <div id="loginError" class="status-message status-error" style="margin-top:1rem; display:none; font-size:0.7rem; padding:0.75rem;"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ADMIN PANEL
+══════════════════════════════════════════════════════════ -->
+<div id="adminPanel" class="hidden">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <h1 class="pixel-text">8-BIT ARCADE &mdash; SALE ADMIN</h1>
+            <p>Connected: <span id="adminAddress" style="color:#00ff88; font-family:monospace;"></span></p>
+        </div>
+        <div class="top-bar-right">
+            <button id="refreshBtn" class="btn btn-ghost btn-sm">&#x21bb; Refresh</button>
+            <button id="logoutBtn"  class="btn btn-red   btn-sm">Logout</button>
+        </div>
+    </div>
+
+    <div class="admin-wrap">
+
+        <!-- Sale Status Banner -->
+        <div id="saleBanner" class="banner-active">
+            <span id="bannerDot">&#9679;</span>
+            <span id="bannerText">Loading sale status...</span>
+        </div>
+
+        <!-- Global Status Message -->
+        <div id="globalStatus"></div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card green">
+                <h4 class="pixel-text">SALE STATUS</h4>
+                <div class="stat-val" id="statStatus">--</div>
+                <div class="stat-sub" id="statStatusSub"></div>
+            </div>
+            <div class="stat-card cyan" id="cardTimeRemaining">
+                <h4 class="pixel-text">TIME REMAINING</h4>
+                <div class="stat-val countdown" id="statCountdown">--:--:--</div>
+                <div class="stat-sub" id="statEndDate"></div>
+            </div>
+            <div class="stat-card yellow hidden" id="cardTimeToStart">
+                <h4 class="pixel-text">STARTS IN</h4>
+                <div class="stat-val countdown" id="statStartCountdown">--:--:--</div>
+                <div class="stat-sub" id="statStartDate"></div>
+            </div>
+            <div class="stat-card green">
+                <h4 class="pixel-text">TOTAL RAISED</h4>
+                <div class="stat-val" id="statRaised">$0</div>
+                <div class="stat-sub" id="statRaisedSub">ETH + USDC</div>
+            </div>
+            <div class="stat-card yellow">
+                <h4 class="pixel-text">SALE PROGRESS</h4>
+                <div class="stat-val" id="statPct">0%</div>
+                <div class="prog-bar-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+                <div class="stat-sub" id="statTokensSold" style="margin-top:0.4rem"></div>
+            </div>
+            <div class="stat-card">
+                <h4 class="pixel-text">ETH IN CONTRACT</h4>
+                <div class="stat-val" id="statEth">0</div>
+                <div class="stat-sub" id="statEthUsd"></div>
+            </div>
+            <div class="stat-card">
+                <h4 class="pixel-text">USDC IN CONTRACT</h4>
+                <div class="stat-val" id="statUsdc">$0</div>
+                <div class="stat-sub">raised via USDC</div>
+            </div>
+            <div class="stat-card cyan">
+                <h4 class="pixel-text">TOTAL BUYERS</h4>
+                <div class="stat-val" id="statBuyers">0</div>
+                <div class="stat-sub">unique wallets</div>
+            </div>
+            <div class="stat-card yellow">
+                <h4 class="pixel-text">DISTRIBUTION</h4>
+                <div class="stat-val" id="statDistributed">--</div>
+                <div class="stat-sub" id="statDistributedSub">buyers received tokens</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="overview">Overview</button>
+            <button class="tab" data-tab="controls">Sale Controls</button>
+            <button class="tab" data-tab="pricing">Pricing &amp; Limits</button>
+            <button class="tab" data-tab="distribution">Token Distribution</button>
+            <button class="tab" data-tab="buyers">Buyers</button>
+            <button class="tab" data-tab="purchases">Purchase History</button>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: OVERVIEW
+        ════════════════════════════════════ -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="panel-grid">
+
+                <div class="sub-panel">
+                    <h3 class="pixel-text">SALE TIMELINE</h3>
+                    <div class="form-group">
+                        <label>Sale Start</label>
+                        <input type="text" id="dispStartTime" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Sale End</label>
+                        <input type="text" id="dispEndTime" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration Remaining</label>
+                        <input type="text" id="dispTimeLeft" disabled>
+                    </div>
+                </div>
+
+                <div class="sub-panel">
+                    <h3 class="pixel-text">CURRENT PRICES</h3>
+                    <div class="form-group">
+                        <label>Tokens per 1 ETH</label>
+                        <input type="text" id="dispTokensPerEth" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Tokens per 1 USDC</label>
+                        <input type="text" id="dispTokensPerUsdc" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Effective Price per Token</label>
+                        <input type="text" id="dispTokenPrice" disabled>
+                    </div>
+                </div>
+
+                <div class="sub-panel">
+                    <h3 class="pixel-text">PURCHASE LIMITS</h3>
+                    <div class="form-group">
+                        <label>Minimum Purchase</label>
+                        <input type="text" id="dispMinPurchase" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum per Wallet</label>
+                        <input type="text" id="dispMaxPurchase" disabled>
+                    </div>
+                </div>
+
+                <div class="sub-panel">
+                    <h3 class="pixel-text">CONTRACT BALANCES</h3>
+                    <div class="form-group">
+                        <label>8BIT Token Balance</label>
+                        <input type="text" id="disp8bitBalance" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>ETH Balance</label>
+                        <input type="text" id="dispEthBalance" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>USDC Balance</label>
+                        <input type="text" id="dispUsdcBalance" disabled>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: SALE CONTROLS
+        ════════════════════════════════════ -->
+        <div id="tab-controls" class="tab-content">
+            <div class="panel-grid">
+
+                <!-- Start Sale Now -->
+                <div class="sub-panel" id="panelScheduleStart" style="border-color:#00ff88;">
+                    <h3 class="pixel-text" style="color:#00ff88;">START SALE</h3>
+                    <p style="margin-bottom:1rem;">Launch the sale immediately or schedule an exact start date &amp; time.</p>
+                    <button id="btnStartNow" class="btn btn-green btn-full" style="margin-bottom:1.25rem; font-size:0.8rem;">&#9654; Start Sale NOW</button>
+                    <hr style="margin:0 0 1.25rem;">
+                    <h3 class="pixel-text" style="font-size:0.65rem; color:#888; margin-bottom:0.75rem;">— OR SCHEDULE —</h3>
+                    <div class="form-group">
+                        <label>Start Date &amp; Time (your local time)</label>
+                        <input type="datetime-local" id="inputSaleStartDateTime">
+                        <div class="hint">Sale will run for 6 weeks from this date.</div>
+                    </div>
+                    <div style="background:#0a1020; border:1px solid #1e3a6e; border-radius:8px; padding:0.75rem; margin-bottom:1rem; font-size:0.65rem; color:#888;">
+                        Start: <span id="previewStartTime" style="color:#00ff88;">--</span><br>
+                        End&nbsp; (+ 6 wks): <span id="previewEndTime" style="color:#00d4ff;">--</span>
+                    </div>
+                    <button id="btnScheduleStart" class="btn btn-blue btn-full">Set Sale Start Time</button>
+                </div>
+
+                <!-- Pause / Unpause -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">PAUSE / UNPAUSE</h3>
+                    <p style="margin-bottom:1rem;">Temporarily halt all purchases without ending the sale. Use during maintenance or market events.</p>
+                    <div style="display:grid; gap:0.75rem;">
+                        <button id="btnPauseSale" class="btn btn-yellow btn-full">Pause Sale</button>
+                        <button id="btnUnpauseSale" class="btn btn-green btn-full">Resume Sale</button>
+                    </div>
+                </div>
+
+                <!-- Extend Sale -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">EXTEND SALE</h3>
+                    <p style="margin-bottom:1rem;">Add additional time to the sale end date. Cannot shorten the sale.</p>
+                    <div class="form-group">
+                        <label>Days to Add</label>
+                        <input type="number" id="inputExtendDays" placeholder="7" min="1" max="365" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Hours to Add (in addition to days)</label>
+                        <input type="number" id="inputExtendHours" placeholder="0" min="0" max="23" step="1">
+                    </div>
+                    <button id="btnExtendSale" class="btn btn-blue btn-full">Extend Sale Duration</button>
+                </div>
+
+                <!-- Withdraw Funds -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">WITHDRAW FUNDS</h3>
+                    <p style="margin-bottom:1rem;">Transfer all ETH and USDC from the contract to a recipient address. Does not touch 8BIT tokens.</p>
+                    <div class="form-group">
+                        <label>Recipient Address</label>
+                        <input type="text" id="inputWithdrawAddress" placeholder="0x...">
+                    </div>
+                    <button id="btnWithdrawFunds" class="btn btn-green btn-full">Withdraw ETH &amp; USDC</button>
+                </div>
+
+                <!-- Finalize Sale -->
+                <div class="sub-panel" style="border-color:#ff4444;">
+                    <h3 class="pixel-text" style="color:#ff4444;">FINALIZE SALE</h3>
+                    <p style="margin-bottom:1rem; color:#ff8888;">
+                        Permanently ends the sale and burns all unsold 8BIT tokens. Only callable after the sale end time. This cannot be undone.
+                    </p>
+                    <p style="margin-bottom:1rem;">
+                        After finalizing, you can distribute tokens to buyers via the <strong style="color:#00ff88;">Token Distribution</strong> tab.
+                    </p>
+                    <div class="form-group">
+                        <label style="color:#ff4444;">Type FINALIZE to confirm</label>
+                        <input type="text" id="inputFinalizeConfirm" placeholder="FINALIZE" style="border-color:#ff4444;">
+                    </div>
+                    <button id="btnFinalizeSale" class="btn btn-red btn-full">Finalize &amp; Burn Unsold</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: PRICING & LIMITS
+        ════════════════════════════════════ -->
+        <div id="tab-pricing" class="tab-content">
+            <div class="panel-grid">
+
+                <!-- ETH Price -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">ETH PRICING</h3>
+                    <p style="margin-bottom:1rem;">Adjust when ETH price moves significantly. Higher ETH price = more tokens per ETH.</p>
+                    <div class="form-group">
+                        <label>Tokens per 1 ETH (whole number)</label>
+                        <input type="number" id="inputTokensPerEth" placeholder="10000" step="100">
+                        <div class="hint">Current: <span id="hintTokensPerEth">--</span> &nbsp;|&nbsp; e.g. if ETH = $3000 and token = $0.0005, enter 6,000,000</div>
+                    </div>
+                    <p style="font-size:0.65rem; color:#888; margin-bottom:1rem;">
+                        Formula: ETH price / token price &rarr; $3000 / $0.0005 = 6,000,000 tokens per ETH
+                    </p>
+                </div>
+
+                <!-- USDC Price -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">USDC PRICING</h3>
+                    <p style="margin-bottom:1rem;">At $0.0005 per token, 1 USDC buys 2000 8BIT tokens. Adjust to change the effective token price.</p>
+                    <div class="form-group">
+                        <label>Tokens per 1 USDC (whole number)</label>
+                        <input type="number" id="inputTokensPerUsdc" placeholder="2000" step="100">
+                        <div class="hint">Current: <span id="hintTokensPerUsdc">--</span> &nbsp;|&nbsp; $0.0005/token = 2000 per USDC</div>
+                    </div>
+                    <p style="font-size:0.65rem; color:#888; margin-bottom:1rem;">
+                        Formula: 1 / token price &rarr; 1 / $0.0005 = 2000 tokens per USDC
+                    </p>
+                </div>
+
+                <!-- Apply Prices -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">APPLY PRICE UPDATE</h3>
+                    <p style="margin-bottom:1rem;">Both ETH and USDC prices are updated in a single transaction.</p>
+                    <div style="background:#0a1020; border:1px solid #1e3a6e; border-radius:8px; padding:0.75rem; margin-bottom:1rem; font-size:0.65rem; color:#888;">
+                        New ETH rate: <span id="previewEth" style="color:#00ff88;">--</span><br>
+                        New USDC rate: <span id="previewUsdc" style="color:#00ff88;">--</span><br>
+                        Effective price: <span id="previewPrice" style="color:#ffcc00;">--</span>
+                    </div>
+                    <button id="btnUpdatePrices" class="btn btn-green btn-full">Update Prices</button>
+                </div>
+
+                <!-- Purchase Limits -->
+                <div class="sub-panel">
+                    <h3 class="pixel-text">PURCHASE LIMITS</h3>
+                    <div class="form-group">
+                        <label>Minimum Purchase (USD)</label>
+                        <input type="number" id="inputMinPurchaseUsd" placeholder="10" step="1" min="0">
+                        <div class="hint">Current: <span id="hintMinPurchase">--</span></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Maximum Tokens per Wallet (whole 8BIT)</label>
+                        <input type="number" id="inputMaxTokens" placeholder="20000000" step="1000000">
+                        <div class="hint">Current: <span id="hintMaxTokens">--</span></div>
+                    </div>
+                    <button id="btnUpdateLimits" class="btn btn-blue btn-full">Update Limits</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: TOKEN DISTRIBUTION
+        ════════════════════════════════════ -->
+        <div id="tab-distribution" class="tab-content">
+
+            <div class="panel" style="border-color:#00ff88;">
+                <h2 class="pixel-text">TOKEN DISTRIBUTION (POST-TGE)</h2>
+                <p style="margin-bottom:1.5rem;">
+                    Tokens are held in the contract until you trigger distribution. Call
+                    <strong style="color:#00ff88;">finalizeSale()</strong> first to burn unsold tokens,
+                    then distribute to all buyers below. Buyers cannot claim on their own &mdash; this is owner-only.
+                </p>
+
+                <!-- Summary cards -->
+                <div class="dist-summary">
+                    <div class="dist-card">
+                        <div class="num" id="distTotalBuyers">--</div>
+                        <div class="lbl">TOTAL BUYERS</div>
+                    </div>
+                    <div class="dist-card">
+                        <div class="num" style="color:#00ff88;" id="distReceived">--</div>
+                        <div class="lbl">RECEIVED TOKENS</div>
+                    </div>
+                    <div class="dist-card">
+                        <div class="num" style="color:#ffcc00;" id="distPending">--</div>
+                        <div class="lbl">PENDING</div>
+                    </div>
+                    <div class="dist-card">
+                        <div class="num" style="color:#00d4ff;" id="distTotalAmt">--</div>
+                        <div class="lbl">TOKENS TO DISTRIBUTE</div>
+                    </div>
+                </div>
+
+                <!-- Distribution progress bar -->
+                <div style="margin-bottom:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:#888; margin-bottom:0.4rem;">
+                        <span>Distribution Progress</span>
+                        <span id="distPctLabel">0%</span>
+                    </div>
+                    <div class="prog-bar-wrap" style="height:12px;">
+                        <div class="prog-bar" id="distProgBar" style="width:0%; background:linear-gradient(90deg,#00ff88,#00d4ff);"></div>
+                    </div>
+                </div>
+
+                <hr>
+                <h3 class="pixel-text" style="margin-bottom:1rem;">DISTRIBUTE TOKENS</h3>
+                <p id="distRequirement" style="margin-bottom:1rem; color:#ff8888;">
+                    Sale must be finalized before distributing tokens.
+                </p>
+
+                <div class="panel-grid">
+                    <div class="sub-panel">
+                        <h3 class="pixel-text">BATCH DISTRIBUTE</h3>
+                        <p style="margin-bottom:1rem; font-size:0.65rem; color:#888;">
+                            Process buyers in batches to stay within block gas limits. 50&ndash;100 per batch is safe. Already-distributed buyers are safely skipped.
+                        </p>
+                        <div class="form-group">
+                            <label>Start Index</label>
+                            <input type="number" id="inputDistStart" value="0" min="0" step="1">
+                            <div class="hint">Index of first buyer in the array (starts at 0)</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Batch Count</label>
+                            <input type="number" id="inputDistCount" value="100" min="1" max="500" step="10">
+                            <div class="hint">Number of buyers to process in this transaction</div>
+                        </div>
+                        <button id="btnDistribute" class="btn btn-green btn-full" disabled>Distribute Batch</button>
+                    </div>
+
+                    <div class="sub-panel">
+                        <h3 class="pixel-text">QUICK ACTIONS</h3>
+                        <p style="margin-bottom:1rem; font-size:0.65rem; color:#888;">
+                            Use these for common scenarios. "Distribute All" runs a single transaction for all buyers &mdash; works well for small buyer counts. For large lists use batches.
+                        </p>
+                        <div style="display:grid; gap:0.75rem;">
+                            <button id="btnDistributeAll" class="btn btn-green btn-full" disabled>Distribute All Buyers</button>
+                            <button id="btnDistributeNext50" class="btn btn-blue btn-full" disabled>Next 50 Buyers</button>
+                            <button id="btnDistributeNext100" class="btn btn-blue btn-full" disabled>Next 100 Buyers</button>
+                            <button id="btnCheckDistStatus" class="btn btn-ghost btn-full">Check Distribution Status</button>
+                        </div>
+                        <div class="hint" style="margin-top:0.75rem;">
+                            Next undistributed batch starts at index: <span id="nextDistIndex" style="color:#00ff88;">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: BUYERS
+        ════════════════════════════════════ -->
+        <div id="tab-buyers" class="tab-content">
+            <div class="panel">
+                <h2 class="pixel-text">ALL BUYERS</h2>
+                <div style="display:flex; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap; align-items:center;">
+                    <button id="btnLoadBuyers" class="btn btn-blue btn-sm">Load / Refresh On-Chain</button>
+                    <button id="btnExportCSV"  class="btn btn-ghost btn-sm">Export CSV</button>
+                    <span id="buyerLoadStatus" style="color:#888; font-size:0.65rem;"></span>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Wallet Address</th>
+                                <th>Tokens Purchased</th>
+                                <th>ETH Spent</th>
+                                <th>USDC Spent</th>
+                                <th>Distributed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="buyersTableBody">
+                            <tr><td colspan="6" style="text-align:center; color:#555;">Click "Load / Refresh On-Chain" to fetch buyer data from the contract.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: PURCHASE HISTORY
+        ════════════════════════════════════ -->
+        <div id="tab-purchases" class="tab-content">
+            <div class="panel">
+                <h2 class="pixel-text">PURCHASE HISTORY</h2>
+                <p style="margin-bottom:1.25rem;">Fetched from Firebase. Shows the 100 most recent purchases.</p>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Buyer</th>
+                                <th>Tokens</th>
+                                <th>Payment</th>
+                                <th>Method</th>
+                                <th>TX Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchasesTableBody">
+                            <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /admin-wrap -->
+</div><!-- /adminPanel -->
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/sale-admin.js" defer></script>
+
+</body>
+</html>

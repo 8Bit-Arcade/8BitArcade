@@ -17,13 +17,24 @@
  * not in code or git.
  */
 
-import * as functions from 'firebase-functions';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onRequest } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { ethers } from 'ethers';
 
 // Import contract configuration
-// ⚠️ UPDATE: Make sure this points to your contracts config
-import { GAME_REWARDS_ADDRESS, ARBITRUM_RPC_URL, USE_TESTNET } from '../config';
+import {
+  GAME_REWARDS_ADDRESS,
+  ARBITRUM_RPC_URL,
+  USE_TESTNET,
+  STAKING_ADDRESS,
+  STAKING_BONUS_ADDRESS
+} from '../config';
+
+// Define the secret for the rewards private key
+// Set this with: firebase functions:secrets:set REWARDS_PRIVATE_KEY
+const rewardsPrivateKey = defineSecret('REWARDS_PRIVATE_KEY');
 
 // Import Discord webhook integration
 import { postWinnersToDiscord } from '../notifications/discordWebhook';
@@ -36,6 +47,17 @@ const GAME_REWARDS_ABI = [
   'function distributeRewards(uint256 dayId, address[] calldata players, uint256[] calldata ranks) external',
   'function isDistributed(uint256 dayId) view returns (bool)',
   'function getRewardForRank(uint256 rank) view returns (uint256)',
+];
+
+// TieredStaking contract ABI (to read staked amounts)
+const STAKING_ABI = [
+  'function userTotalStaked(address) view returns (uint256)',
+];
+
+// StakingBonus contract ABI (to distribute bonuses)
+const STAKING_BONUS_ABI = [
+  'function distributeBonusBatch(uint256 dayId, address[] calldata players, uint256[] calldata baseRewards, uint256[] calldata stakedAmounts) external',
+  'function isBonusDistributed(uint256 dayId, address player) view returns (bool)',
 ];
 
 interface LeaderboardEntry {
@@ -59,30 +81,40 @@ function getYesterdayDayId(): number {
 
 /**
  * Fetch top 10 players from Firestore leaderboard
+ *
+ * Data lives in globalLeaderboard/daily.entries[]
  */
 async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
   const db = admin.firestore();
-
-  // ⚠️ UPDATE: Adjust this query to match your Firestore structure
-  const snapshot = await db
-    .collection('leaderboards')
-    .doc('daily')
-    .collection(dayId.toString())
-    .orderBy('score', 'desc')
-    .limit(10)
-    .get();
-
   const players: LeaderboardEntry[] = [];
 
-  // Fetch display preferences for each player
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
-    if (data.address) {
-      let displayName = data.address; // Default to address
+  try {
+    // Get global daily leaderboard
+    const globalDailyDoc = await db.collection('globalLeaderboard').doc('daily').get();
+
+    if (!globalDailyDoc.exists) {
+      console.log('No global daily leaderboard found');
+      return [];
+    }
+
+    const data = globalDailyDoc.data();
+    const entries = data?.entries || [];
+
+    // Get top 10 entries sorted by score
+    const top10Entries = entries
+      .sort((a: any, b: any) => b.score - a.score)
+      .slice(0, 10);
+
+    // Fetch display preferences for each player
+    for (const entry of top10Entries) {
+      // Field is 'odedId' in your data structure
+      const address = entry.odedId || entry.address;
+      if (!address) continue;
+
+      let displayName = address;
 
       try {
-        // Fetch user's display preference from users collection
-        const userDoc = await db.collection('users').doc(data.address.toLowerCase()).get();
+        const userDoc = await db.collection('users').doc(address.toLowerCase()).get();
         if (userDoc.exists) {
           const userData = userDoc.data();
           const displayPreference = userData?.displayPreference || 'address';
@@ -92,38 +124,45 @@ async function getTop10Players(dayId: number): Promise<LeaderboardEntry[]> {
           } else if (displayPreference === 'ens' && userData?.ensName) {
             displayName = userData.ensName;
           }
-          // If 'address' or no preference, displayName stays as address
         }
       } catch (error) {
-        console.warn(`Failed to fetch display preference for ${data.address}:`, error);
-        // Continue with address as displayName
+        console.warn(`Failed to fetch display preference for ${address}:`, error);
       }
 
       players.push({
-        address: data.address,
-        score: data.score || 0,
-        username: data.username,
+        address: address,
+        score: entry.score || 0,
+        username: entry.username,
         displayName,
       });
     }
-  }
 
-  return players;
+    console.log(`Found ${players.length} players for rewards distribution`);
+    return players;
+
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    return [];
+  }
 }
 
 /**
  * Main function: Distribute daily rewards
  *
  * Triggered daily at midnight UTC via Cloud Scheduler
+ *
+ * SETUP: Set the secret with:
+ *   firebase functions:secrets:set REWARDS_PRIVATE_KEY
  */
-export const distributeDailyRewards = functions
-  .runWith({
-    timeoutSeconds: 300, // 5 minutes
-    memory: '512MB',
-  })
-  .pubsub.schedule('0 0 * * *') // Every day at midnight UTC
-  .timeZone('UTC')
-  .onRun(async (context) => {
+export const distributeDailyRewards = onSchedule(
+  {
+    schedule: '0 0 * * *', // Every day at midnight UTC
+    timeZone: 'UTC',
+    timeoutSeconds: 300,
+    memory: '512MiB',
+    secrets: [rewardsPrivateKey], // Inject the secret
+  },
+  async (event) => {
     try {
       const dayId = getYesterdayDayId(); // Distribute rewards for yesterday
       console.log(`Starting reward distribution for day: ${dayId}`);
@@ -131,10 +170,10 @@ export const distributeDailyRewards = functions
       // Setup provider and wallet
       const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
 
-      // ⚠️ SECURITY: Private key from Firebase config (not hardcoded!)
-      const privateKey = functions.config().rewards?.private_key;
+      // Get private key from secret (new Firebase secrets API)
+      const privateKey = rewardsPrivateKey.value();
       if (!privateKey) {
-        throw new Error('Rewards private key not configured. Run: firebase functions:config:set rewards.private_key="0xYourKey"');
+        throw new Error('Rewards private key not configured. Run: firebase functions:secrets:set REWARDS_PRIVATE_KEY');
       }
 
       const wallet = new ethers.Wallet(privateKey, provider);
@@ -181,7 +220,7 @@ export const distributeDailyRewards = functions
       const alreadyDistributed = await rewardsContract.isDistributed(dayId);
       if (alreadyDistributed) {
         console.log(`Rewards already distributed for day ${dayId}`);
-        return null;
+        return;
       }
 
       // Get top 10 players
@@ -189,7 +228,7 @@ export const distributeDailyRewards = functions
 
       if (top10.length === 0) {
         console.log('No players found for distribution');
-        return null;
+        return;
       }
 
       console.log(`Found ${top10.length} players for rewards`);
@@ -285,12 +324,65 @@ export const distributeDailyRewards = functions
         // Don't fail the whole function if Discord fails
       }
 
-      return {
-        success: true,
-        dayId,
-        txHash: tx.hash,
-        playersRewarded: top10.length,
-      };
+      // === STAKING BONUS DISTRIBUTION ===
+      // Only runs if StakingBonus contract is configured
+      if (STAKING_BONUS_ADDRESS && STAKING_ADDRESS) {
+        try {
+          console.log('Starting staking bonus distribution...');
+
+          const stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, provider);
+          const bonusContract = new ethers.Contract(STAKING_BONUS_ADDRESS, STAKING_BONUS_ABI, wallet);
+
+          // Get staked amounts for all winners
+          const stakedAmounts = await Promise.all(
+            playerAddresses.map(async (addr) => {
+              try {
+                return await stakingContract.userTotalStaked(addr);
+              } catch {
+                return BigInt(0);
+              }
+            })
+          );
+
+          // Get base rewards for each rank
+          const baseRewards = await Promise.all(
+            playerRanks.map(async (rank) => {
+              return await rewardsContract.getRewardForRank(rank);
+            })
+          );
+
+          // Log staking info
+          console.log('Staking bonus data:', playerAddresses.map((addr, i) => ({
+            address: addr.slice(0, 10) + '...',
+            staked: ethers.formatEther(stakedAmounts[i]),
+            baseReward: ethers.formatEther(baseRewards[i]),
+          })));
+
+          // Check if any player has staked tokens (worth distributing bonuses)
+          const anyStaked = stakedAmounts.some(s => s > BigInt(0));
+
+          if (anyStaked) {
+            const bonusTx = await bonusContract.distributeBonusBatch(
+              dayId,
+              playerAddresses,
+              baseRewards,
+              stakedAmounts
+            );
+            console.log('Bonus TX sent:', bonusTx.hash);
+            await bonusTx.wait();
+            console.log('✅ Staking bonuses distributed!');
+          } else {
+            console.log('No stakers among winners, skipping bonus distribution');
+          }
+        } catch (bonusError) {
+          // Don't fail the whole distribution if bonus fails
+          console.error('Staking bonus distribution failed (non-critical):', bonusError);
+        }
+      } else {
+        console.log('StakingBonus not configured, skipping bonus distribution');
+      }
+
+      console.log(`✅ Distribution complete: dayId=${dayId}, txHash=${tx.hash}, players=${top10.length}`);
 
     } catch (error) {
       console.error('Error distributing rewards:', error);
@@ -316,33 +408,212 @@ export const distributeDailyRewards = functions
  * Example:
  * curl -X POST https://your-region-your-project.cloudfunctions.net/manualDistributeRewards
  */
-export const manualDistributeRewards = functions
-  .runWith({
+export const manualDistributeRewards = onRequest(
+  {
     timeoutSeconds: 300,
-    memory: '512MB',
-  })
-  .https.onRequest(async (req, res) => {
+    memory: '512MiB',
+    secrets: [rewardsPrivateKey],
+  },
+  async (req, res) => {
     // ⚠️ SECURITY: Add authentication here in production!
     // Only allow authorized requests
 
     try {
-      // Use yesterday's date for distribution
       const dayId = getYesterdayDayId();
+      console.log(`Manual distribution for day: ${dayId}`);
 
-      // ... same logic as scheduled function ...
-      // (Copy the try block from distributeDailyRewards)
+      // Setup provider and wallet
+      const provider = new ethers.JsonRpcProvider(ARBITRUM_RPC_URL);
+      const privateKey = rewardsPrivateKey.value();
+
+      if (!privateKey) {
+        res.status(500).json({ success: false, error: 'Private key not configured' });
+        return;
+      }
+
+      const wallet = new ethers.Wallet(privateKey, provider);
+      console.log('Distributor wallet:', wallet.address);
+
+      // Connect to GameRewards contract
+      const rewardsContract = new ethers.Contract(
+        GAME_REWARDS_ADDRESS,
+        GAME_REWARDS_ABI,
+        wallet
+      );
+
+      // Check if already distributed
+      const alreadyDistributed = await rewardsContract.isDistributed(dayId);
+      if (alreadyDistributed) {
+        res.status(200).json({ success: true, message: `Already distributed for day ${dayId}` });
+        return;
+      }
+
+      // Get top 10 players
+      const top10 = await getTop10Players(dayId);
+      if (top10.length === 0) {
+        res.status(200).json({ success: true, message: 'No players found for distribution' });
+        return;
+      }
+
+      // Prepare and execute distribution
+      const playerAddresses = top10.map(p => p.address);
+      const playerRanks = top10.map((_, index) => index + 1);
+
+      const tx = await rewardsContract.distributeRewards(dayId, playerAddresses, playerRanks);
+      console.log('Transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+
+      // Log to Firestore
+      const db = admin.firestore();
+      await db.collection('reward_distributions').add({
+        dayId,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        txHash: tx.hash,
+        blockNumber: receipt.blockNumber,
+        players: top10.map((p, i) => ({ rank: i + 1, address: p.address, score: p.score })),
+        manual: true,
+      });
+
+      // === STAKING BONUS DISTRIBUTION ===
+      let bonusTxHash = null;
+      if (STAKING_BONUS_ADDRESS && STAKING_ADDRESS) {
+        try {
+          console.log('Starting staking bonus distribution...');
+
+          const stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, provider);
+          const bonusContract = new ethers.Contract(STAKING_BONUS_ADDRESS, STAKING_BONUS_ABI, wallet);
+
+          const stakedAmounts = await Promise.all(
+            playerAddresses.map(async (addr) => {
+              try {
+                return await stakingContract.userTotalStaked(addr);
+              } catch {
+                return BigInt(0);
+              }
+            })
+          );
+
+          const baseRewards = await Promise.all(
+            playerRanks.map(async (rank) => {
+              return await rewardsContract.getRewardForRank(rank);
+            })
+          );
+
+          const anyStaked = stakedAmounts.some(s => s > BigInt(0));
+
+          if (anyStaked) {
+            const bonusTx = await bonusContract.distributeBonusBatch(
+              dayId,
+              playerAddresses,
+              baseRewards,
+              stakedAmounts
+            );
+            console.log('Bonus TX sent:', bonusTx.hash);
+            await bonusTx.wait();
+            bonusTxHash = bonusTx.hash;
+            console.log('✅ Staking bonuses distributed!');
+          } else {
+            console.log('No stakers among winners, skipping bonus distribution');
+          }
+        } catch (bonusError) {
+          console.error('Staking bonus distribution failed (non-critical):', bonusError);
+        }
+      }
 
       res.status(200).json({
         success: true,
         message: 'Rewards distributed successfully',
         dayId,
+        txHash: tx.hash,
+        bonusTxHash,
+        playersRewarded: top10.length,
       });
 
     } catch (error) {
-      console.error(error);
+      console.error('Manual distribution error:', error);
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
-  });
+  }
+);
+
+/**
+ * TEST ONLY: Check leaderboard data without distributing
+ *
+ * Use this to debug what data exists in your leaderboard
+ * Pass ?date=today or ?date=YYYYMMDD to check specific days
+ */
+export const testCheckLeaderboard = onRequest(
+  {
+    timeoutSeconds: 60,
+    memory: '256MiB',
+  },
+  async (req, res) => {
+    try {
+      const db = admin.firestore();
+
+      // Get dayId from query param or use today
+      let dayId: number;
+      const dateParam = req.query.date as string;
+
+      if (dateParam === 'today') {
+        const today = new Date();
+        const year = today.getUTCFullYear();
+        const month = String(today.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(today.getUTCDate()).padStart(2, '0');
+        dayId = parseInt(`${year}${month}${day}`);
+      } else if (dateParam) {
+        dayId = parseInt(dateParam);
+      } else {
+        dayId = getYesterdayDayId();
+      }
+
+      console.log(`Checking leaderboard for dayId: ${dayId}`);
+
+      // Try the expected path
+      const expectedPath = `leaderboards/daily/${dayId}`;
+      const snapshot = await db
+        .collection('leaderboards')
+        .doc('daily')
+        .collection(dayId.toString())
+        .orderBy('score', 'desc')
+        .limit(10)
+        .get();
+
+      const players = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Also check what collections exist under leaderboards
+      const leaderboardsDoc = await db.collection('leaderboards').doc('daily').get();
+      const subcollections = await db.collection('leaderboards').doc('daily').listCollections();
+      const subcollectionNames = subcollections.map(c => c.id).slice(0, 10); // First 10
+
+      // Check globalLeaderboard too
+      const globalDaily = await db.collection('globalLeaderboard').doc('daily').get();
+
+      res.status(200).json({
+        success: true,
+        dayId,
+        expectedPath,
+        playersFound: players.length,
+        players,
+        debug: {
+          leaderboardsDailyExists: leaderboardsDoc.exists,
+          subcollections: subcollectionNames,
+          globalLeaderboardDaily: globalDaily.exists ? globalDaily.data() : null,
+        }
+      });
+
+    } catch (error) {
+      console.error('Test check error:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+);

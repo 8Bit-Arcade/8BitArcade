@@ -1,12 +1,12 @@
 // Token Sale Web3 Integration
 // Uses ethers.js v5 (loaded from CDN)
 
-// Contract addresses (UPDATE THESE AFTER DEPLOYMENT)
+// Contract addresses — Arbitrum One Mainnet
 const CONTRACTS = {
-    TOKEN_SALE: '0x0000000000000000000000000000000000000000', // UPDATE
-    EIGHT_BIT_TOKEN: '0x0000000000000000000000000000000000000000', // UPDATE
-    USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One USDC
-    CHAIN_ID: 42161, // Arbitrum One
+    TOKEN_SALE: '0x14c07e8deca1eb1415afa4590626613fe1764faa',      // TokenSale (200M 8BIT held)
+    EIGHT_BIT_TOKEN: '0x37ee26669659758109c94862e49b492247be26df', // 8BIT token
+    USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',            // Arbitrum One native USDC
+    CHAIN_ID: 42161, // Arbitrum One Mainnet
     CHAIN_NAME: 'Arbitrum One'
 };
 
@@ -15,9 +15,11 @@ const TOKEN_SALE_ABI = [
     "function buyWithEth() external payable",
     "function buyWithUsdc(uint256 usdcAmount) external",
     "function TOKENS_FOR_SALE() view returns (uint256)",
+    "function SOFT_CAP_USD() view returns (uint256)",
     "function tokensSold() view returns (uint256)",
     "function ethRaised() view returns (uint256)",
     "function usdcRaised() view returns (uint256)",
+    "function saleStartTime() view returns (uint256)",
     "function saleEndTime() view returns (uint256)",
     "function tokensPerEth() view returns (uint256)",
     "function tokensPerUsdc() view returns (uint256)",
@@ -25,6 +27,19 @@ const TOKEN_SALE_ABI = [
     "function isSaleActive() view returns (bool)",
     "function calculateTokensForEth(uint256 ethAmount) view returns (uint256)",
     "function calculateTokensForUsdc(uint256 usdcAmount) view returns (uint256)",
+    "function getBuyerCount() view returns (uint256)",
+    "function getBuyers() view returns (address[])",
+    "function getPurchaseInfo(address buyer) view returns (uint256 tokens, uint256 eth, uint256 usdc)",
+    // Admin functions
+    "function updatePrices(uint256 _tokensPerEth, uint256 _tokensPerUsdc) external",
+    "function pause() external",
+    "function unpause() external",
+    "function withdrawFunds(address payable recipient) external",
+    "function finalizeSale() external",
+    "function extendSale(uint256 additionalTime) external",
+    "function distributeTokens(uint256 startIndex, uint256 count) external",
+    "function tokensClaimed(address buyer) view returns (bool)",
+    "event TokensDistributed(address indexed buyer, uint256 amount)",
 ];
 
 const ERC20_ABI = [
@@ -34,6 +49,14 @@ const ERC20_ABI = [
     "function decimals() view returns (uint8)",
 ];
 
+// Token metadata for wallet integration
+const TOKEN_INFO = {
+    address: '0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d',
+    symbol: '8BIT',
+    decimals: 18,
+    image: 'https://firebasestorage.googleapis.com/v0/b/bitarcade-679b7.firebasestorage.app/o/8bit-token.jpg?alt=media&token=37f53dfb-2225-454c-96d9-f2823d73b538'
+};
+
 // Global state
 let provider = null;
 let signer = null;
@@ -42,11 +65,14 @@ let saleContract = null;
 let tokenContract = null;
 let usdcContract = null;
 let paymentMethod = 'eth';
-let currentEthPrice = 5000; // Fallback default
+let currentEthPrice = 3300; // Fallback default (approximate ETH price)
+
+// Token pricing
+const TOKEN_PRICE_USD = 0.0005; // $0.0005 per 8BIT token
 
 // Price cache settings
 const PRICE_CACHE_KEY = '8bit_eth_price';
-const PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (reduced API calls)
 
 // Initialize - wait for ethers.js to be loaded
 document.addEventListener('DOMContentLoaded', async () => {
@@ -64,56 +90,90 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchEthPrice() {
     try {
-        // Check cache first
+        // Check local cache first (< 30s old = still fresh)
         const cached = localStorage.getItem(PRICE_CACHE_KEY);
         if (cached) {
-            const { price, timestamp } = JSON.parse(cached);
-            const age = Date.now() - timestamp;
-
-            // Use cached price if less than 5 minutes old
-            if (age < PRICE_CACHE_DURATION) {
-                currentEthPrice = price;
-                console.log('Using cached ETH price:', price);
-                return price;
+            try {
+                const { price, timestamp } = JSON.parse(cached);
+                const age = Date.now() - timestamp;
+                if (age < 30000 && price > 0) {
+                    currentEthPrice = price;
+                    console.log('Using locally cached ETH price:', price);
+                    return price;
+                }
+            } catch (e) {
+                localStorage.removeItem(PRICE_CACHE_KEY);
             }
         }
 
-        // Fetch fresh price from CoinGecko (free API, no key needed)
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-
-        if (!response.ok) {
-            throw new Error('CoinGecko API error');
+        // Always fetch live from CoinGecko first (primary source)
+        try {
+            const resp = await fetch(
+                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+                { headers: { Accept: 'application/json' } }
+            );
+            if (resp.ok) {
+                const data = await resp.json();
+                const cgPrice = data?.ethereum?.usd;
+                if (cgPrice > 0) {
+                    localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+                        price: cgPrice,
+                        timestamp: Date.now()
+                    }));
+                    currentEthPrice = cgPrice;
+                    console.log(`ETH price from CoinGecko: $${cgPrice}`);
+                    return cgPrice;
+                }
+            } else {
+                console.warn('CoinGecko returned', resp.status);
+            }
+        } catch (e) {
+            console.warn('CoinGecko direct fetch failed:', e);
         }
 
-        const data = await response.json();
-        const price = data.ethereum.usd;
+        // CoinGecko failed — try Firebase function (may have a cached value)
+        if (typeof firebase !== 'undefined' && firebase.functions) {
+            try {
+                const getEthPriceFn = firebase.functions().httpsCallable('getEthPrice');
+                const result = await getEthPriceFn();
+                const { ethUsd, source } = result.data;
+                if (ethUsd && ethUsd > 0) {
+                    localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+                        price: ethUsd,
+                        timestamp: Date.now()
+                    }));
+                    currentEthPrice = ethUsd;
+                    console.log(`ETH price from Firebase (${source}): $${ethUsd}`);
+                    return ethUsd;
+                }
+            } catch (e) {
+                console.warn('Firebase getEthPrice failed:', e);
+            }
+        }
 
-        // Cache the price
-        localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
-            price: price,
-            timestamp: Date.now()
-        }));
+        // Use any expired local cache before hardcoded fallback
+        if (cached) {
+            try {
+                const { price: cachedPrice } = JSON.parse(cached);
+                if (cachedPrice > 0) {
+                    currentEthPrice = cachedPrice;
+                    console.log('Using expired cached ETH price:', cachedPrice);
+                    return cachedPrice;
+                }
+            } catch (e) { }
+        }
 
-        currentEthPrice = price;
-        console.log('Fetched fresh ETH price from CoinGecko:', price);
-        return price;
+        // Last resort
+        console.log('Using fallback ETH price: $3300');
+        currentEthPrice = 3300;
+        return 3300;
 
     } catch (error) {
-        console.error('Error fetching ETH price:', error);
-
-        // Try to use cached price even if expired
-        const cached = localStorage.getItem(PRICE_CACHE_KEY);
-        if (cached) {
-            const { price } = JSON.parse(cached);
-            currentEthPrice = price;
-            console.log('Using expired cached ETH price:', price);
-            return price;
+        console.error('Error in fetchEthPrice:', error);
+        if (!currentEthPrice || currentEthPrice <= 0) {
+            currentEthPrice = 3300;
         }
-
-        // Final fallback
-        console.log('Using fallback ETH price: $5000');
-        currentEthPrice = 5000;
-        return 5000;
+        return currentEthPrice;
     }
 }
 
@@ -132,7 +192,7 @@ function setupEventListeners() {
     document.getElementById('buyButton').addEventListener('click', handleBuy);
 }
 
-function setPaymentMethod(method) {
+async function setPaymentMethod(method) {
     paymentMethod = method;
 
     // Update UI
@@ -146,6 +206,8 @@ function setPaymentMethod(method) {
         document.getElementById('usdcToggle').classList.add('active');
     }
 
+    // Refresh price display immediately when switching payment methods
+    await loadSaleData();
     updateTokensReceive();
     updateBalance();
 }
@@ -218,11 +280,12 @@ async function loadSaleData() {
     try {
         // If contracts not initialized, use read-only provider
         if (!saleContract) {
-            const readProvider = new ethers.providers.JsonRpcProvider('https://arb1.arbitrum.io/rpc');
+            // Use Alchemy RPC for reliable CORS-enabled access
+            const readProvider = new ethers.providers.JsonRpcProvider('https://arb-mainnet.g.alchemy.com/v2/eu4fg53KRs9jneLNPjxcd');
             saleContract = new ethers.Contract(CONTRACTS.TOKEN_SALE, TOKEN_SALE_ABI, readProvider);
         }
 
-        // Load sale stats
+        // Load sale stats from contract (including constants)
         const [tokensForSale, tokensSold, ethRaised, usdcRaised, saleEndTime, isSaleActive, tokensPerEth, tokensPerUsdc] =
             await Promise.all([
                 saleContract.TOKENS_FOR_SALE(),
@@ -242,18 +305,35 @@ async function loadSaleData() {
         // Calculate total raised using real-time ETH price
         const ethValue = parseFloat(ethers.utils.formatEther(ethRaised)) * currentEthPrice;
         const usdcValue = parseFloat(ethers.utils.formatUnits(usdcRaised, 6));
-        document.getElementById('totalRaised').textContent = '$' + formatNumber(ethValue + usdcValue);
+        const totalRaised = ethValue + usdcValue;
+
+        document.getElementById('totalRaised').textContent = '$' + formatNumber(totalRaised);
 
         // Update progress
         const progress = (parseFloat(ethers.utils.formatEther(tokensSold)) / parseFloat(ethers.utils.formatEther(tokensForSale))) * 100;
-        document.getElementById('progressPercent').textContent = progress.toFixed(1) + '%';
-        document.getElementById('progressFill').style.width = progress + '%';
+
+        // Show more precision for small amounts (0.001% instead of 0.0%)
+        let progressText;
+        if (progress < 0.01 && progress > 0) {
+            // Show 3 decimals for very small progress
+            progressText = progress.toFixed(3) + '%';
+        } else if (progress < 1) {
+            // Show 2 decimals for small progress
+            progressText = progress.toFixed(2) + '%';
+        } else {
+            // Show 1 decimal for normal progress
+            progressText = progress.toFixed(1) + '%';
+        }
+
+        document.getElementById('progressPercent').textContent = progressText;
+        document.getElementById('progressFill').style.width = Math.max(progress, 0.1) + '%'; // Minimum 0.1% width so it's visible
 
         // Update sale status
         updateSaleStatus(isSaleActive, saleEndTime);
 
-        // Update price display
-        const ethPrice = '1 ETH = ' + formatNumber(ethers.utils.formatEther(tokensPerEth)) + ' 8BIT';
+        // Update price display - calculate based on real-time ETH price
+        const calculatedTokensPerEth = currentEthPrice / TOKEN_PRICE_USD; // ETH price / token price = tokens per ETH
+        const ethPrice = '1 ETH = ' + formatNumber(calculatedTokensPerEth) + ' 8BIT';
         const usdcPrice = '1 USDC = ' + formatNumber(ethers.utils.formatEther(tokensPerUsdc)) + ' 8BIT';
         document.getElementById('currentPrice').textContent = paymentMethod === 'eth' ? ethPrice : usdcPrice;
 
@@ -322,7 +402,7 @@ async function updateBalance() {
 async function updateTokensReceive() {
     const amount = document.getElementById('amountInput').value;
 
-    if (!amount || isNaN(amount) || !saleContract) {
+    if (!amount || isNaN(amount)) {
         document.getElementById('tokensReceive').textContent = '0 8BIT';
         return;
     }
@@ -330,14 +410,20 @@ async function updateTokensReceive() {
     try {
         let tokens;
         if (paymentMethod === 'eth') {
-            const ethAmount = ethers.utils.parseEther(amount);
-            tokens = await saleContract.calculateTokensForEth(ethAmount);
+            // Calculate based on real-time ETH price for consistent display
+            const calculatedTokensPerEth = currentEthPrice / TOKEN_PRICE_USD;
+            tokens = parseFloat(amount) * calculatedTokensPerEth;
+            document.getElementById('tokensReceive').textContent = formatNumber(tokens) + ' 8BIT';
         } else {
+            // USDC is stable, use contract calculation
+            if (!saleContract) {
+                document.getElementById('tokensReceive').textContent = '0 8BIT';
+                return;
+            }
             const usdcAmount = ethers.utils.parseUnits(amount, 6);
-            tokens = await saleContract.calculateTokensForUsdc(usdcAmount);
+            const tokensBN = await saleContract.calculateTokensForUsdc(usdcAmount);
+            document.getElementById('tokensReceive').textContent = formatNumber(ethers.utils.formatEther(tokensBN)) + ' 8BIT';
         }
-
-        document.getElementById('tokensReceive').textContent = formatNumber(ethers.utils.formatEther(tokens)) + ' 8BIT';
     } catch (error) {
         console.error('Error calculating tokens:', error);
     }
@@ -375,8 +461,17 @@ async function buyWithEth(amount) {
     const tx = await saleContract.buyWithEth({ value: ethAmount });
     showStatus('Transaction submitted... waiting for confirmation', 'pending');
 
-    await tx.wait();
+    const receipt = await tx.wait();
     showStatus('✅ Tokens purchased successfully!', 'success');
+
+    // Track purchase in Firestore (if Firebase is available)
+    if (typeof firebase !== 'undefined' && firebase.functions) {
+        try {
+            await trackPurchase(receipt, amount, 'ETH');
+        } catch (error) {
+            console.error('Error tracking purchase:', error);
+        }
+    }
 
     // Refresh data
     await loadSaleData();
@@ -400,9 +495,18 @@ async function buyWithUsdc(amount) {
     const tx = await saleContract.buyWithUsdc(usdcAmount);
 
     showStatus('Transaction submitted... waiting for confirmation', 'pending');
-    await tx.wait();
+    const receipt = await tx.wait();
 
     showStatus('✅ Tokens purchased successfully!', 'success');
+
+    // Track purchase in Firestore (if Firebase is available)
+    if (typeof firebase !== 'undefined' && firebase.functions) {
+        try {
+            await trackPurchase(receipt, amount, 'USDC');
+        } catch (error) {
+            console.error('Error tracking purchase:', error);
+        }
+    }
 
     // Refresh data
     await loadSaleData();
@@ -431,7 +535,10 @@ function formatNumber(num) {
     const n = parseFloat(num);
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-    return n.toFixed(0);
+    if (n >= 1) return n.toFixed(0);
+    // For very small numbers, show decimal places
+    if (n > 0) return n.toFixed(2);
+    return '0';
 }
 
 function formatTimeRemaining(seconds) {
@@ -444,12 +551,39 @@ function formatTimeRemaining(seconds) {
     return minutes + 'm';
 }
 
-function startRefreshInterval() {
-    // Refresh sale data every 30 seconds
-    setInterval(loadSaleData, 30000);
+async function trackPurchase(receipt, amount, paymentMethod) {
+    // Parse the receipt to get purchase details
+    const event = receipt.events.find(e => e.event === 'TokensPurchased');
+    if (!event) {
+        console.error('TokensPurchased event not found in receipt');
+        return;
+    }
 
-    // Refresh ETH price every 5 minutes (respects cache)
-    setInterval(fetchEthPrice, PRICE_CACHE_DURATION);
+    const { buyer, amount: tokenAmount, ethSpent, usdcSpent } = event.args;
+
+    // Call Firebase function to track purchase
+    const trackPurchaseFn = firebase.functions().httpsCallable('trackPurchase');
+    await trackPurchaseFn({
+        txHash: receipt.transactionHash,
+        buyer: buyer,
+        amount: tokenAmount.toString(),
+        ethSpent: ethSpent.toString(),
+        usdcSpent: usdcSpent.toString(),
+        timestamp: Math.floor(Date.now() / 1000),
+    });
+
+    console.log('Purchase tracked:', receipt.transactionHash);
+}
+
+function startRefreshInterval() {
+    // Refresh ETH price every 5 minutes (matches cache duration)
+    setInterval(async () => {
+        await fetchEthPrice();
+        await loadSaleData();
+    }, PRICE_CACHE_DURATION);
+
+    // Refresh sale data every 60 seconds (reduced frequency)
+    setInterval(loadSaleData, 60000);
 
     // Update countdown every second
     setInterval(() => {
@@ -462,3 +596,40 @@ function startRefreshInterval() {
         }
     }, 1000);
 }
+
+// Add 8BIT token to user's wallet (MetaMask, Coinbase Wallet, Trust Wallet, etc.)
+async function addTokenToWallet() {
+    if (typeof window.ethereum === 'undefined') {
+        showError('Please install a Web3 wallet like MetaMask');
+        return false;
+    }
+
+    try {
+        const wasAdded = await window.ethereum.request({
+            method: 'wallet_watchAsset',
+            params: {
+                type: 'ERC20',
+                options: {
+                    address: TOKEN_INFO.address,
+                    symbol: TOKEN_INFO.symbol,
+                    decimals: TOKEN_INFO.decimals,
+                    image: TOKEN_INFO.image
+                }
+            }
+        });
+
+        if (wasAdded) {
+            showStatus('✅ 8BIT token added to your wallet!', 'success');
+        } else {
+            showStatus('Token was not added', 'error');
+        }
+        return wasAdded;
+    } catch (error) {
+        console.error('Error adding token to wallet:', error);
+        showError('Failed to add token: ' + error.message);
+        return false;
+    }
+}
+
+// Expose function globally for button onclick
+window.addTokenToWallet = addTokenToWallet;

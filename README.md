@@ -18,28 +18,31 @@ A blockchain-powered retro gaming platform built on Arbitrum. Play classic 8-bit
 
 ## 🎯 Current Status
 
-**Phase Status:** ✅ Games Complete | 🚧 Smart Contracts Ready | 📋 Tokenomics Finalized
+**Phase Status:** ✅ Mainnet Live | ✅ Token Sale Live | ✅ Staking Live | ✅ NFT Achievements Live
 
 ### Completed:
 - ✅ 12 fully functional arcade games
 - ✅ Wallet integration (RainbowKit + wagmi)
 - ✅ Firebase leaderboards and authentication
 - ✅ Username/ENS support
-- ✅ Smart contracts (testnet ready)
-- ✅ Tokenomics model (see TOKENOMICS_PROPOSAL.md)
-- ✅ Token sale infrastructure
+- ✅ Smart contracts deployed to mainnet & verified
+- ✅ Tokenomics model finalized
+- ✅ Token sale LIVE on Arbitrum One
 - ✅ Testnet faucet system
+- ✅ Tournament system (two-tier structure)
+- ✅ Tiered staking (7d, 1mo, 3mo, 6mo lock periods)
+- ✅ NFT achievement badges (soulbound, auto-minted)
+- ✅ Token distribution automation
 
 ### In Progress:
-- 🚧 Tournament system (two-tier structure)
-- 🚧 Token distribution automation
-- 🚧 Staking mechanics
+- 🚧 DEX liquidity setup (Uniswap V3 pool)
+- 🚧 Testnet airdrop snapshot & deployment
+- 🚧 Marketing & community growth
 
 ### Coming Soon:
-- 📋 Testnet deployment
-- 📋 Public token sale ($100K raise)
-- 📋 Mainnet launch
+- 📋 Tournament buyback & burn (after DEX pool)
 - 📋 DAO governance
+- 📋 Additional games
 
 ## 💰 Token Economics
 
@@ -146,34 +149,32 @@ All games feature:
 
 ## 📜 Smart Contract Addresses
 
-### Arbitrum Sepolia Testnet (Current)
+### Arbitrum One Mainnet (LIVE)
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| **8BIT Token** | `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d` | [View](https://sepolia.arbiscan.io/address/0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d) |
-| **Game Rewards** | `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E` | [View](https://sepolia.arbiscan.io/address/0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E) |
-| **Tournament Manager** | `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7` | [View](https://sepolia.arbiscan.io/address/0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7) |
-| **Tournament Payments** | `0xb52aE08daFC310E6f858957Fa0a317fEF341dE85` | [View](https://sepolia.arbiscan.io/address/0xb52aE08daFC310E6f858957Fa0a317fEF341dE85) |
-| **Token Sale** | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` | [View](https://sepolia.arbiscan.io/address/0x057B1130dD6E8FcBc144bb34172e45293C6839fE) |
-| **Treasury Gas Manager** | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` | [View](https://sepolia.arbiscan.io/address/0x39F49a46CAB85CF079Cde25EAE311A563d3952EC) |
-| **Testnet Faucet** | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` | [View](https://sepolia.arbiscan.io/address/0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952) |
-| **USDC (Testnet)** | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` | [View](https://sepolia.arbiscan.io/address/0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d) |
+| **8BIT Token** | `0x37ee26669659758109c94862e49B492247Be26df` | [View](https://arbiscan.io/address/0x37ee26669659758109c94862e49B492247Be26df) |
+| **Game Rewards** | `0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e` | [View](https://arbiscan.io/address/0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e) |
+| **Tournament Manager** | `0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e` | [View](https://arbiscan.io/address/0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e) |
+| **Tournament Payments** | `0xa009e23658609EC3d6b98b1e0904b77005A73e59` | [View](https://arbiscan.io/address/0xa009e23658609EC3d6b98b1e0904b77005A73e59) |
+| **Token Sale** | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` | [View](https://arbiscan.io/address/0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA) |
+| **Treasury Gas Manager** | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` | [View](https://arbiscan.io/address/0x2185cF31B507620C412b00cde9B1BCd1B62983d6) |
+| **Tiered Staking** | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` | [View](https://arbiscan.io/address/0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF) |
+| **Achievement Badges** | `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` | [View](https://arbiscan.io/address/0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c) |
+| **Tradeable Items** | `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` | [View](https://arbiscan.io/address/0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad) |
+| **Achievement Manager** | `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` | [View](https://arbiscan.io/address/0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f) |
 
-**Network:** Arbitrum Sepolia
-**Chain ID:** 421614
-**RPC:** https://sepolia-rollup.arbitrum.io/rpc
-**Explorer:** https://sepolia.arbiscan.io
+**Network:** Arbitrum One | **Chain ID:** 42161 | **Explorer:** https://arbiscan.io
+
+> **Token Sale:** [sale.8bitarcade.games](https://sale.8bitarcade.games) | **Testnet Faucet:** [play.8bitarcade.games/faucet](https://play.8bitarcade.games/faucet)
 
 ### Important Wallet Addresses
 
 | Wallet | Address | Purpose |
 |--------|---------|---------|
-| **Deployer** | TBD | Contract deployment & ownership |
-| **Game Rewards Wallet** | `0x193A7E1a8e840b514AdeD9a1D69a94002d87D678` | Daily reward distributions |
-| **Treasury** | TBD | Protocol fees & revenue |
+| **Deployer / Owner** | `0x80361876199e2318d6993A07e37177cFd21B64a7` | Contract deployment & ownership |
+| **Rewards Distributor** | `0x3879aA591532B8a7BCe322Edff8fD09F7FB5dC9B` | Backend reward distributions |
 | **Liquidity Pool** | `0x1727B058B993eB9392fcE863Ec93C86e7BD725F4` | DEX liquidity (locked) |
-
-> **Note:** These are testnet addresses. Mainnet addresses will be updated here after public launch.
 
 ## 📂 Project Structure
 
@@ -269,18 +270,23 @@ See [SMART_CONTRACTS_GUIDE.md](SMART_CONTRACTS_GUIDE.md) for detailed instructio
 - [x] Phase 4: Anti-cheat system
 - [x] Phase 5: Smart contract development
 - [x] Phase 6: Tokenomics design
+- [x] Phase 7: Tournament system infrastructure
+- [x] Phase 8: Token sale application
+- [x] Phase 9: Testnet deployment & testing
+- [x] Phase 10: Mainnet deployment & contract verification
+- [x] Phase 11: Public token sale launch
+- [x] Phase 12: Tiered staking launch
+- [x] Phase 13: NFT achievement badges launch
 
 ### Current 🚧
-- [ ] Phase 7: Tournament system infrastructure
-- [ ] Phase 8: Token sale application
-- [ ] Phase 9: Testnet deployment & testing
+- [ ] Phase 14: DEX liquidity & trading launch
+- [ ] Phase 15: Testnet airdrop distribution
+- [ ] Phase 16: Marketing & growth
 
 ### Upcoming 📋
-- [ ] Phase 10: Public token sale
-- [ ] Phase 11: Mainnet deployment
-- [ ] Phase 12: Marketing & growth
-- [ ] Phase 13: DAO governance
-- [ ] Phase 14: Additional games
+- [ ] Phase 17: DAO governance
+- [ ] Phase 18: Additional games
+- [ ] Phase 19: Cross-chain support
 
 ## 🔐 Security
 
@@ -293,8 +299,8 @@ See [SMART_CONTRACTS_GUIDE.md](SMART_CONTRACTS_GUIDE.md) for detailed instructio
 
 ## 🌐 Network
 
-**Current**: Arbitrum Sepolia (testnet)
-**Launch**: Arbitrum One (mainnet)
+**Mainnet**: Arbitrum One (LIVE)
+**Testnet**: Arbitrum Sepolia (testing)
 
 Why Arbitrum?
 - Ultra-low gas fees (~$0.01 per transaction)
@@ -322,26 +328,31 @@ This is a 2-person project currently in active development. Community contributi
 
 ## 🎯 Roadmap
 
-**Q4 2025**
+**Q4 2025** ✅
 - ✅ Complete all 12 games
 - ✅ Finalize tokenomics
-- 🚧 Build tournament system
+- ✅ Build tournament system
 - ✅ Deploy to testnet
-- 📋 Community testing (3-6 months)
+- ✅ Community testing
 
-**Q1 2026**
-- 📋 Public token sale
-- 📋 Mainnet deployment
-- 📋 Additional games
-- 📋 Marketing campaign
+**Q1 2026** ✅
+- ✅ Mainnet deployment (Feb 22, 2026)
+- ✅ Public token sale LIVE
+- ✅ Tiered staking launch (9.9M 8BIT funded)
+- ✅ NFT achievement badges launch
+- 🚧 Marketing campaign
+
+**Q2 2026**
+- 🚧 DEX liquidity provision (Uniswap V3)
+- 🚧 Testnet airdrop distribution
 - 📋 First high roller tournament
-
-**Q1-Q2 2026**
-- 📋 DAO governance launch
-- 📋 Staking system
 - 📋 Additional games
-- 📋 Mobile app (PWA)
 - 📋 Partnerships & integrations
+
+**Q3-Q4 2026**
+- 📋 DAO governance launch
+- 📋 Mobile app (PWA)
+- 📋 Cross-chain support
 
 ## ⚖️ License
 

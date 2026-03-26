@@ -46,8 +46,9 @@ Every month, exactly 2.5M tokens are distributed to players through:
 
 ### Standard Tournaments: 180,000/month
 
-- **~4 weekly tournaments** (45K prize pool each)
-- $1-$5 USDC entry fees
+- **Weekly tournaments** (50K prize pool each)
+- **Monthly tournaments** (100K prize pool)
+- 2,000-10,000 8BIT entry fees
 - Open to all players
 - Medium-sized prize pools
 
@@ -59,9 +60,9 @@ Every month, exactly 2.5M tokens are distributed to players through:
 
 ### High Roller Tournaments: 820,000/month
 
-- **1 monthly tournament** (500K prize pool)
-- **3 weekly tournaments** (~80K each)
-- $10-$25 USDC entry fees
+- **Weekly tournaments** (150K prize pool each)
+- **Monthly tournament** (500K prize pool)
+- 10,000-50,000 8BIT entry fees
 - Serious competition, serious prizes
 
 **Monthly High Roller (500K pool):**

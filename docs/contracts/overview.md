@@ -29,12 +29,19 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 │   ├── Fixed price: $0.0005
 │   └── Automatic distribution
 │
-└── TournamentManager.sol
-    ├── Creates and manages tournaments
-    ├── Collects 8BIT entry fees
-    ├── Burns 50% of fees (deflationary)
-    ├── Distributes prizes from 50% pool
-    └── Enforces tournament rules
+├── TournamentManager.sol
+│   ├── Creates and manages tournaments
+│   ├── Collects 8BIT entry fees
+│   ├── Burns 50% of fees (deflationary)
+│   ├── Distributes prizes from 50% pool
+│   └── Enforces tournament rules
+│
+└── VestedAirdrop.sol
+    ├── Merkle tree-based airdrop claims
+    ├── 10M tokens for testnet participants
+    ├── 3-month vesting (33.33% per month)
+    ├── 90-day claim window
+    └── Treasury recovery of unclaimed tokens
 ```
 
 ## Network Details
@@ -55,19 +62,39 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 - 🔐 Ethereum security
 - 🎮 Perfect for high-frequency gaming
 
-### Mainnet Contracts
+### Testnet Contracts (Arbitrum Sepolia)
 
-> 🚧 **Contracts not yet deployed.** Addresses will be announced before presale launch.
+**Currently Deployed:**
+- EightBitToken: `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d`
+- GameRewards: `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E`
+- TournamentManager: `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7`
+- TournamentPayments: `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec` (deprecated)
+- TournamentBuyback: `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6`
+- TokenSale: `0x057B1130dD6E8FcBc144bb34172e45293C6839fE`
+- TreasuryGasManager: `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC`
+- TestnetFaucet: `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952`
+- VestedAirdrop: TBD (pending deployment)
 
-**Will be deployed:**
-- EightBitToken: `0x...` (TBA)
-- GameRewards: `0x...` (TBA)
-- TokenSale: `0x...` (TBA)
-- TournamentManager: `0x...` (TBA)
-- TournamentBuyback: `0x...` (TBA)
+### Mainnet Contracts (Arbitrum One) — LIVE
+
+**Deployed & Verified:**
+- EightBitToken (8BIT): `0x37ee26669659758109c94862e49B492247Be26df`
+- GameRewards: `0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e`
+- TournamentManager: `0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e`
+- TournamentPayments: `0xa009e23658609EC3d6b98b1e0904b77005A73e59`
+- TokenSale: `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` (LIVE)
+- TreasuryGasManager: `0x2185cF31B507620C412b00cde9B1BCd1B62983d6`
+- TieredStaking: `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` (9.9M 8BIT funded)
+- AchievementBadges: `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` (UUPS Proxy)
+- TradeableItems: `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` (UUPS Proxy)
+- AchievementManager: `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` (UUPS Proxy)
+
+**Pending:**
+- TournamentBuyback: Blocked — requires Uniswap V3 8BIT/USDC pool
+- VestedAirdrop: Blocked — requires Merkle root from snapshot
 
 **Verification:**
-- All contracts verified on Arbiscan
+- All deployed contracts verified on Arbiscan
 - Source code publicly viewable
 - Readable by anyone
 - No hidden code
@@ -89,14 +116,13 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
 
 **Tournament Entry:**
 ```
-1. Player approves USDC spend
+1. Player approves 8BIT spend
 2. Enters tournament (TournamentManager)
-3. Pays entry fee
+3. Pays 8BIT entry fee
 4. TournamentManager splits fee:
    - 50% to prize pool
-   - 50% to TournamentBuyback
-5. TournamentBuyback swaps USDC for 8BIT
-6. Burns 8BIT permanently
+   - 50% burned (deflationary)
+5. Winner receives prize pool
 ```
 
 ### For Token Holders
@@ -114,13 +140,13 @@ All core functionality of 8-Bit Arcade runs on Arbitrum smart contracts. This en
    - Instant settlement
 ```
 
-**Future (Staking):**
+**Staking (LIVE):**
 ```
 1. Approve 8BIT spend
 2. Call stake() function
-3. Lock tokens for period
+3. Lock tokens for period (7d, 1mo, 3mo, 6mo)
 4. Earn rewards automatically
-5. Withdraw after lock expires
+5. Withdraw after lock expires (25% penalty for early withdrawal)
 ```
 
 ## Security Model

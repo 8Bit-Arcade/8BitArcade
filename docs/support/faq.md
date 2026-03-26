@@ -21,6 +21,56 @@ A: No. Our games are designed for desktop/laptop play with keyboard controls. Mo
 
 ---
 
+### Testnet Airdrop
+
+**Q: How do I qualify for the airdrop?**
+A: Meet ANY of these: 5+ games played, 1+ tournament entry, 50+ messages in Discord/Telegram with linked wallet, or active stake with linked wallet.
+
+**Q: What activities count for airdrop points?**
+A:
+- Gaming: Games played, tournament entries, top 10 finishes, high scores
+- Discord: Message count (50/200/500 milestones), OG role if early
+- Telegram: Message count (50/200/500 milestones)
+- Staking: Amount staked + lock duration bonus
+See [Airdrop Details](../earning/airdrop.md) for full breakdown.
+
+**Q: How do I link my wallet on Discord?**
+A: Use the `/link 0xYourWallet` command in any Discord channel. Your messages will then count toward airdrop points.
+
+**Q: How do I link my wallet on Telegram?**
+A: Message the bot with `/link 0xYourWallet`. Check your status with `/status`.
+
+**Q: How do Discord roles work?**
+A: Roles are assigned based on message count:
+- Noob = Join server (5 points)
+- Player 1 = 50+ messages (25 points)
+- Keyboard Warrior = 200+ messages (50 points)
+- Keyboard Overlord = 500+ messages (100 points)
+- Arcade OG = Joined before cutoff (150 points)
+
+**Q: When are Discord roles updated?**
+A: Roles sync automatically throughout the day. If you just reached a threshold, wait a few hours for it to update.
+
+**Q: Do staking rewards count toward the airdrop?**
+A: Yes! Staking gives bonus points: 10,000+ staked = 25 pts, 100K+ = 50 pts, 500K+ = 100 pts, 1M+ = 150 pts. Longer locks give bonus points too.
+
+**Q: What's the total airdrop pool?**
+A: 10 million 8BIT tokens are allocated for testnet participants.
+
+**Q: What are the airdrop tiers?**
+A: Legendary (top 1%) = 2M tokens, Epic (top 5%) = 2.5M tokens, Rare (top 20%) = 3.5M tokens, Common (everyone else) = 2M tokens. Your share depends on your points within your tier.
+
+**Q: Who gets the Early Adopter bonus?**
+A: The first 100 users by activity date get a 2x multiplier on all points!
+
+**Q: When can I claim my airdrop?**
+A: After the testnet snapshot is taken before mainnet launch. You'll have 90 days to claim.
+
+**Q: Is the airdrop vested?**
+A: Yes. 33% available immediately, 33% after 30 days, 34% after 60 days. [Full details](../earning/airdrop.md)
+
+---
+
 ### Earning Rewards
 
 **Q: How much can I realistically earn?**
@@ -38,6 +88,34 @@ A: Yes! Each game has separate leaderboards. Rank in all games = earn from all.
 **Q: What if I'm not good at games?**
 A: Practice mode is free. Even ranking 6th-10th earns rewards. Pick easier games.
 
+**Q: Do stakers get bonus daily rewards?**
+A: Yes! Staking bonuses apply to daily leaderboard rewards:
+- 100K staked: +10% bonus
+- 500K staked: +25% bonus
+- 1M staked: +50% bonus
+
+---
+
+### Staking
+
+**Q: Is staking live?**
+A: Yes! Staking is live on Arbitrum Sepolia testnet. Mainnet launch coming soon.
+
+**Q: What are the lock periods?**
+A: 7 days (1x), 1 month (1.5x), 3 months (2x), or 6 months (3x) weighted multiplier.
+
+**Q: What's the early withdrawal penalty?**
+A: 25% of your staked amount is forfeited if you withdraw before lock expires.
+
+**Q: What APY can I expect?**
+A: Depends on total staked. At 25M TVL: 40-120% APY depending on lock period.
+
+**Q: Can I stake and still play games?**
+A: Yes! Staking doesn't prevent playing. Stakers get bonus rewards on daily leaderboards.
+
+**Q: Do staking points help my airdrop allocation?**
+A: Yes! Staking amount and duration both give bonus airdrop points.
+
 ---
 
 ### Tournaments
@@ -49,7 +127,7 @@ A: Depends on skill. Entry fee at risk. Prizes much larger than daily rewards. [
 A: Yes. Entry fees are non-refundable. Only enter if confident.
 
 **Q: What's the difference between Standard and High Roller?**
-A: Entry fee and prize pool. Standard: $1-5 entry. High Roller: $10-25 entry, 10x prizes.
+A: Entry fee and prize pool. Standard: 2,000-10,000 8BIT entry. High Roller: 10,000-50,000 8BIT entry with larger prizes.
 
 ---
 
@@ -119,6 +197,9 @@ A: No. Open source contracts, professional audit, transparent team, locked liqui
 
 ### Gameplay
 
+**Q: How many games are there?**
+A: 12+ games including Chomper, Brick Breaker, Pixel Snake, Block Drop, Space Rocks, Flappy Bird, Alien Assault, Bug Blaster, Road Hopper, Galaxy Fighter, Missile Command, and Paddle Battle. More added regularly!
+
 **Q: Can I cheat?**
 A: No. Advanced anti-cheat detects cheating. Automatic bans. [Anti-cheat details](../games/anti-cheat.md)
 
@@ -152,16 +233,25 @@ A: USDC and ETH on Arbitrum network.
 
 ---
 
-### Staking (Future)
+### Community & Discord/Telegram
 
-**Q: When does staking launch?**
-A: Phase 3, months 7-12 post-launch. [Staking preview](../tokenomics/staking.md)
+**Q: Is there a Discord?**
+A: Yes! https://discord.gg/AKrdPvHz4P - Active community, announcements, support.
 
-**Q: What are the APY rates?**
-A: Estimated 15-30% depending on lock period. TBD.
+**Q: Is there a Telegram?**
+A: Yes! https://t.me/eight_bit_arcade - Real-time discussions and updates.
 
-**Q: Can I stake presale tokens?**
-A: Yes, once staking launches. All 8BIT eligible.
+**Q: How do I get Discord roles?**
+A: Roles are assigned automatically based on message count. Keep chatting to level up!
+
+**Q: Why should I be active in Discord/Telegram?**
+A: Activity counts toward airdrop points! 500+ messages = maximum community points.
+
+**Q: Can I suggest features?**
+A: Absolutely! Discord #suggestions channel. Community feedback valued.
+
+**Q: How do I report a bug?**
+A: Discord #bug-reports or email admin@8bitarcade.games.
 
 ---
 
@@ -194,22 +284,6 @@ A: Ensure on Arbitrum network. Try different browser. Clear cache. Check MetaMas
 
 **Q: Game won't load?**
 A: Refresh page. Clear cache. Try different browser. Check internet connection.
-
----
-
-### Community & Support
-
-**Q: Where can I get help?**
-A: Discord #support channel, email admin@8bitarcade.games, or [contact page](contact.md).
-
-**Q: Is there a Discord?**
-A: Yes! https://discord.gg/AKrdPvHz4P - Active community, announcements, support.
-
-**Q: Can I suggest features?**
-A: Absolutely! Discord #suggestions channel. Community feedback valued.
-
-**Q: How do I report a bug?**
-A: Discord #bug-reports or email admin@8bitarcade.games.
 
 ---
 

@@ -17,9 +17,19 @@ interface Game {
   category: GameCategory;
 }
 
+interface PlayerTournament {
+  id: string;
+  name: string;
+  tier: string;
+  period: string;
+  gameId?: string | null;
+}
+
 interface GameGridProps {
   games: Game[];
   onSelectGame: (index: number) => void;
+  gamesWithTournaments?: Set<string>;
+  playerTournaments?: PlayerTournament[];
 }
 
 const CATEGORIES: { value: GameCategory; label: string }[] = [
@@ -30,11 +40,23 @@ const CATEGORIES: { value: GameCategory; label: string }[] = [
   { value: 'action', label: 'Action' },
 ];
 
-export default function GameGrid({ games, onSelectGame }: GameGridProps) {
+export default function GameGrid({ games, onSelectGame, gamesWithTournaments = new Set(), playerTournaments = [] }: GameGridProps) {
   const { isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<GameCategory>('all');
   const [hoveredGame, setHoveredGame] = useState<string | null>(null);
+
+  // Check if a game has an active tournament
+  const hasActiveTournament = (gameId: string) => {
+    return gamesWithTournaments.has('__all__') || gamesWithTournaments.has(gameId);
+  };
+
+  // Get player's tournaments for a specific game
+  const getPlayerTournamentsForGame = (gameId: string) => {
+    return playerTournaments.filter(
+      (t) => !t.gameId || t.gameId === null || t.gameId === gameId
+    );
+  };
 
   const filteredGames = useMemo(() => {
     return games.filter((game) => {
@@ -142,6 +164,44 @@ export default function GameGrid({ games, onSelectGame }: GameGridProps) {
                       </div>
                     )}
 
+                    {/* Player Tournament Badges */}
+                    {(() => {
+                      const gameTournaments = getPlayerTournamentsForGame(game.id);
+                      const hasWeekly = gameTournaments.some(t => t.period.toLowerCase() === 'weekly');
+                      const hasMonthly = gameTournaments.some(t => t.period.toLowerCase() === 'monthly');
+
+                      if (hasWeekly || hasMonthly) {
+                        return (
+                          <div className="absolute top-1.5 left-1.5 flex flex-col gap-0.5">
+                            {hasWeekly && (
+                              <div className="px-1.5 py-0.5 bg-arcade-pink/90 rounded flex items-center gap-0.5 animate-pulse">
+                                <span className="text-white text-[10px]">🏆</span>
+                                <span className="font-pixel text-[10px] text-white">WK</span>
+                              </div>
+                            )}
+                            {hasMonthly && (
+                              <div className="px-1.5 py-0.5 bg-arcade-purple/90 rounded flex items-center gap-0.5 animate-pulse">
+                                <span className="text-white text-[10px]">🏆</span>
+                                <span className="font-pixel text-[10px] text-white">MO</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      // Fallback: Show generic LIVE badge if active tournament but player not enrolled
+                      if (hasActiveTournament(game.id)) {
+                        return (
+                          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-arcade-pink/50 rounded flex items-center gap-0.5">
+                            <span className="text-white text-[10px]">🏆</span>
+                            <span className="font-pixel text-[10px] text-white/70">LIVE</span>
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
+
                     {/* Status Badges */}
                     <div className="absolute top-1.5 right-1.5 flex gap-1">
                       {!game.playable && (
@@ -172,30 +232,44 @@ export default function GameGrid({ games, onSelectGame }: GameGridProps) {
                   <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-4 bg-arcade-dark border border-arcade-green rounded-lg shadow-xl z-50 hidden md:block">
                     <h4 className="font-pixel text-arcade-green text-sm mb-2">{game.name}</h4>
                     <p className="font-arcade text-gray-400 text-xs mb-3">{game.description}</p>
-                    <div className="flex gap-2">
-                      {game.playable ? (
-                        <>
-                          <Link href={`/games/${game.id}`} className="flex-1">
-                            <Button variant="secondary" size="sm" className="w-full text-[10px]">
-                              Free Play
-                            </Button>
-                          </Link>
-                          {isConnected ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        {game.playable ? (
+                          <>
                             <Link href={`/games/${game.id}`} className="flex-1">
-                              <Button variant="primary" size="sm" className="w-full text-[10px]">
-                                Ranked
+                              <Button variant="secondary" size="sm" className="w-full text-[10px]">
+                                Free Play
                               </Button>
                             </Link>
-                          ) : (
-                            <Button variant="primary" size="sm" className="flex-1 text-[10px]" disabled>
-                              Connect
-                            </Button>
-                          )}
-                        </>
-                      ) : (
-                        <Button variant="secondary" size="sm" className="w-full text-[10px]" disabled>
-                          Coming Soon
-                        </Button>
+                            {isConnected ? (
+                              <Link href={`/games/${game.id}`} className="flex-1">
+                                <Button variant="primary" size="sm" className="w-full text-[10px]">
+                                  Ranked
+                                </Button>
+                              </Link>
+                            ) : (
+                              <Button variant="primary" size="sm" className="flex-1 text-[10px]" disabled>
+                                Connect
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <Button variant="secondary" size="sm" className="w-full text-[10px]" disabled>
+                            Coming Soon
+                          </Button>
+                        )}
+                      </div>
+                      {/* Play Tournament button - only shows if user has enrolled in a tournament for this game */}
+                      {isConnected && game.playable && getPlayerTournamentsForGame(game.id).length > 0 && (
+                        <Link href={`/games/${game.id}?mode=tournament`} className="w-full">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="w-full text-[10px] bg-arcade-pink hover:bg-arcade-pink/80 border-arcade-pink animate-pulse"
+                          >
+                            🏆 Play Tournament
+                          </Button>
+                        </Link>
                       )}
                     </div>
                     {/* Arrow pointing down */}

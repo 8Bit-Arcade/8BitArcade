@@ -7,6 +7,8 @@
     "test": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network arbitrumSepolia",
     "deploy:mainnet": "hardhat run scripts/deploy.ts --network arbitrumOne",
+    "deploy-sale:testnet": "hardhat run scripts/deploy-token-sale.ts --network arbitrumSepolia",
+    "deploy-sale:mainnet": "hardhat run scripts/deploy-token-sale.ts --network arbitrumOne",
     "verify:testnet": "hardhat verify --network arbitrumSepolia",
     "verify:mainnet": "hardhat verify --network arbitrumOne"
   },
@@ -17,6 +19,8 @@
     "hardhat": "^2.19.4"
   },
   "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
+    "@openzeppelin/hardhat-upgrades": "^3.9.1",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.4"
   }

@@ -65,78 +65,87 @@ export default function LeaderboardTable({
 
   return (
     <div className="card-arcade overflow-hidden">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-arcade-green/30">
-            <th className="p-3 text-left font-pixel text-arcade-green text-xs">
-              RANK
-            </th>
-            <th className="p-3 text-left font-pixel text-arcade-green text-xs">
-              PLAYER
-            </th>
-            <th className="p-3 text-right font-pixel text-arcade-green text-xs">
-              SCORE
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry, index) => {
-            const rank = index + 1;
-            const isCurrentUser =
-              userAddress?.toLowerCase() === entry.odedId.toLowerCase();
-            const displayName = useEntryDisplayName(entry);
+      {/* Scrollable container for top 100 */}
+      <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-arcade-green/30 scrollbar-track-transparent">
+        <table className="w-full">
+          <thead className="sticky top-0 bg-arcade-dark z-10">
+            <tr className="border-b border-arcade-green/30">
+              <th className="p-3 text-left font-pixel text-arcade-green text-xs">
+                RANK
+              </th>
+              <th className="p-3 text-left font-pixel text-arcade-green text-xs">
+                PLAYER
+              </th>
+              <th className="p-3 text-right font-pixel text-arcade-green text-xs">
+                SCORE
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((entry, index) => {
+              const rank = index + 1;
+              const isCurrentUser =
+                userAddress?.toLowerCase() === entry.odedId.toLowerCase();
+              const displayName = useEntryDisplayName(entry);
 
-            return (
-              <tr
-                key={entry.odedId}
-                className={`
-                  border-b border-arcade-dark/50 transition-colors
-                  ${isCurrentUser ? 'bg-arcade-green/10' : 'hover:bg-arcade-dark/30'}
-                `}
-              >
-                <td className="p-3">
-                  <span
-                    className={`
-                      font-pixel text-sm
-                      ${rank === 1 ? 'text-yellow-400' : ''}
-                      ${rank === 2 ? 'text-gray-300' : ''}
-                      ${rank === 3 ? 'text-amber-600' : ''}
-                      ${rank > 3 ? 'text-gray-400' : ''}
-                    `}
-                  >
-                    {rank === 1 && '🥇 '}
-                    {rank === 2 && '🥈 '}
-                    {rank === 3 && '🥉 '}
-                    #{rank}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <div className="flex items-center gap-2">
+              return (
+                <tr
+                  key={entry.odedId}
+                  className={`
+                    border-b border-arcade-dark/50 transition-colors
+                    ${isCurrentUser ? 'bg-arcade-green/10' : 'hover:bg-arcade-dark/30'}
+                  `}
+                >
+                  <td className="p-3">
                     <span
                       className={`
-                        font-arcade text-sm
-                        ${isCurrentUser ? 'text-arcade-cyan' : 'text-white'}
+                        font-pixel text-sm
+                        ${rank === 1 ? 'text-yellow-400' : ''}
+                        ${rank === 2 ? 'text-gray-300' : ''}
+                        ${rank === 3 ? 'text-amber-600' : ''}
+                        ${rank > 3 ? 'text-gray-400' : ''}
                       `}
                     >
-                      {displayName}
+                      {rank === 1 && '🥇 '}
+                      {rank === 2 && '🥈 '}
+                      {rank === 3 && '🥉 '}
+                      #{rank}
                     </span>
-                    {isCurrentUser && (
-                      <span className="font-pixel text-xs text-arcade-yellow">
-                        (YOU)
+                  </td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`
+                          font-arcade text-sm
+                          ${isCurrentUser ? 'text-arcade-cyan' : 'text-white'}
+                        `}
+                      >
+                        {displayName}
                       </span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-3 text-right">
-                  <span className="font-pixel text-arcade-yellow text-sm">
-                    {formatNumber(entry.score)}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                      {isCurrentUser && (
+                        <span className="font-pixel text-xs text-arcade-yellow">
+                          (YOU)
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-3 text-right">
+                    <span className="font-pixel text-arcade-yellow text-sm">
+                      {formatNumber(entry.score)}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {/* Entry count footer */}
+      <div className="p-2 border-t border-arcade-green/20 text-center">
+        <span className="font-arcade text-gray-500 text-xs">
+          Showing top {entries.length} players
+        </span>
+      </div>
     </div>
   );
 }

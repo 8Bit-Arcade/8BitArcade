@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { useEthPrice, calculateEthAmount } from './useEthPrice';
+import { ARBITRUM_CHAIN_ID } from '@/config/contracts';
 
 // Contract ABI (minimal - only what we need)
 const TOURNAMENT_PAYMENTS_ABI = [
@@ -107,11 +108,13 @@ export function useTournamentPayment({
   const [isApproving, setIsApproving] = useState(false);
 
   // Get tournament fee in USDC (6 decimals)
+  // chainId ensures reads go to testnet even if wallet is on mainnet
   const { data: feeInUsdc } = useReadContract({
     address: tournamentPaymentsAddress,
     abi: TOURNAMENT_PAYMENTS_ABI,
     functionName: 'tournamentFees',
     args: [BigInt(tournamentId)],
+    chainId: ARBITRUM_CHAIN_ID,
   });
 
   // Check if user has paid
@@ -120,6 +123,7 @@ export function useTournamentPayment({
     abi: TOURNAMENT_PAYMENTS_ABI,
     functionName: 'hasPaid',
     args: address ? [BigInt(tournamentId), address] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: !!address,
     },
@@ -131,6 +135,7 @@ export function useTournamentPayment({
     abi: USDC_ABI,
     functionName: 'allowance',
     args: address ? [address, tournamentPaymentsAddress] : undefined,
+    chainId: ARBITRUM_CHAIN_ID,
     query: {
       enabled: !!address,
     },

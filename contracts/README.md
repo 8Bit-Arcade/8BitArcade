@@ -31,11 +31,20 @@ Smart contracts for the 8-Bit Arcade gaming platform on Arbitrum.
 ### TournamentPayments
 - **Purpose**: Handles tournament entry fees in multiple currencies
 - **Payment Methods**: USDC or ETH
+- **Address (Testnet)**: `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec`
 - **Features**:
   - Automatic ETH→USDC conversion via Uniswap V3
-  - Real-time pricing from Uniswap TWAP oracles
-  - Buyback & burn mechanism (50% of fees)
-  - Prize pool funding (50% of fees)
+  - Real-time pricing from Uniswap V3 TickMath
+  - Prize pool funding
+  - Slippage protection
+
+### TournamentBuyback
+- **Purpose**: Buyback & burn mechanism for 8BIT tokens
+- **Address (Testnet)**: `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6`
+- **Features**:
+  - Converts USDC to 8BIT via Uniswap V3
+  - Burns purchased 8BIT tokens (deflationary)
+  - Real-time pricing from Uniswap V3 TickMath
   - Slippage protection
 
 ### TokenSale
@@ -141,14 +150,15 @@ ARBISCAN_API_KEY=your_arbiscan_api_key_here
 npm run deploy:testnet
 ```
 
-This deploys all 7 contracts in the correct order:
+This deploys all 8 contracts in the correct order:
 1. ✅ EightBitToken
 2. ✅ GameRewards
 3. ✅ TournamentManager
 4. ✅ TournamentPayments
-5. ✅ TokenSale
-6. ✅ TreasuryGasManager
-7. ✅ TestnetFaucet (testnet only)
+5. ✅ TournamentBuyback
+6. ✅ TokenSale
+7. ✅ TreasuryGasManager
+8. ✅ TestnetFaucet (testnet only)
 
 **⚠️ SAVE ALL DEPLOYMENT ADDRESSES!**
 
@@ -367,25 +377,43 @@ npx hardhat console --network arbitrumSepolia
 
 ## 📝 Contract Addresses
 
-### Testnet (Arbitrum Sepolia)
-- **8BIT Token**: `TBD` (update after deployment)
-- **GameRewards**: `TBD` (update after deployment)
-- **TournamentManager**: `TBD` (update after deployment)
-- **TournamentPayments**: `TBD` (update after deployment)
-- **TokenSale**: `TBD` (update after deployment)
-- **TreasuryGasManager**: `TBD` (update after deployment)
-- **TestnetFaucet**: `TBD` (update after deployment)
-- **Explorer**: https://sepolia.arbiscan.io
+### Mainnet (Arbitrum One) — LIVE
 
-### Mainnet (Arbitrum One)
-- **8BIT Token**: `TBD` (update after deployment)
-- **GameRewards**: `TBD` (update after deployment)
-- **TournamentManager**: `TBD` (update after deployment)
-- **TournamentPayments**: `TBD` (update after deployment)
-- **TokenSale**: `TBD` (update after deployment)
-- **TreasuryGasManager**: `TBD` (update after deployment)
-- **TestnetFaucet**: N/A (testnet only)
+| Contract | Address |
+|----------|---------|
+| **8BIT Token** | `0x37ee26669659758109c94862e49B492247Be26df` |
+| **GameRewards** | `0x6e22b6b488f42FaBebE2a52fe759594650ef1B0e` |
+| **TournamentManager** | `0xC0ab5FDF6Ef6A4e6bD60f9eD50b1CedB19B9741e` |
+| **TournamentPayments** | `0xa009e23658609EC3d6b98b1e0904b77005A73e59` |
+| **TokenSale** | `0x14c07e8dEcA1EB1415aFA4590626613Fe1764FaA` (LIVE) |
+| **TreasuryGasManager** | `0x2185cF31B507620C412b00cde9B1BCd1B62983d6` |
+| **TieredStaking** | `0xb30D7185FE83D9Cd2f682f9Ff7BF94b6a20058dF` |
+| **AchievementBadges** | `0x5b0ee0abc08fA668c6B215CCD9f9A28a77789d2c` (UUPS Proxy) |
+| **TradeableItems** | `0x120E5969638Ec37B00BB9d68D49688B18fA8d0Ad` (UUPS Proxy) |
+| **AchievementManager** | `0xF9f1067873bCe779D35e8796bfE9A32EFf5DAF1f` (UUPS Proxy) |
+
 - **Explorer**: https://arbiscan.io
+- **Deployer**: `0x80361876199e2318d6993A07e37177cFd21B64a7`
+
+### Testnet (Arbitrum Sepolia)
+
+| Contract | Address |
+|----------|---------|
+| **8BIT Token** | `0xC1C665D66A9F8433cBBD4e70a543eDc19C56707d` |
+| **GameRewards** | `0x528c9130A05bEf9a9632FbB3D8735287A2e44a4E` |
+| **TournamentManager** | `0xe06C92f15F426b0f6Fccb66302790E533C5Dfbb7` |
+| **TournamentPayments** | `0x0606eDf5Fb1912160b700846C48a49800ae6A1ec` |
+| **TournamentBuyback** | `0x6F3eAF6FB7218340aF69f81e143A01507566a6A6` |
+| **TokenSale** | `0x057B1130dD6E8FcBc144bb34172e45293C6839fE` |
+| **TreasuryGasManager** | `0x39F49a46CAB85CF079Cde25EAE311A563d3952EC` |
+| **TestnetFaucet** | `0x25A4109083f882FCFbC9Ea7cE5Cd942dbae38952` |
+| **TieredStaking** | `0xC193451f59De0df09EC8359D091F8890A80F20c4` |
+| **VestedAirdrop** | `0xC9aaa944B163eB4A580151DE852836330ECB50b1` |
+| **AchievementBadges** | `0x8dE45E3e37f0721D64d63E32da5f37CfaCF9ca9f` |
+| **TradeableItems** | `0x3F09919fba62EAec1295F577D92fbF2555247c44` |
+| **AchievementManager** | `0xE68d3AdD44C541fF76C85D185d02BE5ceAC833B3` |
+
+- **Explorer**: https://sepolia.arbiscan.io
 
 ## 🐛 Troubleshooting
 

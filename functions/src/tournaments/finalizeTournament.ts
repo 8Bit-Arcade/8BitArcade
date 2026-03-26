@@ -9,6 +9,25 @@ interface FinalizeTournamentRequest {
 }
 
 /**
+ * Helper to convert time field to milliseconds
+ * Handles both Firebase Timestamps and Unix timestamp numbers
+ */
+function toMillis(value: any): number | null {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.toMillis === 'function') {
+    return value.toMillis();
+  }
+  if (typeof value === 'number') {
+    return value < 1000000000000 ? value * 1000 : value;
+  }
+  if (typeof value === 'string') {
+    const t = new Date(value).getTime();
+    return isNaN(t) ? null : t;
+  }
+  return null;
+}
+
+/**
  * Internal function to finalize a tournament
  * Used by both the callable function and scheduled function
  */
@@ -22,9 +41,11 @@ async function finalizeTournamentInternal(tournamentId: string) {
 
   const tournament = tournamentDoc.data() as TournamentDocument;
 
-  // Verify tournament has ended
+  // Verify tournament has ended (handle both Timestamp and number formats)
   const now = Timestamp.now();
-  if (tournament.endTime.toMillis() > now.toMillis()) {
+  const nowMillis = now.toMillis();
+  const endTimeMillis = toMillis(tournament.endTime);
+  if (endTimeMillis && endTimeMillis > nowMillis) {
     throw new HttpsError('failed-precondition', 'Tournament has not ended yet');
   }
 
@@ -33,21 +54,40 @@ async function finalizeTournamentInternal(tournamentId: string) {
     throw new HttpsError('already-exists', 'Tournament already finalized');
   }
 
-  // Get all entries sorted by best score
-  const entriesSnapshot = await tournamentRef
-    .collection('entries')
-    .orderBy('bestScore', 'desc')
-    .limit(1)
-    .get();
+  // Get all entries
+  const entriesSnapshot = await tournamentRef.collection('entries').get();
 
   let winnerId: string | null = null;
+  let winningScore = 0;
+  const isSingleGame = tournament.gameId && tournament.gameId !== null;
 
   if (!entriesSnapshot.empty) {
-    const winnerEntry = entriesSnapshot.docs[0].data() as TournamentEntryDocument;
-    winnerId = winnerEntry.player;
+    // Calculate scores and find winner
+    for (const entryDoc of entriesSnapshot.docs) {
+      const entry = entryDoc.data() as TournamentEntryDocument;
+      let calculatedScore: number;
+
+      if (isSingleGame && tournament.gameId) {
+        // Single-game tournament: use score for that specific game
+        calculatedScore = entry.bestScores?.[tournament.gameId] || entry.bestScore || 0;
+      } else {
+        // All-games tournament: use total score (sum of all games)
+        if (entry.bestScores && Object.keys(entry.bestScores).length > 0) {
+          calculatedScore = Object.values(entry.bestScores).reduce((sum, score) => sum + score, 0);
+        } else {
+          // Fallback to totalScore field if available, then legacy bestScore
+          calculatedScore = entry.totalScore || entry.bestScore || 0;
+        }
+      }
+
+      if (calculatedScore > winningScore) {
+        winningScore = calculatedScore;
+        winnerId = entry.player;
+      }
+    }
 
     console.log(
-      `Tournament ${tournamentId} winner: ${winnerId} with score ${winnerEntry.bestScore}`
+      `Tournament ${tournamentId} winner: ${winnerId} with score ${winningScore} (${isSingleGame ? 'single-game' : 'all-games'})`
     );
   } else {
     console.log(`Tournament ${tournamentId} has no participants`);
