@@ -41,7 +41,7 @@ interface ZealyVerifyResponse {
  *   - "games10": Played 10+ games
  *   - "tournament1": Entered 1+ tournament
  *   - "sale30k": Purchased 30,000+ 8BIT tokens
- *   - "sale60k": Purchased 60,000+ 8BIT tokens
+ *   - "sale60k": Purchased 20,000+ 8BIT tokens
  *   - "nft7": Holds 7+ Achievement Badge NFTs
  *
  * Configure in Zealy:
@@ -136,7 +136,7 @@ export const zealyVerifyQuest = onRequest(
 
         case 'sale30k':
         case 'sale60k': {
-          const requiredTokens = quest === 'sale30k' ? 30_000 : 60_000;
+          const requiredTokens = quest === 'sale30k' ? 30_000 : 20_000;
           const requiredWei = requiredTokens * 1e18;
 
           const buyerDoc = await db.collection('sale_buyers').doc(normalizedWallet).get();
@@ -238,7 +238,7 @@ function getRequiredCount(quest: string): number {
     case 'sale30k':
       return 30_000;
     case 'sale60k':
-      return 60_000;
+      return 20_000;
     case 'nft7':
       return 7;
     default:
